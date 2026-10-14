@@ -1,0 +1,141 @@
+.page {
+  min-height: 100svh;
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in oklch, var(--primary) 14%, transparent) 0,
+      transparent 32rem
+    ),
+    var(--background);
+}
+
+.container {
+  width: min(calc(100% - 2rem), 72rem);
+  margin-inline: auto;
+  padding-block: clamp(4rem, 10vw, 8rem);
+}
+
+.hero {
+  max-width: 48rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--primary);
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(2.75rem, 8vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 42rem;
+  margin: 1.75rem 0 0;
+  color: var(--muted-foreground);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.checksSection {
+  margin-top: 4rem;
+}
+
+.sectionTitle {
+  margin: 0 0 1rem;
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.checksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+}
+
+.checkCard {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  color: var(--card-foreground);
+  background: color-mix(in oklch, var(--card) 92%, transparent);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.checkCard:hover {
+  border-color: var(--ring);
+  box-shadow: 0 0.75rem 2rem
+    color-mix(in oklch, var(--foreground) 8%, transparent);
+  transform: translateY(-2px);
+}
+
+.checkCard:focus-visible {
+  border-color: var(--ring);
+  outline: 3px solid color-mix(in oklch, var(--ring) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.checkLabel {
+  font-weight: 700;
+}
+
+.checkDescription {
+  min-height: 3rem;
+  margin: 0.65rem 0 1.25rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.checkPath {
+  color: var(--primary);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 40rem) {
+  .container {
+    width: min(calc(100% - 1.5rem), 72rem);
+    padding-block: 3rem;
+  }
+
+  .title {
+    font-size: clamp(2.5rem, 15vw, 4rem);
+  }
+
+  .checksSection {
+    margin-top: 3rem;
+  }
+
+  .checkDescription {
+    min-height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkCard {
+    transition: none;
+  }
+
+  .checkCard:hover {
+    transform: none;
+  }
+}

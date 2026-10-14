@@ -1,0 +1,103 @@
+name: ${COMPOSE_PROJECT_NAME:-project-starter}
+
+x-app-environment: &app-environment
+  NODE_ENV: ${NODE_ENV}
+  APP_ENV: ${APP_ENV}
+  APP_NAME: ${APP_NAME}
+  APP_VERSION: ${APP_VERSION}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  migrate:
+    image: ${COMPOSE_PROJECT_NAME:-project-starter}-migration:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: migration
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: "no"
+
+  api:
+    image: ${COMPOSE_PROJECT_NAME:-project-starter}-api:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: runner
+    environment:
+      <<: *app-environment
+      API_PORT: ${API_PORT:-3001}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${API_PUBLISHED_PORT:-3001}:${API_PORT:-3001}"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ["CMD", "wget", "-qO-", "http://127.0.0.1:${API_PORT:-3001}/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  web:
+    image: ${COMPOSE_PROJECT_NAME:-project-starter}-web:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        API_INTERNAL_URL: http://api:${API_PORT:-3001}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME}
+        NEXT_PUBLIC_APP_ENV: ${NEXT_PUBLIC_APP_ENV}
+    environment:
+      <<: *app-environment
+      API_INTERNAL_URL: http://api:${API_PORT:-3001}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME}
+      NEXT_PUBLIC_APP_ENV: ${NEXT_PUBLIC_APP_ENV}
+      PORT: ${WEB_PORT:-3000}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${WEB_PUBLISHED_PORT:-3000}:${WEB_PORT:-3000}"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "wget", "-qO-", "http://127.0.0.1:${WEB_PORT:-3000}/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+volumes:
+  database_data:
+
+networks:
+  internal:
+    driver: bridge

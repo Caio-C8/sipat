@@ -1,0 +1,10 @@
+generator client {
+  provider     = "prisma-client-js"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Adicione aqui apenas modelos que pertençam ao domínio do novo projeto.

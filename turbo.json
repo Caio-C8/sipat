@@ -1,0 +1,47 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "APP_ENV",
+    "APP_NAME",
+    "APP_VERSION",
+    "API_PORT",
+    "WEB_PORT",
+    "API_INTERNAL_URL",
+    "CORS_ORIGINS",
+    "DATABASE_URL",
+    "NEXT_PUBLIC_APP_NAME",
+    "NEXT_PUBLIC_APP_ENV"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"],
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "db:generate": {
+      "cache": false
+    }
+  }
+}

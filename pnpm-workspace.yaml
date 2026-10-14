@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+engineStrict: true
+injectWorkspacePackages: true
+preferWorkspacePackages: true
+sharedWorkspaceLockfile: true
+
+allowBuilds:
+  "@prisma/engines": true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true

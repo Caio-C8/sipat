@@ -1,0 +1,49 @@
+{
+  "name": "project-starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Base reutilizável para aplicações web, APIs e apps mobile.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": "24.19.0",
+    "pnpm": "11.19.0"
+  },
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "dotenv -e .env.development -- turbo run dev",
+    "dev:web": "dotenv -e .env.development -- turbo run dev --filter=@repo/web",
+    "dev:api": "dotenv -e .env.development -- turbo run dev --filter=@repo/api",
+    "build": "turbo run build",
+    "build:development": "dotenv -e .env.development -v NODE_ENV=production -- turbo run build",
+    "build:staging": "dotenv -e .env.staging -- turbo run build",
+    "build:production": "dotenv -e .env.production -- turbo run build",
+    "start:development": "dotenv -e .env.development -- turbo run start",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "check": "pnpm db:generate && turbo run lint typecheck test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "turbo run db:generate --filter=@repo/database",
+    "db:migrate:development": "dotenv -e .env.development -- pnpm --filter @repo/database db:migrate:dev",
+    "db:migrate:staging": "dotenv -e .env.staging -- pnpm --filter @repo/database db:migrate:deploy",
+    "db:migrate:production": "dotenv -e .env.production -- pnpm --filter @repo/database db:migrate:deploy",
+    "db:seed:development": "dotenv -e .env.development -- pnpm --filter @repo/database db:seed",
+    "db:studio": "dotenv -e .env.development -- pnpm --filter @repo/database db:studio",
+    "infra:development:up": "docker compose --env-file .env.development -f compose.yaml -f compose.development.yaml up -d db",
+    "infra:development:down": "docker compose --env-file .env.development -f compose.yaml -f compose.development.yaml down",
+    "stack:development:up": "docker compose --env-file .env.development -f compose.yaml -f compose.development.yaml up -d --build",
+    "stack:development:down": "docker compose --env-file .env.development -f compose.yaml -f compose.development.yaml down",
+    "stack:staging:up": "docker compose --env-file .env.staging -f compose.yaml -f compose.staging.yaml up -d --build",
+    "stack:staging:down": "docker compose --env-file .env.staging -f compose.yaml -f compose.staging.yaml down",
+    "stack:production:up": "docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d --build",
+    "stack:production:down": "docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml down"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^11.0.0",
+    "prettier": "^3.4.2",
+    "turbo": "^2.10.4",
+    "typescript": "^5.7.3"
+  }
+}
