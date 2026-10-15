@@ -35,10 +35,11 @@ um consumidor no grafo da aplicação. Módulos são singleton por padrão no
 NestJS, portanto vários módulos podem importar `DatabaseModule` e compartilhar
 o mesmo provider exportado.
 
-Na base vazia, não importe `DatabaseModule` diretamente em `AppModule` apenas
-para manter uma conexão ociosa. Essa importação não disponibiliza o provider
-aos módulos irmãos e faria o processo depender do PostgreSQL antes de existir
-um domínio persistente. Também não torne o módulo global somente para eliminar
+No estado atual do SIPAT, não importe `DatabaseModule` diretamente em
+`AppModule` apenas para manter uma conexão ociosa. Essa importação não
+disponibiliza o provider aos módulos irmãos e faria o processo depender do
+PostgreSQL antes de existir um domínio persistente. Também não torne o módulo
+global somente para eliminar
 imports: a declaração explícita mantém dependências e testes compreensíveis.
 
 Ao criar o primeiro domínio que use persistência:
@@ -66,7 +67,7 @@ documente o motivo.
 
 ## Registro na aplicação
 
-Ao terminar um novo domínio, adicione seu módulo a `AppModule`:
+Ao terminar um módulo de domínio do SIPAT, adicione-o a `AppModule`:
 
 ```ts
 @Module({

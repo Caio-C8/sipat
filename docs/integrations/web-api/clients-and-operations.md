@@ -21,9 +21,9 @@ apps/web/
             └── use-*.ts
 ```
 
-Somente a infraestrutura comum existe na base limpa. Crie operações e hooks
-quando houver endpoint, contrato e consumidor concretos; não antecipe arquivos
-de uma feature inexistente.
+Somente a infraestrutura HTTP comum está implementada. Crie operações e hooks
+do SIPAT quando houver endpoint, contrato e consumidor concretos; não antecipe
+arquivos de uma entrega futura.
 
 ## Abstração comum
 

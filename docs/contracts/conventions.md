@@ -236,7 +236,7 @@ operação:
 - quantidade e tamanho de arquivos;
 - resposta resumida quando a detalhada carregar relações ou conteúdo caro.
 
-Não defina um único número para todos os domínios. A estrutura padrão exige que
+Não defina um único número para todos os domínios. O SIPAT exige que
 o limite seja finito e testado; o contexto do projeto define seu valor. Consulte
 [Performance de contratos e integrações](../performance/contracts-and-integrations.md).
 

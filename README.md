@@ -1,9 +1,13 @@
-# Project Starter
+# SIPAT
 
-Base para iniciar produtos com múltiplas aplicações em um único monorepo. A
-estrutura reúne aplicação web, API, PostgreSQL/Prisma e pacotes compartilhados.
-A branch `main` contém somente a estrutura reutilizável; o exemplo didático de
-Produto permanece preservado em uma tag versionada.
+Sistema de Gestão Patrimonial da Câmara Municipal de Patos de Minas. O SIPAT
+tem como objetivo centralizar e dar rastreabilidade ao ciclo de vida dos bens,
+incluindo cadastro, consulta, movimentação, inventário, manutenção,
+reavaliação, depreciação, baixa e relatórios.
+
+Este monorepo reúne a aplicação Web, a API, PostgreSQL/Prisma e pacotes
+compartilhados. A solução móvel prevista para conferência de inventário ainda
+não faz parte da árvore atual.
 
 ## Tecnologias incluídas
 
@@ -30,27 +34,31 @@ Produto permanece preservado em uma tag versionada.
 │   ├── contracts/           # contratos compartilhados
 │   └── utils/               # funções sem dependência de framework
 ├── docker/                  # imagens de produção
-├── docs/                    # decisões e guias de expansão
+├── docs/                    # requisitos, decisões e guias de desenvolvimento
 ├── compose.yaml             # serviços comuns
 ├── compose.development.yaml # ajustes de desenvolvimento
 ├── compose.staging.yaml     # ajustes de homologação
 └── compose.production.yaml  # ajustes de produção
 ```
 
-Qualquer diretório adicionado diretamente em `apps/*` ou `packages/*` é descoberto automaticamente pelo workspace. Consulte [como adicionar apps](docs/adding-apps.md) antes de criar um novo web, worker ou mobile.
+Qualquer diretório adicionado diretamente em `apps/*` ou `packages/*` é
+descoberto automaticamente pelo workspace. Consulte
+[como adicionar apps](docs/adding-apps.md) antes de criar o aplicativo móvel ou
+outro processo executável.
 
-## Reutilização e exemplo versionado
+## Escopo do produto e estado atual
 
-A branch `main` destinada ao GitHub Template deve conter somente a base limpa.
-O exemplo completo de Produto deve ser preservado em tags anotadas como
-`exemplo-produto-v1.0.0`; essas tags permanecem no repositório de origem, mas
-não entram no código nem no histórico dos projetos gerados pelo template.
+Os requisitos funcionais, não funcionais, regras de negócio, casos de uso,
+rastreabilidade e papéis estão consolidados em
+[Requisitos do SIPAT](docs/requisitos-SIPAT.md). A
+[visão geral do produto](docs/sipat.md) resume o contexto, os módulos previstos
+e as fontes de verdade usadas pelo projeto.
 
-Para consultar o procedimento da primeira separação ou publicar uma nova versão
-do exemplo, siga o guia de
-[manutenção da base e versionamento do exemplo](docs/template-and-example.md).
-O guia também define o que deve permanecer configurado entre Web, API e banco
-de dados depois da limpeza.
+No estado atual, a infraestrutura técnica e o modelo de dados do SIPAT estão
+configurados. O schema Prisma e a migration inicial representam as entidades e
+relações patrimoniais, enquanto a API ainda expõe apenas o health check e a Web
+mantém uma home de infraestrutura. As novas entregas devem partir dos requisitos
+versionados e atualizar a documentação de estado conforme forem concluídas.
 
 ## Pré-requisitos
 
@@ -104,7 +112,7 @@ No Windows, se `pnpm --version` ainda mostrar uma instalação global antiga, lo
    pnpm infra:development:up
    ```
 
-4. Gere o Prisma Client e crie a primeira migration depois de adicionar seus modelos:
+4. Gere o Prisma Client e aplique as migrations existentes:
 
    ```bash
    pnpm db:generate
@@ -131,7 +139,7 @@ Também é possível executar tudo em containers com `pnpm stack:development:up`
 Copy-Item .env.staging.example .env.staging
 ```
 
-Troque as credenciais no arquivo criado. O template usa `localhost:3100` para
+Troque as credenciais no arquivo criado. O exemplo usa `localhost:3100` para
 permitir a execução simultânea com desenvolvimento. Depois execute:
 
 ```bash
@@ -150,7 +158,7 @@ pnpm stack:staging:down
 Copy-Item .env.production.example .env.production
 ```
 
-Para teste local simultâneo, o template usa `localhost:3200`. Preencha segredos
+Para teste local simultâneo, o exemplo usa `localhost:3200`. Preencha segredos
 fortes e valide a configuração:
 
 ```bash
@@ -178,11 +186,15 @@ público. Consulte a [lógica de portas e isolamento dos ambientes](docs/environ
 | `pnpm db:studio`                | Abre o Prisma Studio no ambiente local          |
 | `pnpm format`                   | Formata arquivos suportados                     |
 
-## Regras para manter a base reutilizável
+## Regras para evoluir o SIPAT
 
 - Não coloque regra de negócio em `packages/config`, `contracts` ou `utils`.
 - Uma aplicação não deve importar arquivos internos de outra aplicação.
 - Compartilhe contratos estáveis por pacotes, usando dependências `workspace:*`.
+- Implemente os módulos patrimoniais a partir de requisitos e regras de negócio
+  versionados, sem inferir semânticas ausentes.
+- Registre no roadmap correspondente cada nova capacidade relevante antes de
+  alterar contratos externos.
 - Crie migrations somente em desenvolvimento; staging e produção usam `migrate deploy`.
 - Não versione `.env.development`, `.env.staging` ou `.env.production`.
 - Trate imagens Docker como artefatos imutáveis e use `IMAGE_TAG` por versão/commit.

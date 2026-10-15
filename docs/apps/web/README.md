@@ -4,13 +4,13 @@ Este diretório documenta o padrão de desenvolvimento de `apps/web`.
 
 ## Objetivo
 
-A aplicação usa Next.js com App Router e começa sem domínio de negócio. O
-projeto derivado adiciona páginas e features conforme requisitos concretos,
-preservando as fronteiras entre UI, contratos e integração HTTP.
+A aplicação usa Next.js com App Router. As páginas e features do SIPAT serão
+adicionadas conforme entregas concretas dos requisitos, preservando as
+fronteiras entre UI, contratos e integração HTTP.
 
 ## Estado atual
 
-- `/` apresenta a base e links para os health checks;
+- `/` apresenta a infraestrutura atual e links para os health checks;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;
@@ -26,8 +26,8 @@ preservando as fronteiras entre UI, contratos e integração HTTP.
 - Playwright cobre home, acessibilidade automatizável e headers de segurança;
 - não existem páginas, formulários, hooks, cache remoto ou regras de domínio.
 
-O exemplo completo que validou páginas, operações, formulários e testes está
-preservado em `exemplo-produto-v1.0.0`.
+As páginas, operações e formulários do domínio SIPAT ainda não estão
+implementados.
 
 ## Princípios
 
@@ -70,7 +70,7 @@ esse template.
 | Ordem de trabalho e verificações              | [Testes e workflow](./testing-and-workflow.md)                              |
 | Fontes oficiais                               | [Referências](./references.md)                                              |
 
-## Decisões pendentes por projeto
+## Decisões pendentes do SIPAT
 
 - identidade visual, temas e tokens definitivos;
 - biblioteca de formulários e estado remoto;

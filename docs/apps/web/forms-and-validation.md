@@ -1,10 +1,11 @@
 # Formulários e validação
 
-## Estado da base
+## Estado atual
 
-A base limpa não possui formulários de domínio e não instala React Hook Form ou
-resolvers. Escolha a solução quando uma feature concreta exigir gerenciamento
-de formulário; valide compatibilidade com React e Zod nas versões do projeto.
+O SIPAT ainda não possui formulários de domínio e não instala React Hook Form
+ou resolvers. Escolha a solução quando uma entrega concreta exigir
+gerenciamento de formulário; valide compatibilidade com React e Zod nas
+versões do projeto.
 
 Independentemente da biblioteca, dados externos devem ser validados no boundary
 e a API deve repetir a validação. Validação no navegador melhora a experiência,

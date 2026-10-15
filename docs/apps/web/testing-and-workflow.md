@@ -50,7 +50,7 @@ endpoint, autenticação, formato de erro ou cache para desbloquear uma tela.
 
 ## Ferramentas atuais
 
-A base usa:
+O SIPAT usa:
 
 - Vitest 5 como runner;
 - React Testing Library para hooks e componentes;
@@ -61,7 +61,7 @@ A base usa:
 O script de typecheck executa `next typegen` antes de `tsc --noEmit`, evitando
 que tipos de rota antigos em `.next` sejam usados pela verificação.
 
-A base também usa:
+O SIPAT também usa:
 
 - Playwright Test para fluxos E2E no navegador;
 - Chromium como projeto automatizado inicial;
@@ -136,7 +136,7 @@ encerra o servidor ao concluir. `PLAYWRIGHT_PORT` altera a porta local e
 `PLAYWRIGHT_BASE_URL` desativa o servidor local e aponta a suíte para uma URL
 externa.
 
-O script `test` executa `vitest run`. Na base limpa, a suíte cobre configuração
+O script `test` executa `vitest run`. No estado atual, a suíte cobre configuração
 pública, cliente HTTP, normalização de rotas e operações, Web Vitals e
 observabilidade. Novas features devem adicionar testes proporcionais aos seus
 contratos e estados.
@@ -161,7 +161,7 @@ timeout finitos. A suíte foi aprovada localmente e no GitHub Actions.
 
 O suporte de rede pode interceptar `/api/backend` e verifica expectations por
 método e path. Ele deve ser usado por novas features sem transformar fixtures
-de exemplo em parte permanente da base.
+de uma entrega em parte permanente da infraestrutura comum.
 
 ### Verificação local do artefato standalone
 

@@ -1,4 +1,4 @@
-# Documentação do projeto
+# Documentação do SIPAT
 
 Este diretório concentra a documentação técnica compartilhada por pessoas e
 agentes durante o desenvolvimento.
@@ -7,10 +7,11 @@ agentes durante o desenvolvimento.
 
 Os documentos abaixo tratam de decisões transversais e permanecem na raiz:
 
-- [Arquitetura da base](./architecture.md);
+- [Arquitetura do SIPAT](./architecture.md);
 - [Ambientes](./environments.md);
 - [Como adicionar aplicações e pacotes](./adding-apps.md);
-- [Manutenção da base e versionamento do exemplo](./template-and-example.md).
+- [Visão geral do SIPAT](./sipat.md);
+- [Requisitos do SIPAT](./requisitos-SIPAT.md).
 
 ## Áreas específicas
 

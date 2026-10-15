@@ -9,13 +9,15 @@
 
 ## Arquivos locais
 
-| Ambiente        | Template versionado        | Arquivo ignorado   |
+| Ambiente        | Exemplo versionado         | Arquivo ignorado   |
 | --------------- | -------------------------- | ------------------ |
 | Desenvolvimento | `.env.development.example` | `.env.development` |
 | Homologação     | `.env.staging.example`     | `.env.staging`     |
 | Produção        | `.env.production.example`  | `.env.production`  |
 
-Os templates são documentação e devem usar valores fictícios seguros. Os arquivos sem `.example` nunca devem ser commitados.
+Os arquivos de exemplo são documentação e devem usar valores fictícios seguros.
+Os arquivos sem `.example` nunca devem ser commitados. A identidade usa `sipat`
+nos valores técnicos e `SIPAT` no nome público exibido pela Web.
 
 ## Portas
 

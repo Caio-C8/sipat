@@ -54,7 +54,7 @@ O funcionamento de Guards, Interceptors, Filters, Middleware e Pipes está em
 | Controle exclusivo de um domínio        | `apps/api/src/modules/<dominio>` |
 | Contrato compartilhado com consumidores | `packages/contracts`             |
 
-Não crie diretórios vazios na estrutura padrão. Adicione `guards`,
+Não crie diretórios vazios antecipadamente. Adicione `guards`,
 `interceptors`, `filters`, `middleware`, `pipes` ou `strategies` quando existir
 uma responsabilidade concreta.
 

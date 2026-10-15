@@ -117,12 +117,12 @@ aplicação por conveniência.
 
 ## Autenticação e CSRF
 
-O exemplo didático atual não possui credencial de autenticação e `WEB-005` não
-adicionou identidade, sessão ou proteção CSRF. Portanto, esta seção não
-descreve uma capacidade já implementada nem um critério de conclusão dessa
-entrega; ela preserva o baseline obrigatório para aplicações derivadas
-autenticadas. Sem autorização, as mutações públicas continuam acessíveis a
-qualquer cliente que alcance a API.
+O estado atual do SIPAT não possui credencial de autenticação e `WEB-005` não
+adicionou identidade, sessão ou proteção CSRF. Portanto, esta seção não descreve
+uma capacidade já implementada nem um critério de conclusão dessa entrega; ela
+preserva o baseline obrigatório para os futuros fluxos autenticados. Sem
+autorização, as mutações públicas continuam acessíveis a qualquer cliente que
+alcance a API.
 
 O baseline para navegadores é obrigatório: credenciais de autenticação ficam em
 cookies `HttpOnly` e nunca em `localStorage`, `sessionStorage` ou estado
@@ -224,11 +224,11 @@ Cubra fluxos críticos:
 Mocks não substituem pelo menos uma verificação real do acordo entre contratos,
 web e API.
 
-Na base atual, o cliente HTTP é testado com `fetch` injetado para cobrir URL,
+No estado atual, o cliente HTTP é testado com `fetch` injetado para cobrir URL,
 query, JSON, timeout, cancelamento, erros públicos, validação de response e
 `204 No Content`. Playwright cobre a página inicial, acessibilidade automatizada
 e headers de segurança. A integração Web → rewrite → API é verificada pelo
-health check e deve ganhar testes do novo domínio quando suas operações forem
+health check e deve ganhar testes do domínio SIPAT quando suas operações forem
 implementadas.
 
 O mock estrito de `/api/backend` permanece disponível como infraestrutura E2E:

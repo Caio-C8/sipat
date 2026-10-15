@@ -1,15 +1,14 @@
 # Páginas e roteamento
 
-## Estado da base
+## Estado atual
 
-A aplicação limpa expõe:
+A aplicação Web do SIPAT expõe apenas:
 
 - `/`: home estática e neutra com links para os health checks;
 - `/api/health`: health check da camada Web;
 - `/api/backend/*`: rewrite interno para a API, não uma página navegável.
 
-Não existem rotas dinâmicas, paralelas ou interceptadas no baseline. O exemplo
-completo permanece consultável na tag `exemplo-produto-v1.0.0`.
+Ainda não existem rotas de domínio, dinâmicas, paralelas ou interceptadas.
 
 ## Convenções
 

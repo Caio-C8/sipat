@@ -1,6 +1,6 @@
 # Performance da aplicação Web
 
-## Estado da base
+## Estado atual
 
 A home é estática e a rota `/api/health` é dinâmica. Não há listagem, cache de
 domínio, provider global de estado remoto nem biblioteca de formulários no
@@ -29,8 +29,8 @@ dinâmicas, analise bundle após dependências relevantes e teste rede e CPU
 limitadas. Em produção, acompanhe percentis — especialmente p75 de LCP, INP e
 CLS — segmentados por ambiente e rota normalizada.
 
-Metas numéricas pertencem ao produto derivado. A base exige medição,
-justificativa para regressões e labels sem credenciais, dados pessoais, IDs ou
-URLs brutas.
+As metas numéricas do SIPAT ainda precisam ser definidas por fluxo e ambiente.
+A arquitetura exige medição, justificativa para regressões e labels sem
+credenciais, dados pessoais, IDs ou URLs brutas.
 
 Consulte também [Performance](../../performance/README.md).

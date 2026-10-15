@@ -7,19 +7,18 @@ CSRF e respostas da API pertencem também à
 
 ## Estado atual
 
-A base limpa não possui rotas de domínio. Não há autenticação, autorização,
-cookie de sessão ou proteção CSRF implementados. Isso é uma limitação consciente
-e não um baseline seguro para uma aplicação que introduza identidade ou dados
-protegidos.
+O SIPAT ainda não possui rotas de domínio. Não há autenticação, autorização,
+cookie de sessão ou proteção CSRF implementados. Isso é uma limitação atual e
+não representa o atendimento do RF01 ou do RNF05.
 
 `browserApiClient` usa apenas a origem relativa `/api/backend` e não acessa
 `API_INTERNAL_URL`. `serverApiClient` importa `server-only`. A interface valida
 responses e apresenta mensagens públicas, sem expor o corpo bruto ou o `cause`
 interno dos erros.
 
-A aplicação derivada que introduza identidade ou dados protegidos deve definir e
-testar esses controles antes de produção. CORS, CSP e a ocultação de controles
-na interface não transformam uma mutação pública em uma operação autorizada.
+Antes de introduzir identidade ou dados protegidos no SIPAT, defina e teste
+esses controles. CORS, CSP e a ocultação de controles na interface não
+transformam uma mutação pública em uma operação autorizada.
 
 ## Fronteira server e client
 
@@ -115,7 +114,7 @@ no build de produção:
 default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
 ```
 
-`'unsafe-inline'` ainda é permitido para scripts e estilos no exemplo atual.
+`'unsafe-inline'` ainda é permitido para scripts e estilos no estado atual.
 Uma aplicação que precise de uma política mais estrita deve avaliar nonces ou
 hashes junto da estratégia de renderização e cache, e não apenas remover a
 diretiva sem testar o build real.
@@ -146,11 +145,9 @@ ele aumenta segurança e não exponha senha em logs ou estado persistente.
 
 ## Checklist
 
-No exemplo público, os itens de autenticação, autorização e CSRF abaixo estão
-fora do escopo por decisão explícita; eles não devem ser interpretados como
-implementados. Os demais itens já se aplicam ao exemplo, e o conjunto completo
-passa a ser aplicável quando um projeto derivado introduzir identidade ou dados
-protegidos.
+No estado atual, os itens de autenticação, autorização e CSRF abaixo ainda não
+estão implementados. O conjunto completo é obrigatório à medida que o SIPAT
+introduzir identidade, operações protegidas e dados patrimoniais.
 
 - nenhum segredo no bundle;
 - dados passados ao cliente minimizados;

@@ -36,9 +36,9 @@ apps/web/
 └── instrumentation-client.ts
 ```
 
-A base limpa não possui rota nem feature de domínio. Ela mantém a home, health
-check, clientes HTTP, configuração pública, observabilidade, testes e primitives
-visuais reutilizáveis.
+O estado atual ainda não possui rota nem feature de domínio do SIPAT. Ele
+mantém a home técnica, health check, clientes HTTP, configuração pública,
+observabilidade, testes e primitives visuais reutilizáveis.
 
 ## Responsabilidades
 
@@ -63,9 +63,9 @@ acesso direto à infraestrutura no servidor.
 
 Estado de rota pertence à URL; estado visual temporário pertence ao componente;
 estado remoto deve ter uma estratégia explícita de busca, invalidação e erro.
-A base não fixa uma biblioteca de estado remoto. Ao introduzir uma, limite seu
-provider ao segmento que realmente a utiliza e documente retries, stale time e
-invalidação.
+O SIPAT ainda não fixa uma biblioteca de estado remoto. Ao introduzir uma,
+limite seu provider ao segmento que realmente a utiliza e documente retries,
+stale time e invalidação.
 
 ## Evolução por domínio
 

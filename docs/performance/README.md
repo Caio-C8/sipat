@@ -3,9 +3,8 @@
 ## Objetivo
 
 Performance é requisito de arquitetura, implementação, teste e operação. Este
-diretório define um baseline reutilizável para qualquer projeto derivado sem
-inventar metas numéricas que dependem do produto, da infraestrutura, do volume
-de dados ou do perfil dos usuários.
+diretório define o baseline técnico do SIPAT sem inventar metas numéricas que
+dependem da infraestrutura, do volume de dados ou do perfil dos usuários.
 
 O objetivo não é otimizar tudo antecipadamente. É impedir crescimento sem
 limites, medir os caminhos relevantes, localizar gargalos e exigir evidência
@@ -49,9 +48,9 @@ outros.
 
 ## Metas e orçamento
 
-A estrutura padrão não define um p95 universal para a API, tamanho máximo de
-upload, limite de paginação ou número de conexões. Esses valores dependem do
-projeto e devem ser registrados antes de produção.
+O SIPAT ainda não define um p95 universal para a API, tamanho máximo de upload,
+limite de paginação ou número de conexões. Esses valores dependem de cada fluxo
+e ambiente e devem ser registrados antes de produção.
 
 Use uma tabela por fluxo crítico:
 
@@ -63,11 +62,11 @@ Use uma tabela por fluxo crítico:
 | saturação do gargalo | TBD  | TBD    | TBD                | TBD              |
 | tamanho de payload   | TBD  | TBD    | TBD                | TBD              |
 
-`TBD` não é uma meta válida para liberar produção. Ele é apenas o marcador da
-estrutura padrão até o contexto do projeto existir.
+`TBD` não é uma meta válida para liberar produção. Ele é apenas um marcador até
+o contexto operacional de cada fluxo do SIPAT ser conhecido.
 
 Os Core Web Vitals são a exceção útil: possuem limites públicos para classificar
-experiência web e formam um baseline inicial. O projeto ainda pode adotar metas
+experiência web e formam um baseline inicial. O SIPAT ainda pode adotar metas
 mais restritas.
 
 ## Ambientes e comparação

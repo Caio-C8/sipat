@@ -2,12 +2,11 @@
 
 ## Estado operacional
 
-A branch `main` contém somente o baseline reutilizável. A Web possui página
-inicial, health check, proxy para a API, clientes HTTP, configuração pública,
-segurança, observabilidade, primitives visuais e testes de infraestrutura.
+A Web do SIPAT possui somente a infraestrutura inicial: página inicial técnica,
+health check, proxy para a API, clientes HTTP, configuração pública, segurança,
+observabilidade, primitives visuais e testes de infraestrutura.
 
-Não existem rotas ou dependências de domínio. O exemplo anterior pode ser
-consultado em `exemplo-produto-v1.0.0`.
+Ainda não existem rotas ou dependências do domínio patrimonial.
 
 ## Antes da primeira feature
 
@@ -18,7 +17,7 @@ consultado em `exemplo-produto-v1.0.0`.
 5. implemente operação, UI e testes na mesma fronteira verificável;
 6. atualize este handoff com o estado efetivamente entregue.
 
-## Verificação do baseline
+## Verificação da infraestrutura atual
 
 ```bash
 pnpm --filter @repo/web lint

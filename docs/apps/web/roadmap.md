@@ -13,14 +13,11 @@
 - [x] Playwright configurado para o build de produção.
 - [x] Testes de home, acessibilidade automatizável e headers de segurança.
 
-## Objetivos ativos
+## Próximos objetivos
 
-Nenhum objetivo de domínio está ativo na estrutura padrão. O projeto derivado
-deve registrar uma entrega antes de implementar uma nova página ou integração
-relevante.
+Nenhuma entrega de domínio do SIPAT está implementada na Web. Registre um
+objetivo antes de implementar uma nova página ou integração relevante e
+vincule-o aos [requisitos](../../requisitos-SIPAT.md) correspondentes.
 
 Cada objetivo registra contexto, escopo, estados da interface, contratos e
 endpoints afetados, critérios de acessibilidade, segurança, performance e testes.
-
-O exemplo completo usado para validar este baseline está preservado em
-`exemplo-produto-v1.0.0`.

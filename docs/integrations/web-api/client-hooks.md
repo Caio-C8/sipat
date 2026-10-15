@@ -113,8 +113,8 @@ permissões ou efeitos distintos.
 
 ## Biblioteca de estado remoto
 
-A base limpa não escolhe uma biblioteca de estado remoto sem um domínio
-consumidor. Quando a primeira feature interativa exigir cache, deduplicação,
+A infraestrutura atual não escolhe uma biblioteca de estado remoto sem um fluxo
+consumidor. Quando a primeira feature interativa do SIPAT exigir cache, deduplicação,
 retry e invalidação, compare as alternativas com os requisitos reais e
 documente:
 

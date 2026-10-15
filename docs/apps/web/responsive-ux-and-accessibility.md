@@ -1,9 +1,9 @@
 # Responsividade, UX e acessibilidade
 
-## Estado da base
+## Estado atual
 
-A home usa uma composição simples e responsiva para apresentar a estrutura e os
-health checks. Ela não contém fluxo, formulário ou modal de domínio. As
+A home usa uma composição simples e responsiva para apresentar a infraestrutura
+e os health checks. Ela não contém fluxo, formulário ou modal de domínio. As
 primitives mantidas em `components/ui` são infraestrutura visual; cada nova
 composição precisa ser verificada no contexto real.
 

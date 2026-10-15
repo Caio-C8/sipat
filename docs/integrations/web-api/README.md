@@ -34,12 +34,12 @@ No estado atual:
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
 - ainda não existem operações, hooks ou política de cache de domínio;
-- autenticação, transporte de identidade e CSRF continuam dependentes do novo
-  projeto.
+- autenticação, transporte de identidade e CSRF ainda precisam ser definidos e
+  implementados para o SIPAT.
 
 A integração básica pode ser verificada por
-`GET /api/backend/health`. O exemplo completo de operações e hooks permanece na
-tag `exemplo-produto-v1.0.0`.
+`GET /api/backend/health`. As operações e os hooks do domínio SIPAT ainda não
+existem.
 
 ## Transporte HTTP
 
@@ -69,8 +69,8 @@ baseline.
 | servidor Next | `${API_INTERNAL_URL}/api` | sim, quando autorizado | encaminhamento explícito |
 
 Uma instância universal que detecta `window` pode misturar código server-only
-no bundle e esconder decisões de credenciais. A base usa a mesma abstração com
-duas instâncias centrais, uma por runtime.
+no bundle e esconder decisões de credenciais. A integração usa a mesma
+abstração com duas instâncias centrais, uma por runtime.
 
 ## Operações e estado remoto
 

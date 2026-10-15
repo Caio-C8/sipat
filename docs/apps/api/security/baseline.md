@@ -2,14 +2,14 @@
 
 ## Finalidade
 
-O baseline reúne controles que normalmente pertencem à aplicação inteira. Cada
-projeto derivado deve decidir quais se aplicam, configurar valores por ambiente
-e registrar exceções justificadas.
+O baseline reúne controles que normalmente pertencem à aplicação inteira. O
+SIPAT deve decidir quais se aplicam, configurar valores por ambiente e registrar
+exceções justificadas.
 
-A base não possui rotas de domínio, login, usuários, sessão, autenticação,
-autorização ou CSRF. Os controles de identidade descritos neste documento não
-estão implementados; devem ser aplicados e testados quando uma aplicação
-derivada introduzir identidade ou dados protegidos.
+O estado atual não possui rotas de domínio, login, usuários, sessão,
+autenticação, autorização ou CSRF. Os controles de identidade descritos neste
+documento não estão implementados; devem ser aplicados e testados quando o SIPAT
+introduzir identidade ou dados protegidos.
 
 A API restringe origens por `CORS_ORIGINS`, mantém `credentials: false`, limita
 métodos e headers e expõe somente `X-Request-Id`. Essa política protege a

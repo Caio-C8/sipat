@@ -28,7 +28,7 @@ mapper antes de sair do controller.
 Segurança e performance participam desse fluxo desde os contratos e queries até
 a resposta e a observabilidade; não são revisões executadas somente ao final.
 
-## Estado atual da base
+## Estado atual do SIPAT
 
 No estado atual:
 
@@ -44,16 +44,14 @@ No estado atual:
   `X-Request-Id` ao navegador;
 - `DatabaseModule` cria, exporta e encerra um único Prisma Client quando um
   módulo consumidor o importa;
-- a base vazia não importa `DatabaseModule` diretamente em `AppModule`;
-- o schema Prisma não contém models de domínio;
+- o estado atual não importa `DatabaseModule` diretamente em `AppModule`;
+- o schema Prisma contém os models de domínio, ainda sem módulos consumidores
+  implementados na API;
 - testes unitários cobrem filtro e middleware, e testes E2E cobrem health,
   request ID, erro público e CORS.
 
-O exemplo completo que validou modules, DTOs, services, repositories, mappers e
-rotas permanece disponível na tag `exemplo-produto-v1.0.0`.
-
 Os exemplos desta documentação representam o padrão desejado, não código já
-implementado na base vazia.
+implementado no SIPAT.
 
 ## Pré-requisitos para um módulo
 

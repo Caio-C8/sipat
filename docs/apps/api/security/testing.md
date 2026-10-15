@@ -4,12 +4,12 @@
 
 Antes de implementar uma rota, registre uma matriz de acesso com rota, estado,
 exposição pública, identidade, permissão, regra por recurso, campos sensíveis e
-limites especiais. A base possui somente o health check público; não use essa
+limites especiais. O SIPAT possui somente o health check público; não use essa
 exposição como precedente para rotas de domínio. Uma coluna sem decisão deve
 ser tratada como pendência, não como autorização implícita.
 
 Os testes de autenticação, autorização e CSRF descritos abaixo passam a ser
-aplicáveis quando uma aplicação derivada adotar esses controles.
+aplicáveis quando o SIPAT adotar esses controles.
 
 Os testes atuais confirmam que uma origem configurada recebe os headers CORS,
 que o preflight respeita os métodos e headers permitidos e que uma origem fora

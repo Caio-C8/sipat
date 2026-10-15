@@ -73,14 +73,14 @@ dependências e estilos sem consumidor.
 ### Estado implementado
 
 `components.json` usa o estilo `radix-nova`, Tailwind CSS 4, CSS variables,
-ícones Lucide e aliases locais. A base preserva as primitives genéricas
+ícones Lucide e aliases locais. A infraestrutura atual preserva as primitives genéricas
 `AlertDialog`, `Alert`, `Badge`, `Button`, `Checkbox`, `Dialog`, `Field`,
 `Input`, `Label`, `RadioGroup`, `Select`, `Separator`, `Skeleton`, `Table`,
 `Textarea` e `Toaster`.
 
-Não há composição de domínio no baseline. Ao iniciar uma aplicação derivada,
-remova primitives que não forem usadas ou mantenha-as somente quando fizerem
-parte conscientemente do kit visual do projeto. A presença de uma primitive não
+Não há composição de domínio no baseline. Ao iniciar as telas do SIPAT, remova
+primitives que não forem usadas ou mantenha-as somente quando fizerem parte
+conscientemente do kit visual do produto. A presença de uma primitive não
 obriga seu uso em toda situação; controles nativos podem ser mais adequados.
 
 ### Toasts

@@ -25,11 +25,9 @@ A regra central é:
 O package se chama `@repo/contracts`, é consumido por `apps/web` e `apps/api` e
 usa Zod 4 para contratos runtime. Ele possui testes próprios executados por
 `tsx` e entrega somente o baseline genérico de respostas, erros, paginação e
-health check. Contratos de domínio devem ser adicionados pelo projeto derivado
-quando sua semântica estiver definida.
-
-O exemplo completo que validou essa arquitetura permanece disponível na tag
-`exemplo-produto-v1.0.0`, sem fazer parte da API pública atual.
+health check. Os contratos do SIPAT devem ser adicionados por entrega, depois de
+confirmar sua semântica nos [requisitos](../requisitos-SIPAT.md) e registrar o
+objetivo correspondente no roadmap.
 
 Os documentos deste diretório descrevem tanto as decisões aprovadas quanto o
 plano para construir a camada de validação. Exemplos marcados como conceituais

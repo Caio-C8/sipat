@@ -1,4 +1,4 @@
-# Arquitetura da base
+# Arquitetura do SIPAT
 
 ## Limites
 
@@ -17,13 +17,16 @@ Não existe um pacote `ui` inicialmente porque componentes React para web e comp
 
 ## Banco de dados
 
-O schema começa sem modelos. Adicione somente entidades do novo domínio. A
-aplicação da API também começa desacoplada do banco para que o health check
-continue útil durante falhas de infraestrutura.
+O schema atual representa as entidades, enums e relações patrimoniais previstas
+no diagrama do SIPAT. Os nomes físicos de tabelas e colunas usam `snake_case`,
+com tabelas no plural, por meio de `@@map` e `@map`; os nomes da API Prisma
+permanecem em PascalCase e camelCase. A aplicação da API permanece desacoplada
+do banco enquanto não houver módulo de domínio consumidor, para que o health
+check continue útil durante falhas de infraestrutura.
 
 Em aplicações NestJS, o módulo de persistência instancia
 `createDatabaseClient()` e encerra a conexão no shutdown. Cada módulo de domínio
-que usa persistência importa esse módulo explicitamente; a base vazia não o
+que usa persistência importa esse módulo explicitamente; o estado atual não o
 importa em `AppModule` apenas para manter uma conexão ociosa. Evite um singleton
 global escondido em importações, pois isso atrapalha testes, scripts e builds.
 
