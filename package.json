@@ -1,8 +1,8 @@
 {
-  "name": "project-starter",
+  "name": "sipat",
   "version": "0.1.0",
   "private": true,
-  "description": "Base reutilizável para aplicações web, APIs e apps mobile.",
+  "description": "Sistema de Gestão Patrimonial da Câmara Municipal de Patos de Minas.",
   "license": "UNLICENSED",
   "engines": {
     "node": "24.19.0",

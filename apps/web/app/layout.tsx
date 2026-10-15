@@ -15,7 +15,8 @@ export const metadata: Metadata = {
     default: appName,
     template: `%s | ${appName}`,
   },
-  description: "Base reutilizável para iniciar uma nova aplicação.",
+  description:
+    "Sistema de Gestão Patrimonial da Câmara Municipal de Patos de Minas.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

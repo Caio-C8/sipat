@@ -3,7 +3,7 @@ import { createDatabaseClient } from "../src";
 const database = createDatabaseClient();
 
 async function main() {
-  console.info("No seed data configured. Add project-specific records here.");
+  console.info("Nenhum dado inicial do SIPAT foi configurado.");
 }
 
 main()

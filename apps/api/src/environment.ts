@@ -9,7 +9,7 @@ const environmentSchema = z.object({
     .enum(["development", "staging", "production", "test"])
     .default("development"),
 
-  APP_NAME: z.string().min(1).default("project-starter"),
+  APP_NAME: z.string().min(1).default("sipat"),
 
   APP_VERSION: z.string().min(1).default("0.1.0"),
 

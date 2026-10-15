@@ -1,6 +1,6 @@
 import type { AppEnvironment } from "@repo/contracts";
 
-const DEFAULT_APP_NAME = "Project Starter";
+const DEFAULT_APP_NAME = "SIPAT";
 const DEFAULT_APP_ENVIRONMENT: AppEnvironment = "development";
 
 const APP_ENVIRONMENTS = [

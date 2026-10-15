@@ -14,7 +14,7 @@ describe("obterConfiguracaoPublica", () => {
 
   it("usa os valores padrão quando as variáveis não foram definidas", () => {
     expect(obterConfiguracaoPublica(undefined, undefined)).toEqual({
-      appName: "Project Starter",
+      appName: "SIPAT",
       environment: "development",
     });
   });

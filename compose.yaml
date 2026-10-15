@@ -1,4 +1,4 @@
-name: ${COMPOSE_PROJECT_NAME:-project-starter}
+name: ${COMPOSE_PROJECT_NAME:-sipat}
 
 x-app-environment: &app-environment
   NODE_ENV: ${NODE_ENV}
@@ -25,7 +25,7 @@ services:
       - internal
 
   migrate:
-    image: ${COMPOSE_PROJECT_NAME:-project-starter}-migration:${IMAGE_TAG:-local}
+    image: ${COMPOSE_PROJECT_NAME:-sipat}-migration:${IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/api.Dockerfile
@@ -40,7 +40,7 @@ services:
     restart: "no"
 
   api:
-    image: ${COMPOSE_PROJECT_NAME:-project-starter}-api:${IMAGE_TAG:-local}
+    image: ${COMPOSE_PROJECT_NAME:-sipat}-api:${IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/api.Dockerfile
@@ -67,7 +67,7 @@ services:
       - internal
 
   web:
-    image: ${COMPOSE_PROJECT_NAME:-project-starter}-web:${IMAGE_TAG:-local}
+    image: ${COMPOSE_PROJECT_NAME:-sipat}-web:${IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/web.Dockerfile

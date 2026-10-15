@@ -8,6 +8,6 @@ export default defineConfig({
   datasource: {
     url:
       process.env.DATABASE_URL ??
-      "postgresql://app:app@localhost:5432/app?schema=public",
+      "postgresql://sipat:sipat@localhost:5432/sipat?schema=public",
   },
 });

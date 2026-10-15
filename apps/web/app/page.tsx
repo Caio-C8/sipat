@@ -6,7 +6,7 @@ const { appName, environment } = publicAppConfig;
 
 export const metadata: Metadata = {
   title: `Início | ${appName}`,
-  description: "Página inicial da estrutura padrão do projeto.",
+  description: "Página inicial da infraestrutura do SIPAT.",
 };
 
 const checks = [
@@ -32,9 +32,9 @@ export default function Home() {
           <h1 className={styles.title}>{appName}</h1>
 
           <p className={styles.lead}>
-            A infraestrutura está pronta para receber o domínio da nova
-            aplicação. Use as verificações abaixo para confirmar a Web e a
-            integração com a API.
+            A infraestrutura inicial do SIPAT está pronta para receber os
+            módulos patrimoniais. Use as verificações abaixo para confirmar a
+            Web e a integração com a API.
           </p>
         </section>
 
@@ -43,7 +43,7 @@ export default function Home() {
           aria-labelledby="checks-title"
         >
           <h2 id="checks-title" className={styles.sectionTitle}>
-            Verificações da base
+            Verificações da infraestrutura
           </h2>
 
           <div className={styles.checksGrid}>
