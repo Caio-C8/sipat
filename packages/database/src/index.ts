@@ -12,5 +12,48 @@ export function createDatabaseClient(
   return new PrismaClient({ adapter });
 }
 
-export { Prisma, PrismaClient } from "@prisma/client";
+export {
+  MetodoDepreciacao,
+  PerfilUsuario,
+  Prisma,
+  PrismaClient,
+  SituacaoItemInventario,
+  StatusCorrecaoItemInventario,
+  StatusInventario,
+  StatusManutencao,
+  StatusPatrimonio,
+  StatusSetorInventario,
+  StatusVerificacaoItemInventario,
+  TipoBaixa,
+  TipoCorrecaoItemInventario,
+  TipoIncorporacao,
+  TipoManutencao,
+  TipoMembroComissao,
+} from "@prisma/client";
+export type {
+  BaixaPatrimonio,
+  Comissao,
+  DepreciacaoPatrimonio,
+  DevolucaoPatrimonio,
+  EmprestimoPatrimonio,
+  Especie,
+  Fornecedor,
+  Inventario,
+  ItemInventario,
+  ItemManutencao,
+  Manutencao,
+  MembroComissao,
+  Natureza,
+  NotaFiscal,
+  ParametroDepreciacao,
+  Patrimonio,
+  ProcessoCompra,
+  ReavaliacaoPatrimonio,
+  Responsavel,
+  Setor,
+  SetorInventario,
+  SituacaoContabilPatrimonio,
+  TransferenciaPatrimonio,
+  Usuario,
+} from "./types";
 export type DatabaseClient = ReturnType<typeof createDatabaseClient>;

@@ -7,4 +7,622 @@ datasource db {
   provider = "postgresql"
 }
 
-// Adicione aqui apenas modelos que pertençam ao domínio do novo projeto.
+enum PerfilUsuario {
+  ADMINISTRADOR
+  DIRETOR_PATRIMONIO
+}
+
+enum TipoMembroComissao {
+  PRESIDENTE
+  MEMBRO
+}
+
+enum TipoIncorporacao {
+  AQUISICAO
+  DOACAO
+  TRANSFERENCIA
+  CESSAO
+  COMODATO
+  PERMUTA
+  PRODUCAO_INTERNA
+  OUTROS
+}
+
+enum StatusPatrimonio {
+  ATIVO
+  BAIXADO
+  EMPRESTADO
+  EM_MANUTENCAO
+}
+
+enum TipoBaixa {
+  ALIENACAO
+  INVERSIBILIDADE
+  PERDA_FISICA
+  AJUSTE_CONTABIL
+}
+
+enum TipoManutencao {
+  PREVENTIVA
+  CORRETIVA
+}
+
+enum StatusManutencao {
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+enum StatusInventario {
+  FINALIZADO
+  PENDENTE
+  EM_ANDAMENTO
+}
+
+enum StatusSetorInventario {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDO
+}
+
+enum SituacaoItemInventario {
+  DIVERGENCIA
+  CORRETO
+  NAO_LOCALIZADO
+}
+
+enum StatusVerificacaoItemInventario {
+  VERIFICADO
+  PENDENTE
+}
+
+enum StatusCorrecaoItemInventario {
+  CORRIGIDO
+  PENDENTE
+}
+
+enum TipoCorrecaoItemInventario {
+  TRANSFERENCIA_CADASTRAL
+  RETORNO_AO_SETOR_CADASTRADO
+}
+
+enum MetodoDepreciacao {
+  LINEAR
+}
+
+model Usuario {
+  id     String        @id @default(uuid()) @db.Uuid
+  nome   String        @db.VarChar(100)
+  email  String        @unique @db.VarChar(150)
+  senha  String        @db.VarChar(255)
+  perfil PerfilUsuario
+  ativo  Boolean       @default(true)
+
+  ultimoLoginAt DateTime? @map("ultimo_login_at") @db.Timestamp(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt     DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById   String?   @map("created_by_id") @db.Uuid
+
+  createdBy              Usuario?                  @relation("UsuarioCriadoPor", fields: [createdById], references: [id])
+  usuariosCriados        Usuario[]                 @relation("UsuarioCriadoPor")
+  responsaveisCriados    Responsavel[]
+  naturezasCriadas       Natureza[]
+  especiesCriadas        Especie[]
+  processosCompraCriados ProcessoCompra[]
+  setoresCriados         Setor[]
+  manutencoesCriadas     Manutencao[]
+  transferenciasCriadas  TransferenciaPatrimonio[]
+  fornecedoresCriados    Fornecedor[]
+  comissoesCriadas       Comissao[]
+  emprestimosCriados     EmprestimoPatrimonio[]
+  inventariosCriados     Inventario[]
+  baixasCriadas          BaixaPatrimonio[]
+  patrimoniosCriados     Patrimonio[]
+  depreciacoesCriadas    DepreciacaoPatrimonio[]
+  reavaliacoesCriadas    ReavaliacaoPatrimonio[]
+  notasFiscaisCriadas    NotaFiscal[]
+
+  @@map("usuarios")
+}
+
+model Responsavel {
+  id        String  @id @default(uuid()) @db.Uuid
+  nome      String  @db.VarChar(100)
+  matricula String  @db.VarChar(20)
+  ativo     Boolean @default(true)
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  createdBy       Usuario          @relation(fields: [createdById], references: [id])
+  setores         Setor[]
+  membrosComissao MembroComissao[]
+
+  @@map("responsaveis")
+}
+
+model Natureza {
+  id              String  @id @default(uuid()) @db.Uuid
+  nome            String  @unique @db.VarChar(100)
+  nomeNormalizado String  @unique @map("nome_normalizado") @db.VarChar(100)
+  descricao       String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  createdById String    @map("created_by_id") @db.Uuid
+  createdBy   Usuario   @relation(fields: [createdById], references: [id])
+  especies    Especie[]
+
+  @@map("naturezas")
+}
+
+model Especie {
+  id              String  @id @default(uuid()) @db.Uuid
+  nome            String  @db.VarChar(100)
+  nomeNormalizado String  @unique @map("nome_normalizado") @db.VarChar(100)
+  descricao       String? @db.Text
+  naturezaId      String  @map("natureza_id") @db.Uuid
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  natureza    Natureza     @relation(fields: [naturezaId], references: [id])
+  createdBy   Usuario      @relation(fields: [createdById], references: [id])
+  patrimonios Patrimonio[]
+
+  @@map("especies")
+}
+
+model ProcessoCompra {
+  id             String   @id @default(uuid()) @db.Uuid
+  numeroProcesso String?  @map("numero_processo") @db.VarChar(50)
+  anoProcesso    Int?     @map("ano_processo") @db.SmallInt
+  numeroEmpenho  String?  @map("numero_empenho") @db.VarChar(50)
+  anoEmpenho     Int?     @map("ano_empenho") @db.SmallInt
+  valorTotal     Decimal? @map("valor_total") @db.Decimal(19, 7)
+  observacao     String?  @db.Text
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  createdBy    Usuario      @relation(fields: [createdById], references: [id])
+  notasFiscais NotaFiscal[]
+  patrimonios  Patrimonio[]
+
+  @@map("processos_compra")
+}
+
+model Setor {
+  id            String  @id @default(uuid()) @db.Uuid
+  nome          String  @db.VarChar(100)
+  sala          String? @db.VarChar(50)
+  ramal         String? @db.VarChar(10)
+  responsavelId String  @map("responsavel_id") @db.Uuid
+  ativo         Boolean @default(true)
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  responsavel                        Responsavel               @relation(fields: [responsavelId], references: [id])
+  createdBy                          Usuario                   @relation(fields: [createdById], references: [id])
+  patrimoniosAtuais                  Patrimonio[]
+  transferenciasComoSetorAntigo      TransferenciaPatrimonio[] @relation("TransferenciaSetorAntigo")
+  transferenciasComoSetorAtual       TransferenciaPatrimonio[] @relation("TransferenciaSetorAtual")
+  itensInventarioComoSetorEsperado   ItemInventario[]          @relation("ItemInventarioSetorEsperado")
+  itensInventarioComoSetorEncontrado ItemInventario[]          @relation("ItemInventarioSetorEncontrado")
+  setoresInventario                  SetorInventario[]
+
+  @@map("setores")
+}
+
+model Fornecedor {
+  id                String  @id @default(uuid()) @db.Uuid
+  razaoSocial       String  @map("razao_social") @db.VarChar(150)
+  nomeFantasia      String? @map("nome_fantasia") @db.VarChar(150)
+  nomeRepresentante String? @map("nome_representante") @db.VarChar(150)
+  cnpj              String? @unique @db.VarChar(20)
+  email             String? @db.VarChar(150)
+  telefone          String? @db.VarChar(30)
+  endereco          String? @db.Text
+  ativo             Boolean @default(true)
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  createdBy    Usuario      @relation(fields: [createdById], references: [id])
+  notasFiscais NotaFiscal[]
+  manutencoes  Manutencao[]
+
+  @@map("fornecedores")
+}
+
+model Comissao {
+  id                 String    @id @default(uuid()) @db.Uuid
+  nome               String    @db.VarChar(150)
+  descricao          String?   @db.Text
+  numeroAto          DateTime? @map("numero_ato") @db.Date
+  dataVigenciaInicio DateTime  @map("data_vigencia_inicio") @db.Date
+  dataVigenciaFim    DateTime  @map("data_vigencia_fim") @db.Date
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  createdBy      Usuario                   @relation(fields: [createdById], references: [id])
+  membros        MembroComissao[]
+  transferencias TransferenciaPatrimonio[]
+  emprestimos    EmprestimoPatrimonio[]
+  manutencoes    Manutencao[]
+  inventarios    Inventario[]
+  baixas         BaixaPatrimonio[]
+  devolucoes     DevolucaoPatrimonio[]
+  depreciacoes   DepreciacaoPatrimonio[]
+  reavaliacoes   ReavaliacaoPatrimonio[]
+
+  @@map("comissoes")
+}
+
+model MembroComissao {
+  id                 String              @id @default(uuid()) @db.Uuid
+  tipoMembroComissao TipoMembroComissao? @map("tipo_membro_comissao")
+  comissaoId         String              @map("comissao_id") @db.Uuid
+  responsavelId      String              @map("responsavel_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  comissao    Comissao    @relation(fields: [comissaoId], references: [id])
+  responsavel Responsavel @relation(fields: [responsavelId], references: [id])
+
+  @@unique([comissaoId, responsavelId])
+  @@map("membros_comissao")
+}
+
+model NotaFiscal {
+  id                     String   @id @default(uuid()) @db.Uuid
+  numeroNotaFiscal       String   @map("numero_nota_fiscal") @db.VarChar(50)
+  anoNotaFiscal          Int      @map("ano_nota_fiscal") @db.SmallInt
+  dataEmissao            DateTime @map("data_emissao") @db.Date
+  caminhoAnexoNotaFiscal String?  @map("caminho_anexo_nota_fiscal") @db.VarChar(500)
+  processoCompraId       String   @map("processo_compra_id") @db.Uuid
+  fornecedorId           String   @map("fornecedor_id") @db.Uuid
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  processoCompra ProcessoCompra @relation(fields: [processoCompraId], references: [id])
+  fornecedor     Fornecedor     @relation(fields: [fornecedorId], references: [id])
+  createdBy      Usuario        @relation(fields: [createdById], references: [id])
+
+  @@map("notas_fiscais")
+}
+
+model Patrimonio {
+  id                String           @id @default(uuid()) @db.Uuid
+  numeroPatrimonio  String           @unique @map("numero_patrimonio") @db.VarChar(50)
+  descricao         String           @db.Text
+  marca             String?          @db.VarChar(100)
+  modelo            String?          @db.VarChar(100)
+  numeroSerie       String?          @unique @map("numero_serie") @db.VarChar(100)
+  textoBusca        String?          @map("texto_busca") @db.Text
+  tipoIncorporacao  TipoIncorporacao @default(AQUISICAO) @map("tipo_incorporacao")
+  dataTombamento    DateTime         @map("data_tombamento") @db.Date
+  valorIncorporacao Decimal          @map("valor_incorporacao") @db.Decimal(19, 7)
+  status            StatusPatrimonio @default(ATIVO)
+  especieId         String           @map("especie_id") @db.Uuid
+  setorAtualId      String           @map("setor_atual_id") @db.Uuid
+  processoCompraId  String?          @map("processo_compra_id") @db.Uuid
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  especie               Especie                     @relation(fields: [especieId], references: [id])
+  setorAtual            Setor                       @relation(fields: [setorAtualId], references: [id])
+  processoCompra        ProcessoCompra?             @relation(fields: [processoCompraId], references: [id])
+  createdBy             Usuario                     @relation(fields: [createdById], references: [id])
+  situacaoContabil      SituacaoContabilPatrimonio?
+  parametrosDepreciacao ParametroDepreciacao[]
+  depreciacoes          DepreciacaoPatrimonio[]
+  reavaliacoes          ReavaliacaoPatrimonio[]
+  transferencias        TransferenciaPatrimonio[]
+  emprestimos           EmprestimoPatrimonio[]
+  itensManutencao       ItemManutencao[]
+  itensInventario       ItemInventario[]
+  baixas                BaixaPatrimonio[]
+
+  @@map("patrimonios")
+}
+
+model TransferenciaPatrimonio {
+  id                String   @id @default(uuid()) @db.Uuid
+  dataTransferencia DateTime @map("data_transferencia") @db.Timestamp(6)
+  observacao        String?  @db.Text
+  setorAntigoId     String   @map("setor_antigo_id") @db.Uuid
+  setorAtualId      String   @map("setor_atual_id") @db.Uuid
+  patrimonioId      String   @map("patrimonio_id") @db.Uuid
+  comissaoId        String   @map("comissao_id") @db.Uuid
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById String   @map("created_by_id") @db.Uuid
+
+  setorAntigo            Setor           @relation("TransferenciaSetorAntigo", fields: [setorAntigoId], references: [id])
+  setorAtual             Setor           @relation("TransferenciaSetorAtual", fields: [setorAtualId], references: [id])
+  patrimonio             Patrimonio      @relation(fields: [patrimonioId], references: [id])
+  comissao               Comissao        @relation(fields: [comissaoId], references: [id])
+  createdBy              Usuario         @relation(fields: [createdById], references: [id])
+  itemInventarioCorrecao ItemInventario?
+
+  @@map("transferencias_patrimoniais")
+}
+
+model EmprestimoPatrimonio {
+  id                    String    @id @default(uuid()) @db.Uuid
+  dataEmprestimo        DateTime  @map("data_emprestimo") @db.Timestamp(6)
+  dataPrevistaDevolucao DateTime? @map("data_prevista_devolucao") @db.Timestamp(6)
+  destinatario          String?   @db.VarChar(200)
+  finalidade            String?   @db.Text
+  observacao            String?   @db.Text
+  grupoEmprestimoId     String    @map("grupo_emprestimo_id") @db.Uuid
+  comissaoId            String    @map("comissao_id") @db.Uuid
+  patrimonioId          String    @map("patrimonio_id") @db.Uuid
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById String   @map("created_by_id") @db.Uuid
+
+  comissao   Comissao             @relation(fields: [comissaoId], references: [id])
+  patrimonio Patrimonio           @relation(fields: [patrimonioId], references: [id])
+  createdBy  Usuario              @relation(fields: [createdById], references: [id])
+  devolucao  DevolucaoPatrimonio?
+
+  @@map("emprestimos_patrimoniais")
+}
+
+model DevolucaoPatrimonio {
+  id            String   @id @default(uuid()) @db.Uuid
+  dataDevolucao DateTime @map("data_devolucao") @db.Timestamp(6)
+  observacao    String?  @db.Text
+  emprestimoId  String   @unique @map("emprestimo_id") @db.Uuid
+  comissaoId    String   @map("comissao_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  emprestimo EmprestimoPatrimonio @relation(fields: [emprestimoId], references: [id])
+  comissao   Comissao             @relation(fields: [comissaoId], references: [id])
+
+  @@map("devolucoes_patrimoniais")
+}
+
+model Manutencao {
+  id                     String           @id @default(uuid()) @db.Uuid
+  numeroRequisicao       String?          @map("numero_requisicao") @db.VarChar(50)
+  numeroEmpenho          String?          @map("numero_empenho") @db.VarChar(50)
+  anoEmpenho             Int?             @map("ano_empenho") @db.SmallInt
+  tipo                   TipoManutencao
+  justificativa          String?          @db.Text
+  dataEmpenho            DateTime?        @map("data_empenho") @db.Date
+  dataEnvio              DateTime         @map("data_envio") @db.Date
+  previsaoRetorno        DateTime?        @map("previsao_retorno") @db.Date
+  dataRetorno            DateTime?        @map("data_retorno") @db.Date
+  status                 StatusManutencao @default(EM_ANDAMENTO)
+  observacao             String?          @db.Text
+  caminhoAnexoObservacao String?          @map("caminho_anexo_observacao") @db.VarChar(500)
+  fornecedorId           String?          @map("fornecedor_id") @db.Uuid
+  comissaoId             String           @map("comissao_id") @db.Uuid
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  fornecedor Fornecedor?      @relation(fields: [fornecedorId], references: [id])
+  comissao   Comissao         @relation(fields: [comissaoId], references: [id])
+  createdBy  Usuario          @relation(fields: [createdById], references: [id])
+  itens      ItemManutencao[]
+
+  @@map("manutencoes")
+}
+
+model ItemManutencao {
+  id                        String    @id @default(uuid()) @db.Uuid
+  descricaoProblema         String?   @map("descricao_problema") @db.Text
+  dataOrcamento             DateTime? @map("data_orcamento") @db.Date
+  descricaoOrcamento        String?   @map("descricao_orcamento") @db.Text
+  valorOrcamento            Decimal?  @map("valor_orcamento") @db.Decimal(19, 7)
+  descricaoServicoRealizado String?   @map("descricao_servico_realizado") @db.Text
+  valorRealizado            Decimal?  @map("valor_realizado") @db.Decimal(19, 7)
+  dataRetorno               DateTime? @map("data_retorno") @db.Date
+  observacao                String?   @db.Text
+  caminhoAnexoObservacao    String?   @map("caminho_anexo_observacao") @db.VarChar(500)
+  manutencaoId              String    @map("manutencao_id") @db.Uuid
+  patrimonioId              String    @map("patrimonio_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  manutencao Manutencao @relation(fields: [manutencaoId], references: [id])
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id])
+
+  @@map("itens_manutencao")
+}
+
+model Inventario {
+  id         String           @id @default(uuid()) @db.Uuid
+  nome       String           @db.VarChar(150)
+  descricao  String?          @db.Text
+  dataInicio DateTime?        @map("data_inicio") @db.Date
+  dataFim    DateTime?        @map("data_fim") @db.Date
+  status     StatusInventario @default(PENDENTE)
+  observacao String?          @db.Text
+  comissaoId String           @map("comissao_id") @db.Uuid
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById String    @map("created_by_id") @db.Uuid
+
+  comissao  Comissao          @relation(fields: [comissaoId], references: [id])
+  createdBy Usuario           @relation(fields: [createdById], references: [id])
+  setores   SetorInventario[]
+  itens     ItemInventario[]
+
+  @@map("inventarios")
+}
+
+model SetorInventario {
+  id           String                @id @default(uuid()) @db.Uuid
+  status       StatusSetorInventario @default(PENDENTE)
+  dataInicio   DateTime?             @map("data_inicio") @db.Timestamp(6)
+  dataFim      DateTime?             @map("data_fim") @db.Timestamp(6)
+  inventarioId String                @map("inventario_id") @db.Uuid
+  setorId      String                @map("setor_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  inventario Inventario       @relation(fields: [inventarioId], references: [id])
+  setor      Setor            @relation(fields: [setorId], references: [id])
+  itens      ItemInventario[]
+
+  @@unique([inventarioId, setorId])
+  @@map("setores_inventario")
+}
+
+model ItemInventario {
+  id                      String                          @id @default(uuid()) @db.Uuid
+  situacao                SituacaoItemInventario?
+  statusVerificacao       StatusVerificacaoItemInventario @default(PENDENTE) @map("status_verificacao")
+  dataVerificacao         DateTime?                       @map("data_verificacao") @db.Timestamp(6)
+  statusCorrecao          StatusCorrecaoItemInventario?   @map("status_correcao")
+  tipoCorrecao            TipoCorrecaoItemInventario?     @map("tipo_correcao")
+  dataCorrecao            DateTime?                       @map("data_correcao") @db.Timestamp(6)
+  observacao              String?                         @db.Text
+  setorEsperadoId         String                          @map("setor_esperado_id") @db.Uuid
+  setorEncontradoId       String?                         @map("setor_encontrado_id") @db.Uuid
+  patrimonioId            String                          @map("patrimonio_id") @db.Uuid
+  setorInventarioId       String                          @map("setor_inventario_id") @db.Uuid
+  inventarioId            String                          @map("inventario_id") @db.Uuid
+  transferenciaCorrecaoId String?                         @unique @map("transferencia_correcao_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  setorEsperado         Setor                    @relation("ItemInventarioSetorEsperado", fields: [setorEsperadoId], references: [id])
+  setorEncontrado       Setor?                   @relation("ItemInventarioSetorEncontrado", fields: [setorEncontradoId], references: [id])
+  patrimonio            Patrimonio               @relation(fields: [patrimonioId], references: [id])
+  setorInventario       SetorInventario          @relation(fields: [setorInventarioId], references: [id])
+  inventario            Inventario               @relation(fields: [inventarioId], references: [id])
+  transferenciaCorrecao TransferenciaPatrimonio? @relation(fields: [transferenciaCorrecaoId], references: [id])
+
+  @@unique([inventarioId, patrimonioId])
+  @@map("itens_inventario")
+}
+
+model BaixaPatrimonio {
+  id                    String    @id @default(uuid()) @db.Uuid
+  dataBaixa             DateTime  @map("data_baixa") @db.Timestamp(6)
+  tipo                  TipoBaixa
+  motivo                String    @db.Text
+  observacao            String?   @db.Text
+  caminhoAnexoDocumento String?   @map("caminho_anexo_documento") @db.VarChar(500)
+  patrimonioId          String    @map("patrimonio_id") @db.Uuid
+  comissaoId            String    @map("comissao_id") @db.Uuid
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById String   @map("created_by_id") @db.Uuid
+
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id])
+  comissao   Comissao   @relation(fields: [comissaoId], references: [id])
+  createdBy  Usuario    @relation(fields: [createdById], references: [id])
+
+  @@map("baixas_patrimoniais")
+}
+
+model SituacaoContabilPatrimonio {
+  id                        String  @id @default(uuid()) @db.Uuid
+  valorBrutoAtual           Decimal @map("valor_bruto_atual") @db.Decimal(19, 7)
+  depreciacaoAcumuladaAtual Decimal @default(0) @map("depreciacao_acumulada_atual") @db.Decimal(19, 7)
+  patrimonioId              String  @unique @map("patrimonio_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id])
+
+  @@map("situacoes_contabeis_patrimoniais")
+}
+
+model ParametroDepreciacao {
+  id                   String            @id @default(uuid()) @db.Uuid
+  metodo               MetodoDepreciacao
+  vidaUtilInicialMeses Int               @map("vida_util_inicial_meses")
+  percentualResidual   Decimal?          @map("percentual_residual") @db.Decimal(5, 2)
+  valorResidual        Decimal           @map("valor_residual") @db.Decimal(19, 7)
+  valorBaseInicial     Decimal           @map("valor_base_inicial") @db.Decimal(19, 7)
+  dataInicio           DateTime          @map("data_inicio") @db.Date
+  dataFim              DateTime?         @map("data_fim") @db.Date
+  reavaliacaoId        String?           @unique @map("reavaliacao_id") @db.Uuid
+  patrimonioId         String            @map("patrimonio_id") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
+
+  reavaliacao  ReavaliacaoPatrimonio?  @relation(fields: [reavaliacaoId], references: [id])
+  patrimonio   Patrimonio              @relation(fields: [patrimonioId], references: [id])
+  depreciacoes DepreciacaoPatrimonio[]
+
+  @@map("parametros_depreciacao")
+}
+
+model DepreciacaoPatrimonio {
+  id                     String   @id @default(uuid()) @db.Uuid
+  dataDepreciacao        DateTime @map("data_depreciacao") @db.Timestamp(6)
+  dataCompetencia        DateTime @map("data_competencia") @db.Date
+  valorContabilAnterior  Decimal  @map("valor_contabil_anterior") @db.Decimal(19, 7)
+  valorDepreciado        Decimal  @map("valor_depreciado") @db.Decimal(19, 7)
+  valorContabilNovo      Decimal  @map("valor_contabil_novo") @db.Decimal(19, 7)
+  observacao             String?  @db.Text
+  patrimonioId           String   @map("patrimonio_id") @db.Uuid
+  parametroDepreciacaoId String   @map("parametro_depreciacao_id") @db.Uuid
+  comissaoId             String   @map("comissao_id") @db.Uuid
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById String   @map("created_by_id") @db.Uuid
+
+  patrimonio           Patrimonio           @relation(fields: [patrimonioId], references: [id])
+  parametroDepreciacao ParametroDepreciacao @relation(fields: [parametroDepreciacaoId], references: [id])
+  comissao             Comissao             @relation(fields: [comissaoId], references: [id])
+  createdBy            Usuario              @relation(fields: [createdById], references: [id])
+
+  @@unique([patrimonioId, parametroDepreciacaoId, dataCompetencia])
+  @@map("depreciacoes_patrimoniais")
+}
+
+model ReavaliacaoPatrimonio {
+  id                            String   @id @default(uuid()) @db.Uuid
+  dataReavaliacao               DateTime @map("data_reavaliacao") @db.Timestamp(6)
+  valorLiquidoAnterior          Decimal  @map("valor_liquido_anterior") @db.Decimal(19, 7)
+  valorReavaliado               Decimal  @map("valor_reavaliado") @db.Decimal(19, 7)
+  valorResidualAnterior         Decimal  @map("valor_residual_anterior") @db.Decimal(19, 7)
+  valorResidualNovo             Decimal  @map("valor_residual_novo") @db.Decimal(19, 7)
+  vidaUtilRestanteAnteriorMeses Int      @map("vida_util_restante_anterior_meses")
+  vidaUtilNovaMeses             Int      @map("vida_util_nova_meses")
+  laudoTecnico                  String?  @map("laudo_tecnico") @db.Text
+  observacao                    String?  @db.Text
+  patrimonioId                  String   @map("patrimonio_id") @db.Uuid
+  comissaoId                    String   @map("comissao_id") @db.Uuid
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById String   @map("created_by_id") @db.Uuid
+
+  patrimonio           Patrimonio            @relation(fields: [patrimonioId], references: [id])
+  comissao             Comissao              @relation(fields: [comissaoId], references: [id])
+  createdBy            Usuario               @relation(fields: [createdById], references: [id])
+  parametroDepreciacao ParametroDepreciacao?
+
+  @@map("reavaliacoes_patrimoniais")
+}
