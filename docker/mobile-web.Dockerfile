@@ -35,13 +35,22 @@ RUN --mount=type=cache,id=sipat-pnpm-store,target=/pnpm/store,sharing=locked \
     pnpm install --frozen-lockfile --filter @repo/mobile...
 RUN pnpm --filter @repo/mobile exec expo export --platform web --output-dir dist/web
 
-FROM nginx:1.30.6-alpine AS runner
+FROM nginx:1.30.6-alpine AS runtime
 
 COPY docker/mobile-web.nginx.conf /etc/nginx/nginx.conf
-COPY --from=builder --chown=nginx:nginx /app/apps/mobile/dist/web /usr/share/nginx/html
 
 USER nginx
 EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -qO- http://127.0.0.1:8080/health || exit 1
 
 ENTRYPOINT []
 CMD ["nginx", "-g", "daemon off;"]
+
+FROM runtime AS ci
+
+COPY --chown=nginx:nginx apps/mobile/dist/web /usr/share/nginx/html
+
+FROM runtime AS runner
+
+COPY --from=builder --chown=nginx:nginx /app/apps/mobile/dist/web /usr/share/nginx/html

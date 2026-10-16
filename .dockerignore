@@ -9,6 +9,9 @@ node_modules
 **/.turbo
 **/.next
 **/dist
+!apps/mobile/dist/
+!apps/mobile/dist/web/
+!apps/mobile/dist/web/**
 coverage
 uploads
 .env*

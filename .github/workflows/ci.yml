@@ -39,13 +39,35 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
-      - name: Lint, types and tests
+      - name: Lint, types and tests (including mobile)
         run: pnpm check
 
       - name: Build
         env:
           NODE_ENV: production
         run: pnpm build
+
+      - name: Build mobile Web health image
+        run: >-
+          docker build
+          --file docker/mobile-web.Dockerfile
+          --target ci
+          --tag sipat-mobile-web:ci
+          .
+
+      - name: Start mobile Web health image
+        run: >-
+          docker run --detach
+          --name sipat-mobile-web-ci
+          --publish 127.0.0.1:8081:8080
+          sipat-mobile-web:ci
+
+      - name: Check mobile Web health
+        run: pnpm --filter @repo/mobile healthcheck:web
+
+      - name: Stop mobile Web health image
+        if: always()
+        run: docker rm --force sipat-mobile-web-ci
 
       - name: Install Playwright browser
         run: pnpm --filter @repo/web exec playwright install --with-deps chromium

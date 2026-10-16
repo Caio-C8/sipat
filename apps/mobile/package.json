@@ -17,6 +17,9 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "healthcheck:web": "node scripts/check-web-health.mjs",
     "doctor": "npx expo-doctor@latest"
   },
   "dependencies": {
@@ -39,6 +42,7 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.18.0",
     "eslint-config-expo": "~57.0.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
   }
 }
