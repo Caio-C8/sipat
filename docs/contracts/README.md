@@ -22,8 +22,8 @@ A regra central é:
 
 ## Estado atual
 
-O package se chama `@repo/contracts`, é consumido por `apps/web` e `apps/api` e
-usa Zod 4 para contratos runtime. Ele possui testes próprios executados por
+O package se chama `@repo/contracts`, é consumido por `apps/web`, `apps/api` e
+`apps/mobile` e usa Zod 4 para contratos runtime. Ele possui testes próprios executados por
 `tsx` e entrega somente o baseline genérico de respostas, erros, paginação e
 health check. Os contratos do SIPAT devem ser adicionados por entrega, depois de
 confirmar sua semântica nos [requisitos](../requisitos-SIPAT.md) e registrar o

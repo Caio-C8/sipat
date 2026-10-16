@@ -5,15 +5,15 @@ tem como objetivo centralizar e dar rastreabilidade ao ciclo de vida dos bens,
 incluindo cadastro, consulta, movimentação, inventário, manutenção,
 reavaliação, depreciação, baixa e relatórios.
 
-Este monorepo reúne a aplicação Web, a API, PostgreSQL/Prisma e pacotes
-compartilhados. A solução móvel prevista para conferência de inventário ainda
-não faz parte da árvore atual.
+Este monorepo reúne a aplicação Web, a API, o aplicativo móvel,
+PostgreSQL/Prisma e pacotes compartilhados.
 
 ## Tecnologias incluídas
 
 - pnpm workspaces e Turborepo para orquestrar o monorepo;
 - Next.js em `apps/web`;
 - NestJS em `apps/api`;
+- Expo e React Native em `apps/mobile`;
 - PostgreSQL e Prisma em `packages/database`;
 - configurações compartilhadas em `packages/config`;
 - contratos TypeScript em `packages/contracts`;
@@ -27,6 +27,7 @@ não faz parte da árvore atual.
 .
 ├── apps/
 │   ├── api/                 # API NestJS
+│   ├── mobile/              # aplicativo Expo/React Native
 │   └── web/                 # aplicação Next.js
 ├── packages/
 │   ├── config/              # ESLint e TypeScript compartilhados
@@ -43,8 +44,8 @@ não faz parte da árvore atual.
 
 Qualquer diretório adicionado diretamente em `apps/*` ou `packages/*` é
 descoberto automaticamente pelo workspace. Consulte
-[como adicionar apps](docs/adding-apps.md) antes de criar o aplicativo móvel ou
-outro processo executável.
+[como adicionar apps](docs/adding-apps.md) antes de criar outro processo
+executável.
 
 ## Escopo do produto e estado atual
 
@@ -57,8 +58,9 @@ e as fontes de verdade usadas pelo projeto.
 No estado atual, a infraestrutura técnica e o modelo de dados do SIPAT estão
 configurados. O schema Prisma e a migration inicial representam as entidades e
 relações patrimoniais, enquanto a API ainda expõe apenas o health check e a Web
-mantém uma home de infraestrutura. As novas entregas devem partir dos requisitos
-versionados e atualizar a documentação de estado conforme forem concluídas.
+e o Mobile mantêm telas de infraestrutura. As novas entregas devem partir dos
+requisitos versionados e atualizar a documentação de estado conforme forem
+concluídas.
 
 ## Pré-requisitos
 
@@ -66,7 +68,7 @@ versionados e atualizar a documentação de estado conforme forem concluídas.
 | ------------------------- | --------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Git                       | atual suportada | Clonar o repositório e versionar as alterações                         | [Downloads oficiais](https://git-scm.com/downloads/)                                                                               |
 | NVM                       | atual suportada | Instalar e alternar a versão fixada do Node.js                         | [Windows](https://docs.nvm-windows.com/install/installers/) · [macOS/Linux](https://github.com/nvm-sh/nvm#installing-and-updating) |
-| Node.js                   | 24.19.0         | Executar pnpm, scripts, API e aplicação web localmente                 | Instale pelo NVM ou use o [download oficial da versão 24.19.0](https://nodejs.org/download/release/v24.19.0/)                      |
+| Node.js                   | 24.19.0         | Executar pnpm, scripts, API, Web e Mobile localmente                   | Instale pelo NVM ou use o [download oficial da versão 24.19.0](https://nodejs.org/download/release/v24.19.0/)                      |
 | pnpm                      | 11.19.0         | Instalar dependências e executar o monorepo                            | Ativado pelo Corepack incluído no Node.js; consulte a [documentação do pnpm](https://pnpm.io/installation)                         |
 | Docker com Docker Compose | atual suportada | Executar o PostgreSQL e, opcionalmente, toda a aplicação em containers | [Docker Desktop](https://docs.docker.com/desktop/) · [Docker Engine e Compose](https://docs.docker.com/compose/install/)           |
 
@@ -119,7 +121,7 @@ No Windows, se `pnpm --version` ainda mostrar uma instalação global antiga, lo
    pnpm db:migrate:development
    ```
 
-5. Inicie web e API com hot reload:
+5. Inicie Web, API e Metro com hot reload:
 
    ```bash
    pnpm dev
@@ -128,6 +130,7 @@ No Windows, se `pnpm --version` ainda mostrar uma instalação global antiga, lo
 - Web: <http://localhost:3000>
 - API: <http://localhost:3001/api/health>
 - Proxy web para API: <http://localhost:3000/api/backend/health>
+- Mobile: abra o QR code do Metro no Expo Go, use os comandos Android/iOS ou entre na interface web <http://localhost:8081>.
 
 Também é possível executar tudo em containers com `pnpm stack:development:up`.
 
@@ -146,6 +149,10 @@ permitir a execução simultânea com desenvolvimento. Depois execute:
 pnpm stack:staging:up
 ```
 
+- Web Next.js: <http://localhost:3100>
+- API: <http://localhost:3101/api/health>
+- interface Web do mobile: <http://localhost:3181>
+
 Para encerrar:
 
 ```bash
@@ -162,29 +169,48 @@ Para teste local simultâneo, o exemplo usa `localhost:3200`. Preencha segredos
 fortes e valide a configuração:
 
 ```bash
-docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml config
+docker compose --profile mobile-web --env-file .env.production -f compose.yaml -f compose.production.yaml config
 pnpm stack:production:up
 ```
 
+- Web Next.js: <http://localhost:3200>
+- API: <http://localhost:3201/api/health>
+- interface Web do mobile: <http://localhost:3281>
+
 Por padrão, as portas de produção são publicadas em `127.0.0.1`. Coloque Caddy, Nginx, Traefik, um ingress ou a plataforma de hospedagem na frente dos containers para TLS e domínio público.
 
-Ao fazer um deploy real, substitua `WEB_URL` e `CORS_ORIGINS` pelo domínio HTTPS
-público. Consulte a [lógica de portas e isolamento dos ambientes](docs/environments.md).
+Ao fazer um deploy real, substitua `WEB_URL`, `MOBILE_WEB_URL`,
+`EXPO_PUBLIC_API_URL` e `CORS_ORIGINS` pelos domínios HTTPS públicos. Como
+`EXPO_PUBLIC_API_URL` é incorporada ao JavaScript do mobile-web durante o
+build, alterá-la exige reconstruir a imagem. Consulte a
+[lógica de portas e isolamento dos ambientes](docs/environments.md).
 
 ## Comandos principais
 
-| Comando                         | Finalidade                                      |
-| ------------------------------- | ----------------------------------------------- |
-| `pnpm dev`                      | Executa todos os apps que têm script `dev`      |
-| `pnpm dev:web` / `pnpm dev:api` | Executa apenas um app                           |
-| `pnpm check`                    | Gera Prisma Client, roda lint, tipos e testes   |
-| `pnpm build:staging`            | Build local com variáveis de homologação        |
-| `pnpm build:production`         | Build local com variáveis de produção           |
-| `pnpm db:migrate:development`   | Cria/aplica migrations durante desenvolvimento  |
-| `pnpm db:migrate:staging`       | Aplica migrations já versionadas em homologação |
-| `pnpm db:migrate:production`    | Aplica migrations já versionadas em produção    |
-| `pnpm db:studio`                | Abre o Prisma Studio no ambiente local          |
-| `pnpm format`                   | Formata arquivos suportados                     |
+| Comando                         | Finalidade                                       |
+| ------------------------------- | ------------------------------------------------ |
+| `pnpm dev`                      | Executa todos os apps que têm script `dev`       |
+| `pnpm dev:web` / `pnpm dev:api` | Executa apenas Web ou API                        |
+| `pnpm dev:mobile`               | Inicia o Metro do aplicativo mobile              |
+| `pnpm mobile:android`           | Abre o app no Android                            |
+| `pnpm mobile:ios`               | Abre o app no iOS; simulador exige macOS         |
+| `pnpm mobile:web`               | Abre a interface mobile no navegador             |
+| `pnpm mobile:build:android`     | Gera um APK instalável pelo EAS                  |
+| `pnpm mobile:build:testflight`  | Gera e envia o build iOS ao TestFlight           |
+| `pnpm stack:staging:up`         | Sobe API, Web, mobile-web e banco em homologação |
+| `pnpm stack:production:up`      | Sobe API, Web, mobile-web e banco em produção    |
+| `pnpm check`                    | Gera Prisma Client, roda lint, tipos e testes    |
+| `pnpm build:staging`            | Build local com variáveis de homologação         |
+| `pnpm build:production`         | Build local com variáveis de produção            |
+| `pnpm db:migrate:development`   | Cria/aplica migrations durante desenvolvimento   |
+| `pnpm db:migrate:staging`       | Aplica migrations já versionadas em homologação  |
+| `pnpm db:migrate:production`    | Aplica migrations já versionadas em produção     |
+| `pnpm db:studio`                | Abre o Prisma Studio no ambiente local           |
+| `pnpm format`                   | Formata arquivos suportados                      |
+
+O guia completo do aplicativo — Web, Expo Go, rede local, túnel HTTPS, APK e
+TestFlight — está em
+[Execução, builds e distribuição mobile](docs/apps/mobile/builds-and-distribution.md).
 
 ## Regras para evoluir o SIPAT
 

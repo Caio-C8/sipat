@@ -6,7 +6,8 @@ executável localizada em `apps/`.
 ## Aplicações atuais
 
 - [API](./api/README.md);
-- [Web](./web/README.md).
+- [Web](./web/README.md);
+- [Mobile](./mobile/README.md).
 
 Quando uma nova aplicação for adicionada, crie também
 `docs/apps/<nome>/README.md` para documentar seu objetivo e, conforme as

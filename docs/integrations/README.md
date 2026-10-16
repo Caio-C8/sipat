@@ -6,10 +6,11 @@ mais unidades do monorepo.
 ## Integrações atuais
 
 - [Aplicação web e API](./web-api/README.md).
+- [Aplicativo mobile e API](./mobile-api/README.md).
 
-Quando um app mobile, worker ou novo frontend for adicionado, crie documentação
-própria para sua integração. Não presuma que transporte, cache ou autenticação
-do navegador sejam adequados a outro runtime.
+Quando um worker ou novo frontend for adicionado, crie documentação própria para
+sua integração. Não presuma que transporte, cache ou autenticação de um runtime
+sejam adequados a outro.
 
 ## Limite
 
@@ -53,5 +54,6 @@ própria.
 
 A implementação dos controles internos da API continua em
 [Segurança da API](../apps/api/security/README.md). A segurança de renderização
-e do navegador fica em [Segurança web](../apps/web/security.md). Formatos
+e do navegador fica em [Segurança web](../apps/web/security.md), e os controles
+do dispositivo ficam em [Segurança mobile](../apps/mobile/security.md). Formatos
 compartilhados permanecem em [Contratos](../contracts/README.md).

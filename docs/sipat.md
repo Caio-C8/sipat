@@ -56,11 +56,12 @@ O repositório ainda está na etapa de infraestrutura inicial do SIPAT:
 
 - a API expõe somente `GET /api/health`;
 - a Web possui home técnica, health check e proxy para a API;
+- o mobile possui tela técnica e consulta direta ao health check da API;
 - o schema Prisma e a migration inicial representam o domínio patrimonial;
 - `@repo/contracts` expõe apenas contratos genéricos de infraestrutura;
 - autenticação, autorização e módulos patrimoniais ainda não estão
   implementados;
-- o aplicativo móvel ainda não existe neste monorepo.
+- os fluxos patrimoniais do aplicativo móvel ainda não estão implementados.
 
 Os documentos de arquitetura descrevem o padrão a seguir durante a evolução.
 Exemplos conceituais não representam funcionalidade já entregue.

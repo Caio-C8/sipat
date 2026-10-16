@@ -85,6 +85,7 @@ mais restritas.
 | Camada                          | Documento                                                  |
 | ------------------------------- | ---------------------------------------------------------- |
 | Aplicação web                   | [Performance web](../apps/web/performance.md)              |
+| Aplicativo mobile               | [Performance mobile](../apps/mobile/performance.md)        |
 | API NestJS                      | [Performance da API](../apps/api/performance.md)           |
 | Prisma e PostgreSQL             | [Banco de dados](./database.md)                            |
 | Contratos e integrações         | [Contratos e integrações](./contracts-and-integrations.md) |

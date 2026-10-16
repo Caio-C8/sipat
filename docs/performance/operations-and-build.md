@@ -51,6 +51,22 @@ Performance de desenvolvimento também precisa de regressão visível. Acompanhe
 - Compare bundles e artefatos após dependências relevantes.
 - Preserve lockfile e versões de runtime para tornar comparações reproduzíveis.
 
+As imagens Docker limitam a instalação ao grafo da aplicação, compartilham
+stores de pacotes e metadados por cache BuildKit e usam retries finitos para o
+registry. Os mounts usam `sharing=locked` para serializar as instalações que
+compartilham o cache; os scripts `stack:*:up` também limitam as operações do
+Compose com `--parallel 1`. O primeiro build ainda precisa baixar dependências;
+builds seguintes reutilizam o cache enquanto ele não for removido do builder.
+Se uma indisponibilidade externa interromper esse primeiro download, repita o
+mesmo comando `stack:*:up`: as camadas e os pacotes já concluídos permanecem no
+cache. Falhas recorrentes devem ser investigadas como problema de proxy, DNS ou
+acesso ao registry, em vez de desabilitar verificações de integridade.
+
+Não use `trustLockfile` como atalho para uma rede lenta: essa opção pula a
+reaplicação das políticas de supply chain ao lockfile. Também não execute
+`docker builder prune` rotineiramente, pois ele remove caches que tornam os
+builds seguintes mais rápidos e resilientes.
+
 ### Artefato standalone do Next.js
 
 Com `output: "standalone"`, execute o `server.js` mínimo gerado em vez de
@@ -59,6 +75,18 @@ standalone por padrão. A imagem Docker da Web já copia esses diretórios para 
 artefato final; uma execução manual precisa reproduzir as mesmas cópias antes
 de iniciar o servidor. Sem os assets, o HTML pode responder enquanto os chunks
 retornam `404`, o que invalida qualquer verificação funcional ou de performance.
+
+### Export estático do mobile-web
+
+O serviço `mobile-web` gera `apps/mobile/dist/web` durante o build da imagem e
+serve os arquivos com Nginx. Meça separadamente tempo e tamanho do export,
+bytes transferidos, compressão e cache dos assets. O health check `/health`
+confirma somente o servidor estático; disponibilidade e latência da API devem
+continuar sendo observadas pelo endpoint da API e pelos fluxos reais.
+
+Variáveis `EXPO_PUBLIC_*` fazem parte do input do build. Trocar URL ou ambiente
+sem reconstruir a imagem deixa o bundle antigo ativo, mesmo que o container
+seja reiniciado.
 
 ## Deploy e regressão
 
