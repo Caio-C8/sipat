@@ -11,7 +11,11 @@
     "CORS_ORIGINS",
     "DATABASE_URL",
     "NEXT_PUBLIC_APP_NAME",
-    "NEXT_PUBLIC_APP_ENV"
+    "NEXT_PUBLIC_APP_ENV",
+    "EXPO_PUBLIC_APP_NAME",
+    "EXPO_PUBLIC_APP_ENV",
+    "EXPO_PUBLIC_API_URL",
+    "EXPO_PUBLIC_API_PORT"
   ],
   "tasks": {
     "build": {

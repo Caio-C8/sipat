@@ -95,6 +95,30 @@ services:
     networks:
       - internal
 
+  mobile-web:
+    profiles: ["mobile-web"]
+    image: ${COMPOSE_PROJECT_NAME:-sipat}-mobile-web:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/mobile-web.Dockerfile
+      args:
+        EXPO_PUBLIC_APP_NAME: ${EXPO_PUBLIC_APP_NAME}
+        EXPO_PUBLIC_APP_ENV: ${EXPO_PUBLIC_APP_ENV}
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL}
+        EXPO_PUBLIC_API_PORT: ${EXPO_PUBLIC_API_PORT:-3001}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${MOBILE_WEB_PUBLISHED_PORT:-8081}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
 volumes:
   database_data:
 

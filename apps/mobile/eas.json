@@ -1,0 +1,32 @@
+{
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "node": "24.19.0",
+      "pnpm": "11.19.0",
+      "environment": "development",
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "node": "24.19.0",
+      "pnpm": "11.19.0",
+      "environment": "preview",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "node": "24.19.0",
+      "pnpm": "11.19.0",
+      "environment": "production",
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -1,5 +1,7 @@
 node_modules
 .next
+.expo
+expo-env.d.ts
 dist
 coverage
 pnpm-lock.yaml

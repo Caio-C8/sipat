@@ -15,7 +15,9 @@ const environmentSchema = z.object({
 
   API_PORT: z.coerce.number().int().positive().default(3001),
 
-  CORS_ORIGINS: z.string().default("http://localhost:3000"),
+  CORS_ORIGINS: z
+    .string()
+    .default("http://localhost:3000,http://localhost:8081"),
 
   DATABASE_URL: z.string().min(1),
 });

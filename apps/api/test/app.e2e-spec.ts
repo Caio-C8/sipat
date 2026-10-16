@@ -16,7 +16,7 @@ describe("health endpoint", () => {
 
     app = module.createNestApplication();
     app.setGlobalPrefix("api");
-    configurarCors(app, "http://localhost:3000");
+    configurarCors(app, "http://localhost:3000,http://localhost:8081");
     await app.init();
   });
 
@@ -100,6 +100,17 @@ describe("health endpoint", () => {
     ).toBeUndefined();
     expect(response.headers["access-control-expose-headers"]).toBe(
       "X-Request-Id",
+    );
+  });
+
+  it("allows the local mobile Web origin", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/api/health")
+      .set("Origin", "http://localhost:8081");
+
+    expect(response.status).toBe(200);
+    expect(response.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:8081",
     );
   });
 

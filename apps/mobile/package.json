@@ -1,0 +1,44 @@
+{
+  "name": "@repo/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build": "expo export --platform android --output-dir dist/android && expo export --platform ios --output-dir dist/ios && expo export --platform web --output-dir dist/web",
+    "build:android:apk": "npx eas-cli@latest build --platform android --profile preview",
+    "build:ios": "npx eas-cli@latest build --platform ios --profile production",
+    "build:ios:testflight": "npx eas-cli@latest build --platform ios --profile production --auto-submit",
+    "submit:ios": "npx eas-cli@latest submit --platform ios --profile production",
+    "lint": "expo lint",
+    "lint:fix": "expo lint --fix",
+    "typecheck": "tsc --noEmit",
+    "doctor": "npx expo-doctor@latest"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~57.0.17",
+    "@repo/contracts": "workspace:*",
+    "expo": "~57.0.30",
+    "expo-constants": "~57.0.22",
+    "expo-linking": "~57.0.13",
+    "expo-router": "~57.0.28",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.2",
+    "react-native-web": "^0.21.4"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.18.0",
+    "eslint-config-expo": "~57.0.2",
+    "typescript": "^6.0.3"
+  }
+}
