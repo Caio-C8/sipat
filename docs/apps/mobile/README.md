@@ -27,10 +27,14 @@ código interno da API.
   build de loja;
 - staging e produção possuem um container `mobile-web` opcional com o export
   estático do Expo servido por Nginx;
+- a suíte Vitest cobre a configuração pública e o cliente do health check;
+- o CI exporta as plataformas, constrói o container `mobile-web` e verifica ao
+  vivo o endpoint `/health` e o documento HTML servido na raiz;
 - `orientation: "default"` permite retrato e paisagem, e a tela técnica adapta
   os cards em duas colunas quando a janela possui largura suficiente;
 - ainda não existem autenticação, armazenamento persistente, operação de
-  domínio, formulário, cache remoto, modo offline ou suíte automatizada mobile.
+  domínio, formulário, cache remoto, modo offline, testes de componentes ou E2E
+  em dispositivos.
 
 O estado “Aplicativo móvel operacional” confirma apenas que o bundle React
 Native inicializou. Ele não substitui o health check da API.
@@ -101,7 +105,8 @@ A comunicação HTTP está em
 - biblioteca de formulários e estado remoto;
 - política de cache, persistência e operação offline;
 - observabilidade, crash reporting e analytics;
-- suíte unitária, de componentes e E2E em dispositivos;
+- ampliar a suíte unitária e adicionar testes de componentes e E2E em
+  dispositivos;
 - permissões nativas, notificações e deep links universais;
 - metas numéricas de inicialização, frames, memória, bundle e rede;
 - publicação Android na Play Store e política de EAS Update.

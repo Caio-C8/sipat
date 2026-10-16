@@ -10,6 +10,8 @@
 - [x] Perfis EAS para development, APK interno e build de loja.
 - [x] Identificadores Android/iOS, ícones e configuração de versão inicial.
 - [x] Lint, typecheck, export multiplataforma e Expo Doctor disponíveis.
+- [x] Testes unitários da configuração pública e do cliente de health check.
+- [x] Smoke test do container `mobile-web` no CI, cobrindo `/health` e `/`.
 
 ## Próximos objetivos
 

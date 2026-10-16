@@ -84,6 +84,10 @@ bytes transferidos, compressão e cache dos assets. O health check `/health`
 confirma somente o servidor estático; disponibilidade e latência da API devem
 continuar sendo observadas pelo endpoint da API e pelos fluxos reais.
 
+No CI, o target Docker `ci` reutiliza o export Web que a etapa `pnpm build` já
+produziu e valida somente a camada de runtime. O target padrão `runner` continua
+gerando seu próprio artefato para que imagens de deploy sejam autocontidas.
+
 Variáveis `EXPO_PUBLIC_*` fazem parte do input do build. Trocar URL ou ambiente
 sem reconstruir a imagem deixa o bundle antigo ativo, mesmo que o container
 seja reiniciado.

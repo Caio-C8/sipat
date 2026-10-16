@@ -7,8 +7,11 @@ configuração pública, health check, export Android/iOS/Web e perfis EAS. A te
 funciona no navegador, possui imagem estática para os stacks Docker de staging
 e produção, e os builds remotos possuem runtime alinhado ao monorepo.
 
-Ainda não existem autenticação, navegação de domínio, dados persistidos,
-operações patrimoniais, cache/offline ou testes automatizados mobile.
+Vitest cobre configuração pública e cliente do health check. O CI também
+constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
+raiz serve HTML. Ainda não existem autenticação, navegação de domínio, dados
+persistidos, operações patrimoniais, cache/offline, testes de componentes ou
+E2E em dispositivos.
 
 O bloqueio global em retrato foi removido com `orientation: "default"`. A home
 usa a largura atual da janela e apresenta os cards em duas colunas a partir de
@@ -31,6 +34,7 @@ nativa antiga.
 ```bash
 pnpm --filter @repo/mobile lint
 pnpm --filter @repo/mobile typecheck
+pnpm --filter @repo/mobile test
 pnpm --filter @repo/mobile build
 pnpm mobile:doctor
 pnpm format:check
