@@ -61,6 +61,7 @@ pnpm --filter @repo/mobile lint
 pnpm --filter @repo/mobile typecheck
 pnpm --filter @repo/mobile test
 pnpm --filter @repo/mobile build
+pnpm security:patches
 pnpm mobile:doctor
 pnpm format:check
 ```

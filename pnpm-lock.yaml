@@ -21,6 +21,11 @@ overrides:
   source-map-js@>=1.0.0 <1.2.2: ^1.2.2
   uuid@<11.1.1: ^11.1.1
 
+patchedDependencies:
+  braces@3.0.3: 002408f5ee6a63091ac154469523f1f3e8b6460658538b44daf96f42caaf6f32
+  decode-uri-component@0.2.2: 07d480841cd5ed81e7300d502769373079cd3899d0bc25de3886074dfc9e41e7
+  node-forge@1.4.0: 4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0
+
 importers:
 
   .:
@@ -9563,7 +9568,7 @@ snapshots:
       glob: 13.0.6
       lan-network: 0.2.1
       multitars: 1.0.2
-      node-forge: 1.4.0
+      node-forge: 1.4.0(patch_hash=4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0)
       npm-package-arg: 11.0.3
       ora: 3.4.0
       picomatch: 4.0.7
@@ -9600,7 +9605,7 @@ snapshots:
 
   '@expo/code-signing-certificates@0.0.6':
     dependencies:
-      node-forge: 1.4.0
+      node-forge: 1.4.0(patch_hash=4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0)
 
   '@expo/config-plugins@57.0.10(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
@@ -13128,7 +13133,7 @@ snapshots:
     dependencies:
       balanced-match: 4.0.4
 
-  braces@3.0.3:
+  braces@3.0.3(patch_hash=002408f5ee6a63091ac154469523f1f3e8b6460658538b44daf96f42caaf6f32):
     dependencies:
       fill-range: 7.1.1
 
@@ -13560,7 +13565,7 @@ snapshots:
 
   decimal.js@10.6.0: {}
 
-  decode-uri-component@0.2.2: {}
+  decode-uri-component@0.2.2(patch_hash=07d480841cd5ed81e7300d502769373079cd3899d0bc25de3886074dfc9e41e7): {}
 
   dedent@1.7.2: {}
 
@@ -16352,7 +16357,7 @@ snapshots:
 
   micromatch@4.0.8:
     dependencies:
-      braces: 3.0.3
+      braces: 3.0.3(patch_hash=002408f5ee6a63091ac154469523f1f3e8b6460658538b44daf96f42caaf6f32)
       picomatch: 2.3.2
 
   mime-db@1.52.0: {}
@@ -16500,7 +16505,7 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
-  node-forge@1.4.0: {}
+  node-forge@1.4.0(patch_hash=4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0): {}
 
   node-int64@0.4.0: {}
 
@@ -16963,7 +16968,7 @@ snapshots:
 
   query-string@7.1.3:
     dependencies:
-      decode-uri-component: 0.2.2
+      decode-uri-component: 0.2.2(patch_hash=07d480841cd5ed81e7300d502769373079cd3899d0bc25de3886074dfc9e41e7)
       filter-obj: 1.1.0
       split-on-first: 1.1.0
       strict-uri-encode: 2.0.0

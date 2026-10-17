@@ -85,9 +85,28 @@ rota normalizados, com baixa cardinalidade.
 - use dependências necessárias e versões compatíveis com o SDK;
 - revise config plugins, permissões e código gerado;
 - preserve lockfile e versões de Node/pnpm do EAS;
+- mantenha os patches transitivos registrados em `pnpm-workspace.yaml` enquanto
+  `braces`, `node-forge` e `decode-uri-component` não tiverem uma atualização
+  compatível com o Expo SDK 57;
+- execute `pnpm security:patches` após instalar dependências e remova cada patch
+  assim que uma versão oficial corrigida puder substituí-lo;
 - não versione keystore, certificado, profile ou chave privada;
 - restrinja acesso ao projeto, token Expo e credenciais de loja;
 - verifique o artefato assinado e a origem do build antes de distribuir.
+
+Os patches atuais limitam a profundidade de chaves processada pelo `braces`,
+validam a quantidade de elementos ASN.1 aninhados no `node-forge` e substituem
+o decoder recursivo de URI por uma leitura linear compatível com CommonJS. Eles
+mitigam, respectivamente,
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
+[GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) e
+[GHSA-vcc3-ghjq-m6fr](https://github.com/advisories/GHSA-vcc3-ghjq-m6fr), sem
+alterar Expo, React Native, Metro ou Expo Router.
+
+Auditorias baseadas apenas no número da versão, incluindo `pnpm audit` e o
+Dependabot, podem continuar exibindo esses três avisos porque não inspecionam o
+conteúdo dos patches locais. Não ignore nem encerre os avisos sem registrar a
+existência dos patches e a execução bem-sucedida de `pnpm security:patches`.
 
 ## Checklist de uma feature protegida
 

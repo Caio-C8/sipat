@@ -24,6 +24,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "check": "pnpm db:generate && turbo run lint typecheck test",
+    "security:patches": "node scripts/verify-security-patches.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "turbo run db:generate --filter=@repo/database",
