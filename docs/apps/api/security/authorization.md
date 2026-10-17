@@ -1,5 +1,10 @@
 # Autorização
 
+> Os perfis, a negação por padrão e a matriz inicial de rotas do SIPAT estão em
+> [Identidade, sessão e controle de acesso](../../../security-and-access.md).
+> A barreira global por perfil do `SEC-001` está implementada. Regras por
+> recurso continuam pertencendo aos services/policies de cada feature futura.
+
 ## Camadas de autorização
 
 Uma API pode precisar verificar mais de um nível:

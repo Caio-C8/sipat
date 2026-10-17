@@ -33,9 +33,9 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-Nenhum contrato de domínio do SIPAT está implementado. Adicione um objetivo
-antes de criar uma capacidade relevante ou alterar o comportamento externo de
-um contrato.
+O contrato de identidade e perfis do `CONTRACTS-001` está implementado. Os
+demais objetivos abaixo acompanham o [roadmap inicial](../roadmap.md). Um
+objetivo planejado não representa um export já disponível.
 
 Cada objetivo deve registrar:
 
@@ -44,6 +44,68 @@ Cada objetivo deve registrar:
 - consumidores afetados;
 - critérios de aceite verificáveis;
 - decisões semânticas que não podem ser inferidas apenas do tipo.
+
+### CONTRACTS-001 — Identidade e perfis para controle de acesso
+
+**Status:** concluído
+
+**Contexto**
+
+`SEC-001` precisa compartilhar os dois perfis confirmados pelos requisitos e a
+representação segura da identidade autenticada sem importar enums do Prisma.
+
+**Escopo**
+
+- schema e tipo de `ADMINISTRADOR | DIRETOR_PATRIMONIO`;
+- schema e tipo da identidade segura com `id`, `nome`, `email` e `perfil`;
+- constantes públicas `X-SIPAT-CSRF` e `1`, que não contêm segredo;
+- testes de valores válidos, inválidos, propriedades inesperadas e API pública;
+- exports independentes de `@repo/database`.
+
+**Consumidores afetados**
+
+- API, nos Guards e no contexto autenticado;
+- Web, ao consultar a identidade atual em `AUTH-001`.
+
+**Critérios de aceite**
+
+- [x] schema é a fonte de verdade e os tipos são derivados;
+- [x] somente os dois perfis dos requisitos são aceitos;
+- [x] identidade não contém senha, hash, sessão ou campos internos;
+- [x] lint, typecheck e testes do package passam;
+- [x] consumidores afetados passam nas verificações aplicáveis.
+
+### CONTRACTS-002 — Operações de usuários e autenticação
+
+**Status:** planejado
+
+**Contexto**
+
+`USERS-001` e `AUTH-001` exigem contratos distintos para CRUD administrativo,
+login e identidade atual. Formulário, body, response e model Prisma não são o
+mesmo contrato.
+
+**Escopo**
+
+- params, query, criação, atualização e situação do usuário;
+- response segura resumida/detalhada e resposta paginada;
+- body de login e response de identidade atual;
+- testes de limites, e-mail, senha, PATCH, enums e ausência de campos sensíveis.
+
+**Consumidores afetados**
+
+- módulos `usuarios` e `auth` da API;
+- features de usuários e autenticação da Web.
+
+**Critérios de aceite**
+
+- [ ] criação, atualização, situação, login e responses possuem schemas
+      próprios quando suas semânticas diferem;
+- [ ] senha existe somente nos inputs que realmente a recebem;
+- [ ] responses nunca aceitam ou expõem senha, hash ou token;
+- [ ] paginação reutiliza o contrato comum sem remover seu limite finito;
+- [ ] contratos possuem testes antes do consumo pelos apps;
+- [ ] lint, typecheck, testes e consumidores afetados passam.
 
 ## Histórico do baseline
 
