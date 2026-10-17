@@ -27,6 +27,7 @@ ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
 ENV NODE_ENV=production
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 COPY apps/web ./apps/web
 COPY packages/config ./packages/config
 COPY packages/contracts ./packages/contracts

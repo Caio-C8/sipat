@@ -17,6 +17,7 @@ WORKDIR /app
 FROM base AS dependencies
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 COPY apps/api ./apps/api
 COPY packages/config ./packages/config
 COPY packages/contracts ./packages/contracts

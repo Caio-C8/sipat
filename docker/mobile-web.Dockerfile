@@ -26,6 +26,7 @@ ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
 ENV EXPO_PUBLIC_API_PORT=$EXPO_PUBLIC_API_PORT
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 COPY apps/mobile ./apps/mobile
 COPY packages/config ./packages/config
 COPY packages/contracts ./packages/contracts
