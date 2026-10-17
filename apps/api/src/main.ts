@@ -3,9 +3,12 @@ import { ConfigService } from "@nestjs/config";
 import { AppModule } from "./app.module";
 import { configurarCors } from "./configurar-cors";
 import type { EnvironmentVariables } from "./environment";
+import cookieParser from "cookie-parser";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(cookieParser());
 
   const config = app.get(ConfigService<EnvironmentVariables, true>);
 

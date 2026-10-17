@@ -1,6 +1,8 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { RespostaErroSchema } from "@repo/contracts";
+import { CABECALHO_CSRF, RespostaErroSchema } from "@repo/contracts";
+import { DATABASE_CLIENT } from "../src/common/database/database.constants";
+import cookieParser from "cookie-parser";
 import request from "supertest";
 import * as z from "zod";
 import { AppModule } from "../src/app.module";
@@ -12,9 +14,17 @@ describe("health endpoint", () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(DATABASE_CLIENT)
+      .useValue({
+        $connect: jest.fn(),
+        $disconnect: jest.fn(),
+        sessaoUsuario: { findUnique: jest.fn() },
+      })
+      .compile();
 
     app = module.createNestApplication();
+    app.use(cookieParser());
     app.setGlobalPrefix("api");
     configurarCors(app, "http://localhost:3000,http://localhost:8081");
     await app.init();
@@ -126,10 +136,10 @@ describe("health endpoint", () => {
       "http://localhost:3000",
     );
     expect(response.headers["access-control-allow-methods"]).toBe(
-      "GET,HEAD,POST,PATCH,DELETE",
+      "GET,HEAD,POST,PUT,PATCH,DELETE",
     );
     expect(response.headers["access-control-allow-headers"]).toBe(
-      "Content-Type",
+      `Content-Type,${CABECALHO_CSRF}`,
     );
     expect(
       response.headers["access-control-allow-credentials"],
