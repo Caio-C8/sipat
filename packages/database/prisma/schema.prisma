@@ -120,8 +120,23 @@ model Usuario {
   depreciacoesCriadas    DepreciacaoPatrimonio[]
   reavaliacoesCriadas    ReavaliacaoPatrimonio[]
   notasFiscaisCriadas    NotaFiscal[]
+  sessoes                SessaoUsuario[]
 
   @@map("usuarios")
+}
+
+model SessaoUsuario {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  usuarioId String    @map("usuario_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamp(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId, revokedAt], map: "sessoes_usuarios_usuario_id_revoked_at_idx")
+  @@map("sessoes_usuarios")
 }
 
 model Responsavel {

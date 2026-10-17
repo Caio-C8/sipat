@@ -20,6 +20,7 @@ export type {
   Responsavel,
   Setor,
   SetorInventario,
+  SessaoUsuario,
   SituacaoContabilPatrimonio,
   TransferenciaPatrimonio,
   Usuario,
