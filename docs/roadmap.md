@@ -16,12 +16,13 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Estado atual
 
-O `SEC-001` e o backend do `USERS-001` estão implementados. A API possui
+O `SEC-001`, o backend do `USERS-001` e o backend do `AUTH-001` estão
+implementados. A API possui
 barreira global de autenticação, autorização por perfil, proteção CSRF,
 persistência de sessões revogáveis, contratos e as cinco operações
-administrativas de usuários. Nenhuma página de usuários está implementada.
-Login, logout, `/auth/me` e criação produtiva de sessões ainda não existem e
-permanecem no `AUTH-001`.
+administrativas de usuários, além de login, logout, `/auth/me` e
+provisionamento inicial controlado. As interfaces Web de usuários e
+autenticação não estão implementadas.
 
 ## Ordem das primeiras entregas
 
@@ -29,14 +30,15 @@ permanecem no `AUTH-001`.
 | ----- | ------------------------------------------ | --------- | ------------------ |
 | 1     | `SEC-001` — Proteger rotas por perfil      | concluído | RF01, RNF05, RNF06 |
 | 2     | `USERS-001` — Backend de usuários          | concluído | RF02, UC02, RNF01  |
-| 3     | `AUTH-001` — Autenticar e encerrar sessões | planejado | RF01, UC01, RNF05  |
+| 3     | `AUTH-001` — Autenticar e encerrar sessões | concluído | RF01, UC01, RNF05  |
 
 A ordem solicitada é viável desde que a dependência seja explícita: `SEC-001`
 cria a barreira e valida uma sessão que já exista; `USERS-001` consome essa
 barreira e pode ser validado com sessões controladas nos testes; somente
-`AUTH-001` passa a criar sessões por login e a encerrá-las por logout. A
-interface administrativa pertence ao objetivo separado `WEB-USERS-001`, que
-permanece planejado no roadmap da Web.
+`AUTH-001` cria sessões por login e as encerra por logout. As interfaces
+administrativas e de autenticação pertencem, respectivamente, aos objetivos
+separados `WEB-USERS-001` e `WEB-AUTH-001`, que permanecem planejados no roadmap
+da Web.
 
 Não enfraqueça temporariamente os Guards nem aceite perfil enviado pelo cliente
 para contornar essa dependência.
@@ -168,20 +170,20 @@ response. A troca ou redefinição de senha não será inferida a partir do verb
 
 ## AUTH-001 — Autenticar e encerrar sessões
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
 Permitir login por e-mail e senha, consulta da identidade atual e logout com
 revogação no servidor, tornando operacionais as rotas protegidas anteriores.
 
-### Rotas planejadas
+### Rotas implementadas
 
 | Método | Rota               | Acesso      | Resultado                               |
 | ------ | ------------------ | ----------- | --------------------------------------- |
 | `POST` | `/api/auth/login`  | pública     | cria sessão e define cookie             |
 | `GET`  | `/api/auth/me`     | autenticada | retorna a identidade segura             |
-| `POST` | `/api/auth/logout` | autenticada | revoga a sessão atual e expira o cookie |
+| `POST` | `/api/auth/logout` | pública     | revoga a sessão atual e expira o cookie |
 
 ### Escopo
 
@@ -190,11 +192,11 @@ revogação no servidor, tornando operacionais as rotas protegidas anteriores.
   usuário inativo;
 - token opaco aleatório, armazenado somente como verificador no banco;
 - cookie de sessão criado e removido exclusivamente pelo servidor;
-- rate limit específico de login e observabilidade sem dados pessoais;
-- tela `/login`, redirecionamentos sem loop e ação de logout acessível;
-- página protegida consulta a identidade no servidor e a API continua sendo a
-  autoridade final;
-- testes de cookie, expiração, revogação, CSRF, `401`, `403`, login e logout.
+- rate limit persistente específico de login e proteção finita da capacidade
+  Argon2 por instância;
+- provisionamento interativo e exclusivo do primeiro administrador;
+- testes de cookie, expiração, revogação, CSRF, `401`, `403`, login, logout e
+  concorrência real no PostgreSQL.
 
 ### Fora do escopo
 
@@ -203,18 +205,21 @@ revogação no servidor, tornando operacionais as rotas protegidas anteriores.
 - MFA, SSO ou provedor externo;
 - autenticação mobile;
 - refresh token ou renovação silenciosa.
+- página `/login`, integração Web, redirects, hooks, formulários ou botões de
+  logout, que permanecem em `WEB-AUTH-001`.
 
 ### Critérios de aceite
 
-- [ ] credenciais válidas de usuário ativo criam uma sessão utilizável;
-- [ ] credenciais inválidas e usuário inativo não criam sessão nem permitem
+- [x] credenciais válidas de usuário ativo criam uma sessão utilizável;
+- [x] credenciais inválidas e usuário inativo não criam sessão nem permitem
       enumeração de contas;
-- [ ] logout revoga a sessão no servidor e expira o cookie no navegador;
-- [ ] `/api/auth/me` nunca retorna senha, hash ou token;
-- [ ] cookie atende à política documentada por ambiente;
-- [ ] mutações autenticadas sem a proteção CSRF definida são rejeitadas;
-- [ ] páginas não entram em loop entre login e rota protegida;
-- [ ] verificações de contratos, banco, API, Web e E2E passam.
+- [x] logout público e idempotente revoga somente a sessão atual quando ela
+      existe e sempre expira o cookie;
+- [x] `/api/auth/me` nunca retorna senha, hash ou token;
+- [x] cookie atende à política documentada por ambiente;
+- [x] login e logout sem Origin permitido ou proteção CSRF são rejeitados;
+- [x] contratos, banco, API e E2E backend passam nas verificações aplicáveis;
+- [x] nenhuma implementação ou alteração de Web integra este objetivo.
 
 ## Decisões necessárias antes dos objetivos seguintes
 
@@ -227,11 +232,7 @@ a 128 pontos de código Unicode, inclusive espaços, sem regra de composição, 
 é persistida com Argon2id. Troca, recuperação e redefinição de senha continuam
 fora desse objetivo.
 
-Permanecem abertas para `AUTH-001`:
-
-1. forma controlada de provisionar o primeiro
-   administrador;
-2. duração absoluta da sessão, timeout por inatividade e
-   quantidade de sessões simultâneas por usuário;
-3. valores de rate limit e bloqueio progressivo por
-   ambiente.
+As decisões de `AUTH-001` foram confirmadas e estão registradas em
+[Identidade, sessão e controle de acesso](./security-and-access.md). Não há
+bloqueio permanente nem atraso artificial; as interfaces Web continuam nos
+objetivos próprios do roadmap da Web.

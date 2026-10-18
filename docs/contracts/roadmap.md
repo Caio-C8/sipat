@@ -33,10 +33,8 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-O contrato de identidade e perfis do `CONTRACTS-001` está implementado. A parte
-de usuários do `CONTRACTS-002` também está entregue; o objetivo permanece em
-andamento porque os contratos de autenticação pertencentes ao `AUTH-001` ainda
-não existem.
+O contrato de identidade e perfis do `CONTRACTS-001` e os contratos de usuários
+e autenticação do `CONTRACTS-002` estão implementados e validados.
 
 Cada objetivo deve registrar:
 
@@ -78,7 +76,7 @@ representação segura da identidade autenticada sem importar enums do Prisma.
 
 ### CONTRACTS-002 — Operações de usuários e autenticação
 
-**Status:** em andamento
+**Status:** concluído
 
 **Contexto**
 
@@ -90,9 +88,10 @@ mesmo contrato.
 
 - **entregue:** params, query, criação, atualização e situação do usuário;
 - **entregue:** response segura resumida/detalhada e resposta paginada;
-- **pendente de `AUTH-001`:** body de login e response de identidade atual;
-- testes de limites, e-mail, senha, PATCH, enums e ausência de campos sensíveis
-  já cobrem a parte entregue.
+- **entregue:** body estrito de login, response segura do login e response da
+  identidade atual;
+- testes cobrem limites, normalização de e-mail, senha, PATCH, enums,
+  propriedades inesperadas e ausência de campos sensíveis.
 
 **Consumidores afetados**
 
@@ -103,12 +102,12 @@ mesmo contrato.
 
 - [x] criação, atualização, situação e responses de usuário possuem schemas
       próprios quando suas semânticas diferem;
-- [ ] login e identidade atual possuem schemas próprios em `AUTH-001`;
-- [x] senha existe somente no input de criação entregue;
+- [x] login e identidade atual possuem schemas próprios em `AUTH-001`;
+- [x] senha existe somente nos inputs de criação e login;
 - [x] responses de usuário nunca aceitam ou expõem senha, hash ou token;
 - [x] paginação reutiliza o contrato comum sem remover seu limite finito;
 - [x] contratos de usuário possuem testes antes do consumo pelos apps;
-- [x] lint, typecheck, testes e consumidores da parte de usuário passam.
+- [x] lint, typecheck, testes e consumidores afetados passam.
 
 ## Histórico do baseline
 

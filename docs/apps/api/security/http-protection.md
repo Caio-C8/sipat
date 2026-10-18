@@ -52,6 +52,12 @@ O NestJS fornece integração de throttling, mas os valores precisam vir do
 contexto e de testes. Consulte
 [Rate limiting](https://docs.nestjs.com/security/rate-limiting).
 
+No login do SIPAT, o limite é persistido no PostgreSQL por HMAC do e-mail
+normalizado, sem IP ou `X-Forwarded-For`: 5 tentativas por 15 minutos em
+staging/produção é uma decisão do produto, não uma prescrição do NIST. A
+verificação Argon2 também possui concorrência e fila finitas por instância; a
+saturação responde `429` sem executar espera ilimitada.
+
 ## Transporte e proxy
 
 Produção deve usar HTTPS no servidor ou proxy responsável pela terminação TLS.

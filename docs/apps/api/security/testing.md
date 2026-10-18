@@ -4,14 +4,20 @@
 
 Antes de implementar uma rota, registre uma matriz de acesso com rota, estado,
 exposição pública, identidade, permissão, regra por recurso, campos sensíveis e
-limites especiais. O SIPAT possui somente o health check público; não use essa
-exposição como precedente para rotas de domínio. Uma coluna sem decisão deve
+limites especiais. O SIPAT possui health check, login e logout explicitamente
+públicos; login e logout continuam protegidos por Origin e CSRF. Não use essas
+exposições como precedente para rotas de domínio. Uma coluna sem decisão deve
 ser tratada como pendência, não como autorização implícita.
 
 O `SEC-001` cobre sessão ausente, malformada, inexistente, expirada e revogada,
 usuário inativo, os dois perfis, negação sem metadata, `401` versus `403`,
 origem e header CSRF. O E2E inicializa os Guards reais e substitui somente a
 persistência por um adapter determinístico.
+
+O `AUTH-001` acrescenta relógio controlado para duração absoluta, inatividade e
+agrupamento de atividade; capacidade Argon2 e fila finitas; E2E dos três
+endpoints; e integração em PostgreSQL para corridas de provisionamento, limite
+de sessões e rate limit atômico.
 
 Os testes atuais confirmam que uma origem configurada recebe os headers CORS,
 que o preflight respeita os métodos e headers permitidos e que uma origem fora

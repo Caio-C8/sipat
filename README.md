@@ -101,6 +101,7 @@ No Windows, se `pnpm --version` ainda mostrar uma instalação global antiga, lo
    ```
 
    Em Bash, use `cp .env.development.example .env.development`.
+   Execute `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"` para preencher a variável `AUTH_RATE_LIMIT_HMAC_SECRET`.
 
 2. Instale as dependências:
 

@@ -1,14 +1,16 @@
 # Identidade, sessão e controle de acesso
 
 Este documento registra a arquitetura das primeiras entregas de segurança do
-SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001` e a gestão de usuários
-do `USERS-001` estão implementadas. Login, logout, `/auth/me`, emissão de cookie
-e criação produtiva de sessões continuam planejados para o `AUTH-001`. O estado
-e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
+SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
+do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
+As interfaces Web de usuários e autenticação continuam planejadas nos objetivos
+próprios. O estado e a ordem de execução ficam no
+[roadmap inicial](./roadmap.md).
 
-## Estado implementado no SEC-001
+## Estado implementado
 
-- somente `GET /api/health` é uma rota pública de produção;
+- `GET /api/health`, `POST /api/auth/login` e `POST /api/auth/logout` são as
+  rotas públicas; os dois `POST` continuam submetidos a Origin e CSRF;
 - autenticação, autorização e CSRF são Guards globais registrados nessa ordem;
 - rotas protegidas sem perfis declarados negam acesso por padrão;
 - o cookie é escolhido por ambiente e contém um token opaco de 32 bytes em
@@ -17,7 +19,8 @@ e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
 - identidade válida sem um perfil permitido produz `403`;
 - `POST`, `PUT`, `PATCH` e `DELETE` exigem Origin exato permitido e
   `X-SIPAT-CSRF: 1`, inclusive quando uma rota for pública;
-- não existe endpoint que crie, renove ou encerre sessão.
+- `POST /api/auth/login` cria a sessão, `GET /api/auth/me` consulta a identidade
+  atual e `POST /api/auth/logout` encerra a sessão de forma idempotente.
 
 ## Requisitos atendidos
 
@@ -51,9 +54,9 @@ consultar a identidade, mas isso não concede nem revoga permissão.
 
 ## Mecanismo de sessão
 
-O navegador usará sessão opaca revogável, e não JWT persistido no cliente:
+O navegador usa sessão opaca revogável, e não JWT persistido no cliente:
 
-- o segredo é gerado por CSPRNG quando o login for implementado;
+- o segredo é gerado por CSPRNG no login;
 - o cookie contém somente o segredo opaco;
 - o banco armazena somente um verificador unidirecional do segredo, nunca o
   valor reutilizável enviado ao navegador;
@@ -63,7 +66,20 @@ O navegador usará sessão opaca revogável, e não JWT persistido no cliente:
 - o perfil considerado é sempre o valor atual lido pelo servidor;
 - inativar um usuário revoga suas sessões e, mesmo durante concorrência, o
   Guard recusa um usuário já inativo;
-- `AUTH-001` começa sem refresh token nem renovação silenciosa.
+- a duração absoluta é de 8 horas e não é renovada pela atividade;
+- a inatividade nominal é de 30 minutos, calculada pela última atividade
+  persistida;
+- a atividade é persistida condicionalmente no máximo uma vez a cada 5 minutos;
+  por isso, a janela efetiva após a última request fica entre aproximadamente
+  25 e 30 minutos, nunca acima de 30 minutos;
+- no máximo cinco sessões ativas contam por usuário; ao criar a sexta, a sessão
+  ativa mais antiga é revogada;
+- somente sessão não revogada, dentro da duração absoluta e do limite de
+  inatividade conta como ativa;
+- criação, limite e atualização de `ultimoLoginAt` usam transação
+  `Serializable` e até três tentativas para `P2034`; contenção remanescente é
+  recusada genericamente com `429`;
+- não há refresh token nem renovação silenciosa.
 
 Esse desenho foi escolhido porque RF02 exige que a inativação impeça novos
 acessos e porque logout precisa revogar a credencial no servidor. Um JWT
@@ -138,7 +154,7 @@ proteção própria; não deve copiar cookies do navegador automaticamente.
 | `PATCH /api/usuarios/:usuarioId/situacao` | não     | sim           | não                   | USERS-001 |
 | `POST /api/auth/login`                    | sim     | sim           | sim                   | AUTH-001  |
 | `GET /api/auth/me`                        | não     | sim           | sim                   | AUTH-001  |
-| `POST /api/auth/logout`                   | não     | sim           | sim                   | AUTH-001  |
+| `POST /api/auth/logout`                   | sim     | sim           | sim                   | AUTH-001  |
 
 Uma rota pública não recebe autorização implícita para mutar estado sem CSRF,
 validação, limite e tratamento de abuso.
@@ -168,16 +184,50 @@ validação, limite e tratamento de abuso.
 
 ## Segurança do login e logout
 
-- compare senha com função de derivação resistente a força bruta; a escolha
-  inicial recomendada é Argon2id, com parâmetros medidos no ambiente alvo;
-- credencial inválida e usuário inativo retornam a mesma resposta pública;
-- aplique rate limit específico sem usar e-mail, IP bruto ou outro dado pessoal
-  como label de métrica;
-- login bem-sucedido atualiza `ultimoLoginAt`, cria sessão e define cookie;
-- logout revoga a sessão atual e expira o cookie mesmo se a sessão já estiver
-  inválida;
-- `GET /auth/me` retorna apenas a identidade segura;
-- nenhuma resposta retorna token de sessão no JSON.
+- a senha é verificada de forma assíncrona com Argon2id; usuário ausente,
+  inativo ou com senha incorreta recebe a mesma resposta e passa por uma
+  verificação equivalente;
+- o login bem-sucedido atualiza `ultimoLoginAt`, cria sessão e define cookie sem
+  retornar o token no JSON;
+- o limite persistido por chave HMAC do e-mail normalizado é 20 tentativas por
+  15 minutos em desenvolvimento, 5 por 15 minutos em staging/produção e 3 por
+  1 minuto em testes;
+- **5 tentativas por 15 minutos é uma decisão de produto do SIPAT**, não um
+  número prescrito pelo NIST;
+- incremento e verificação formam um único `UPSERT` atômico no PostgreSQL; o
+  sucesso limpa o contador somente depois de a senha ser validada e a sessão
+  ser criada;
+- registros possuem expiração e são removidos em lotes de até 100; a admissão
+  finita por instância impede trabalho e crescimento sem limite por e-mails
+  aleatórios;
+- `AUTH_ARGON2_MAX_CONCURRENCY` e `AUTH_ARGON2_MAX_QUEUE` limitam, por
+  instância, verificações simultâneas e espera; saturação retorna `429` genérico
+  com `Retry-After` e não executa contador nem Argon2;
+- o segredo HMAC exige 32 bytes em Base64url sem padding, diversidade mínima e
+  geração aleatória; ele nunca integra logs ou métricas;
+- IP e `X-Forwarded-For` não participam da chave até existir topologia de proxy
+  confiável documentada;
+- não existe bloqueio permanente nem atraso artificial;
+- logout é público e idempotente com `204`, mas Origin permitido e
+  `X-SIPAT-CSRF: 1` continuam obrigatórios;
+- logout revoga somente a sessão identificada pelo cookie, quando existente, e
+  sempre expira o cookie com os atributos do ambiente;
+- `GET /auth/me` retorna apenas a identidade segura.
+
+## Provisionamento inicial
+
+O primeiro administrador é criado exclusivamente pelo comando interativo:
+
+```bash
+pnpm --filter @repo/api build
+pnpm --filter @repo/api provisionar:admin
+```
+
+O comando exige TTY, lê senha e confirmação sem eco, não aceita argumentos e
+recusa o provisionamento quando já existe qualquer usuário. A verificação e a
+criação usam bloqueio transacional no PostgreSQL, transação `Serializable` e
+repetição limitada de `P2034`, garantindo apenas um administrador em execuções
+concorrentes. Não existe endpoint HTTP de bootstrap.
 
 ## Arquitetura Web futura
 
@@ -197,7 +247,7 @@ validação, limite e tratamento de abuso.
 - unitários: parsing de cookie, verificação de sessão, metadata, Guards,
   policies, hash de senha, mappers e contratos;
 - integração: persistência de sessão, unicidade de e-mail, inativação com
-  revogação e consultas paginadas;
+  revogação, provisionamento e corridas de rate limit e limite de sessões;
 - E2E da API: rota pública, `401`, `403`, cada perfil permitido, expiração,
   revogação, usuário inativo, CSRF, login e logout;
 - Web: estados, metadata, formulário, foco, teclado e erros normalizados;
@@ -218,15 +268,12 @@ reais e prova a ordem dos controles globais.
   `WEB-USERS-001`; biblioteca de formulário e estado remoto ainda serão
   decididas quando existir um consumidor concreto.
 
-## Decisões ainda abertas para AUTH-001
+## Decisões confirmadas no AUTH-001
 
-Os requisitos não definem e os agentes não devem inferir:
-
-- provisionamento controlado do primeiro administrador;
-- duração absoluta, inatividade e simultaneidade de sessões;
-- limites de tentativas e bloqueio progressivo do login.
-
-Essas decisões são pré-condições dos objetivos indicados no roadmap.
+As políticas implementadas são as descritas nas seções de mecanismo de sessão,
+login/logout e provisionamento deste documento. `AUTH-001` cobre somente o
+backend. Não existe página de login, formulário, hook, redirect ou integração
+Web; `WEB-AUTH-001` continua planejado no roadmap próprio da Web.
 
 ## Fontes oficiais e de segurança
 
