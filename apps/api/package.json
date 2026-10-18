@@ -18,6 +18,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@repo/contracts": "workspace:*",
     "@repo/database": "workspace:*",
+    "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
     "nestjs-zod": "^5.5.0",
     "reflect-metadata": "^0.2.2",

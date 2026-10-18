@@ -21,9 +21,9 @@ apps/web/
             └── use-*.ts
 ```
 
-Somente a infraestrutura HTTP comum está implementada. Crie operações e hooks
-do SIPAT quando houver endpoint, contrato e consumidor concretos; não antecipe
-arquivos de uma entrega futura.
+Somente a infraestrutura HTTP comum está implementada. Os cinco endpoints e os
+contratos de usuários existem no backend, mas crie operações e hooks Web apenas
+quando houver consumidor concreto; não antecipe arquivos da entrega futura.
 
 ## Abstração comum
 
@@ -55,8 +55,9 @@ segredos: proibidos
 origem: mesma origem do Next.js
 ```
 
-Não leia variável server-only nesse módulo. Defina `credentials`, CORS, cookie
-e CSRF em conjunto quando autenticação for introduzida.
+Não leia variável server-only nesse módulo. Defina `credentials`, cookie e o
+envio do sinal público de CSRF em conjunto quando a autenticação Web e as
+primeiras mutações forem introduzidas.
 
 ## Instância do servidor
 

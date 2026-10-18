@@ -16,25 +16,27 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Estado atual
 
-O `SEC-001` está implementado: a API possui barreira global de autenticação,
-autorização por perfil, proteção CSRF e persistência de sessões revogáveis. A
-única rota de produção atual continua sendo o health check público. Login,
-logout, criação produtiva de sessões, rotas e telas de usuários ainda não
-existem e permanecem nos objetivos seguintes.
+O `SEC-001` e o backend do `USERS-001` estão implementados. A API possui
+barreira global de autenticação, autorização por perfil, proteção CSRF,
+persistência de sessões revogáveis, contratos e as cinco operações
+administrativas de usuários. Nenhuma página de usuários está implementada.
+Login, logout, `/auth/me` e criação produtiva de sessões ainda não existem e
+permanecem no `AUTH-001`.
 
 ## Ordem das primeiras entregas
 
 | Ordem | Objetivo                                   | Status    | Requisitos         |
 | ----- | ------------------------------------------ | --------- | ------------------ |
 | 1     | `SEC-001` — Proteger rotas por perfil      | concluído | RF01, RNF05, RNF06 |
-| 2     | `USERS-001` — Gerenciar usuários           | planejado | RF02, UC02, RNF01  |
+| 2     | `USERS-001` — Backend de usuários          | concluído | RF02, UC02, RNF01  |
 | 3     | `AUTH-001` — Autenticar e encerrar sessões | planejado | RF01, UC01, RNF05  |
 
 A ordem solicitada é viável desde que a dependência seja explícita: `SEC-001`
 cria a barreira e valida uma sessão que já exista; `USERS-001` consome essa
 barreira e pode ser validado com sessões controladas nos testes; somente
-`AUTH-001` passa a criar sessões por login e a encerrá-las por logout. Antes de
-`AUTH-001`, nenhuma pessoa consegue usar o CRUD pela Web em um ambiente real.
+`AUTH-001` passa a criar sessões por login e a encerrá-las por logout. A
+interface administrativa pertence ao objetivo separado `WEB-USERS-001`, que
+permanece planejado no roadmap da Web.
 
 Não enfraqueça temporariamente os Guards nem aceite perfil enviado pelo cliente
 para contornar essa dependência.
@@ -108,16 +110,17 @@ explicitamente as exceções públicas e os perfis aceitos por rota.
 - [x] `pnpm format:check` passa;
 - [x] documentação de estado é atualizada sem declarar login implementado.
 
-## USERS-001 — Gerenciar usuários
+## USERS-001 — Backend de gestão de usuários
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
-Entregar o CRUD administrativo previsto em RF02, sem exclusão física e
-acessível somente ao perfil `ADMINISTRADOR`.
+Entregar na API o CRUD administrativo previsto em RF02, sem exclusão física e
+acessível somente ao perfil `ADMINISTRADOR`. A interface pertence ao objetivo
+separado `WEB-USERS-001`.
 
-### Rotas planejadas
+### Rotas implementadas
 
 | Método  | Rota                                | Perfil        | Resultado                     |
 | ------- | ----------------------------------- | ------------- | ----------------------------- |
@@ -140,9 +143,6 @@ response. A troca ou redefinição de senha não será inferida a partir do verb
 - hash de senha adequado antes da persistência;
 - mapper com seleção explícita de campos seguros;
 - repository, service, controller, módulo e testes;
-- página Web `/usuarios` com estados de loading, vazio, erro, sem permissão,
-  sucesso e mutação pendente;
-- metadata `Usuários | SIPAT`, responsividade, teclado e foco;
 - auditoria por `createdById`, `createdAt` e `updatedAt`;
 - revogação das sessões do usuário quando ele for inativado.
 
@@ -151,19 +151,20 @@ response. A troca ou redefinição de senha não será inferida a partir do verb
 - exclusão física;
 - autoedição de perfil;
 - recuperação, redefinição ou troca de senha;
+- página ou feature Web de gestão de usuários;
 - permissões configuráveis além dos dois perfis dos requisitos.
 
 ### Critérios de aceite
 
-- [ ] somente administrador acessa todas as rotas e a página de usuários;
-- [ ] diretor autenticado recebe `403` e não obtém dados parciais;
-- [ ] requisição anônima recebe `401`;
-- [ ] e-mail duplicado produz conflito público e previsível;
-- [ ] inativação preserva o usuário e seus vínculos históricos;
-- [ ] usuário inativado e suas sessões deixam de autenticar;
-- [ ] senha e hash não aparecem em response, log, métrica ou fixture pública;
-- [ ] contratos, banco, API e Web possuem testes proporcionais ao risco;
-- [ ] verificações dos packages afetados e `pnpm format:check` passam.
+- [x] somente administrador acessa todas as rotas;
+- [x] diretor autenticado recebe `403` e não obtém dados parciais;
+- [x] requisição anônima recebe `401`;
+- [x] e-mail duplicado produz conflito público e previsível;
+- [x] inativação preserva o usuário e seus vínculos históricos;
+- [x] usuário inativado e suas sessões deixam de autenticar;
+- [x] senha e hash não aparecem em response, log, métrica ou fixture pública;
+- [x] contratos, banco e API possuem testes proporcionais ao risco;
+- [x] verificações dos packages afetados e `pnpm format:check` passam.
 
 ## AUTH-001 — Autenticar e encerrar sessões
 
@@ -220,12 +221,17 @@ revogação no servidor, tornando operacionais as rotas protegidas anteriores.
 Estas decisões afetam segurança ou comportamento externo e não podem ser
 inventadas pelo agente executor:
 
-1. antes de `USERS-001`: impedir ou permitir que um administrador inative a si
-   mesmo e impedir ou permitir a inativação do último administrador ativo;
-2. antes de `USERS-001`: política da senha inicial e futura redefinição;
-3. antes de `AUTH-001`: forma controlada de provisionar o primeiro
+As decisões do `USERS-001` foram confirmadas: o administrador não pode inativar
+a própria conta nem o último administrador ativo; a senha inicial aceita de 15
+a 128 pontos de código Unicode, inclusive espaços, sem regra de composição, e
+é persistida com Argon2id. Troca, recuperação e redefinição de senha continuam
+fora desse objetivo.
+
+Permanecem abertas para `AUTH-001`:
+
+1. forma controlada de provisionar o primeiro
    administrador;
-4. antes de `AUTH-001`: duração absoluta da sessão, timeout por inatividade e
+2. duração absoluta da sessão, timeout por inatividade e
    quantidade de sessões simultâneas por usuário;
-5. antes de `AUTH-001`: valores de rate limit e bloqueio progressivo por
+3. valores de rate limit e bloqueio progressivo por
    ambiente.

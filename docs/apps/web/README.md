@@ -26,8 +26,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - Playwright cobre home, acessibilidade automatizável e headers de segurança;
 - não existem páginas, formulários, hooks, cache remoto ou regras de domínio.
 
-As páginas, operações e formulários do domínio SIPAT ainda não estão
-implementados.
+Os contratos e endpoints administrativos de usuários existem no backend, mas
+ainda não possuem consumidor Web. Login, logout, `/auth/me` e criação produtiva
+de sessão também não existem.
 
 ## Princípios
 
@@ -74,7 +75,8 @@ esse template.
 
 - identidade visual, temas e tokens definitivos;
 - biblioteca de formulários e estado remoto;
-- autenticação, autorização, cookies e CSRF;
+- autenticação Web, identidade atual, redirects, login e logout;
+- duração e política operacional das sessões e do cookie;
 - serviço de observabilidade e analytics;
 - internacionalização;
 - metas numéricas de bundle e Core Web Vitals;

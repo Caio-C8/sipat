@@ -2,12 +2,22 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   CABECALHO_CSRF,
+  AlterarSituacaoUsuarioSchema,
+  AlterarUsuarioSchema,
+  ConsultarUsuarioResponseSchema,
+  CriarUsuarioResponseSchema,
+  CriarUsuarioSchema,
   ErroCampoSchema,
   IdentidadeAutenticadaSchema,
+  ListarUsuariosQuerySchema,
+  ListarUsuariosResponseSchema,
   MetaPaginacaoSchema,
   PaginacaoQuerySchema,
   PerfilUsuarioSchema,
   RespostaErroSchema,
+  UsuarioDetalheSchema,
+  UsuarioParamsSchema,
+  UsuarioResumoSchema,
   VALOR_CABECALHO_CSRF,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -35,5 +45,24 @@ describe("@repo/contracts — API pública", () => {
     assert.equal(typeof IdentidadeAutenticadaSchema.safeParse, "function");
     assert.equal(CABECALHO_CSRF, "X-SIPAT-CSRF");
     assert.equal(VALOR_CABECALHO_CSRF, "1");
+  });
+
+  it("exporta os contratos de gestão de usuários pelo entrypoint", () => {
+    const schemas = [
+      UsuarioParamsSchema,
+      ListarUsuariosQuerySchema,
+      CriarUsuarioSchema,
+      AlterarUsuarioSchema,
+      AlterarSituacaoUsuarioSchema,
+      UsuarioResumoSchema,
+      UsuarioDetalheSchema,
+      ListarUsuariosResponseSchema,
+      CriarUsuarioResponseSchema,
+      ConsultarUsuarioResponseSchema,
+    ];
+
+    for (const schema of schemas) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
   });
 });

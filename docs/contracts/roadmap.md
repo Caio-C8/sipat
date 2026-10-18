@@ -33,9 +33,10 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-O contrato de identidade e perfis do `CONTRACTS-001` está implementado. Os
-demais objetivos abaixo acompanham o [roadmap inicial](../roadmap.md). Um
-objetivo planejado não representa um export já disponível.
+O contrato de identidade e perfis do `CONTRACTS-001` está implementado. A parte
+de usuários do `CONTRACTS-002` também está entregue; o objetivo permanece em
+andamento porque os contratos de autenticação pertencentes ao `AUTH-001` ainda
+não existem.
 
 Cada objetivo deve registrar:
 
@@ -77,7 +78,7 @@ representação segura da identidade autenticada sem importar enums do Prisma.
 
 ### CONTRACTS-002 — Operações de usuários e autenticação
 
-**Status:** planejado
+**Status:** em andamento
 
 **Contexto**
 
@@ -87,10 +88,11 @@ mesmo contrato.
 
 **Escopo**
 
-- params, query, criação, atualização e situação do usuário;
-- response segura resumida/detalhada e resposta paginada;
-- body de login e response de identidade atual;
-- testes de limites, e-mail, senha, PATCH, enums e ausência de campos sensíveis.
+- **entregue:** params, query, criação, atualização e situação do usuário;
+- **entregue:** response segura resumida/detalhada e resposta paginada;
+- **pendente de `AUTH-001`:** body de login e response de identidade atual;
+- testes de limites, e-mail, senha, PATCH, enums e ausência de campos sensíveis
+  já cobrem a parte entregue.
 
 **Consumidores afetados**
 
@@ -99,13 +101,14 @@ mesmo contrato.
 
 **Critérios de aceite**
 
-- [ ] criação, atualização, situação, login e responses possuem schemas
+- [x] criação, atualização, situação e responses de usuário possuem schemas
       próprios quando suas semânticas diferem;
-- [ ] senha existe somente nos inputs que realmente a recebem;
-- [ ] responses nunca aceitam ou expõem senha, hash ou token;
-- [ ] paginação reutiliza o contrato comum sem remover seu limite finito;
-- [ ] contratos possuem testes antes do consumo pelos apps;
-- [ ] lint, typecheck, testes e consumidores afetados passam.
+- [ ] login e identidade atual possuem schemas próprios em `AUTH-001`;
+- [x] senha existe somente no input de criação entregue;
+- [x] responses de usuário nunca aceitam ou expõem senha, hash ou token;
+- [x] paginação reutiliza o contrato comum sem remover seu limite finito;
+- [x] contratos de usuário possuem testes antes do consumo pelos apps;
+- [x] lint, typecheck, testes e consumidores da parte de usuário passam.
 
 ## Histórico do baseline
 

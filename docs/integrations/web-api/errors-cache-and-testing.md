@@ -117,12 +117,10 @@ aplicação por conveniência.
 
 ## Autenticação e CSRF
 
-O estado atual do SIPAT não possui credencial de autenticação e `WEB-005` não
-adicionou identidade, sessão ou proteção CSRF. Portanto, esta seção não descreve
-uma capacidade já implementada nem um critério de conclusão dessa entrega; ela
-preserva o baseline obrigatório para os futuros fluxos autenticados. Sem
-autorização, as mutações públicas continuam acessíveis a qualquer cliente que
-alcance a API.
+O SIPAT possui validação de sessão, autorização global e proteção CSRF na API.
+A Web ainda não possui operações de usuários nem credencial de autenticação.
+Login, logout, `/auth/me`, emissão do cookie e criação produtiva da sessão
+permanecem pendentes no `AUTH-001`.
 
 O baseline para navegadores é obrigatório: credenciais de autenticação ficam em
 cookies `HttpOnly` e nunca em `localStorage`, `sessionStorage` ou estado
@@ -228,7 +226,7 @@ No estado atual, o cliente HTTP é testado com `fetch` injetado para cobrir URL,
 query, JSON, timeout, cancelamento, erros públicos, validação de response e
 `204 No Content`. Playwright cobre a página inicial, acessibilidade automatizada
 e headers de segurança. A integração Web → rewrite → API é verificada pelo
-health check e deve ganhar testes do domínio SIPAT quando suas operações forem
+health check e deve ganhar testes de domínio quando suas operações forem
 implementadas.
 
 O mock estrito de `/api/backend` permanece disponível como infraestrutura E2E:
