@@ -30,6 +30,24 @@ export interface UsuarioParaAlteracaoSenha {
   senha: string;
 }
 
+export interface UsuarioParaRecuperacaoSenha {
+  id: string;
+  email: string;
+}
+
+export interface RedefinicaoSenhaParaConsumo {
+  id: string;
+  tokenHash: string;
+  expiraAt: Date;
+  consumidoAt: Date | null;
+  usuario: {
+    id: string;
+    email: string;
+    ativo: boolean;
+    senha: string;
+  };
+}
+
 export interface LoginRealizado {
   identidade: IdentidadeAutenticada;
   token: string;

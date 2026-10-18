@@ -168,8 +168,8 @@ validação, limite e tratamento de abuso.
 
 | Rota                             | Pública | Identidade exigida | Objetivo |
 | -------------------------------- | ------- | ------------------ | -------- |
-| `POST /api/auth/forgot-password` | sim     | não                | AUTH-003 |
-| `POST /api/auth/reset-password`  | sim     | token de uso único | AUTH-003 |
+| `POST /api/auth/esqueceu-senha`  | sim     | não                | AUTH-003 |
+| `POST /api/auth/redefinir-senha` | sim     | token de uso único | AUTH-003 |
 
 As duas rotas públicas continuam submetidas a Origin exato,
 `X-SIPAT-CSRF: 1`, validação estrita, limite contra abuso e respostas que não
@@ -270,7 +270,7 @@ sejam institucionais.
 
 ### Solicitação
 
-- `POST /api/auth/forgot-password` recebe somente o e-mail normalizado;
+- `POST /api/auth/esqueceu-senha` recebe somente o e-mail normalizado;
 - conta ativa, inexistente ou inativa recebe `202 Accepted` com exatamente a
   mesma mensagem pública;
 - nenhuma conta é bloqueada, inativada ou alterada pela solicitação;
@@ -286,7 +286,8 @@ sejam institucionais.
   existe; a falha produz somente observabilidade sem destinatário, token ou
   conteúdo da mensagem, e o usuário pode realizar nova solicitação;
 - a implantação produtiva permanece desabilitada até existir uma URL HTTPS de
-  consumidor válida para receber o token.
+  consumidor válida para receber o token; em desenvolvimento, HTTP é aceito
+  somente para `localhost` e endereços de loopback.
 
 ### Token e persistência
 
@@ -307,7 +308,7 @@ sejam institucionais.
 
 ### Redefinição
 
-- `POST /api/auth/reset-password` recebe somente `token`, `novaSenha` e
+- `POST /api/auth/redefinir-senha` recebe somente `token`, `novaSenha` e
   `confirmacaoNovaSenha`;
 - a API calcula o hash do token e determina o usuário exclusivamente pela
   associação persistida;

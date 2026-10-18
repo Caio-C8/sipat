@@ -7,6 +7,8 @@ import type { EnvironmentVariables } from "../src/environment";
 import { AuthRepository } from "../src/modules/auth/auth.repository";
 import { AuthService } from "../src/modules/auth/auth.service";
 import { CapacidadeArgon2 } from "../src/modules/auth/capacidade-argon2";
+import type { DespachanteEmailAuth } from "../src/modules/auth/despachante-email";
+import type { MensagemEmailAuth } from "../src/modules/auth/email.types";
 import {
   provisionarPrimeiroAdministrador,
   ProvisionamentoAdministradorRecusadoError,
@@ -28,6 +30,9 @@ function criarConfig(
       if (chave === "AUTH_RATE_LIMIT_HMAC_SECRET") return SEGREDO_TESTE;
       if (chave === "AUTH_ARGON2_MAX_CONCURRENCY") return concorrencia;
       if (chave === "AUTH_ARGON2_MAX_QUEUE") return fila;
+      if (chave === "AUTH_PASSWORD_RESET_ENABLED") return true;
+      if (chave === "AUTH_PASSWORD_RESET_URL")
+        return "https://sipat.example/redefinir-senha";
       throw new Error(`Configuração inesperada: ${chave}`);
     }),
   } as unknown as ConfigService<EnvironmentVariables, true>;
@@ -37,6 +42,7 @@ function criarAuthService(
   database: DatabaseClient,
   ambiente: "development" | "test",
   senhaHasher: SenhaHasher,
+  mensagensEmail: MensagemEmailAuth[] = [],
 ): AuthService {
   const config = criarConfig(ambiente);
 
@@ -46,6 +52,12 @@ function criarAuthService(
     senhaHasher,
     new CapacidadeArgon2(config),
     config,
+    {
+      despachar: jest.fn((mensagem: MensagemEmailAuth) => {
+        mensagensEmail.push(mensagem);
+        return true;
+      }),
+    } as unknown as DespachanteEmailAuth,
   );
 }
 
@@ -55,9 +67,9 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
   jest.setTimeout(60_000);
 
   beforeAll(async () => {
-    if (!databaseUrl?.includes("/sipat_auth001_test")) {
+    if (!databaseUrl?.includes("/sipat_auth003_test")) {
       throw new Error(
-        "AUTH_INTEGRATION_DATABASE_URL deve apontar para sipat_auth001_test.",
+        "AUTH_INTEGRATION_DATABASE_URL deve apontar para sipat_auth003_test.",
       );
     }
 
@@ -69,7 +81,7 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
 
   beforeEach(async () => {
     await database.$executeRawUnsafe(
-      'TRUNCATE TABLE "tentativas_login", "sessoes_usuarios", "usuarios" CASCADE',
+      'TRUNCATE TABLE "redefinicoes_senha", "tentativas_operacoes_senha", "tentativas_login", "sessoes_usuarios", "usuarios" CASCADE',
     );
   });
 
@@ -351,5 +363,123 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
 
     expect(removidas).toBe(100);
     expect(await database.tentativaLogin.count()).toBe(50);
+  });
+
+  it("permite somente um reset concorrente e revoga todas as sessões", async () => {
+    const senhaHasher = new SenhaHasher();
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Administradora",
+        email: "recuperacao@example.com",
+        senha: await senhaHasher.criarHash("uma senha inicial segura"),
+        perfil: "ADMINISTRADOR",
+        ativo: true,
+      },
+    });
+    await database.sessaoUsuario.createMany({
+      data: ["a", "b"].map((prefixo) => ({
+        tokenHash: prefixo.repeat(64),
+        usuarioId: usuario.id,
+        expiraAt: new Date("2999-01-01"),
+        ultimaAtividadeAt: new Date(),
+      })),
+    });
+    const mensagensEmail: MensagemEmailAuth[] = [];
+    const service = criarAuthService(
+      database,
+      "test",
+      senhaHasher,
+      mensagensEmail,
+    );
+
+    await service.solicitarRedefinicaoSenha({ email: usuario.email });
+    const mensagem = mensagensEmail[0];
+    if (mensagem?.tipo !== "REDEFINIR_SENHA") {
+      throw new Error("Mensagem de redefinição esperada.");
+    }
+    const token = new URL(mensagem.link).searchParams.get("token")!;
+    const dados = {
+      token,
+      novaSenha: "uma senha redefinida segura",
+      confirmacaoNovaSenha: "uma senha redefinida segura",
+    };
+
+    const resultados = await Promise.allSettled([
+      service.redefinirSenha(dados),
+      service.redefinirSenha(dados),
+    ]);
+
+    expect(
+      resultados.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      resultados.filter(
+        (resultado): resultado is PromiseRejectedResult =>
+          resultado.status === "rejected" &&
+          resultado.reason instanceof UnauthorizedException,
+      ),
+    ).toHaveLength(1);
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, revogadoAt: { not: null } },
+      }),
+    ).toBe(2);
+    const persistido = await database.usuario.findUniqueOrThrow({
+      where: { id: usuario.id },
+      select: { senha: true },
+    });
+    await expect(
+      senhaHasher.verificarHash(
+        persistido.senha,
+        "uma senha redefinida segura",
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it("invalida o reset pendente na mesma transação da alteração autenticada", async () => {
+    const senhaHasher = new SenhaHasher();
+    const senhaAtual = "uma senha inicial segura";
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Diretor",
+        email: "alteracao-invalida-reset@example.com",
+        senha: await senhaHasher.criarHash(senhaAtual),
+        perfil: "DIRETOR_PATRIMONIO",
+        ativo: true,
+      },
+    });
+    const mensagensEmail: MensagemEmailAuth[] = [];
+    const service = criarAuthService(
+      database,
+      "test",
+      senhaHasher,
+      mensagensEmail,
+    );
+    await service.solicitarRedefinicaoSenha({ email: usuario.email });
+    const mensagem = mensagensEmail[0];
+    if (mensagem?.tipo !== "REDEFINIR_SENHA") {
+      throw new Error("Mensagem de redefinição esperada.");
+    }
+    const token = new URL(mensagem.link).searchParams.get("token")!;
+
+    await service.alterarSenha(usuario.id, {
+      senhaAtual,
+      novaSenha: "uma senha alterada segura",
+      confirmacaoNovaSenha: "uma senha alterada segura",
+    });
+
+    await expect(
+      service.redefinirSenha({
+        token,
+        novaSenha: "outra senha redefinida segura",
+        confirmacaoNovaSenha: "outra senha redefinida segura",
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(
+      await database.redefinicaoSenha.findUnique({
+        where: { usuarioId: usuario.id },
+        select: { consumidoAt: true },
+      }),
+    ).toEqual({ consumidoAt: expect.any(Date) });
   });
 });

@@ -7,6 +7,7 @@ export const INTERVALO_ATUALIZACAO_ATIVIDADE_MS = 5 * 60 * 1_000;
 export const MAXIMO_SESSOES_ATIVAS = 5;
 export const TAMANHO_LOTE_LIMPEZA_RATE_LIMIT = 100;
 export const MAXIMO_TENTATIVAS_TRANSACAO = 3;
+export const DURACAO_TOKEN_REDEFINICAO_SENHA_MS = 15 * 60 * 1_000;
 
 export const POLITICA_RATE_LIMIT_LOGIN = {
   development: { tentativas: 20, janelaMs: 15 * 60 * 1_000 },

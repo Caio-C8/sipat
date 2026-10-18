@@ -20,11 +20,11 @@ O `SEC-001`, o backend do `USERS-001` e o backend do `AUTH-001` estão
 implementados. A API possui
 barreira global de autenticação, autorização por perfil, proteção CSRF,
 persistência de sessões revogáveis, contratos e as cinco operações
-administrativas de usuários, além de login, logout, `/auth/me` e
-provisionamento inicial controlado. As interfaces Web de usuários e
-autenticação não estão implementadas. Alteração autenticada e recuperação de
-senha ainda não estão implementadas e foram organizadas nos objetivos
-`CONTRACTS-003`, `AUTH-002` e `AUTH-003`.
+administrativas de usuários, além de login, logout, `/auth/me`, provisionamento
+inicial controlado, alteração autenticada e recuperação de senha por e-mail.
+Fora do ambiente de desenvolvimento, a recuperação permanece desabilitada até
+a configuração do consumidor HTTPS e SMTP institucional. As interfaces Web de
+usuários e autenticação não estão implementadas.
 
 ## Ordem das primeiras entregas
 
@@ -51,7 +51,7 @@ para contornar essa dependência.
 | ----- | ----------------------------------------- | --------- | ---------------------------- |
 | 4     | `CONTRACTS-003` — Contratos de senha      | concluído | `CONTRACTS-002`, RF01 e UC01 |
 | 5     | `AUTH-002` — Alterar a própria senha      | concluído | `CONTRACTS-003` e `AUTH-001` |
-| 6     | `AUTH-003` — Recuperar a senha por e-mail | planejado | `AUTH-002` e SMTP            |
+| 6     | `AUTH-003` — Recuperar a senha por e-mail | concluído | `AUTH-002` e SMTP            |
 
 Esta sequência entrega somente contratos, banco e backend. Não inclui página,
 formulário, operação ou hook Web, nem qualquer alteração no aplicativo mobile.
@@ -317,7 +317,7 @@ Especificação de execução:
 
 ## AUTH-003 — Recuperar a senha por e-mail institucional
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -327,8 +327,8 @@ da conta por identificador fornecido na confirmação.
 
 ### Escopo
 
-- `POST /api/auth/forgot-password`, público e com response neutra;
-- `POST /api/auth/reset-password`, público e autorizado exclusivamente por
+- `POST /api/auth/esqueceu-senha`, público e com response neutra;
+- `POST /api/auth/redefinir-senha`, público e autorizado exclusivamente por
   token de alta entropia, temporário e de uso único;
 - persistência somente do SHA-256 do token, associado ao usuário;
 - validade de 15 minutos e invalidação do token anterior ao emitir um novo;
@@ -352,14 +352,14 @@ da conta por identificador fornecido na confirmação.
 
 ### Critérios de aceite
 
-- [ ] solicitar recuperação produz a mesma response para conta elegível,
+- [x] solicitar recuperação produz a mesma response para conta elegível,
       inexistente ou inativa;
-- [ ] conhecer e-mail, ID ou perfil não permite redefinir a senha;
-- [ ] somente o token original válido determina o usuário da redefinição;
-- [ ] token expirado, consumido ou concorrente não altera a conta;
-- [ ] sucesso altera a senha, consome os tokens e revoga todas as sessões;
-- [ ] segredos de SMTP, senha e token não aparecem em response, log ou métrica;
-- [ ] contratos, banco e API passam nas verificações proporcionais.
+- [x] conhecer e-mail, ID ou perfil não permite redefinir a senha;
+- [x] somente o token original válido determina o usuário da redefinição;
+- [x] token expirado, consumido ou concorrente não altera a conta;
+- [x] sucesso altera a senha, consome os tokens e revoga todas as sessões;
+- [x] segredos de SMTP, senha e token não aparecem em response, log ou métrica;
+- [x] contratos, banco e API passam nas verificações proporcionais.
 
 Especificação de execução:
 [AUTH-003](./tasks/AUTH-003-recuperar-senha.md).

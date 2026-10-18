@@ -106,6 +106,13 @@ describe("RedefinirSenhaBodySchema", () => {
       parseValido(TokenRedefinicaoSenhaSchema, tokenValido),
       tokenValido,
     );
+    for (const caractereFinal of "AEIMQUYcgkosw048") {
+      const tokenCanonico = `${"A".repeat(42)}${caractereFinal}`;
+      assert.equal(
+        parseValido(TokenRedefinicaoSenhaSchema, tokenCanonico),
+        tokenCanonico,
+      );
+    }
 
     esperaInvalidos(TokenRedefinicaoSenhaSchema, [
       "A".repeat(42),

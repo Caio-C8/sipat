@@ -18,3 +18,13 @@ export function criarChaveRateLimitAlteracaoSenha(
     .update(usuarioId, "utf8")
     .digest("hex");
 }
+
+export function criarChaveRateLimitRecuperacaoSenha(
+  emailNormalizado: string,
+  segredoBase64url: string,
+): string {
+  return createHmac("sha256", Buffer.from(segredoBase64url, "base64url"))
+    .update("recuperar-senha\0", "utf8")
+    .update(emailNormalizado, "utf8")
+    .digest("hex");
+}

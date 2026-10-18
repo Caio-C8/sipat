@@ -2,7 +2,7 @@ import * as z from "zod";
 import { EmailUsuarioSchema } from "../usuario/usuario-fields.schema";
 import { SenhaSchema } from "./senha.schema";
 
-const TOKEN_REDEFINICAO_SENHA_PATTERN = /^[A-Za-z0-9_-]{42}[AQgw]$/;
+const TOKEN_REDEFINICAO_SENHA_PATTERN = /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/;
 
 export const MENSAGEM_SOLICITACAO_REDEFINICAO_SENHA =
   "Se houver uma conta elegível, enviaremos as instruções para redefinir a senha.";

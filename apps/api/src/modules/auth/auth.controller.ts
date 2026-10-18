@@ -9,10 +9,12 @@ import {
   Res,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import type {
-  AppEnvironment,
-  AuthMeResponse,
-  LoginResponse,
+import {
+  MENSAGEM_SOLICITACAO_REDEFINICAO_SENHA,
+  type SolicitarRedefinicaoSenhaResponse,
+  type AppEnvironment,
+  type AuthMeResponse,
+  type LoginResponse,
 } from "@repo/contracts";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { EnvironmentVariables } from "../../environment";
@@ -25,6 +27,9 @@ import {
   AuthMeResponseDto,
   LoginBodyDto,
   LoginResponseDto,
+  RedefinirSenhaBodyDto,
+  SolicitarRedefinicaoSenhaBodyDto,
+  SolicitarRedefinicaoSenhaResponseDto,
 } from "./dtos";
 import {
   extrairTokenSessao,
@@ -104,6 +109,29 @@ export class AuthController {
       "",
       obterOpcoesExpiracaoCookieSessao(ambiente),
     );
+  }
+
+  @Post("esqueceu-senha")
+  @Publica()
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ZodSerializerDto(SolicitarRedefinicaoSenhaResponseDto)
+  async solicitarRedefinicaoSenha(
+    @Body() body: SolicitarRedefinicaoSenhaBodyDto,
+  ): Promise<SolicitarRedefinicaoSenhaResponse> {
+    await this.authService.solicitarRedefinicaoSenha(body);
+
+    return {
+      status: HttpStatus.ACCEPTED,
+      sucesso: true,
+      mensagem: MENSAGEM_SOLICITACAO_REDEFINICAO_SENHA,
+    };
+  }
+
+  @Post("redefinir-senha")
+  @Publica()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async redefinirSenha(@Body() body: RedefinirSenhaBodyDto): Promise<void> {
+    await this.authService.redefinirSenha(body);
   }
 
   @Post("logout")
