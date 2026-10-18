@@ -83,7 +83,9 @@ describe("gestão de usuários", () => {
 
         if (where.tokenHash === hashAdministrador) {
           return {
+            id: "00000000-0000-4000-8000-000000000001",
             expiresAt: new Date("2999-01-01T00:00:00.000Z"),
+            lastActivityAt: new Date("2998-01-01T00:00:00.000Z"),
             revokedAt: null,
             usuario: {
               id: ADMIN_ID,
@@ -97,7 +99,9 @@ describe("gestão de usuários", () => {
 
         if (where.tokenHash === hashDiretor) {
           return {
+            id: "00000000-0000-4000-8000-000000000002",
             expiresAt: new Date("2999-01-01T00:00:00.000Z"),
+            lastActivityAt: new Date("2998-01-01T00:00:00.000Z"),
             revokedAt: null,
             usuario: {
               id: DIRETOR_ID,

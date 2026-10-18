@@ -6,6 +6,7 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main.js",
+    "provisionar:admin": "node dist/commands/provisionar-administrador.js",
     "lint": "eslint src test",
     "lint:fix": "eslint src test --fix",
     "typecheck": "tsc --noEmit",

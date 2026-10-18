@@ -11,9 +11,21 @@ export interface RequisicaoAutenticada {
 }
 
 export interface SessaoParaAutenticacao {
+  id: string;
   expiresAt: Date;
+  lastActivityAt: Date;
   revokedAt: Date | null;
   usuario: IdentidadeAutenticadaInput & {
     ativo: boolean;
   };
+}
+
+export interface UsuarioParaLogin extends IdentidadeAutenticadaInput {
+  ativo: boolean;
+  senha: string;
+}
+
+export interface LoginRealizado {
+  identidade: IdentidadeAutenticada;
+  token: string;
 }

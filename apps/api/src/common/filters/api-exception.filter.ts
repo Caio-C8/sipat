@@ -16,6 +16,7 @@ import { ZodSerializationException, ZodValidationException } from "nestjs-zod";
 import { randomUUID } from "node:crypto";
 import * as z from "zod";
 import { type RequisicaoComId } from "../middleware/requisicao-id.middleware";
+import { MuitasRequisicoesException } from "../http/muitas-requisicoes.exception";
 
 const MAXIMO_ERROS_CAMPO = 100;
 const MAXIMO_CAMPO = 200;
@@ -151,6 +152,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (httpAdapter.isHeadersSent(response)) {
       httpAdapter.end(response);
       return;
+    }
+
+    if (exception instanceof MuitasRequisicoesException) {
+      httpAdapter.setHeader(
+        response,
+        "Retry-After",
+        String(exception.retryAfterSeconds),
+      );
     }
 
     httpAdapter.reply(response, respostaErro, respostaErro.status);

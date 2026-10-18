@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import {
   calcularHashTokenSessao,
   extrairTokenSessao,
+  gerarTokenSessao,
   obterNomeCookieSessao,
+  obterOpcoesCriacaoCookieSessao,
+  obterOpcoesExpiracaoCookieSessao,
 } from "../token-sessao";
 
 describe("token de sessão", () => {
@@ -49,4 +52,40 @@ describe("token de sessão", () => {
     expect(calcularHashTokenSessao(token)).toBe(hashEsperado);
     expect(calcularHashTokenSessao(token)).toHaveLength(64);
   });
+
+  it("gera 32 bytes aleatórios em Base64url sem padding", () => {
+    const primeiro = gerarTokenSessao();
+    const segundo = gerarTokenSessao();
+
+    expect(primeiro).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(Buffer.from(primeiro, "base64url")).toHaveLength(32);
+    expect(segundo).not.toBe(primeiro);
+  });
+
+  it.each([
+    ["development", false, "sipat_session"],
+    ["test", false, "sipat_session"],
+    ["staging", true, "__Host-sipat_session"],
+    ["production", true, "__Host-sipat_session"],
+  ] as const)(
+    "define cookie coerente em %s",
+    (ambiente, secure, nomeEsperado) => {
+      expect(obterNomeCookieSessao(ambiente)).toBe(nomeEsperado);
+      expect(obterOpcoesCriacaoCookieSessao(ambiente)).toEqual({
+        httpOnly: true,
+        sameSite: "strict",
+        secure,
+        path: "/",
+        maxAge: 8 * 60 * 60 * 1_000,
+      });
+      expect(obterOpcoesExpiracaoCookieSessao(ambiente)).toEqual({
+        httpOnly: true,
+        sameSite: "strict",
+        secure,
+        path: "/",
+        maxAge: 0,
+        expires: new Date(0),
+      });
+    },
+  );
 });
