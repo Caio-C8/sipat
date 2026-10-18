@@ -3,17 +3,25 @@
 Estas regras complementam o `AGENTS.md` da raiz para qualquer alteração em
 `apps/api`.
 
-## Leitura obrigatória
+## Roteamento da leitura
 
-Antes de implementar, leia [a documentação da API](../../docs/apps/api/README.md)
-e somente os capítulos relacionados à tarefa.
+Antes de implementar, comece pelo índice da
+[documentação da API](../../docs/apps/api/README.md), confirme o módulo e os
+símbolos afetados e leia somente os capítulos relacionados à tarefa.
 
-Para rotas, autenticação, autorização, dados externos ou componentes
-transversais, leia também:
+Consulte adicionalmente, quando aplicável:
 
-- [Segurança](../../docs/apps/api/security/README.md);
-- [Performance](../../docs/apps/api/performance.md);
-- [Ciclo da requisição](../../docs/apps/api/request-lifecycle/README.md).
+- [Segurança](../../docs/apps/api/security/README.md) para autenticação,
+  autorização, dados externos, exposição de respostas ou controles de rota;
+- [Performance](../../docs/apps/api/performance.md) para caminhos críticos,
+  queries, listagens, uploads, concorrência ou integrações externas;
+- [Ciclo da requisição](../../docs/apps/api/request-lifecycle/README.md) ao
+  alterar Guards, Interceptors, Filters, Middleware, Pipes ou decorators;
+- [Contratos](../../docs/contracts/README.md) ao consumir ou alterar schemas e
+  tipos compartilhados.
+
+Não abra todos esses documentos por padrão. Amplie a leitura quando a mudança
+atravessar essas responsabilidades ou revelar um risco não previsto.
 
 ## Pré-condições
 
@@ -75,9 +83,17 @@ transversais, leia também:
 
 ## Verificação
 
-Execute os checks relevantes descritos em
-[workflow e testes](../../docs/apps/api/workflow-and-testing.md). Não encerre a
-tarefa com falhas conhecidas sem relatá-las claramente.
+Escolha verificações progressivas conforme o impacto e siga os comandos de
+[workflow e testes](../../docs/apps/api/workflow-and-testing.md):
+
+- documentação da API: diff, links, Markdown e formatação;
+- código localizado: lint, typecheck e testes relevantes de `@repo/api`;
+- rota ou comportamento funcional: testes unitários/E2E aplicáveis e build;
+- segurança, banco ou mudança transversal: valide também contratos, geração do
+  client, consumidores e integração afetados.
+
+A CI completa permanece como critério de integração. Não encerre a tarefa com
+falhas conhecidas ou limitações sem relatá-las claramente.
 
 Ao explicar uma implementação, relacione-a à documentação da API e diferencie
 o padrão planejado do estado realmente implementado. Questione propostas que

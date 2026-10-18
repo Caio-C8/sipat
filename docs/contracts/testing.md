@@ -149,3 +149,17 @@ Além dos schemas isolados, teste:
 O `typecheck` deve confirmar os tipos inferidos de input e output. Quando uma
 transformação muda o tipo, inclua uma asserção de tipos ou fixture de compilação
 que impeça a regressão.
+
+## Comandos de verificação
+
+Depois de modificar somente `@repo/contracts`, execute no mínimo:
+
+```bash
+pnpm --filter @repo/contracts lint
+pnpm --filter @repo/contracts typecheck
+pnpm --filter @repo/contracts test
+```
+
+Quando a mudança afetar consumidores, valide também os apps envolvidos ou
+amplie para `pnpm check` e `pnpm format:check`. A CI completa continua sendo o
+critério de integração para mudanças transversais.

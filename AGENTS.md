@@ -1,139 +1,85 @@
 # Instruções para agentes
 
-## Escopo geral
+## Regras universais
 
-- Inspecione a estrutura e os usos existentes antes de alterar código.
-- Preserve mudanças do usuário que não pertençam à tarefa.
-- Faça mudanças pequenas, verificáveis e compatíveis com a arquitetura.
-- Não altere contratos externos silenciosamente.
-- Explique decisões arquiteturais e trade-offs relevantes.
-- Quando a semântica de um campo não puder ser inferida com segurança, pergunte
-  antes de decidir.
-
-## Fontes
-
+- Delimite o objetivo e confirme o estado real do código e da configuração antes
+  de editar. Preserve mudanças do usuário fora do escopo e faça alterações
+  pequenas, verificáveis e compatíveis com a arquitetura.
+- Não invente regras de negócio, semânticas de campos, contratos, políticas de
+  segurança ou estados de implementação. Não altere contratos externos
+  silenciosamente.
+- Peça uma decisão quando a ambiguidade puder mudar comportamento externo,
+  segurança, custo relevante ou escopo. Resolva detalhes seguros e compatíveis
+  que não mudem esses limites.
+- Avalie criticamente a solução proposta. Quando ela for inconsistente,
+  desnecessariamente complexa ou insegura, explique evidências, impactos e uma
+  alternativa. Depois de expostos os trade-offs, respeite a decisão confirmada
+  dentro dos limites de segurança e autorização.
 - Confirme APIs e recomendações nas documentações oficiais das versões usadas.
-- Quando houver incerteza, pesquise uma fonte confiável e forneça o link.
-- Use issues, discussões e comunidade apenas como evidência secundária.
+  Em incerteza relevante, pesquise fonte confiável e forneça o link; trate
+  issues, discussões e comunidade como evidência secundária.
+- Mantenha documentação e implementação consistentes. Atualize o documento que
+  a mudança tornar incorreto quando isso estiver dentro do escopo.
 
-## Análise crítica
+## Leitura eficiente
 
-- Trate o pedido do usuário como o objetivo a ser alcançado, não como prova de
-  que a solução sugerida é a melhor implementação.
-- Compare decisões propostas com o código existente, a arquitetura documentada,
-  as versões instaladas e as recomendações oficiais aplicáveis.
-- Quando uma decisão parecer inconsistente, desnecessariamente complexa,
-  insegura ou contrária às práticas recomendadas, explique antes de adotá-la:
-  identifique o problema, apresente evidências, descreva os impactos e recomende
-  uma alternativa.
-- Não bloqueie o trabalho por preferência pessoal ou diferença apenas estética.
-  Se houver uma alternativa segura, compatível e dentro do escopo, prossiga com
-  ela e registre a adaptação.
-- Peça uma decisão ao usuário quando as alternativas mudarem comportamento
-  externo, política de produto, segurança, custo relevante ou escopo.
-- Se o usuário mantiver conscientemente uma decisão após conhecer os trade-offs,
-  respeite-a dentro dos limites de segurança, autorização e viabilidade técnica.
+- Identifique áreas e riscos antes de explorar. Localize arquivos e símbolos com
+  `rg --files`, `rg` ou equivalente antes de abrir conteúdos completos.
+- Comece por índices e trechos diretamente relacionados. Não faça varredura
+  completa, releitura ou investigação externa ao escopo sem necessidade
+  concreta.
+- Reutilize contexto já verificado na sessão e limite a saída das ferramentas ao
+  necessário para decidir ou validar.
+- Amplie a investigação ao encontrar dependências, impacto transversal,
+  segurança ou evidência insuficiente.
 
-## Explicação e documentação
+Essas são preferências operacionais, não limites para uma investigação
+necessária.
 
-- Seja capaz de explicar em linguagem clara as regras, conceitos e decisões
-  descritos na documentação do repositório.
-- Ao explicar, confirme também o código e a configuração atuais. Diferencie o
-  padrão desejado daquilo que já está implementado.
-- Aponte os documentos internos relevantes e, quando necessário, as fontes
-  oficiais que sustentam a explicação.
-- Se uma mudança tornar a documentação incorreta, atualize-a na mesma tarefa
-  quando isso estiver dentro do escopo.
+## Roteamento por escopo
 
-## Contratos
+Comece por [docs/README.md](docs/README.md) e consulte somente o que a tarefa
+exigir:
 
-Antes de modificar `packages/contracts` ou um consumidor de seus contratos,
-comece por [docs/contracts/README.md](docs/contracts/README.md) e leia apenas os
-documentos relevantes à tarefa.
+| Escopo                                                                                 | Ponto de entrada e gatilhos adicionais                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contratos ou consumidores                                                              | [docs/contracts/README.md](docs/contracts/README.md). Leia convenções, integrações, testes e roadmap conforme o impacto; registre antes uma nova capacidade relevante ou mudança de contrato externo.                   |
+| `apps/api`                                                                             | [apps/api/AGENTS.md](apps/api/AGENTS.md) e [docs/apps/api/README.md](docs/apps/api/README.md).                                                                                                                          |
+| `apps/web`                                                                             | [apps/web/AGENTS.md](apps/web/AGENTS.md) e [docs/apps/web/README.md](docs/apps/web/README.md). Para API, autenticação, response, cache remoto ou hooks, leia [integração Web–API](docs/integrations/web-api/README.md). |
+| `apps/mobile`                                                                          | [docs/apps/mobile/README.md](docs/apps/mobile/README.md). Para chamadas à API, leia [integração Mobile–API](docs/integrations/mobile-api/README.md).                                                                    |
+| Caminho crítico, query, listagem, upload, cache, concorrência, build ou infraestrutura | [docs/performance/README.md](docs/performance/README.md) e somente o capítulo da camada afetada.                                                                                                                        |
+| Identidade, sessão, autenticação, autorização, CSRF, credenciais ou auditoria          | [docs/security-and-access.md](docs/security-and-access.md) e segurança da aplicação afetada. Não enfraqueça a política existente.                                                                                       |
+| Handoff formal entre agentes                                                           | [docs/agents/workflow.md](docs/agents/workflow.md) e, quando trouxer rastreabilidade útil, [docs/tasks/TEMPLATE.md](docs/tasks/TEMPLATE.md).                                                                            |
 
-Regras obrigatórias:
+## Estado documental
 
-- Use Zod 4 para novos contratos runtime.
-- Considere o schema a fonte de verdade e derive tipos dele.
-- Diferencie `z.input` de `z.output` quando houver transformação.
-- Valide dados externos no boundary.
-- Mantenha regras dependentes de banco ou permissões fora dos schemas.
-- Não faça `@repo/contracts` depender de `@repo/database` sem decisão
-  arquitetural explícita.
-- Não crie uma DSL genérica sobre o Zod.
-- Preserve a diferença entre propriedade ausente, `undefined`, `null` e
-  string vazia.
-- Não presuma que Create, Update, formulário, banco e response compartilham o
-  mesmo contrato.
-- Adicione testes antes de reutilizar primitives, normalizers, codecs ou helpers
-  em várias features.
+- Requisitos descrevem o produto; arquitetura e segurança registram decisões;
+  roadmaps organizam objetivos e dependências; tarefas formalizam o contrato de
+  execução; handoffs registram o estado operacional entregue.
+- Atualize status somente após as verificações correspondentes e diferencie o
+  padrão desejado do que está implementado.
+- Evite duplicação: registre a informação completa em uma fonte de verdade e
+  use links relativos nos demais documentos. Não crie artefatos apenas para
+  demonstrar o trabalho.
 
-## Roadmap de contratos
+## Verificação proporcional
 
-Antes de criar uma nova capacidade relevante em `@repo/contracts` ou alterar o
-comportamento de um contrato externo, registre um objetivo em
-[docs/contracts/roadmap.md](docs/contracts/roadmap.md).
+| Impacto                        | Verificação mínima                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| Somente documentação           | Diff, links relativos, Markdown e formatação afetados.                             |
+| Código localizado              | Lint, typecheck e testes do package, módulo ou arquivos afetados.                  |
+| Comportamento funcional        | Cobertura do comportamento, lint, tipos, testes, build e consumidores necessários. |
+| Mudança transversal ou crítica | Packages e apps envolvidos, integração ou E2E aplicável e build relevante.         |
 
-- Inclua contexto, escopo, consumidores afetados e critérios de aceite.
-- Não adicione objetivos hipotéticos ou de um domínio inexistente à estrutura
-  padrão.
-- Atualize o status somente depois das verificações correspondentes.
-- Promova uma capacidade ao baseline apenas quando ela estiver implementada,
-  validada e for reutilizável em qualquer projeto derivado.
-- Correções pequenas que não criam capacidade nem alteram comportamento externo
-  não precisam de um objetivo separado.
+A CI completa continua sendo o critério de integração. Não apresente como
+executada uma validação que não ocorreu; relate falhas, limitações e pendências.
 
-## API
+## Comunicação
 
-Antes de modificar `apps/api`, leia [apps/api/AGENTS.md](apps/api/AGENTS.md) e
-comece por [docs/apps/api/README.md](docs/apps/api/README.md). As instruções
-específicas da API complementam as regras gerais deste arquivo.
-
-## Web
-
-Antes de modificar `apps/web`, leia [apps/web/AGENTS.md](apps/web/AGENTS.md) e
-comece por [docs/apps/web/README.md](docs/apps/web/README.md).
-
-Quando a tarefa envolver chamadas à API, autenticação, contratos de response,
-cache remoto ou hooks de dados, leia também
-[docs/integrations/web-api/README.md](docs/integrations/web-api/README.md).
-
-Uma tarefa pode implementar página e integração em conjunto; nesse caso, aplique
-as instruções das duas áreas.
-
-## Performance
-
-Antes de alterar caminho crítico, query, listagem, upload, integração externa,
-cache, concorrência, build ou infraestrutura, leia
-[docs/performance/README.md](docs/performance/README.md) e o capítulo da camada
-afetada.
-
-- Considere performance durante o desenho, não somente depois da implementação.
-- Defina limites finitos para trabalho controlado por entrada externa.
-- Observe no mínimo duração por percentis, volume, falhas, saturação, dados
-  processados e tempo das dependências quando aplicáveis.
-- Não invente metas numéricas universais; registre metas e alertas conforme o
-  contexto do projeto.
-- Não use média isolada para concluir que um fluxo atende performance.
-- Não adicione cache, índice, paralelismo, memoização ou nova tecnologia sem
-  identificar o gargalo e a semântica afetada.
-- Compare cenários equivalentes antes e depois de uma otimização.
-- Métricas, logs e traces não podem usar credenciais, dados pessoais, IDs ou
-  URLs brutas como labels.
-
-## Verificação
-
-Depois de modificar somente o package de contratos, execute no mínimo:
-
-```bash
-pnpm --filter @repo/contracts lint
-pnpm --filter @repo/contracts typecheck
-```
-
-Execute os testes do package quando o script `test` existir. Para mudanças que
-afetem consumidores, valide também os apps envolvidos ou rode:
-
-```bash
-pnpm check
-pnpm format:check
-```
+- Não repita todo o contexto. Explique decisões e trade-offs relevantes.
+- Ao concluir, informe objetivamente arquivos alterados, verificações,
+  limitações e pendências.
+- Peça esclarecimento somente diante de ambiguidade relevante que não possa ser
+  resolvida com segurança.
+- Não produza relatório ou documentação duplicada apenas para registrar a
+  atividade do agente.

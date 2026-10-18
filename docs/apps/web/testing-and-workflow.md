@@ -102,13 +102,26 @@ título com valor `undefined`, identificador bruto ou dado sensível.
 
 ## Comandos atuais
 
-Para alteração localizada:
+Selecione os comandos conforme o impacto. Em código localizado, comece por lint,
+typecheck e testes relevantes do package:
 
 ```bash
 pnpm --filter @repo/web lint
 pnpm --filter @repo/web typecheck
 pnpm --filter @repo/web test
+```
+
+Inclua o build quando a mudança afetar renderização, rotas, configuração,
+dependências ou o artefato de produção:
+
+```bash
 pnpm --filter @repo/web build
+```
+
+Para alterações documentais, revise o diff, os links e o Markdown e execute a
+formatação aplicável:
+
+```bash
 pnpm format:check
 ```
 
@@ -186,7 +199,7 @@ O `ResizeObserver` ausente no jsdom possui um mock mínimo no setup porque as
 primitives Radix o utilizam; o mock não substitui testes reais de layout, foco e
 teclado no navegador.
 
-Para mudança transversal:
+Para mudança transversal ou crítica:
 
 ```bash
 pnpm check
@@ -196,6 +209,9 @@ pnpm --filter @repo/web test:e2e
 ```
 
 No Next.js 16, `next build` não substitui o lint. Execute ambos.
+
+A CI completa permanece como critério de integração; verificações locais e
+manuais não substituem toda a matriz automatizada.
 
 ## Definition of done
 

@@ -3,12 +3,14 @@
 Estas regras complementam o `AGENTS.md` da raiz para qualquer alteração em
 `apps/web`.
 
-## Leitura obrigatória
+## Roteamento da leitura
 
-Comece por [Documentação web](../../docs/apps/web/README.md) e leia os capítulos
-relacionados à tarefa.
+Comece pelo índice da
+[documentação Web](../../docs/apps/web/README.md), localize as rotas,
+componentes e operações afetadas e leia somente os capítulos relacionados à
+tarefa.
 
-Leia também:
+Consulte adicionalmente, quando aplicável:
 
 - [Contratos](../../docs/contracts/README.md) ao usar ou alterar schemas e tipos
   compartilhados;
@@ -16,13 +18,15 @@ Leia também:
   cliente, operação, hook ou fluxo que chama a API;
 - [Segurança web](../../docs/apps/web/security.md) para dados externos,
   conteúdo rico, credenciais, scripts ou componentes Client;
-- [Performance web](../../docs/apps/web/performance.md) para renderização,
-  bundle, mídia, rede e métricas;
+- [Performance web](../../docs/apps/web/performance.md) quando a mudança afetar
+  renderização, bundle, mídia, rede, cache ou métricas;
 - [Responsividade, UX e acessibilidade](../../docs/apps/web/responsive-ux-and-accessibility.md)
   para qualquer página ou componente visual.
 
 Uma tarefa pode implementar interface e integração na mesma execução. A
 separação dos documentos não proíbe isso; exige aplicar as duas áreas.
+Não abra todos os capítulos por padrão; amplie a leitura conforme as
+responsabilidades realmente afetadas.
 
 ## Pré-condições
 
@@ -100,22 +104,16 @@ resultante, inclusive para a home e metadata dinâmica.
 
 ## Verificação
 
-Execute no mínimo:
+Use [Testes e workflow](../../docs/apps/web/testing-and-workflow.md) para
+selecionar verificações progressivas:
 
-```bash
-pnpm --filter @repo/web lint
-pnpm --filter @repo/web typecheck
-pnpm --filter @repo/web test
-pnpm --filter @repo/web build
-pnpm format:check
-```
+- documentação Web: diff, links, Markdown e formatação;
+- código localizado: lint, typecheck e testes relevantes de `@repo/web`;
+- página, fluxo ou integração funcional: suíte Web, build, inspeção manual e E2E
+  aplicável;
+- contratos ou mudança transversal: valide também os packages e apps
+  consumidores.
 
-Quando a mudança afetar contratos, API ou outros apps, amplie para:
-
-```bash
-pnpm check
-pnpm build
-```
-
-Não declare a tarefa concluída com falha conhecida ou sem relatar limitações de
-teste visual, acessibilidade ou integração.
+A CI completa permanece como critério de integração. Não declare a tarefa
+concluída com falha conhecida ou sem relatar limitações de teste visual,
+acessibilidade ou integração.

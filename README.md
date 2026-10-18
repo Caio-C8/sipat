@@ -229,4 +229,6 @@ TestFlight — está em
 Mais detalhes estão em [arquitetura](docs/architecture.md),
 [contratos compartilhados](docs/contracts/README.md) e
 [ambientes](docs/environments.md). Consulte também o
-[índice completo da documentação](docs/README.md).
+[índice completo da documentação](docs/README.md). Para trabalhos com passagem
+formal entre conversas de planejamento, implementação e versionamento, use o
+[fluxo entre agentes](docs/agents/workflow.md).
