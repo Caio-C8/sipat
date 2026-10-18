@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { PerfilUsuarioSchema } from "../auth";
+import { PerfilUsuarioSchema } from "../auth/identidade-autenticada.schema";
 
 export const NomeUsuarioSchema = z
   .string()
@@ -12,7 +12,7 @@ export const NomeUsuarioSchema = z
 export const EmailUsuarioSchema = z
   .string()
   .trim()
-  .toLowerCase()
+  .transform((email) => email.normalize("NFC").toLowerCase())
   .pipe(
     z
       .email({ error: "Informe um e-mail válido." })
