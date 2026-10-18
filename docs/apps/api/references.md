@@ -28,6 +28,9 @@ Estas fontes fundamentam o padrão descrito neste diretório:
 - [OWASP API Security Top 10 — 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/)
 - [OWASP: Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [OWASP: CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
+- [NIST SP 800-63B: authenticator lifecycle and account recovery](https://pages.nist.gov/800-63-4/sp800-63b.html)
+- [Nodemailer: SMTP transport](https://nodemailer.com/smtp)
 
 Antes de implementar, confira a documentação correspondente às versões
 instaladas no repositório. Exemplos de documentação não substituem a verificação

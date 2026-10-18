@@ -36,8 +36,11 @@ No estado atual:
 - ainda não existem operações, hooks ou política de cache de domínio;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
-- a barreira da API e o CSRF estão implementados, mas login, logout, `/auth/me`
-  e emissão de cookie continuam pendentes em `AUTH-001`.
+- a barreira da API, o CSRF, login, logout, `/auth/me` e emissão do cookie estão
+  implementados no backend, mas ainda não possuem consumidor Web;
+- alteração e recuperação de senha estão planejadas somente para contratos,
+  banco e API em `CONTRACTS-003`, `AUTH-002` e `AUTH-003`; páginas, operações e
+  hooks Web permanecem fora dessas entregas.
 
 A integração básica pode ser verificada por `GET /api/backend/health`. As
 operações e os hooks Web de usuários ainda não existem.
@@ -112,10 +115,8 @@ defina query keys, invalidação, retry e consistência.
 
 ## Decisões pendentes
 
-- duração, inatividade e simultaneidade de sessões;
-- provisionamento do primeiro administrador;
-- limites de tentativas e bloqueio progressivo do login;
 - biblioteca de estado remoto e regras de cache;
+- consumidor Web dos endpoints de autenticação e senha;
 - retry por operação e idempotência;
 - propagação de correlation ID para dependências externas;
 - provedor de observabilidade, retenção, alertas e metas.
