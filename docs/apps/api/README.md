@@ -34,7 +34,7 @@ No estado atual:
 
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
-  `POST /api/auth/change-password` e as cinco rotas protegidas de
+  `POST /api/auth/alterar-senha` e as cinco rotas protegidas de
   `/api/usuarios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;

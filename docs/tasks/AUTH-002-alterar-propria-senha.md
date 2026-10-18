@@ -29,7 +29,7 @@ a senha atual e encerrando todas as sessões após o sucesso.
 3. Reutilizar a capacidade Argon2 e o limite persistente de operações de senha.
 4. Implementar repository e transação para atualizar o hash e revogar todas as
    sessões.
-5. Implementar service, DTO e `POST /api/auth/change-password`.
+5. Implementar service, DTO e `POST /api/auth/alterar-senha`.
 6. Expirar o cookie no controller somente após sucesso.
 7. Cobrir unidades, integração PostgreSQL e E2E com Guards e CSRF reais.
 8. Executar lint, tipos, testes, build e verificações transversais.
@@ -37,7 +37,7 @@ a senha atual e encerrando todas as sessões após o sucesso.
 
 ## Escopo
 
-- rota protegida `POST /api/auth/change-password`, permitida a
+- rota protegida `POST /api/auth/alterar-senha`, permitida a
   `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`;
 - identidade derivada exclusivamente da sessão válida;
 - verificação Argon2 da senha atual;

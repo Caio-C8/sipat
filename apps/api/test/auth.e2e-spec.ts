@@ -320,7 +320,7 @@ describe("autenticação E2E", () => {
     },
   ) {
     return request(app.getHttpServer())
-      .post("/api/auth/change-password")
+      .post("/api/auth/alterar-senha")
       .set("Origin", "http://localhost:3000")
       .set(CABECALHO_CSRF, "1")
       .set("Cookie", cookie)
@@ -493,8 +493,10 @@ describe("autenticação E2E", () => {
   });
 
   it("protege a alteração por autenticação, perfil, CSRF e body estrito", async () => {
+    const confirmacaoDivergente = `${senha}-diferente`;
+
     await request(app.getHttpServer())
-      .post("/api/auth/change-password")
+      .post("/api/auth/alterar-senha")
       .set("Origin", "http://localhost:3000")
       .set(CABECALHO_CSRF, "1")
       .send({
@@ -508,7 +510,7 @@ describe("autenticação E2E", () => {
     const cookie = cookieDaResposta(respostaLogin);
 
     await request(app.getHttpServer())
-      .post("/api/auth/change-password")
+      .post("/api/auth/alterar-senha")
       .set("Origin", "http://localhost:3000")
       .set("Cookie", cookie)
       .send({
@@ -528,7 +530,7 @@ describe("autenticação E2E", () => {
     await alterarSenha(cookie, {
       senhaAtual: senha,
       novaSenha: "uma nova senha segura de teste",
-      confirmacaoNovaSenha: "outra senha segura de teste",
+      confirmacaoNovaSenha: confirmacaoDivergente,
     }).expect(400);
   });
 

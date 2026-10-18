@@ -23,7 +23,7 @@ estado e a ordem de execução ficam no
   `X-SIPAT-CSRF: 1`, inclusive quando uma rota for pública;
 - `POST /api/auth/login` cria a sessão, `GET /api/auth/me` consulta a identidade
   atual e `POST /api/auth/logout` encerra a sessão de forma idempotente;
-- `POST /api/auth/change-password` exige a senha atual, altera somente a
+- `POST /api/auth/alterar-senha` exige a senha atual, altera somente a
   identidade da sessão, revoga todas as sessões e expira o cookie.
 
 ## Requisitos atendidos
@@ -159,7 +159,7 @@ proteção própria; não deve copiar cookies do navegador automaticamente.
 | `POST /api/auth/login`                    | sim     | sim           | sim                   | AUTH-001  |
 | `GET /api/auth/me`                        | não     | sim           | sim                   | AUTH-001  |
 | `POST /api/auth/logout`                   | sim     | sim           | sim                   | AUTH-001  |
-| `POST /api/auth/change-password`          | não     | sim           | sim                   | AUTH-002  |
+| `POST /api/auth/alterar-senha`            | não     | sim           | sim                   | AUTH-002  |
 
 Uma rota pública não recebe autorização implícita para mutar estado sem CSRF,
 validação, limite e tratamento de abuso.

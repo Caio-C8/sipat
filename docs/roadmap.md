@@ -286,7 +286,7 @@ senha após comprovar a senha atual.
 
 ### Escopo
 
-- `POST /api/auth/change-password`, protegido para os dois perfis;
+- `POST /api/auth/alterar-senha`, protegido para os dois perfis;
 - verificação da sessão, da senha atual e da política da nova senha;
 - uso da capacidade Argon2 já limitada por instância;
 - atualização do hash e revogação de todas as sessões do usuário em operação
