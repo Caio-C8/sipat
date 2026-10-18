@@ -25,6 +25,11 @@ export interface UsuarioParaLogin extends IdentidadeAutenticadaInput {
   senha: string;
 }
 
+export interface UsuarioParaAlteracaoSenha {
+  ativo: boolean;
+  senha: string;
+}
+
 export interface LoginRealizado {
   identidade: IdentidadeAutenticada;
   token: string;

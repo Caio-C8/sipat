@@ -20,7 +20,12 @@ import { AuthService } from "./auth.service";
 import type { RequisicaoAutenticada } from "./auth.types";
 import { PerfisPermitidos } from "./decorators/perfis-permitidos.decorator";
 import { Publica } from "./decorators/publica.decorator";
-import { AuthMeResponseDto, LoginBodyDto, LoginResponseDto } from "./dtos";
+import {
+  AlterarSenhaBodyDto,
+  AuthMeResponseDto,
+  LoginBodyDto,
+  LoginResponseDto,
+} from "./dtos";
 import {
   extrairTokenSessao,
   obterNomeCookieSessao,
@@ -78,6 +83,27 @@ export class AuthController {
       mensagem: "Identidade autenticada consultada com sucesso.",
       dados: request.identidadeAutenticada!,
     };
+  }
+
+  @Post("alterar-senha")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async alterarSenha(
+    @Body() body: AlterarSenhaBodyDto,
+    @Req() request: RequisicaoAutenticada,
+    @Res({ passthrough: true }) response: RespostaComCookie,
+  ): Promise<void> {
+    await this.authService.alterarSenha(
+      request.identidadeAutenticada!.id,
+      body,
+    );
+
+    const ambiente = this.obterAmbiente();
+    response.cookie(
+      obterNomeCookieSessao(ambiente),
+      "",
+      obterOpcoesExpiracaoCookieSessao(ambiente),
+    );
   }
 
   @Post("logout")

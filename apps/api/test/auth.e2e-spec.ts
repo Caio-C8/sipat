@@ -134,22 +134,30 @@ describe("autenticação E2E", () => {
       ),
       usuario: {
         findUnique: jest.fn(
-          ({ where }: { where: { email?: string } }) =>
-            usuarios.find((usuario) => usuario.email === where.email) ?? null,
+          ({ where }: { where: { email?: string; id?: string } }) =>
+            usuarios.find(
+              (usuario) =>
+                (where.email !== undefined && usuario.email === where.email) ||
+                (where.id !== undefined && usuario.id === where.id),
+            ) ?? null,
         ),
         updateMany: jest.fn(
           ({
             where,
             data,
           }: {
-            where: { id: string; ativo: boolean };
-            data: { ultimoLoginAt: Date };
+            where: { id: string; ativo: boolean; senha?: string };
+            data: { ultimoLoginAt?: Date; senha?: string };
           }) => {
             const usuario = usuarios.find(
-              (item) => item.id === where.id && item.ativo === where.ativo,
+              (item) =>
+                item.id === where.id &&
+                item.ativo === where.ativo &&
+                (where.senha === undefined || item.senha === where.senha),
             );
             if (!usuario) return { count: 0 };
-            usuario.ultimoLoginAt = data.ultimoLoginAt;
+            if (data.ultimoLoginAt) usuario.ultimoLoginAt = data.ultimoLoginAt;
+            if (data.senha) usuario.senha = data.senha;
             return { count: 1 };
           },
         ),
@@ -213,6 +221,7 @@ describe("autenticação E2E", () => {
           }: {
             where: {
               id?: string | { in: string[] };
+              usuarioId?: string;
               tokenHash?: string;
               revogadoAt?: null;
               expiraAt?: { gt: Date };
@@ -229,6 +238,7 @@ describe("autenticação E2E", () => {
               if (
                 (typeof where.id === "string" && sessao.id !== where.id) ||
                 (idsPermitidos && !idsPermitidos.includes(sessao.id)) ||
+                (where.usuarioId && sessao.usuarioId !== where.usuarioId) ||
                 (where.tokenHash && sessao.tokenHash !== where.tokenHash) ||
                 (where.revogadoAt === null && sessao.revogadoAt !== null) ||
                 (where.expiraAt && sessao.expiraAt <= where.expiraAt.gt) ||
@@ -299,6 +309,22 @@ describe("autenticação E2E", () => {
       .set("Origin", "http://localhost:3000")
       .set(CABECALHO_CSRF, "1")
       .send({ email, senha: senhaInformada });
+  }
+
+  function alterarSenha(
+    cookie: string,
+    body: Record<string, unknown> = {
+      senhaAtual: senha,
+      novaSenha: "uma nova senha segura de teste",
+      confirmacaoNovaSenha: "uma nova senha segura de teste",
+    },
+  ) {
+    return request(app.getHttpServer())
+      .post("/api/auth/change-password")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .set("Cookie", cookie)
+      .send(body);
   }
 
   function cookieDaResposta(resposta: request.Response): string {
@@ -403,6 +429,107 @@ describe("autenticação E2E", () => {
     }
 
     await request(app.getHttpServer()).get("/api/auth/me").expect(401);
+  });
+
+  it.each(["admin@example.com", "diretor@example.com"])(
+    "altera somente a própria senha de %s, revoga todas as sessões e expira o cookie",
+    async (email) => {
+      const primeira = await login(email).expect(200);
+      const segunda = await login(email).expect(200);
+      const usuario = usuarios.find((item) => item.email === email)!;
+      const hashAnterior = usuario.senha;
+
+      const resposta = await alterarSenha(cookieDaResposta(primeira)).expect(
+        204,
+      );
+
+      expect(resposta.body).toEqual({});
+      expect(resposta.headers["set-cookie"]?.[0]).toContain("Max-Age=0");
+      expect(usuario.senha).not.toBe(hashAnterior);
+      await expect(
+        senhaHasher.verificarHash(
+          usuario.senha,
+          "uma nova senha segura de teste",
+        ),
+      ).resolves.toBe(true);
+      expect(
+        sessoes.filter(
+          (sessao) =>
+            sessao.usuarioId === usuario.id && sessao.revogadoAt !== null,
+        ),
+      ).toHaveLength(2);
+
+      await request(app.getHttpServer())
+        .get("/api/auth/me")
+        .set("Cookie", cookieDaResposta(segunda))
+        .expect(401);
+      await login(email).expect(401);
+      await login(email, "uma nova senha segura de teste").expect(200);
+    },
+  );
+
+  it("rejeita senha atual inválida sem alterar hash, sessões ou cookie", async () => {
+    const respostaLogin = await login("admin@example.com").expect(200);
+    const usuario = usuarios.find(
+      (item) => item.email === "admin@example.com",
+    )!;
+    const hashAnterior = usuario.senha;
+
+    const resposta = await alterarSenha(cookieDaResposta(respostaLogin), {
+      senhaAtual: "senha incorreta",
+      novaSenha: "uma nova senha segura de teste",
+      confirmacaoNovaSenha: "uma nova senha segura de teste",
+    }).expect(401);
+
+    expect(resposta.body).toEqual(
+      expect.objectContaining({
+        codigo: "SENHA_ATUAL_INVALIDA",
+        mensagem: "A senha atual é inválida.",
+      }),
+    );
+    expect(resposta.headers["set-cookie"]).toBeUndefined();
+    expect(usuario.senha).toBe(hashAnterior);
+    expect(sessoes).toEqual([expect.objectContaining({ revogadoAt: null })]);
+  });
+
+  it("protege a alteração por autenticação, perfil, CSRF e body estrito", async () => {
+    await request(app.getHttpServer())
+      .post("/api/auth/change-password")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .send({
+        senhaAtual: senha,
+        novaSenha: "uma nova senha segura de teste",
+        confirmacaoNovaSenha: "uma nova senha segura de teste",
+      })
+      .expect(401);
+
+    const respostaLogin = await login("admin@example.com").expect(200);
+    const cookie = cookieDaResposta(respostaLogin);
+
+    await request(app.getHttpServer())
+      .post("/api/auth/change-password")
+      .set("Origin", "http://localhost:3000")
+      .set("Cookie", cookie)
+      .send({
+        senhaAtual: senha,
+        novaSenha: "uma nova senha segura de teste",
+        confirmacaoNovaSenha: "uma nova senha segura de teste",
+      })
+      .expect(403);
+
+    await alterarSenha(cookie, {
+      senhaAtual: senha,
+      novaSenha: "uma nova senha segura de teste",
+      confirmacaoNovaSenha: "uma nova senha segura de teste",
+      usuarioId: ids.diretor,
+    }).expect(400);
+
+    await alterarSenha(cookie, {
+      senhaAtual: senha,
+      novaSenha: "uma nova senha segura de teste",
+      confirmacaoNovaSenha: "outra senha segura de teste",
+    }).expect(400);
   });
 
   it("rejeita /auth/me com sessão expirada, revogada ou usuário inativo", async () => {

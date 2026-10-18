@@ -207,6 +207,98 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     expect((await database.tentativaLogin.findFirst())?.tentativas).toBe(4);
   });
 
+  it("altera o hash e revoga todas as sessões na mesma transação", async () => {
+    const senhaHasher = new SenhaHasher();
+    const senhaAtual = "uma senha atual segura";
+    const novaSenha = "uma nova senha segura";
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Diretor",
+        email: "diretor@example.com",
+        senha: await senhaHasher.criarHash(senhaAtual),
+        perfil: "DIRETOR_PATRIMONIO",
+        ativo: true,
+      },
+    });
+    await database.sessaoUsuario.createMany({
+      data: ["d", "e"].map((prefixo) => ({
+        usuarioId: usuario.id,
+        tokenHash: prefixo.repeat(64),
+        expiraAt: new Date(Date.now() + 8 * 60 * 60 * 1_000),
+        ultimaAtividadeAt: new Date(),
+      })),
+    });
+
+    const service = criarAuthService(database, "test", senhaHasher);
+    await service.alterarSenha(usuario.id, {
+      senhaAtual,
+      novaSenha,
+      confirmacaoNovaSenha: novaSenha,
+    });
+
+    const persistido = await database.usuario.findUniqueOrThrow({
+      where: { id: usuario.id },
+      select: { senha: true },
+    });
+    await expect(
+      senhaHasher.verificarHash(persistido.senha, novaSenha),
+    ).resolves.toBe(true);
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, revogadoAt: { not: null } },
+      }),
+    ).toBe(2);
+  });
+
+  it("permite somente uma alteração concorrente baseada no mesmo hash antigo", async () => {
+    const senhaHasher = new SenhaHasher();
+    const senhaAtual = "uma senha atual segura";
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Administradora",
+        email: "admin-concorrente@example.com",
+        senha: await senhaHasher.criarHash(senhaAtual),
+        perfil: "ADMINISTRADOR",
+        ativo: true,
+      },
+    });
+    const service = criarAuthService(database, "development", senhaHasher);
+
+    const resultados = await Promise.allSettled([
+      service.alterarSenha(usuario.id, {
+        senhaAtual,
+        novaSenha: "primeira nova senha segura",
+        confirmacaoNovaSenha: "primeira nova senha segura",
+      }),
+      service.alterarSenha(usuario.id, {
+        senhaAtual,
+        novaSenha: "segunda nova senha segura",
+        confirmacaoNovaSenha: "segunda nova senha segura",
+      }),
+    ]);
+
+    expect(
+      resultados.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      resultados.filter(
+        (resultado): resultado is PromiseRejectedResult =>
+          resultado.status === "rejected" &&
+          resultado.reason instanceof UnauthorizedException,
+      ),
+    ).toHaveLength(1);
+
+    const persistido = await database.usuario.findUniqueOrThrow({
+      where: { id: usuario.id },
+      select: { senha: true },
+    });
+    const hashesValidos = await Promise.all([
+      senhaHasher.verificarHash(persistido.senha, "primeira nova senha segura"),
+      senhaHasher.verificarHash(persistido.senha, "segunda nova senha segura"),
+    ]);
+    expect(hashesValidos.filter(Boolean)).toHaveLength(1);
+  });
+
   it("reabre atomicamente a janela de rate limit no instante de expiração", async () => {
     const repository = new AuthRepository(database);
     const inicio = new Date("2026-10-18T12:00:00.000Z");

@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   type AppEnvironment,
+  type AlterarSenhaBody,
   type IdentidadeAutenticada,
   IdentidadeAutenticadaSchema,
   type LoginBody,
@@ -21,7 +22,10 @@ import {
   TAMANHO_LOTE_LIMPEZA_RATE_LIMIT,
 } from "./auth.constants";
 import { CapacidadeArgon2 } from "./capacidade-argon2";
-import { criarChaveRateLimitLogin } from "./rate-limit-login";
+import {
+  criarChaveRateLimitAlteracaoSenha,
+  criarChaveRateLimitLogin,
+} from "./rate-limit-login";
 import { SessaoRepository } from "./sessao.repository";
 import { calcularHashTokenSessao, gerarTokenSessao } from "./token-sessao";
 import type { LoginRealizado } from "./auth.types";
@@ -96,6 +100,113 @@ export class AuthService {
 
     if (tokenHash !== null) {
       await this.sessoes.revogarPorTokenHash(tokenHash, new Date());
+    }
+  }
+
+  alterarSenha(usuarioId: string, dados: AlterarSenhaBody): Promise<void> {
+    return this.capacidadeArgon2.executar(() =>
+      this.executarAlteracaoSenha(usuarioId, dados),
+    );
+  }
+
+  private async executarAlteracaoSenha(
+    usuarioId: string,
+    dados: AlterarSenhaBody,
+  ): Promise<void> {
+    const agora = new Date();
+    const ambiente = this.obterAmbiente();
+    const politica = POLITICA_RATE_LIMIT_LOGIN[ambiente];
+    const chaveRateLimit = criarChaveRateLimitAlteracaoSenha(
+      usuarioId,
+      this.config.getOrThrow("AUTH_RATE_LIMIT_HMAC_SECRET", { infer: true }),
+    );
+
+    await this.authRepository.limparTentativasExpiradas(
+      agora,
+      TAMANHO_LOTE_LIMPEZA_RATE_LIMIT,
+    );
+
+    const bloqueadoAte = await this.authRepository.reservarTentativaLogin(
+      chaveRateLimit,
+      agora,
+      politica.tentativas,
+      politica.janelaMs,
+    );
+
+    if (bloqueadoAte !== null) {
+      throw new MuitasRequisicoesException(
+        Math.max(
+          1,
+          Math.ceil((bloqueadoAte.getTime() - agora.getTime()) / 1_000),
+        ),
+      );
+    }
+
+    const usuario =
+      await this.authRepository.buscarUsuarioParaAlteracaoSenha(usuarioId);
+    const senhaValida =
+      usuario !== null &&
+      usuario.ativo &&
+      (await this.senhaHasher.verificarHash(usuario.senha, dados.senhaAtual));
+
+    if (!senhaValida || usuario === null) {
+      throw this.senhaAtualInvalida();
+    }
+
+    const novaSenhaHash = await this.senhaHasher.criarHash(dados.novaSenha);
+    await this.persistirAlteracaoSenha(
+      usuarioId,
+      usuario.senha,
+      novaSenhaHash,
+      chaveRateLimit,
+      agora,
+    );
+  }
+
+  private async persistirAlteracaoSenha(
+    usuarioId: string,
+    senhaHashAtual: string,
+    novaSenhaHash: string,
+    chaveRateLimit: string,
+    agora: Date,
+  ): Promise<void> {
+    for (
+      let tentativa = 1;
+      tentativa <= MAXIMO_TENTATIVAS_TRANSACAO;
+      tentativa += 1
+    ) {
+      try {
+        const alterada =
+          await this.authRepository.executarTransacaoSerializavel(
+            async (repository) => {
+              const atualizada = await repository.atualizarSenhaSeAtual(
+                usuarioId,
+                senhaHashAtual,
+                novaSenhaHash,
+                agora,
+              );
+
+              if (!atualizada) return false;
+
+              await repository.revogarTodasSessoes(usuarioId, agora);
+              await repository.limparTentativasLogin(chaveRateLimit);
+              return true;
+            },
+          );
+
+        if (!alterada) {
+          throw this.senhaAtualInvalida();
+        }
+
+        return;
+      } catch (erro: unknown) {
+        if (this.ehErroTransacaoRepetivel(erro)) {
+          if (tentativa < MAXIMO_TENTATIVAS_TRANSACAO) continue;
+          throw new MuitasRequisicoesException(1);
+        }
+
+        throw erro;
+      }
     }
   }
 
@@ -239,6 +350,14 @@ export class AuthService {
     return new UnauthorizedException({
       codigo: "CREDENCIAIS_INVALIDAS",
       mensagem: "E-mail ou senha inválidos.",
+      erros: [],
+    });
+  }
+
+  private senhaAtualInvalida(): UnauthorizedException {
+    return new UnauthorizedException({
+      codigo: "SENHA_ATUAL_INVALIDA",
+      mensagem: "A senha atual é inválida.",
       erros: [],
     });
   }
