@@ -42,6 +42,25 @@ staging/produção. Esses números são limites de capacidade, não metas univer
 meça CPU, memória, latência e saturação antes de alterá-los. Fila cheia retorna
 `429` imediatamente, sem espera ilimitada.
 
+## Recuperação de senha e SMTP
+
+Quando `AUTH_PASSWORD_RESET_ENABLED` é `true`, a API exige
+`AUTH_PASSWORD_RESET_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+`SMTP_PASSWORD` e `SMTP_FROM`. A URL usa HTTPS em todos os ambientes; somente
+em `development` também pode usar HTTP com `localhost`, `127.0.0.1` ou `::1`,
+para que a página Web local receba o token quando existir. `SMTP_SECURE`
+seleciona TLS desde a conexão e `SMTP_REQUIRE_TLS` exige upgrade STARTTLS; em
+staging e produção pelo menos um deles deve ser `true`, sempre com validação do
+certificado.
+
+`AUTH_EMAIL_MAX_CONCURRENCY` e `AUTH_EMAIL_MAX_QUEUE` limitam, por instância, os
+envios simultâneos e a fila em memória. A fila não é durável: falha do processo,
+saturação ou erro SMTP exige uma nova solicitação. Logger e debug do transporte
+ficam desligados e destinatário, token, conteúdo e credenciais não são
+registrados. Em staging e produção, a ativação operacional depende do futuro
+consumidor HTTPS e do SMTP institucional; não use as credenciais nos arquivos
+`.env` versionados.
+
 Builds remotos do mobile não recebem automaticamente os arquivos `.env` locais.
 Os perfis de `apps/mobile/eas.json` selecionam os ambientes EAS `development`,
 `preview` e `production`. Configure neles os valores públicos correspondentes e

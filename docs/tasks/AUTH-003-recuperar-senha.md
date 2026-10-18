@@ -1,6 +1,6 @@
 # `AUTH-003` — Recuperar a senha por e-mail institucional
 
-**Status:** aprovada
+**Status:** concluída
 
 ## Objetivo
 
@@ -32,7 +32,8 @@ token de uso único e revogação de sessões.
 2. Adicionar a dependência SMTP na versão estável compatível com o Node do
    projeto e validar sua documentação oficial.
 3. Acrescentar e validar as configurações de recuperação e SMTP, mantendo a
-   recuperação desabilitada quando não houver consumidor HTTPS configurado.
+   recuperação desabilitada quando não houver consumidor HTTPS configurado,
+   salvo HTTP local restrito ao ambiente de desenvolvimento.
 4. Criar migration e models de redefinição e limite de operações de senha;
    gerar o Prisma Client e validar a migration em banco descartável.
 5. Implementar geração/hash do token, repository e transações, sem ainda
@@ -48,14 +49,14 @@ token de uso único e revogação de sessões.
 
 ## Escopo
 
-- `POST /api/auth/forgot-password`:
+- `POST /api/auth/esqueceu-senha`:
   - recebe somente o contrato de e-mail;
   - retorna `202` com mensagem neutra para conta ativa, inexistente ou inativa;
   - não altera nem bloqueia a conta;
   - cria ou substitui a redefinição somente para usuário ativo;
   - aplica limite persistente por HMAC do e-mail normalizado;
   - despacha a mensagem sem aguardar SMTP na response.
-- `POST /api/auth/reset-password`:
+- `POST /api/auth/redefinir-senha`:
   - recebe somente token, nova senha e confirmação;
   - determina o usuário exclusivamente pelo hash do token;
   - usa a mesma falha pública para token inválido, expirado, consumido ou de
@@ -75,7 +76,8 @@ token de uso único e revogação de sessões.
 - despachante em memória com fila e concorrência finitas; falha de processo ou
   envio não é recuperada por broker nesta versão e exige nova solicitação.
 - flag operacional que mantenha a recuperação indisponível até existir URL
-  HTTPS válida para o futuro consumidor.
+  HTTPS válida para o futuro consumidor, com exceção de HTTP local em
+  desenvolvimento.
 
 ## Fora do escopo
 
@@ -104,19 +106,19 @@ token de uso único e revogação de sessões.
 
 ## Critérios de aceite
 
-- [ ] responses de solicitação não permitem enumerar conta ou situação;
-- [ ] limite é aplicado também a e-mails inexistentes;
-- [ ] banco armazena somente o hash do token;
-- [ ] token anterior, expirado, consumido ou concorrente não redefine senha;
-- [ ] usuário inativo não recebe nem conclui recuperação;
-- [ ] sucesso revoga todas as sessões e exige novo login;
-- [ ] alteração autenticada posterior à emissão invalida o token pendente;
-- [ ] CSRF e Origin continuam obrigatórios nas duas rotas públicas;
-- [ ] saturação do despachante e falha SMTP são finitas e observáveis sem dados
+- [x] responses de solicitação não permitem enumerar conta ou situação;
+- [x] limite é aplicado também a e-mails inexistentes;
+- [x] banco armazena somente o hash do token;
+- [x] token anterior, expirado, consumido ou concorrente não redefine senha;
+- [x] usuário inativo não recebe nem conclui recuperação;
+- [x] sucesso revoga todas as sessões e exige novo login;
+- [x] alteração autenticada posterior à emissão invalida o token pendente;
+- [x] CSRF e Origin continuam obrigatórios nas duas rotas públicas;
+- [x] saturação do despachante e falha SMTP são finitas e observáveis sem dados
       sensíveis;
-- [ ] configuração insegura de TLS é rejeitada em staging/produção;
-- [ ] nenhum endpoint administrativo de senha é criado;
-- [ ] nenhum arquivo de Web ou mobile é alterado.
+- [x] configuração insegura de TLS é rejeitada em staging/produção;
+- [x] nenhum endpoint administrativo de senha é criado;
+- [x] nenhum arquivo de Web ou mobile é alterado.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -146,7 +148,17 @@ token de uso único e revogação de sessões.
 
 ## Pendências ou decisões bloqueantes
 
-- Para ativar a recuperação fora dos testes, a implantação precisa fornecer
-  servidor SMTP institucional, remetente e URL HTTPS do futuro consumidor. A
-  ausência desses valores não bloqueia a implementação backend, mas bloqueia a
-  ativação operacional do fluxo.
+- Para ativar a recuperação em staging ou produção, a implantação precisa
+  fornecer servidor SMTP institucional, remetente e URL HTTPS do futuro
+  consumidor. Em desenvolvimento, HTTP é aceito somente para localhost ou
+  loopback. A ausência dos valores obrigatórios não bloqueia a implementação
+  backend, mas bloqueia a ativação operacional do fluxo.
+
+## Evidências de conclusão
+
+Em 18 de outubro de 2026, as seis migrations foram aplicadas desde zero em
+PostgreSQL 17 descartável e os nove testes de integração, incluindo as corridas
+de alteração e redefinição, passaram. Contratos, database e API passaram por
+lint, tipos, testes e build aplicáveis; o SMTP foi validado somente com fake e
+nenhuma suíte enviou e-mail real. A correção do conjunto de caracteres finais
+canônicos do token Base64url preservou o contrato aprovado de 32 bytes.

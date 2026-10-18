@@ -4,9 +4,11 @@
 > e proteção CSRF está em
 > [Identidade, sessão e controle de acesso](../../../security-and-access.md).
 > A validação de sessões do `SEC-001`, login, logout, `/auth/me`, emissão do
-> cookie e criação produtiva de sessões do `AUTH-001` e alteração autenticada
-> da própria senha do `AUTH-002` estão implementados. A integração Web
-> permanece no objetivo Web próprio.
+> cookie e criação produtiva de sessões do `AUTH-001`, alteração autenticada
+> da própria senha do `AUTH-002` e recuperação por e-mail do `AUTH-003` estão
+> implementados. Fora de desenvolvimento, a recuperação permanece desabilitada
+> operacionalmente até a configuração do consumidor HTTPS e do SMTP
+> institucional. A integração Web permanece no objetivo Web próprio.
 
 ## Responsabilidade
 

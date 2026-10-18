@@ -34,8 +34,8 @@ No estado atual:
 
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
-  `POST /api/auth/alterar-senha` e as cinco rotas protegidas de
-  `/api/usuarios`;
+  `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
+  `POST /api/auth/redefinir-senha` e as cinco rotas protegidas de `/api/usuarios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -52,6 +52,10 @@ No estado atual:
   revogável e rate limit persistente;
 - alteração da própria senha exige a senha atual, usa limite persistente por
   escopo, troca o hash e revoga todas as sessões atomicamente e expira o cookie;
+- recuperação usa response neutra, token aleatório armazenado somente por hash,
+  uso único, validade de 15 minutos, SMTP desacoplado e revogação atômica das
+  sessões; fora de desenvolvimento, permanece desligada por flag até haver
+  consumidor HTTPS e SMTP;
 - a duração absoluta é 8 horas, a inatividade efetiva fica entre
   aproximadamente 25 e 30 minutos e no máximo cinco sessões ficam ativas por
   usuário;

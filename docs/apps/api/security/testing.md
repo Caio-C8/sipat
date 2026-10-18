@@ -24,6 +24,13 @@ senha atual inválida, CSRF, expiração do cookie, revogação de todas as sess
 corrida real no PostgreSQL para que somente uma alteração baseada no mesmo hash
 antigo possa vencer.
 
+O `AUTH-003` cobre response neutra para conta ativa, inativa ou inexistente,
+limite persistente por HMAC, token armazenado somente por hash, substituição,
+expiração, uso único e inativação. Os E2E mantêm Guards de CSRF e Origin reais e
+substituem o SMTP por fake; a integração PostgreSQL valida que somente um reset
+concorrente vence, revoga todas as sessões e que a alteração autenticada
+invalida a redefinição pendente.
+
 Os testes atuais confirmam que uma origem configurada recebe os headers CORS,
 que o preflight respeita os métodos e headers permitidos e que uma origem fora
 da allowlist não recebe autorização do navegador. Esses testes não devem ser
