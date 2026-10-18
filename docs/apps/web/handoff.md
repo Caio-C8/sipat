@@ -6,7 +6,10 @@ A Web do SIPAT possui somente a infraestrutura inicial: página inicial técnica
 health check, proxy para a API, clientes HTTP, configuração pública, segurança,
 observabilidade, primitives visuais e testes de infraestrutura.
 
-Ainda não existem rotas ou dependências do domínio patrimonial.
+Ainda não existem páginas ou features de usuários nem rotas do domínio
+patrimonial. Os contratos e endpoints administrativos de usuários estão prontos
+no backend, mas não possuem consumidor Web. Login, logout, `/auth/me` e criação
+produtiva de sessão também não existem.
 
 ## Antes da primeira feature
 

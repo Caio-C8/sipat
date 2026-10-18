@@ -32,14 +32,21 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 
 No estado atual:
 
-- a API expõe somente `GET /api/health`, explicitamente público;
+- a API expõe `GET /api/health`, explicitamente público, e as cinco rotas
+  protegidas de `/api/usuarios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
   perfis nega acesso;
 - a sessão é consultada pelo hash SHA-256 do token e a identidade anexada à
   request contém somente `id`, `nome`, `email` e `perfil`;
-- login, logout e criação produtiva de sessões ainda não existem;
+- `UsuariosModule` separa DTOs Zod, controller, service, repository, tipos e
+  mappers; somente `ADMINISTRADOR` acessa suas rotas;
+- listagem usa paginação finita, busca e filtros com seleção mínima e ordenação
+  determinística; criação usa Argon2id e auditoria derivada da sessão;
+- inativação é atômica com a revogação de sessões e protege autoinativação e o
+  último administrador ativo;
+- login, logout, `/auth/me` e criação produtiva de sessões ainda não existem;
 - `apps/api` usa Zod 4 e `nestjs-zod` 5;
 - `ZodValidationPipe` e `ZodSerializerInterceptor` estão registrados
   globalmente;
@@ -50,12 +57,12 @@ No estado atual:
   header `X-SIPAT-CSRF` e expõe somente `X-Request-Id` ao navegador;
 - `DatabaseModule` cria, exporta e encerra um único Prisma Client quando um
   módulo consumidor o importa;
-- `AuthModule` importa `DatabaseModule`; `AppModule` não acessa o client
-  diretamente;
-- o schema Prisma contém os models de domínio, ainda sem módulos consumidores
-  implementados na API;
-- testes unitários cobrem filtro e middleware, e testes E2E cobrem health,
-  request ID, erro público e CORS.
+- `AuthModule` e `UsuariosModule` importam `DatabaseModule`; `AppModule` não
+  acessa o client diretamente;
+- o model `Usuario` e a relação com `SessaoUsuario` existentes atendem o
+  `USERS-001`; não foi necessária migration ou alteração do schema;
+- testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de
+  usuários, incluindo `401`, `403`, CSRF, conflitos e regras administrativas.
 
 Os exemplos desta documentação representam o padrão desejado, não código já
 implementado no SIPAT.

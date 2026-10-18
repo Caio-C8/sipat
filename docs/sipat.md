@@ -66,7 +66,9 @@ O repositório permanece na etapa de infraestrutura inicial do SIPAT:
 - o mobile possui tela técnica e consulta direta ao health check da API;
 - o schema Prisma representa o domínio patrimonial e a persistência de sessões;
 - `@repo/contracts` expõe os contratos genéricos e a identidade/perfis seguros;
-- login, logout, criação produtiva de sessões, CRUD de usuários e módulos
+- a gestão administrativa de usuários está implementada somente na API;
+- a interface Web de usuários ainda não está implementada;
+- login, logout, `/auth/me`, criação produtiva de sessões e módulos
   patrimoniais ainda não estão implementados;
 - os fluxos patrimoniais do aplicativo móvel ainda não estão implementados.
 

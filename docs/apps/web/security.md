@@ -7,18 +7,19 @@ CSRF e respostas da API pertencem também à
 
 ## Estado atual
 
-O SIPAT ainda não possui rotas de domínio. Não há autenticação, autorização,
-cookie de sessão ou proteção CSRF implementados. Isso é uma limitação atual e
-não representa o atendimento do RF01 ou do RNF05.
+O SIPAT ainda não possui rotas Web de domínio. A API já aplica autenticação,
+autorização por perfil e CSRF às rotas administrativas de usuários, mas a Web
+não possui operações ou mutações que as consumam. Login, logout, `/auth/me`,
+emissão do cookie e criação produtiva de sessão continuam ausentes.
 
 `browserApiClient` usa apenas a origem relativa `/api/backend` e não acessa
 `API_INTERNAL_URL`. `serverApiClient` importa `server-only`. A interface valida
 responses e apresenta mensagens públicas, sem expor o corpo bruto ou o `cause`
 interno dos erros.
 
-Antes de introduzir identidade ou dados protegidos no SIPAT, defina e teste
-esses controles. CORS, CSP e a ocultação de controles na interface não
-transformam uma mutação pública em uma operação autorizada.
+A API permanece a autoridade: CORS, CSP e a futura ocultação de controles na
+interface não concedem permissão. A arquitetura Web deve transportar o cookie
+`HttpOnly` e o sinal público de CSRF quando essas operações forem implementadas.
 
 ## Fronteira server e client
 
@@ -145,9 +146,9 @@ ele aumenta segurança e não exponha senha em logs ou estado persistente.
 
 ## Checklist
 
-No estado atual, os itens de autenticação, autorização e CSRF abaixo ainda não
-estão implementados. O conjunto completo é obrigatório à medida que o SIPAT
-introduzir identidade, operações protegidas e dados patrimoniais.
+Os itens abaixo continuam sendo o checklist. Autorização e CSRF das rotas da API
+de usuários estão implementados; o consumidor Web, a criação do cookie e os
+fluxos de identidade permanecem planejados.
 
 - nenhum segredo no bundle;
 - dados passados ao cliente minimizados;

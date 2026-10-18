@@ -6,10 +6,11 @@ O baseline reúne controles que normalmente pertencem à aplicação inteira. O
 SIPAT deve decidir quais se aplicam, configurar valores por ambiente e registrar
 exceções justificadas.
 
-O estado atual ainda não possui rotas de domínio, login, logout ou CRUD de
-usuários. O `SEC-001` implementou persistência e validação de sessão,
-autenticação global, autorização por perfil e CSRF. A API não cria sessões em
-produção; os testes inserem sessões controladas pelo adapter de persistência.
+O estado atual possui as rotas administrativas de usuários do `USERS-001`, mas
+ainda não possui login, logout nem `/auth/me`. O `SEC-001` implementou
+persistência e validação de sessão, autenticação global, autorização por perfil
+e CSRF. A API não cria sessões em produção; os testes inserem sessões
+controladas pelo adapter de persistência.
 
 A API restringe origens por `CORS_ORIGINS`, mantém `credentials: false`, permite
 o header público `X-SIPAT-CSRF` e expõe somente `X-Request-Id`. CORS não

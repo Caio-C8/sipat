@@ -20,16 +20,16 @@ entregas seguem o [roadmap inicial](../../roadmap.md):
 
 - **WEB-USERS-001 — Gestão de usuários (planejado):** página `/usuarios`
   exclusiva do administrador, com listagem, filtros, criação, edição, ativação
-  e inativação; será construída depois dos contratos e endpoints de
-  `USERS-001`;
+  e inativação; os contratos e endpoints do backend já estão implementados,
+  mas ainda não existe consumidor Web;
 - **WEB-AUTH-001 — Login, sessão e logout (planejado):** página `/login`,
   consulta da identidade atual, shell protegido, redirects sem loop e ação de
   logout; será construída em `AUTH-001` e tornará a gestão de usuários
   acessível em um ambiente real.
 
 A Web não substitui a autorização da API. Antes de `WEB-AUTH-001`, a gestão de
-usuários pode ser validada com mocks estritos e testes controlados, mas não deve
-ser apresentada como fluxo operacional concluído.
+usuários poderá ser validada com mocks estritos e testes controlados, mas não
+deve ser apresentada como fluxo operacional concluído.
 
 Cada objetivo registra contexto, escopo, estados da interface, contratos e
 endpoints afetados, critérios de acessibilidade, segurança, performance e testes.

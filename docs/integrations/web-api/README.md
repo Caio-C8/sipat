@@ -34,12 +34,13 @@ No estado atual:
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
 - ainda não existem operações, hooks ou política de cache de domínio;
-- a arquitetura alvo de autenticação, transporte de identidade e CSRF está
-  [documentada](../../security-and-access.md), mas ainda não está implementada.
+- os contratos e endpoints administrativos de usuários estão implementados no
+  backend, mas ainda não possuem consumidor Web;
+- a barreira da API e o CSRF estão implementados, mas login, logout, `/auth/me`
+  e emissão de cookie continuam pendentes em `AUTH-001`.
 
-A integração básica pode ser verificada por
-`GET /api/backend/health`. As operações e os hooks do domínio SIPAT ainda não
-existem.
+A integração básica pode ser verificada por `GET /api/backend/health`. As
+operações e os hooks Web de usuários ainda não existem.
 
 ## Transporte HTTP
 
@@ -112,7 +113,7 @@ defina query keys, invalidação, retry e consistência.
 ## Decisões pendentes
 
 - duração, inatividade e simultaneidade de sessões;
-- provisionamento do primeiro administrador e política de senha;
+- provisionamento do primeiro administrador;
 - limites de tentativas e bloqueio progressivo do login;
 - biblioteca de estado remoto e regras de cache;
 - retry por operação e idempotência;

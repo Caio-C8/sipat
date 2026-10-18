@@ -1,10 +1,10 @@
 # Identidade, sessão e controle de acesso
 
 Este documento registra a arquitetura das primeiras entregas de segurança do
-SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001` está implementada. Login,
-logout, emissão de cookie e criação produtiva de sessões continuam planejados
-para o `AUTH-001`; CRUD de usuários continua planejado para o `USERS-001`. O
-estado e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
+SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001` e a gestão de usuários
+do `USERS-001` estão implementadas. Login, logout, `/auth/me`, emissão de cookie
+e criação produtiva de sessões continuam planejados para o `AUTH-001`. O estado
+e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
 
 ## Estado implementado no SEC-001
 
@@ -145,7 +145,12 @@ validação, limite e tratamento de abuso.
 
 ## Segurança do CRUD de usuários
 
-- criação recebe senha em texto puro somente no body validado e persiste hash;
+- as cinco rotas declaram explicitamente apenas `ADMINISTRADOR` e continuam
+  submetidas aos Guards globais;
+- criação recebe senha em texto puro somente no body validado e persiste hash
+  Argon2id com `memoryCost` 19.456 KiB, `timeCost` 2 e `parallelism` 1;
+- a senha inicial possui de 15 a 128 pontos de código Unicode, permite espaços
+  e não exige combinação artificial de classes de caracteres;
 - e-mail é normalizado de forma determinística antes da comparação e
   persistência, mantendo a unicidade também no banco;
 - responses usam `select` e mapper explícitos e nunca incluem senha ou hash;
@@ -153,7 +158,12 @@ validação, limite e tratamento de abuso.
   genérico;
 - ativação e inativação usam operação própria;
 - não existe exclusão física;
-- inativação e revogação de sessões formam uma única operação consistente;
+- o administrador não pode alterar o próprio perfil nem inativar a própria
+  conta;
+- o último administrador ativo não pode ser inativado; a contagem, a mudança de
+  situação e a revogação usam transação serializável com repetição limitada em
+  conflito de escrita;
+- inativação e revogação de sessões formam uma única operação atômica;
 - erros e logs não permitem enumerar hashes, tokens ou detalhes internos.
 
 ## Segurança do login e logout
@@ -169,17 +179,17 @@ validação, limite e tratamento de abuso.
 - `GET /auth/me` retorna apenas a identidade segura;
 - nenhuma resposta retorna token de sessão no JSON.
 
-## Web
+## Arquitetura Web futura
 
-- `/login` é a única página de autenticação inicial;
-- `/usuarios` existe somente para administrador;
-- proteção de layout e redirects evitam mostrar telas incompatíveis, mas a API
+- `/login` será a única página de autenticação inicial;
+- `/usuarios` deverá existir somente para administrador;
+- proteção de layout e redirects deverão evitar telas incompatíveis, mas a API
   repete a autorização em todas as operações;
 - Proxy do Next.js pode fazer apenas checagem otimista; não é o local da
   validação completa da sessão nem da autorização;
-- redirects diferenciam usuário anônimo de usuário autenticado sem perfil e não
-  entram em loop;
-- logout permanece acessível por teclado e expõe estado pendente;
+- redirects deverão diferenciar usuário anônimo de usuário autenticado sem
+  perfil e não entrar em loop;
+- logout deverá permanecer acessível por teclado e expor estado pendente;
 - respostas autenticadas não entram em cache público nem atravessam usuários.
 
 ## Testes obrigatórios
@@ -197,12 +207,21 @@ validação, limite e tratamento de abuso.
 Mocks podem isolar unidades. Eles não substituem o E2E que inicializa os Guards
 reais e prova a ordem dos controles globais.
 
-## Decisões ainda abertas
+## Decisões confirmadas no USERS-001
+
+- autoinativação é proibida;
+- inativação do último administrador ativo é proibida;
+- senha inicial: 15 a 128 pontos de código Unicode, espaços permitidos, sem
+  regra de composição e hash Argon2id;
+- troca, recuperação e redefinição de senha não pertencem ao `USERS-001`;
+- a interface Web de usuários permanece no objetivo separado
+  `WEB-USERS-001`; biblioteca de formulário e estado remoto ainda serão
+  decididas quando existir um consumidor concreto.
+
+## Decisões ainda abertas para AUTH-001
 
 Os requisitos não definem e os agentes não devem inferir:
 
-- autoinativação e proteção do último administrador ativo;
-- política de senha inicial, troca e recuperação;
 - provisionamento controlado do primeiro administrador;
 - duração absoluta, inatividade e simultaneidade de sessões;
 - limites de tentativas e bloqueio progressivo do login.
