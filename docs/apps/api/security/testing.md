@@ -19,6 +19,11 @@ agrupamento de atividade; capacidade Argon2 e fila finitas; E2E dos três
 endpoints; e integração em PostgreSQL para corridas de provisionamento, limite
 de sessões e rate limit atômico.
 
+O `AUTH-002` cobre os dois perfis, identidade derivada do Guard, body estrito,
+senha atual inválida, CSRF, expiração do cookie, revogação de todas as sessões e
+corrida real no PostgreSQL para que somente uma alteração baseada no mesmo hash
+antigo possa vencer.
+
 Os testes atuais confirmam que uma origem configurada recebe os headers CORS,
 que o preflight respeita os métodos e headers permitidos e que uma origem fora
 da allowlist não recebe autorização do navegador. Esses testes não devem ser
