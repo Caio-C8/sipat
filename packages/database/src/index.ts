@@ -53,6 +53,7 @@ export type {
   Setor,
   SetorInventario,
   SessaoUsuario,
+  TentativaLogin,
   SituacaoContabilPatrimonio,
   TransferenciaPatrimonio,
   Usuario,

@@ -126,17 +126,28 @@ model Usuario {
 }
 
 model SessaoUsuario {
-  id        String    @id @default(uuid()) @db.Uuid
-  tokenHash String    @unique @map("token_hash") @db.Char(64)
-  usuarioId String    @map("usuario_id") @db.Uuid
-  expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
-  revokedAt DateTime? @map("revoked_at") @db.Timestamp(6)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  id             String    @id @default(uuid()) @db.Uuid
+  tokenHash      String    @unique @map("token_hash") @db.Char(64)
+  usuarioId      String    @map("usuario_id") @db.Uuid
+  expiresAt      DateTime  @map("expires_at") @db.Timestamp(6)
+  lastActivityAt DateTime  @default(now()) @map("last_activity_at") @db.Timestamp(6)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamp(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId, revokedAt], map: "sessoes_usuarios_usuario_id_revoked_at_idx")
   @@map("sessoes_usuarios")
+}
+
+model TentativaLogin {
+  chaveHash      String   @id @map("chave_hash") @db.Char(64)
+  tentativas     Int
+  janelaExpiraAt DateTime @map("janela_expira_at") @db.Timestamp(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([janelaExpiraAt], map: "tentativas_login_janela_expira_at_idx")
+  @@map("tentativas_login")
 }
 
 model Responsavel {
