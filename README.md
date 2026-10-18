@@ -188,26 +188,27 @@ build, alterá-la exige reconstruir a imagem. Consulte a
 
 ## Comandos principais
 
-| Comando                         | Finalidade                                       |
-| ------------------------------- | ------------------------------------------------ |
-| `pnpm dev`                      | Executa todos os apps que têm script `dev`       |
-| `pnpm dev:web` / `pnpm dev:api` | Executa apenas Web ou API                        |
-| `pnpm dev:mobile`               | Inicia o Metro do aplicativo mobile              |
-| `pnpm mobile:android`           | Abre o app no Android                            |
-| `pnpm mobile:ios`               | Abre o app no iOS; simulador exige macOS         |
-| `pnpm mobile:web`               | Abre a interface mobile no navegador             |
-| `pnpm mobile:build:android`     | Gera um APK instalável pelo EAS                  |
-| `pnpm mobile:build:testflight`  | Gera e envia o build iOS ao TestFlight           |
-| `pnpm stack:staging:up`         | Sobe API, Web, mobile-web e banco em homologação |
-| `pnpm stack:production:up`      | Sobe API, Web, mobile-web e banco em produção    |
-| `pnpm check`                    | Gera Prisma Client, roda lint, tipos e testes    |
-| `pnpm build:staging`            | Build local com variáveis de homologação         |
-| `pnpm build:production`         | Build local com variáveis de produção            |
-| `pnpm db:migrate:development`   | Cria/aplica migrations durante desenvolvimento   |
-| `pnpm db:migrate:staging`       | Aplica migrations já versionadas em homologação  |
-| `pnpm db:migrate:production`    | Aplica migrations já versionadas em produção     |
-| `pnpm db:studio`                | Abre o Prisma Studio no ambiente local           |
-| `pnpm format`                   | Formata arquivos suportados                      |
+| Comando                                                                             | Finalidade                                       |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `pnpm dev`                                                                          | Executa todos os apps que têm script `dev`       |
+| `pnpm dev:web` / `pnpm dev:api`                                                     | Executa apenas Web ou API                        |
+| `pnpm dev:mobile`                                                                   | Inicia o Metro do aplicativo mobile              |
+| `pnpm mobile:android`                                                               | Abre o app no Android                            |
+| `pnpm mobile:ios`                                                                   | Abre o app no iOS; simulador exige macOS         |
+| `pnpm mobile:web`                                                                   | Abre a interface mobile no navegador             |
+| `pnpm mobile:build:android`                                                         | Gera um APK instalável pelo EAS                  |
+| `pnpm mobile:build:testflight`                                                      | Gera e envia o build iOS ao TestFlight           |
+| `pnpm stack:staging:up`                                                             | Sobe API, Web, mobile-web e banco em homologação |
+| `pnpm stack:production:up`                                                          | Sobe API, Web, mobile-web e banco em produção    |
+| `pnpm check`                                                                        | Gera Prisma Client, roda lint, tipos e testes    |
+| `pnpm build:staging`                                                                | Build local com variáveis de homologação         |
+| `pnpm build:production`                                                             | Build local com variáveis de produção            |
+| `pnpm db:migrate:development`                                                       | Cria/aplica migrations durante desenvolvimento   |
+| `pnpm db:migrate:staging`                                                           | Aplica migrations já versionadas em homologação  |
+| `pnpm db:migrate:production`                                                        | Aplica migrations já versionadas em produção     |
+| `pnpm db:studio`                                                                    | Abre o Prisma Studio no ambiente local           |
+| `pnpm format`                                                                       | Formata arquivos suportados                      |
+| `pnpm exec dotenv -e .env.development -- pnpm --filter @repo/api provisionar:admin` | Criar usuário administrador através do terminal  |
 
 O guia completo do aplicativo — Web, Expo Go, rede local, túnel HTTPS, APK e
 TestFlight — está em
