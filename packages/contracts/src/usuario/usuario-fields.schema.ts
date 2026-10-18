@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { PerfilUsuarioSchema } from "../auth/identidade-autenticada.schema";
+import { SenhaSchema } from "../auth/senha.schema";
 
 export const NomeUsuarioSchema = z
   .string()
@@ -19,13 +20,6 @@ export const EmailUsuarioSchema = z
       .max(150, { error: "O e-mail deve possuir no máximo 150 caracteres." }),
   );
 
-export const SenhaInicialUsuarioSchema = z
-  .string({ error: "A senha inicial é obrigatória." })
-  .refine((senha) => Array.from(senha).length >= 15, {
-    error: "A senha inicial deve possuir no mínimo 15 caracteres.",
-  })
-  .refine((senha) => Array.from(senha).length <= 128, {
-    error: "A senha inicial deve possuir no máximo 128 caracteres.",
-  });
+export const SenhaInicialUsuarioSchema = SenhaSchema;
 
 export { PerfilUsuarioSchema };

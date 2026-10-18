@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   CABECALHO_CSRF,
   AuthMeResponseSchema,
+  AlterarSenhaBodySchema,
   AlterarSituacaoUsuarioSchema,
   AlterarUsuarioSchema,
   ConsultarUsuarioResponseSchema,
@@ -14,6 +15,11 @@ import {
   ListarUsuariosResponseSchema,
   LoginBodySchema,
   LoginResponseSchema,
+  RedefinirSenhaBodySchema,
+  SenhaSchema,
+  SolicitarRedefinicaoSenhaBodySchema,
+  SolicitarRedefinicaoSenhaResponseSchema,
+  TokenRedefinicaoSenhaSchema,
   MetaPaginacaoSchema,
   PaginacaoQuerySchema,
   PerfilUsuarioSchema,
@@ -52,9 +58,15 @@ describe("@repo/contracts — API pública", () => {
 
   it("exporta os contratos de autenticação pelo entrypoint", () => {
     for (const schema of [
+      SenhaSchema,
       LoginBodySchema,
       LoginResponseSchema,
       AuthMeResponseSchema,
+      AlterarSenhaBodySchema,
+      SolicitarRedefinicaoSenhaBodySchema,
+      RedefinirSenhaBodySchema,
+      SolicitarRedefinicaoSenhaResponseSchema,
+      TokenRedefinicaoSenhaSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }
