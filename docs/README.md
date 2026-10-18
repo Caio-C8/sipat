@@ -22,6 +22,14 @@ Os documentos abaixo tratam de decisões transversais e permanecem na raiz:
 - [Integrações entre aplicações](./integrations/README.md);
 - [Performance](./performance/README.md).
 
+## Trabalho com agentes
+
+- [Fluxo entre planejamento, implementação e versionamento](./agents/workflow.md);
+- [Template para novas tarefas com handoff formal](./tasks/TEMPLATE.md).
+
+O fluxo é incremental: ele orienta novos trabalhos sem substituir roadmaps,
+handoffs, requisitos ou decisões já existentes.
+
 Cada nova aplicação pode receber um diretório próprio em `docs/apps/<app>`.
 Crie documentação detalhada somente quando suas decisões forem conhecidas.
 
