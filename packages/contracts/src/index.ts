@@ -1,6 +1,7 @@
 export * from "./common";
 export * from "./auth";
 export * from "./usuario";
+export * from "./patrimonio";
 
 export type AppEnvironment = "development" | "staging" | "production" | "test";
 
