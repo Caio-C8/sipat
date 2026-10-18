@@ -50,7 +50,7 @@ para contornar essa dependência.
 | Ordem | Objetivo                                  | Status    | Dependências                 |
 | ----- | ----------------------------------------- | --------- | ---------------------------- |
 | 4     | `CONTRACTS-003` — Contratos de senha      | concluído | `CONTRACTS-002`, RF01 e UC01 |
-| 5     | `AUTH-002` — Alterar a própria senha      | planejado | `CONTRACTS-003` e `AUTH-001` |
+| 5     | `AUTH-002` — Alterar a própria senha      | concluído | `CONTRACTS-003` e `AUTH-001` |
 | 6     | `AUTH-003` — Recuperar a senha por e-mail | planejado | `AUTH-002` e SMTP            |
 
 Esta sequência entrega somente contratos, banco e backend. Não inclui página,
@@ -277,7 +277,7 @@ Especificação de execução:
 
 ## AUTH-002 — Alterar a própria senha
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -286,7 +286,7 @@ senha após comprovar a senha atual.
 
 ### Escopo
 
-- `POST /api/auth/change-password`, protegido para os dois perfis;
+- `POST /api/auth/alterar-senha`, protegido para os dois perfis;
 - verificação da sessão, da senha atual e da política da nova senha;
 - uso da capacidade Argon2 já limitada por instância;
 - atualização do hash e revogação de todas as sessões do usuário em operação
@@ -303,11 +303,14 @@ senha após comprovar a senha atual.
 
 ### Critérios de aceite
 
-- [ ] somente a identidade da sessão pode ter a senha alterada;
-- [ ] senha atual inválida não modifica senha, sessão ou token de recuperação;
-- [ ] sucesso altera o hash, revoga todas as sessões e expira o cookie;
-- [ ] nenhuma rota administrativa aceita senha de outro usuário;
-- [ ] contratos, banco e API passam nas verificações proporcionais.
+- [x] somente a identidade da sessão pode ter a senha alterada;
+- [x] senha atual inválida não modifica senha nem sessão;
+- [x] sucesso altera o hash, revoga todas as sessões e expira o cookie;
+- [x] nenhuma rota administrativa aceita senha de outro usuário;
+- [x] contratos, banco e API passam nas verificações proporcionais.
+
+A invalidação de token de recuperação será conectada pelo `AUTH-003`, que cria
+o model persistente correspondente e já inclui essa integração em seu escopo.
 
 Especificação de execução:
 [AUTH-002](./tasks/AUTH-002-alterar-propria-senha.md).

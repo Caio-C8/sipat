@@ -3,9 +3,10 @@
 > A decisão específica do SIPAT por sessão opaca revogável, cookie `HttpOnly`
 > e proteção CSRF está em
 > [Identidade, sessão e controle de acesso](../../../security-and-access.md).
-> A validação de sessões do `SEC-001` e login, logout, `/auth/me`, emissão do
-> cookie e criação produtiva de sessões do backend `AUTH-001` estão
-> implementados. A integração Web permanece no objetivo Web próprio.
+> A validação de sessões do `SEC-001`, login, logout, `/auth/me`, emissão do
+> cookie e criação produtiva de sessões do `AUTH-001` e alteração autenticada
+> da própria senha do `AUTH-002` estão implementados. A integração Web
+> permanece no objetivo Web próprio.
 
 ## Responsabilidade
 

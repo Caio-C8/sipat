@@ -31,14 +31,17 @@ describe("AuthService", () => {
 
   const repositoryTransacao = {
     atualizarUltimoLoginSeAtivo: jest.fn(),
+    atualizarSenhaSeAtual: jest.fn(),
     listarSessoesAtivas: jest.fn(),
     revogarSessoes: jest.fn(),
+    revogarTodasSessoes: jest.fn(),
     criarSessao: jest.fn(),
     limparTentativasLogin: jest.fn(),
   } as unknown as AuthRepository;
   const authRepository = {
     limparTentativasExpiradas: jest.fn(),
     buscarUsuarioParaLogin: jest.fn(),
+    buscarUsuarioParaAlteracaoSenha: jest.fn(),
     reservarTentativaLogin: jest.fn(),
     executarTransacaoSerializavel: jest.fn(
       (operacao: (repository: AuthRepository) => Promise<unknown>) =>
@@ -46,6 +49,7 @@ describe("AuthService", () => {
     ),
   } as unknown as AuthRepository;
   const senhaHasher = {
+    criarHash: jest.fn(),
     verificarHash: jest.fn(),
   } as unknown as SenhaHasher;
   const capacidadeArgon2 = {
@@ -104,10 +108,16 @@ describe("AuthService", () => {
     (
       repositoryTransacao.atualizarUltimoLoginSeAtivo as jest.Mock
     ).mockResolvedValue(true);
+    (repositoryTransacao.atualizarSenhaSeAtual as jest.Mock).mockResolvedValue(
+      true,
+    );
     (repositoryTransacao.listarSessoesAtivas as jest.Mock).mockResolvedValue(
       [],
     );
     (repositoryTransacao.revogarSessoes as jest.Mock).mockResolvedValue(
+      undefined,
+    );
+    (repositoryTransacao.revogarTodasSessoes as jest.Mock).mockResolvedValue(
       undefined,
     );
     (repositoryTransacao.criarSessao as jest.Mock).mockResolvedValue(undefined);
@@ -117,6 +127,7 @@ describe("AuthService", () => {
     (authRepository.limparTentativasExpiradas as jest.Mock).mockResolvedValue(
       0,
     );
+    (senhaHasher.criarHash as jest.Mock).mockResolvedValue("hash-novo");
   });
 
   it.each(["ADMINISTRADOR", "DIRETOR_PATRIMONIO"] as const)(
@@ -351,5 +362,110 @@ describe("AuthService", () => {
       expect.stringMatching(/^[a-f0-9]{64}$/),
       agora,
     );
+  });
+
+  it("altera a própria senha e revoga todas as sessões", async () => {
+    const usuario = {
+      ativo: true,
+      senha: "hash-atual",
+    };
+    (
+      authRepository.buscarUsuarioParaAlteracaoSenha as jest.Mock
+    ).mockResolvedValue(usuario);
+    (senhaHasher.verificarHash as jest.Mock).mockResolvedValue(true);
+
+    await service.alterarSenha(identidadeBase.id, {
+      senhaAtual: "senha atual",
+      novaSenha: "uma nova senha segura",
+      confirmacaoNovaSenha: "uma nova senha segura",
+    });
+
+    expect(capacidadeArgon2.executar).toHaveBeenCalledTimes(1);
+    expect(senhaHasher.verificarHash).toHaveBeenCalledWith(
+      "hash-atual",
+      "senha atual",
+    );
+    expect(senhaHasher.criarHash).toHaveBeenCalledWith("uma nova senha segura");
+    expect(repositoryTransacao.atualizarSenhaSeAtual).toHaveBeenCalledWith(
+      identidadeBase.id,
+      "hash-atual",
+      "hash-novo",
+      agora,
+    );
+    expect(repositoryTransacao.revogarTodasSessoes).toHaveBeenCalledWith(
+      identidadeBase.id,
+      agora,
+    );
+    expect(repositoryTransacao.limparTentativasLogin).toHaveBeenCalledWith(
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+    );
+  });
+
+  it("rejeita senha atual inválida sem criar hash nem modificar sessão", async () => {
+    (
+      authRepository.buscarUsuarioParaAlteracaoSenha as jest.Mock
+    ).mockResolvedValue({ ativo: true, senha: "hash-atual" });
+    (senhaHasher.verificarHash as jest.Mock).mockResolvedValue(false);
+
+    const erro = await service
+      .alterarSenha(identidadeBase.id, {
+        senhaAtual: "incorreta",
+        novaSenha: "uma nova senha segura",
+        confirmacaoNovaSenha: "uma nova senha segura",
+      })
+      .catch((valor: unknown) => valor);
+
+    expect(erro).toBeInstanceOf(UnauthorizedException);
+    expect((erro as UnauthorizedException).getResponse()).toEqual({
+      codigo: "SENHA_ATUAL_INVALIDA",
+      mensagem: "A senha atual é inválida.",
+      erros: [],
+    });
+    expect(senhaHasher.criarHash).not.toHaveBeenCalled();
+    expect(authRepository.executarTransacaoSerializavel).not.toHaveBeenCalled();
+    expect(repositoryTransacao.revogarTodasSessoes).not.toHaveBeenCalled();
+  });
+
+  it("rejeita alteração concorrente quando o hash atual já mudou", async () => {
+    (
+      authRepository.buscarUsuarioParaAlteracaoSenha as jest.Mock
+    ).mockResolvedValue({ ativo: true, senha: "hash-atual" });
+    (senhaHasher.verificarHash as jest.Mock).mockResolvedValue(true);
+    (repositoryTransacao.atualizarSenhaSeAtual as jest.Mock).mockResolvedValue(
+      false,
+    );
+
+    await expect(
+      service.alterarSenha(identidadeBase.id, {
+        senhaAtual: "senha atual",
+        novaSenha: "uma nova senha segura",
+        confirmacaoNovaSenha: "uma nova senha segura",
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(repositoryTransacao.revogarTodasSessoes).not.toHaveBeenCalled();
+    expect(repositoryTransacao.limparTentativasLogin).not.toHaveBeenCalled();
+  });
+
+  it("aplica à alteração de senha o rate limit persistente do ambiente", async () => {
+    (authRepository.reservarTentativaLogin as jest.Mock).mockResolvedValue(
+      new Date(agora.getTime() + 60_000),
+    );
+
+    await expect(
+      service.alterarSenha(identidadeBase.id, {
+        senhaAtual: "senha atual",
+        novaSenha: "uma nova senha segura",
+        confirmacaoNovaSenha: "uma nova senha segura",
+      }),
+    ).rejects.toBeInstanceOf(MuitasRequisicoesException);
+    expect(authRepository.reservarTentativaLogin).toHaveBeenCalledWith(
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+      agora,
+      3,
+      60_000,
+    );
+    expect(
+      authRepository.buscarUsuarioParaAlteracaoSenha,
+    ).not.toHaveBeenCalled();
   });
 });

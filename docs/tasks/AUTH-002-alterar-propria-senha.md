@@ -1,6 +1,6 @@
 # `AUTH-002` — Alterar a própria senha
 
-**Status:** aprovada
+**Status:** concluída
 
 ## Objetivo
 
@@ -29,7 +29,7 @@ a senha atual e encerrando todas as sessões após o sucesso.
 3. Reutilizar a capacidade Argon2 e o limite persistente de operações de senha.
 4. Implementar repository e transação para atualizar o hash e revogar todas as
    sessões.
-5. Implementar service, DTO e `POST /api/auth/change-password`.
+5. Implementar service, DTO e `POST /api/auth/alterar-senha`.
 6. Expirar o cookie no controller somente após sucesso.
 7. Cobrir unidades, integração PostgreSQL e E2E com Guards e CSRF reais.
 8. Executar lint, tipos, testes, build e verificações transversais.
@@ -37,7 +37,7 @@ a senha atual e encerrando todas as sessões após o sucesso.
 
 ## Escopo
 
-- rota protegida `POST /api/auth/change-password`, permitida a
+- rota protegida `POST /api/auth/alterar-senha`, permitida a
   `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`;
 - identidade derivada exclusivamente da sessão válida;
 - verificação Argon2 da senha atual;
@@ -72,15 +72,15 @@ a senha atual e encerrando todas as sessões após o sucesso.
 
 ## Critérios de aceite
 
-- [ ] requisição anônima ou com sessão inválida recebe `401`;
-- [ ] os dois perfis autenticados podem alterar somente a própria senha;
-- [ ] body com ID, e-mail, perfil ou propriedade extra é rejeitado;
-- [ ] senha atual inválida não altera nenhum estado;
-- [ ] nova senha fora da política ou confirmação divergente é rejeitada;
-- [ ] sucesso muda o hash, revoga todas as sessões e expira o cookie;
-- [ ] concorrência não deixa senha alterada com sessões antigas válidas;
-- [ ] senha, hash e cookie não aparecem em response, log ou métrica;
-- [ ] nenhum arquivo de Web ou mobile é alterado.
+- [x] requisição anônima ou com sessão inválida recebe `401`;
+- [x] os dois perfis autenticados podem alterar somente a própria senha;
+- [x] body com ID, e-mail, perfil ou propriedade extra é rejeitado;
+- [x] senha atual inválida não altera senha nem sessões;
+- [x] nova senha fora da política ou confirmação divergente é rejeitada;
+- [x] sucesso muda o hash, revoga todas as sessões e expira o cookie;
+- [x] concorrência não deixa senha alterada com sessões antigas válidas;
+- [x] senha, hash e cookie não aparecem em response, log ou métrica;
+- [x] nenhum arquivo de Web ou mobile é alterado.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -106,4 +106,7 @@ a senha atual e encerrando todas as sessões após o sucesso.
 
 ## Pendências ou decisões bloqueantes
 
-- Nenhuma depois da conclusão verificada de `CONTRACTS-003`.
+- Nenhuma. As verificações passaram em 18 de outubro de 2026, incluindo os
+  testes de integração em PostgreSQL descartável. A invalidação de uma futura
+  redefinição pendente será integrada quando o model correspondente for criado
+  pelo `AUTH-003`, conforme a ordem de execução dessa tarefa.

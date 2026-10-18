@@ -33,7 +33,8 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 No estado atual:
 
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
-  `POST /api/auth/logout`, `GET /api/auth/me` e as cinco rotas protegidas de
+  `POST /api/auth/logout`, `GET /api/auth/me`,
+  `POST /api/auth/alterar-senha` e as cinco rotas protegidas de
   `/api/usuarios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
@@ -49,6 +50,8 @@ No estado atual:
   último administrador ativo;
 - login, logout e `/auth/me` usam contratos Zod, cookie `HttpOnly`, sessão opaca
   revogável e rate limit persistente;
+- alteração da própria senha exige a senha atual, usa limite persistente por
+  escopo, troca o hash e revoga todas as sessões atomicamente e expira o cookie;
 - a duração absoluta é 8 horas, a inatividade efetiva fica entre
   aproximadamente 25 e 30 minutos e no máximo cinco sessões ficam ativas por
   usuário;

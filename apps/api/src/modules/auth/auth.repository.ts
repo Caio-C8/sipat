@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { DatabaseClient, Prisma } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
-import type { UsuarioParaLogin } from "./auth.types";
+import type { UsuarioParaAlteracaoSenha, UsuarioParaLogin } from "./auth.types";
 
 type ClienteAuth = DatabaseClient | Prisma.TransactionClient;
 
@@ -32,6 +32,15 @@ export class AuthRepository {
     return this.database.usuario.findUnique({
       where: { email },
       select: usuarioParaLoginSelect,
+    });
+  }
+
+  buscarUsuarioParaAlteracaoSenha(
+    usuarioId: string,
+  ): Promise<UsuarioParaAlteracaoSenha | null> {
+    return this.database.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { ativo: true, senha: true },
     });
   }
 
@@ -122,6 +131,20 @@ export class AuthRepository {
     return resultado.count === 1;
   }
 
+  async atualizarSenhaSeAtual(
+    usuarioId: string,
+    senhaHashAtual: string,
+    novaSenhaHash: string,
+    agora: Date,
+  ): Promise<boolean> {
+    const resultado = await this.database.usuario.updateMany({
+      where: { id: usuarioId, ativo: true, senha: senhaHashAtual },
+      data: { senha: novaSenhaHash, updatedAt: agora },
+    });
+
+    return resultado.count === 1;
+  }
+
   async listarSessoesAtivas(
     usuarioId: string,
     agora: Date,
@@ -144,6 +167,13 @@ export class AuthRepository {
 
     await this.database.sessaoUsuario.updateMany({
       where: { id: { in: [...ids] }, revogadoAt: null },
+      data: { revogadoAt: agora },
+    });
+  }
+
+  async revogarTodasSessoes(usuarioId: string, agora: Date): Promise<void> {
+    await this.database.sessaoUsuario.updateMany({
+      where: { usuarioId, revogadoAt: null },
       data: { revogadoAt: agora },
     });
   }

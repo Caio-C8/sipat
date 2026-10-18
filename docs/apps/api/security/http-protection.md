@@ -58,6 +58,11 @@ staging/produção é uma decisão do produto, não uma prescrição do NIST. A
 verificação Argon2 também possui concorrência e fila finitas por instância; a
 saturação responde `429` sem executar espera ilimitada.
 
+A alteração autenticada de senha reutiliza as mesmas janelas quantitativas em
+um registro separado por chave HMAC do ID da identidade e pelo escopo da
+operação. Sucesso limpa esse contador; login e alteração de senha não consomem
+a mesma chave.
+
 ## Transporte e proxy
 
 Produção deve usar HTTPS no servidor ou proxy responsável pela terminação TLS.

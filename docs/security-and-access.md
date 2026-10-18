@@ -3,8 +3,9 @@
 Este documento registra a arquitetura das primeiras entregas de segurança do
 SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
 do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
-Os backends de alteração e recuperação de senha estão planejados em `AUTH-002`
-e `AUTH-003`. As interfaces Web e mobile continuam fora dessas entregas. O
+O backend de alteração autenticada da própria senha do `AUTH-002` também está
+implementado; a recuperação de senha permanece planejada em `AUTH-003`. As
+interfaces Web e mobile continuam fora dessas entregas. O
 estado e a ordem de execução ficam no
 [roadmap inicial](./roadmap.md).
 
@@ -21,7 +22,9 @@ estado e a ordem de execução ficam no
 - `POST`, `PUT`, `PATCH` e `DELETE` exigem Origin exato permitido e
   `X-SIPAT-CSRF: 1`, inclusive quando uma rota for pública;
 - `POST /api/auth/login` cria a sessão, `GET /api/auth/me` consulta a identidade
-  atual e `POST /api/auth/logout` encerra a sessão de forma idempotente.
+  atual e `POST /api/auth/logout` encerra a sessão de forma idempotente;
+- `POST /api/auth/alterar-senha` exige a senha atual, altera somente a
+  identidade da sessão, revoga todas as sessões e expira o cookie.
 
 ## Requisitos atendidos
 
@@ -156,15 +159,15 @@ proteção própria; não deve copiar cookies do navegador automaticamente.
 | `POST /api/auth/login`                    | sim     | sim           | sim                   | AUTH-001  |
 | `GET /api/auth/me`                        | não     | sim           | sim                   | AUTH-001  |
 | `POST /api/auth/logout`                   | sim     | sim           | sim                   | AUTH-001  |
+| `POST /api/auth/alterar-senha`            | não     | sim           | sim                   | AUTH-002  |
 
 Uma rota pública não recebe autorização implícita para mutar estado sem CSRF,
 validação, limite e tratamento de abuso.
 
-### Matriz planejada para senha
+### Matriz de recuperação de senha planejada
 
 | Rota                             | Pública | Identidade exigida | Objetivo |
 | -------------------------------- | ------- | ------------------ | -------- |
-| `POST /api/auth/change-password` | não     | própria sessão     | AUTH-002 |
 | `POST /api/auth/forgot-password` | sim     | não                | AUTH-003 |
 | `POST /api/auth/reset-password`  | sim     | token de uso único | AUTH-003 |
 
@@ -231,7 +234,7 @@ podem selecionar outro usuário na confirmação.
 
 ## Alteração autenticada da própria senha
 
-O `AUTH-002` seguirá estas decisões:
+O `AUTH-002` implementa estas decisões:
 
 - qualquer usuário ativo dos dois perfis pode alterar somente a própria senha;
 - a sessão válida identifica o usuário, e a senha atual é obrigatória como
@@ -253,6 +256,9 @@ O `AUTH-002` seguirá estas decisões:
 - o cookie atual é expirado e o usuário precisa autenticar novamente; não há
   criação automática de nova sessão;
 - a response de sucesso é `204 No Content` e nunca contém hash ou credencial.
+
+O model de redefinição ainda não existe. O `AUTH-003`, responsável por criá-lo,
+também integra sua invalidação à transação já implementada pelo `AUTH-002`.
 
 ## Recuperação da senha por e-mail institucional
 
@@ -400,9 +406,9 @@ login/logout e provisionamento deste documento. `AUTH-001` cobre somente o
 backend. Não existe página de login, formulário, hook, redirect ou integração
 Web; `WEB-AUTH-001` continua planejado no roadmap próprio da Web.
 
-## Decisões confirmadas no AUTH-002 e AUTH-003
+## Decisões confirmadas para AUTH-002 e AUTH-003
 
-- a entrega implementa somente contratos, banco e backend;
+- as entregas se restringem a contratos, banco e backend;
 - os e-mails cadastrados são tratados como institucionais e confiáveis, sem
   verificação adicional nesta etapa;
 - a troca autenticada exige senha atual e afeta somente a identidade da sessão;
