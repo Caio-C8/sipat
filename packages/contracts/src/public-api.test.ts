@@ -15,6 +15,8 @@ import {
   ListarUsuariosResponseSchema,
   LoginBodySchema,
   LoginResponseSchema,
+  ListarPatrimoniosQuerySchema,
+  ListarPatrimoniosResponseSchema,
   RedefinirSenhaBodySchema,
   SenhaSchema,
   SolicitarRedefinicaoSenhaBodySchema,
@@ -23,10 +25,21 @@ import {
   MetaPaginacaoSchema,
   PaginacaoQuerySchema,
   PerfilUsuarioSchema,
+  PatrimonioDetalheSchema,
+  PatrimonioParamsSchema,
+  PatrimonioResumoSchema,
   RespostaErroSchema,
   UsuarioDetalheSchema,
   UsuarioParamsSchema,
   UsuarioResumoSchema,
+  CriarPatrimonioBodySchema,
+  CriarPatrimonioResponseSchema,
+  ConsultarPatrimonioResponseSchema,
+  StatusPatrimonioSchema,
+  SubstituirNumeroPatrimonialBodySchema,
+  SubstituirNumeroPatrimonialResponseSchema,
+  TipoIncorporacaoSchema,
+  TipoNumeroPatrimonialSchema,
   VALOR_CABECALHO_CSRF,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -84,6 +97,28 @@ describe("@repo/contracts — API pública", () => {
       ListarUsuariosResponseSchema,
       CriarUsuarioResponseSchema,
       ConsultarUsuarioResponseSchema,
+    ];
+
+    for (const schema of schemas) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
+
+  it("exporta somente os contratos públicos das operações de patrimônios", () => {
+    const schemas = [
+      TipoNumeroPatrimonialSchema,
+      StatusPatrimonioSchema,
+      TipoIncorporacaoSchema,
+      PatrimonioParamsSchema,
+      CriarPatrimonioBodySchema,
+      ListarPatrimoniosQuerySchema,
+      SubstituirNumeroPatrimonialBodySchema,
+      PatrimonioResumoSchema,
+      PatrimonioDetalheSchema,
+      ListarPatrimoniosResponseSchema,
+      CriarPatrimonioResponseSchema,
+      ConsultarPatrimonioResponseSchema,
+      SubstituirNumeroPatrimonialResponseSchema,
     ];
 
     for (const schema of schemas) {
