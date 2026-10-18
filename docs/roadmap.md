@@ -58,6 +58,43 @@ formulário, operação ou hook Web, nem qualquer alteração no aplicativo mobi
 Os consumidores deverão ser planejados em objetivos próprios depois que a API
 estiver implementada e verificada.
 
+## Ordem das entregas básicas de patrimônios
+
+| Ordem | Objetivo                                      | Status    | Dependências                         |
+| ----- | --------------------------------------------- | --------- | ------------------------------------ |
+| 7     | `CONTRACTS-004` — Contratos de patrimônios    | concluído | RF10, RF11, RF12, UC10, UC11 e UC12  |
+| 8     | `PATRIMONIOS-001` — Cadastrar patrimônios     | planejado | `CONTRACTS-004`, `SEC-001`           |
+| 9     | `PATRIMONIOS-002` — Consultar patrimônios     | planejado | `PATRIMONIOS-001`                    |
+| 10    | `PATRIMONIOS-003` — Substituir número oficial | planejado | `PATRIMONIOS-001`, `PATRIMONIOS-002` |
+
+Esta sequência entrega contratos, persistência e backend. Interfaces, hooks e
+formatação visual da Web, operações mobile, impressão ou reimpressão de
+etiquetas permanecem fora do escopo.
+
+### Decisões comuns da numeração patrimonial
+
+- O cadastro recebe somente a escolha entre numeração oficial e ausência de
+  número oficial; o cliente nunca envia o número a ser atribuído.
+- A numeração oficial usa valores canônicos como `1`; a identificação sem
+  número oficial usa valores como `SP-1`. As duas sequências são independentes.
+- As sequências são crescentes, concorrentes, não reutilizam números emitidos e
+  podem possuir lacunas após falha ou rollback. Ausência de lacunas não é
+  requisito desta etapa.
+- O banco preserva o valor canônico sem zeros à esquerda. Consumidores futuros
+  completam somente a parte numérica para a largura mínima de seis dígitos,
+  apresentando `000001` ou `SP-000001` sem limitar valores maiores.
+- A distinção entre `OFICIAL` e `SEM_NUMERO_OFICIAL` deve ser explícita no
+  domínio e nos contratos; regras não devem depender apenas de analisar o
+  prefixo da string.
+- Um identificador `SP-` continua pertencendo a um patrimônio válido no SIPAT,
+  mas não representa etiqueta oficial e não permite substituição ou reimpressão
+  de etiqueta. Outras exceções institucionais exigem requisito próprio.
+- A substituição da etiqueta preserva o `id` e todos os vínculos do patrimônio,
+  gera o próximo número oficial e registra número anterior, número novo, data e
+  usuário na mesma operação atômica.
+- Para impedir repetição e concorrência acidental, a substituição recebe o
+  número atual canônico como pré-condição, mas nunca recebe o número novo.
+
 ## Regras comuns
 
 - A API é a autoridade de autenticação e autorização. Ocultar páginas, links ou
@@ -363,6 +400,188 @@ da conta por identificador fornecido na confirmação.
 
 Especificação de execução:
 [AUTH-003](./tasks/AUTH-003-recuperar-senha.md).
+
+## CONTRACTS-004 — Contratos das operações básicas de patrimônios
+
+**Status:** concluído
+
+### Resultado esperado
+
+Definir em `@repo/contracts` os boundaries de cadastro, listagem, detalhe e
+substituição do número oficial antes que a API implemente essas operações.
+
+### Escopo
+
+- enums públicos necessários, inclusive tipo de numeração, tipo de
+  incorporação e status;
+- params por identificador UUID;
+- body estrito de cadastro sem número patrimonial, status, texto de busca ou
+  auditoria fornecidos pelo cliente;
+- query paginada de listagem, com padrão 20, máximo 50, busca e filtros por
+  status, setor, espécie, natureza e tipo de numeração;
+- responses resumida, detalhada e paginada com allowlist explícita;
+- body de substituição contendo somente o número atual canônico usado como
+  pré-condição concorrente;
+- representação monetária e de datas adequada ao JSON, sem perda de precisão
+  nem interpretação dependente de fuso;
+- testes de limites, propriedades extras, enums, paginação, campos gerados pelo
+  servidor e API pública do package.
+
+### Fora do escopo
+
+- formulários, apresentação com zeros, hooks ou clientes Web/mobile;
+- contratos de edição genérica, exclusão, transferência, baixa, inventário,
+  impressão ou depreciação automática;
+- regras que consultem banco dentro dos schemas.
+
+### Critérios de aceite
+
+- [x] o cadastro não aceita número, status, texto de busca ou auditoria;
+- [x] a substituição não aceita o novo número e exige o número atual canônico;
+- [x] listagem possui paginação finita e filtros com representação inequívoca;
+- [x] responses distinguem numeração oficial de `SEM_NUMERO_OFICIAL` sem exigir
+      parsing do prefixo pelo consumidor;
+- [x] contratos e tipos são derivados de schemas Zod 4 e possuem testes;
+- [x] API pública e consumidores existentes permanecem compatíveis.
+
+Especificação de execução:
+[CONTRACTS-004](./tasks/CONTRACTS-004-contratos-patrimonios.md).
+
+## PATRIMONIOS-001 — Cadastrar patrimônios
+
+**Status:** planejado
+
+### Resultado esperado
+
+Permitir que somente o Diretor de Patrimônio crie um bem com identidade
+patrimonial gerada pelo servidor, status inicial `ATIVO`, vínculos válidos e
+auditoria derivada da sessão.
+
+### Escopo
+
+- adequar o schema e a migration para representar explicitamente o tipo de
+  numeração e as duas sequences PostgreSQL;
+- inicializar cada sequence acima dos valores canônicos já existentes, sem
+  reclassificar silenciosamente dados legados inválidos;
+- `POST /api/patrimonios`, permitido somente a `DIRETOR_PATRIMONIO`;
+- geração atômica e concorrente de `1` ou `SP-1`, mantendo a restrição única no
+  banco como defesa adicional;
+- normalização dos campos textuais e construção de `textoBusca` no servidor;
+- validação de setor ativo, espécie e processo de compra opcional;
+- criação da situação contábil e dos parâmetros iniciais de depreciação quando
+  informados pelo contrato aprovado;
+- persistência atômica do patrimônio e de seus registros iniciais;
+- DTO, controller, service, repository, tipos, mapper, módulo e testes.
+
+### Fora do escopo
+
+- número escolhido pelo usuário, cadastro em lote e importação;
+- edição genérica, exclusão, transferência, baixa ou reavaliação;
+- interfaces Web/mobile e impressão de etiqueta.
+
+### Critérios de aceite
+
+- [ ] requisição anônima recebe `401`, administrador recebe `403` e diretor
+      autenticado pode cadastrar;
+- [ ] o body não controla número, status, texto de busca ou auditoria;
+- [ ] cada tipo consome somente sua própria sequence e concorrência não produz
+      duplicidade;
+- [ ] falha não deixa patrimônio ou registros iniciais parciais, embora possa
+      deixar lacuna na sequence;
+- [ ] status, auditoria, normalização e relações são definidos e validados no
+      servidor;
+- [ ] contratos, banco, API e testes PostgreSQL passam nas verificações.
+
+Especificação de execução:
+[PATRIMONIOS-001](./tasks/PATRIMONIOS-001-cadastrar-patrimonios.md).
+
+## PATRIMONIOS-002 — Consultar e listar patrimônios
+
+**Status:** planejado
+
+### Resultado esperado
+
+Permitir que Administrador e Diretor de Patrimônio consultem detalhes e uma
+lista paginada, filtrável e ordenada deterministicamente, sem N+1 nem exposição
+de campos internos.
+
+### Escopo
+
+- `GET /api/patrimonios` com busca normalizada, filtros aprovados, paginação com
+  padrão 20 e máximo 50 e ordenação determinística;
+- `GET /api/patrimonios/:patrimonioId` com os dados de identificação e vínculos
+  previstos no contrato detalhado;
+- setor atual acompanhado de seu responsável atual e espécie acompanhada de
+  sua natureza;
+- seleção mínima, mapper explícito, índices justificados pelas queries reais e
+  testes com volume e combinações de filtros representativas.
+
+### Fora do escopo
+
+- resposta sem paginação, busca por histórico ou relatório;
+- cache remoto, exportação, Web/mobile e formatação com zeros no backend;
+- mutações patrimoniais.
+
+### Critérios de aceite
+
+- [ ] os dois perfis autenticados consultam; anônimo recebe `401`;
+- [ ] filtros inválidos são rejeitados e ausência de resultados retorna lista
+      vazia com metadados consistentes;
+- [ ] busca usa os dados normalizados e `textoBusca`;
+- [ ] responsável e natureza são obtidos pelas relações atuais, sem duplicação
+      de fonte de verdade;
+- [ ] paginação é estável, finita e não executa N+1;
+- [ ] responses passam pelos schemas e não expõem models Prisma diretamente.
+
+Especificação de execução:
+[PATRIMONIOS-002](./tasks/PATRIMONIOS-002-consultar-patrimonios.md).
+
+## PATRIMONIOS-003 — Substituir número patrimonial oficial
+
+**Status:** planejado
+
+### Resultado esperado
+
+Trocar uma etiqueta oficial danificada sem baixar, duplicar ou recriar o bem,
+preservando sua identidade e registrando a substituição para auditoria.
+
+### Escopo
+
+- persistência do histórico de substituições com patrimônio, número anterior,
+  número novo, data e usuário;
+- `POST /api/patrimonios/:patrimonioId/substituicoes-numero`, permitido somente
+  a `DIRETOR_PATRIMONIO`;
+- comparação do número atual recebido com o valor persistido;
+- rejeição de patrimônio `SEM_NUMERO_OFICIAL`;
+- consumo do próximo número da sequence oficial;
+- atualização do patrimônio e criação do histórico na mesma transação;
+- tratamento previsível de patrimônio ausente, número atual desatualizado,
+  tipo não elegível e conflito inesperado de unicidade;
+- testes unitários, E2E e de concorrência em PostgreSQL real.
+
+### Fora do escopo
+
+- número novo fornecido pelo usuário;
+- conversão entre numeração oficial e `SEM_NUMERO_OFICIAL`;
+- reimpressão, geração de arquivo ou integração com impressora;
+- edição de qualquer outro atributo, baixa ou recriação do patrimônio;
+- tela, modal, operação ou hook Web/mobile.
+
+### Critérios de aceite
+
+- [ ] somente diretor autenticado pode executar a operação;
+- [ ] patrimônio `SP-` é rejeitado sem consumir a sequence oficial;
+- [ ] número atual divergente rejeita repetição ou concorrência sem nova troca;
+- [ ] uma troca bem-sucedida preserva `id`, relações e demais atributos;
+- [ ] número anterior, novo, data e usuário são gravados atomicamente;
+- [ ] o número anterior nunca volta ao conjunto de números disponíveis;
+- [ ] duas confirmações concorrentes para o mesmo estado produzem exatamente
+      uma substituição bem-sucedida;
+- [ ] falha pode consumir número da sequence, mas não deixa atualização ou
+      histórico parcial.
+
+Especificação de execução:
+[PATRIMONIOS-003](./tasks/PATRIMONIOS-003-substituir-numero-patrimonial.md).
 
 ## Decisões necessárias antes dos objetivos seguintes
 

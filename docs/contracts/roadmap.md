@@ -35,7 +35,8 @@ marcada como concluída.
 
 Os contratos de identidade e perfis do `CONTRACTS-001`, de usuários e
 autenticação do `CONTRACTS-002` e de alteração e recuperação de senha do
-`CONTRACTS-003` estão implementados e validados.
+`CONTRACTS-003` e os contratos das operações básicas de patrimônios do
+`CONTRACTS-004` estão implementados e validados.
 
 Cada objetivo deve registrar:
 
@@ -155,6 +156,54 @@ detalhes de SMTP em contratos públicos.
 
 A especificação aprovada está em
 [CONTRACTS-003](../tasks/CONTRACTS-003-contratos-senha.md).
+
+### CONTRACTS-004 — Operações básicas de patrimônios
+
+**Status:** concluído
+
+**Contexto**
+
+`PATRIMONIOS-001`, `PATRIMONIOS-002` e `PATRIMONIOS-003` precisam compartilhar
+boundaries explícitos para cadastro, listagem, detalhe e substituição do número
+oficial. O número atribuído, o status inicial, o texto de busca e a auditoria
+pertencem ao servidor e não podem ser promovidos acidentalmente a inputs.
+
+**Escopo**
+
+- enum público `OFICIAL | SEM_NUMERO_OFICIAL`, além dos enums patrimoniais
+  necessários às operações;
+- params UUID do patrimônio;
+- body estrito de cadastro com a indicação `semNumeroOficial`, dados cadastrais,
+  vínculos e parâmetros iniciais de depreciação quando aplicáveis;
+- query de listagem baseada no contrato comum de paginação, com padrão 20,
+  máximo 50, busca e filtros por status, setor, espécie, natureza e tipo de
+  numeração;
+- schemas resumido, detalhado e paginado de response;
+- body estrito da substituição contendo somente o número atual canônico como
+  pré-condição, sem aceitar o número novo;
+- datas em representação ISO acordada e valores decimais serializados sem perda
+  de precisão;
+- testes de limites, propriedades extras, transformações, API pública e ausência
+  dos campos controlados pelo servidor nos inputs.
+
+**Consumidores afetados**
+
+- módulo `patrimonios` da API;
+- Web e mobile somente em objetivos futuros, sem alteração nesta entrega.
+
+**Critérios de aceite**
+
+- [x] schemas são estritos e tipos derivam de Zod 4;
+- [x] cadastro nunca aceita número patrimonial, status, texto de busca ou
+      auditoria;
+- [x] substituição exige o número atual e nunca aceita o número novo;
+- [x] paginação e strings possuem limites finitos e testados;
+- [x] responses distinguem o tipo de numeração e usam allowlist explícita;
+- [x] contratos existentes e seus consumidores permanecem compatíveis;
+- [x] lint, typecheck e testes do package passam.
+
+A especificação aprovada está em
+[CONTRACTS-004](../tasks/CONTRACTS-004-contratos-patrimonios.md).
 
 ## Histórico do baseline
 

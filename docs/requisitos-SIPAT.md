@@ -126,15 +126,20 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve permitir que o Diretor de Patrimônio cadastre bens patrimoniais e suas informações de tombamento, localização, classificação e valor.
 
-**Informações:** Número patrimonial, data de tombamento, tipo de incorporação, descrição, marca, modelo, número de série, valor de incorporação, status, espécie, setor, aquisição vinculada e parâmetros de depreciação quando aplicáveis.
+**Informações:** Indicação de existência de numeração patrimonial oficial, número patrimonial gerado pelo sistema, data de tombamento, tipo de incorporação, descrição, marca, modelo, número de série, valor de incorporação, status, espécie, setor, aquisição vinculada e parâmetros de depreciação quando aplicáveis.
 
 **Regras:**
 
 - O número do patrimônio e o número de série devem ser únicos.
+- O usuário não deve informar nem escolher o número patrimonial no cadastro; o sistema deve gerar o próximo valor da sequência correspondente.
+- Bens com numeração oficial devem usar a sequência numérica, armazenada sem zeros à esquerda, por exemplo `1`.
 - Descrição, marca, modelo e número de série devem ser armazenados normalizados em letras maiúsculas e sem acentuação.
 - O sistema deve manter um texto de busca composto pelos principais campos textuais do patrimônio para apoiar consultas.
 - O status do bem deve admitir, no mínimo: ATIVO, BAIXADO, EMPRESTADO e EM_MANUTENÇÃO.
-- Se o bem não possuir número patrimonial oficial, o sistema deve gerar um identificador sequencial no padrão SP-XXXX.
+- Se o bem não possuir número patrimonial oficial, o sistema deve gerar um identificador em uma sequência própria, armazenado no padrão `SP-1`.
+- As sequências oficial e `SP-` são independentes, crescentes, não reutilizam números já emitidos e podem possuir lacunas causadas por falha ou rollback.
+- A apresentação deve completar a parte numérica para a largura mínima de seis dígitos, por exemplo `000001` e `SP-000001`, sem alterar o valor canônico armazenado nem impor limite em `999999`.
+- O identificador `SP-` não representa uma etiqueta patrimonial oficial e não habilita alteração ou reimpressão de etiqueta; outras diferenças de tratamento exigem requisito próprio.
 - O patrimônio deve estar vinculado a um setor; o responsável pelo patrimônio será o responsável atual desse setor.
 - O patrimônio deve possuir uma espécie; a natureza será determinada pela espécie.
 - Não é permitido cadastrar patrimônio sem tombamento, e o valor do bem não pode ser zero.
@@ -153,15 +158,18 @@ gerenciem a própria senha com segurança.
 
 ### RF12: Alteração do Número Patrimonial
 
-**Descrição:** O sistema deve permitir que o Diretor de Patrimônio substitua o número da placa patrimonial quando houver necessidade física de troca.
+**Descrição:** O sistema deve permitir que o Diretor de Patrimônio substitua o número da placa patrimonial oficial quando houver necessidade física de troca, sem baixar ou recriar o bem.
 
-**Informações:** Patrimônio, número atual, novo número patrimonial e usuário responsável.
+**Informações:** Patrimônio, número atual confirmado pelo solicitante, novo número patrimonial gerado pelo sistema, data e usuário responsável.
 
 **Regras:**
 
 - Somente o número patrimonial poderá ser alterado diretamente no cadastro do bem.
-- O novo número numérico deve seguir a próxima posição disponível da sequência patrimonial existente.
-- Bens identificados apenas pelo padrão SP-XXXX não devem ter o número alterado por esse fluxo.
+- O usuário não deve informar nem escolher o novo número; o sistema deve consumir a próxima posição da sequência numérica oficial.
+- A confirmação deve informar o número atual canônico para impedir que uma repetição ou requisição concorrente substitua o número mais de uma vez.
+- A substituição deve atualizar o mesmo patrimônio e registrar, atomicamente, o número anterior, o novo número, a data e o usuário responsável.
+- O número anterior não pode ser reutilizado por outro patrimônio.
+- Bens identificados pelo padrão `SP-` não devem ter o número alterado nem gerar reimpressão de etiqueta por esse fluxo.
 - Parâmetros de depreciação não podem ser alterados diretamente; sua alteração deve ocorrer por reavaliação.
 - Demais atributos do patrimônio não devem possuir edição direta por este requisito.
 
@@ -275,7 +283,7 @@ gerenciem a própria senha com segurança.
 
 **Regras:**
 
-- O histórico deve permitir rastrear, no mínimo, transferências, reavaliações, depreciações, empréstimos/devoluções, baixas, manutenções e ocorrências de inventário.
+- O histórico deve permitir rastrear, no mínimo, substituições de número patrimonial oficial, transferências, reavaliações, depreciações, empréstimos/devoluções, baixas, manutenções e ocorrências de inventário.
 - As operações históricas não devem ser apagadas quando cadastros relacionados forem inativados.
 - Os registros devem manter as informações de auditoria, registrando quem criou e quando o registro foi criado.
 
@@ -757,15 +765,15 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 **Fluxo principal:**
 
 1. O Diretor acessa o cadastro de patrimônio.
-2. O Diretor informa os dados do bem, podendo marcar que ele não tem número de patrimônio para que o sistema gere um.
+2. O Diretor informa os dados do bem e marca se ele não possui número patrimonial oficial.
 3. O Diretor seleciona setor, espécie e processo de compra.
 4. O Diretor informa os dados dos parâmetros de depreciação.
-5. O sistema normaliza os campos de busca e valida unicidades.
-6. O sistema salva o patrimônio com status inicial ATIVO.
+5. O sistema normaliza os campos de busca, valida unicidades e gera o próximo identificador da sequência oficial ou `SP-`, conforme a marcação.
+6. O sistema salva o patrimônio com status inicial ATIVO e associa o identificador gerado.
 
 **Fluxos alternativos / exceções:**
 
-- Número patrimonial já existente: o sistema rejeita o cadastro.
+- Conflito inesperado na geração do identificador: o sistema não cria parcialmente o patrimônio e retorna erro previsível.
 - Número de série já existente: o sistema rejeita o cadastro.
 - Valor igual ou menor que zero: o sistema rejeita o cadastro.
 - Dados obrigatórios ausentes: o sistema rejeita o cadastro.
@@ -806,14 +814,16 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 
 1. O Diretor localiza o patrimônio.
 2. O Diretor solicita a troca do número patrimonial.
-3. O sistema identifica o próximo número disponível da sequência numérica.
-4. O Diretor confirma a substituição.
-5. O sistema atualiza o número do patrimônio.
+3. O Diretor confirma o número atual apresentado pelo sistema.
+4. O sistema valida que o identificador atual pertence à sequência oficial e ainda corresponde ao patrimônio.
+5. O sistema gera o próximo número da sequência numérica oficial.
+6. O sistema atualiza o número e registra a substituição de forma atômica.
 
 **Fluxos alternativos / exceções:**
 
-- Bem sem número de patrimônio identificado por SP-XXXX: o sistema informa que esse fluxo não se aplica.
-- Novo número conflita com registro existente: o sistema não conclui a alteração.
+- Bem identificado pelo padrão `SP-`: o sistema informa que esse fluxo não se aplica.
+- Número atual informado não corresponde mais ao patrimônio: o sistema rejeita a repetição ou atualização concorrente.
+- Novo número conflita com registro existente: o sistema não conclui a alteração nem grava histórico parcial.
 
 **Pós-condição:** O patrimônio passa a ser identificado pelo novo número patrimonial.
 
