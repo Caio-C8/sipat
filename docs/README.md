@@ -11,7 +11,9 @@ Os documentos abaixo tratam de decisões transversais e permanecem na raiz:
 - [Ambientes](./environments.md);
 - [Como adicionar aplicações e pacotes](./adding-apps.md);
 - [Visão geral do SIPAT](./sipat.md);
-- [Requisitos do SIPAT](./requisitos-SIPAT.md).
+- [Requisitos do SIPAT](./requisitos-SIPAT.md);
+- [Roadmap inicial do SIPAT](./roadmap.md);
+- [Identidade, sessão e controle de acesso](./security-and-access.md).
 
 ## Áreas específicas
 

@@ -20,6 +20,10 @@ a semântica definida pelos requisitos. Divergências entre protótipo,
 documentos externos e requisitos versionados devem ser resolvidas antes da
 implementação.
 
+O [roadmap inicial](./roadmap.md) coordena as primeiras entregas de segurança,
+usuários e autenticação. As decisões transversais correspondentes estão em
+[identidade, sessão e controle de acesso](./security-and-access.md).
+
 ## Capacidades previstas
 
 O escopo funcional está organizado nas seguintes áreas:
@@ -47,20 +51,23 @@ Os requisitos distinguem três papéis:
 - **Usuário do sistema:** identidade autenticada cujo acesso depende do perfil
   e da situação do cadastro.
 
-A autorização deverá ser validada na API. Ocultar controles na interface melhora
-a experiência, mas não substitui a verificação de permissão no servidor.
+A autorização é validada na API. Ocultar controles na interface melhora a
+experiência, mas não substitui a verificação de permissão no servidor.
 
 ## Estado implementado
 
-O repositório ainda está na etapa de infraestrutura inicial do SIPAT:
+O repositório permanece na etapa de infraestrutura inicial do SIPAT:
 
-- a API expõe somente `GET /api/health`;
+- a API expõe somente `GET /api/health`, marcado explicitamente como público;
+- as demais rotas são autenticadas e autorizadas por perfil por padrão;
+- sessões opacas revogáveis são persistidas apenas pelo hash SHA-256 do token;
+- métodos mutáveis exigem Origin permitido e `X-SIPAT-CSRF: 1`;
 - a Web possui home técnica, health check e proxy para a API;
 - o mobile possui tela técnica e consulta direta ao health check da API;
-- o schema Prisma e a migration inicial representam o domínio patrimonial;
-- `@repo/contracts` expõe apenas contratos genéricos de infraestrutura;
-- autenticação, autorização e módulos patrimoniais ainda não estão
-  implementados;
+- o schema Prisma representa o domínio patrimonial e a persistência de sessões;
+- `@repo/contracts` expõe os contratos genéricos e a identidade/perfis seguros;
+- login, logout, criação produtiva de sessões, CRUD de usuários e módulos
+  patrimoniais ainda não estão implementados;
 - os fluxos patrimoniais do aplicativo móvel ainda não estão implementados.
 
 Os documentos de arquitetura descrevem o padrão a seguir durante a evolução.

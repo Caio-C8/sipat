@@ -1,5 +1,11 @@
 # Autenticação
 
+> A decisão específica do SIPAT por sessão opaca revogável, cookie `HttpOnly`
+> e proteção CSRF está em
+> [Identidade, sessão e controle de acesso](../../../security-and-access.md).
+> A validação de sessões do `SEC-001` está implementada. Login, logout, emissão
+> do cookie e criação produtiva de sessões permanecem no `AUTH-001`.
+
 ## Responsabilidade
 
 Autenticação estabelece quem ou qual sistema fez a requisição. Ela não decide,

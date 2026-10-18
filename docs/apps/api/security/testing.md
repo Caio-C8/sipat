@@ -8,8 +8,10 @@ limites especiais. O SIPAT possui somente o health check público; não use essa
 exposição como precedente para rotas de domínio. Uma coluna sem decisão deve
 ser tratada como pendência, não como autorização implícita.
 
-Os testes de autenticação, autorização e CSRF descritos abaixo passam a ser
-aplicáveis quando o SIPAT adotar esses controles.
+O `SEC-001` cobre sessão ausente, malformada, inexistente, expirada e revogada,
+usuário inativo, os dois perfis, negação sem metadata, `401` versus `403`,
+origem e header CSRF. O E2E inicializa os Guards reais e substitui somente a
+persistência por um adapter determinístico.
 
 Os testes atuais confirmam que uma origem configurada recebe os headers CORS,
 que o preflight respeita os métodos e headers permitidos e que uma origem fora

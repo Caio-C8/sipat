@@ -34,8 +34,8 @@ No estado atual:
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
 - ainda não existem operações, hooks ou política de cache de domínio;
-- autenticação, transporte de identidade e CSRF ainda precisam ser definidos e
-  implementados para o SIPAT.
+- a arquitetura alvo de autenticação, transporte de identidade e CSRF está
+  [documentada](../../security-and-access.md), mas ainda não está implementada.
 
 A integração básica pode ser verificada por
 `GET /api/backend/health`. As operações e os hooks do domínio SIPAT ainda não
@@ -105,13 +105,15 @@ defina query keys, invalidação, retry e consistência.
 | Clientes, operações e contratos     | [Clientes e operações](./clients-and-operations.md)            |
 | Hooks de operações cliente          | [Hooks de API](./client-hooks.md)                              |
 | Erros, cache, cancelamento e testes | [Erros, cache e testes](./errors-cache-and-testing.md)         |
+| Sessão, cookie, CSRF e perfis       | [Identidade e acesso](../../security-and-access.md)            |
 | Limites e métricas da integração    | [Performance](../../performance/contracts-and-integrations.md) |
 | Fontes oficiais                     | [Referências](./references.md)                                 |
 
 ## Decisões pendentes
 
-- mecanismo de autenticação e transporte de identidade;
-- política de cookies, `credentials` e CSRF;
+- duração, inatividade e simultaneidade de sessões;
+- provisionamento do primeiro administrador e política de senha;
+- limites de tentativas e bloqueio progressivo do login;
 - biblioteca de estado remoto e regras de cache;
 - retry por operação e idempotência;
 - propagação de correlation ID para dependências externas;

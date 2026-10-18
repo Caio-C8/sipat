@@ -32,19 +32,26 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 
 No estado atual:
 
-- a API expõe somente `GET /api/health`;
-- não existe módulo de domínio registrado em `AppModule`;
+- a API expõe somente `GET /api/health`, explicitamente público;
+- `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
+  nessa ordem;
+- rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
+  perfis nega acesso;
+- a sessão é consultada pelo hash SHA-256 do token e a identidade anexada à
+  request contém somente `id`, `nome`, `email` e `perfil`;
+- login, logout e criação produtiva de sessões ainda não existem;
 - `apps/api` usa Zod 4 e `nestjs-zod` 5;
 - `ZodValidationPipe` e `ZodSerializerInterceptor` estão registrados
   globalmente;
 - o filtro de exceções produz o formato definido por `RespostaErroSchema`;
 - o middleware de request ID cria um UUID por requisição, devolve
   `X-Request-Id` e o inclui nas respostas de erro;
-- CORS usa a allowlist de `CORS_ORIGINS`, não aceita credenciais e expõe somente
-  `X-Request-Id` ao navegador;
+- CORS usa a allowlist de `CORS_ORIGINS`, não aceita credenciais, permite o
+  header `X-SIPAT-CSRF` e expõe somente `X-Request-Id` ao navegador;
 - `DatabaseModule` cria, exporta e encerra um único Prisma Client quando um
   módulo consumidor o importa;
-- o estado atual não importa `DatabaseModule` diretamente em `AppModule`;
+- `AuthModule` importa `DatabaseModule`; `AppModule` não acessa o client
+  diretamente;
 - o schema Prisma contém os models de domínio, ainda sem módulos consumidores
   implementados na API;
 - testes unitários cobrem filtro e middleware, e testes E2E cobrem health,
@@ -82,6 +89,8 @@ crie silenciosamente contratos ou semânticas de campos para desbloquear a API.
 | Posicionamento de funções utilitárias    | [Utilitários](./utilities.md)                        |
 | Ordem de implementação e testes          | [Workflow e testes](./workflow-and-testing.md)       |
 | Políticas e validações de segurança      | [Segurança](./security/README.md)                    |
+| Roadmap transversal inicial              | [Roadmap do SIPAT](../../roadmap.md)                 |
+| Identidade, sessão e controle de acesso  | [Decisão do SIPAT](../../security-and-access.md)     |
 | Limites, métricas e eficiência           | [Performance](./performance.md)                      |
 | Guards, Interceptors, Filters e Pipes    | [Ciclo da requisição](./request-lifecycle/README.md) |
 | Documentações oficiais                   | [Referências](./references.md)                       |
@@ -96,7 +105,8 @@ compartilhados seguem as regras de
 Esta estrutura não escolhe antecipadamente políticas que dependem da aplicação.
 Antes de implementar recursos relacionados, documente:
 
-- autenticação, autorização e significado de rota pública;
+- parâmetros operacionais e decisões abertas de autenticação listados em
+  [Identidade, sessão e controle de acesso](../../security-and-access.md);
 - catálogo de erros e exceptions de domínio;
 - formato e limites de paginação;
 - limites e propagação de transações;

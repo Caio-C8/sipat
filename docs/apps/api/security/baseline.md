@@ -6,15 +6,14 @@ O baseline reúne controles que normalmente pertencem à aplicação inteira. O
 SIPAT deve decidir quais se aplicam, configurar valores por ambiente e registrar
 exceções justificadas.
 
-O estado atual não possui rotas de domínio, login, usuários, sessão,
-autenticação, autorização ou CSRF. Os controles de identidade descritos neste
-documento não estão implementados; devem ser aplicados e testados quando o SIPAT
-introduzir identidade ou dados protegidos.
+O estado atual ainda não possui rotas de domínio, login, logout ou CRUD de
+usuários. O `SEC-001` implementou persistência e validação de sessão,
+autenticação global, autorização por perfil e CSRF. A API não cria sessões em
+produção; os testes inserem sessões controladas pelo adapter de persistência.
 
-A API restringe origens por `CORS_ORIGINS`, mantém `credentials: false`, limita
-métodos e headers e expõe somente `X-Request-Id`. Essa política protege a
-fronteira atual, mas não substitui autenticação ou autorização quando surgirem
-rotas de domínio.
+A API restringe origens por `CORS_ORIGINS`, mantém `credentials: false`, permite
+o header público `X-SIPAT-CSRF` e expõe somente `X-Request-Id`. CORS não
+substitui os Guards globais nem a autorização futura por recurso.
 
 ## Inicialização e configuração
 
@@ -68,16 +67,16 @@ Não adote esse desenho sem definir:
 ## Checklist do baseline
 
 - [ ] configuração validada ao iniciar;
-- [ ] política de autenticação definida;
+- [x] política de autenticação definida;
 - [ ] credenciais de navegador usam cookie `HttpOnly` e não Web Storage;
 - [ ] `Secure`, `SameSite`, escopo, expiração, renovação e logout definidos;
 - [ ] resposta pública de erros definida;
-- [ ] CORS restrito aos consumidores esperados;
-- [ ] necessidade de CSRF avaliada conforme o transporte de credenciais;
+- [x] CORS restrito aos consumidores esperados;
+- [x] necessidade de CSRF avaliada conforme o transporte de credenciais;
 - [ ] headers HTTP de segurança configurados;
 - [ ] rate limiting e limites de payload definidos;
 - [ ] logs e tracing não expõem secrets;
-- [ ] testes E2E confirmam a ordem e a abrangência dos controles globais.
+- [x] testes E2E confirmam a ordem e a abrangência dos controles globais.
 
 Um item pode ser marcado como não aplicável somente com uma justificativa
 registrada.
