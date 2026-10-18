@@ -72,9 +72,9 @@ describe("AuthService", () => {
   ): SessaoParaAutenticacao {
     return {
       id: "5826835a-bb5b-432a-b8b8-2c7622bbfabc",
-      expiresAt: new Date("2026-10-18T20:00:00.000Z"),
-      lastActivityAt: new Date("2026-10-18T11:56:00.000Z"),
-      revokedAt: null,
+      expiraAt: new Date("2026-10-18T20:00:00.000Z"),
+      ultimaAtividadeAt: new Date("2026-10-18T11:56:00.000Z"),
+      revogadoAt: null,
       usuario: {
         ...identidadeBase,
         perfil,
@@ -137,7 +137,7 @@ describe("AuthService", () => {
   it("atualiza atividade somente após o agrupamento de cinco minutos", async () => {
     buscarPorTokenHash.mockResolvedValue({
       ...sessaoValida(),
-      lastActivityAt: new Date(agora.getTime() - 5 * 60 * 1_000),
+      ultimaAtividadeAt: new Date(agora.getTime() - 5 * 60 * 1_000),
     });
 
     await service.autenticar(token);
@@ -148,7 +148,7 @@ describe("AuthService", () => {
   it("não escreve atividade antes de cinco minutos", async () => {
     buscarPorTokenHash.mockResolvedValue({
       ...sessaoValida(),
-      lastActivityAt: new Date(agora.getTime() - (5 * 60 * 1_000 - 1)),
+      ultimaAtividadeAt: new Date(agora.getTime() - (5 * 60 * 1_000 - 1)),
     });
 
     await service.autenticar(token);
@@ -159,7 +159,7 @@ describe("AuthService", () => {
   it("expira pela atividade persistida em 30 minutos", async () => {
     buscarPorTokenHash.mockResolvedValue({
       ...sessaoValida(),
-      lastActivityAt: new Date(agora.getTime() - 30 * 60 * 1_000),
+      ultimaAtividadeAt: new Date(agora.getTime() - 30 * 60 * 1_000),
     });
 
     await expect(service.autenticar(token)).resolves.toBeNull();
@@ -170,8 +170,8 @@ describe("AuthService", () => {
     const atividadePersistida = new Date("2026-10-18T12:00:00.000Z");
     buscarPorTokenHash.mockResolvedValue({
       ...sessaoValida(),
-      expiresAt: new Date("2026-10-18T20:00:00.000Z"),
-      lastActivityAt: atividadePersistida,
+      expiraAt: new Date("2026-10-18T20:00:00.000Z"),
+      ultimaAtividadeAt: atividadePersistida,
     });
 
     jest.setSystemTime(new Date("2026-10-18T12:04:59.999Z"));
@@ -194,8 +194,8 @@ describe("AuthService", () => {
     buscarPorTokenHash.mockImplementation(() =>
       Promise.resolve({
         ...sessaoValida(),
-        expiresAt: expiraEm,
-        lastActivityAt: new Date(Date.now() - 60_000),
+        expiraAt: expiraEm,
+        ultimaAtividadeAt: new Date(Date.now() - 60_000),
       }),
     );
 
@@ -215,8 +215,8 @@ describe("AuthService", () => {
 
   it.each([
     ["inexistente", null],
-    ["expirada", { ...sessaoValida(), expiresAt: agora }],
-    ["revogada", { ...sessaoValida(), revokedAt: agora }],
+    ["expirada", { ...sessaoValida(), expiraAt: agora }],
+    ["revogada", { ...sessaoValida(), revogadoAt: agora }],
     [
       "de usuário inativo",
       {
@@ -295,8 +295,8 @@ describe("AuthService", () => {
       expect.objectContaining({
         usuarioId: identidadeBase.id,
         tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/),
-        expiresAt: new Date("2026-10-18T20:00:00.000Z"),
-        lastActivityAt: agora,
+        expiraAt: new Date("2026-10-18T20:00:00.000Z"),
+        ultimaAtividadeAt: agora,
       }),
     );
     expect(repositoryTransacao.limparTentativasLogin).toHaveBeenCalledTimes(1);

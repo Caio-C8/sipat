@@ -5,9 +5,9 @@ import type { SessaoParaAutenticacao } from "./auth.types";
 
 const sessaoParaAutenticacaoSelect = {
   id: true,
-  expiresAt: true,
-  lastActivityAt: true,
-  revokedAt: true,
+  expiraAt: true,
+  ultimaAtividadeAt: true,
+  revogadoAt: true,
   usuario: {
     select: {
       id: true,
@@ -45,20 +45,20 @@ export class SessaoRepository {
       where: {
         id: sessaoId,
         AND: [
-          { lastActivityAt: atividadeAnterior },
-          { lastActivityAt: { lte: limiteAtualizacao } },
+          { ultimaAtividadeAt: atividadeAnterior },
+          { ultimaAtividadeAt: { lte: limiteAtualizacao } },
         ],
-        expiresAt: { gt: agora },
-        revokedAt: null,
+        expiraAt: { gt: agora },
+        revogadoAt: null,
       },
-      data: { lastActivityAt: agora },
+      data: { ultimaAtividadeAt: agora },
     });
   }
 
   async revogarPorTokenHash(tokenHash: string, agora: Date): Promise<void> {
     await this.database.sessaoUsuario.updateMany({
-      where: { tokenHash, revokedAt: null },
-      data: { revokedAt: agora },
+      where: { tokenHash, revogadoAt: null },
+      data: { revogadoAt: agora },
     });
   }
 }

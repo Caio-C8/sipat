@@ -23,9 +23,9 @@ type SessaoMemoria = {
   id: string;
   tokenHash: string;
   usuarioId: string;
-  expiresAt: Date;
-  lastActivityAt: Date;
-  revokedAt: Date | null;
+  expiraAt: Date;
+  ultimaAtividadeAt: Date;
+  revogadoAt: Date | null;
   createdAt: Date;
 };
 
@@ -170,17 +170,17 @@ describe("autenticação E2E", () => {
           }: {
             where: {
               usuarioId: string;
-              expiresAt: { gt: Date };
-              lastActivityAt: { gt: Date };
+              expiraAt: { gt: Date };
+              ultimaAtividadeAt: { gt: Date };
             };
           }) =>
             sessoes
               .filter(
                 (sessao) =>
                   sessao.usuarioId === where.usuarioId &&
-                  sessao.revokedAt === null &&
-                  sessao.expiresAt > where.expiresAt.gt &&
-                  sessao.lastActivityAt > where.lastActivityAt.gt,
+                  sessao.revogadoAt === null &&
+                  sessao.expiraAt > where.expiraAt.gt &&
+                  sessao.ultimaAtividadeAt > where.ultimaAtividadeAt.gt,
               )
               .sort(
                 (a, b) =>
@@ -193,13 +193,13 @@ describe("autenticação E2E", () => {
           ({
             data,
           }: {
-            data: Omit<SessaoMemoria, "id" | "createdAt" | "revokedAt">;
+            data: Omit<SessaoMemoria, "id" | "createdAt" | "revogadoAt">;
           }) => {
             sequenciaSessao += 1;
             const sessao: SessaoMemoria = {
               ...data,
               id: `00000000-0000-4000-8000-${String(sequenciaSessao).padStart(12, "0")}`,
-              revokedAt: null,
+              revogadoAt: null,
               createdAt: new Date(),
             };
             sessoes.push(sessao);
@@ -214,9 +214,13 @@ describe("autenticação E2E", () => {
             where: {
               id?: string | { in: string[] };
               tokenHash?: string;
-              revokedAt?: null;
+              revogadoAt?: null;
+              expiraAt?: { gt: Date };
+              AND?: Array<{
+                ultimaAtividadeAt: Date | { lte: Date };
+              }>;
             };
-            data: { revokedAt?: Date; lastActivityAt?: Date };
+            data: { revogadoAt?: Date; ultimaAtividadeAt?: Date };
           }) => {
             let count = 0;
             for (const sessao of sessoes) {
@@ -226,13 +230,21 @@ describe("autenticação E2E", () => {
                 (typeof where.id === "string" && sessao.id !== where.id) ||
                 (idsPermitidos && !idsPermitidos.includes(sessao.id)) ||
                 (where.tokenHash && sessao.tokenHash !== where.tokenHash) ||
-                (where.revokedAt === null && sessao.revokedAt !== null)
+                (where.revogadoAt === null && sessao.revogadoAt !== null) ||
+                (where.expiraAt && sessao.expiraAt <= where.expiraAt.gt) ||
+                (where.AND?.some(({ ultimaAtividadeAt }) =>
+                  ultimaAtividadeAt instanceof Date
+                    ? sessao.ultimaAtividadeAt.getTime() !==
+                      ultimaAtividadeAt.getTime()
+                    : sessao.ultimaAtividadeAt > ultimaAtividadeAt.lte,
+                ) ??
+                  false)
               ) {
                 continue;
               }
-              if (data.revokedAt) sessao.revokedAt = data.revokedAt;
-              if (data.lastActivityAt)
-                sessao.lastActivityAt = data.lastActivityAt;
+              if (data.revogadoAt) sessao.revogadoAt = data.revogadoAt;
+              if (data.ultimaAtividadeAt)
+                sessao.ultimaAtividadeAt = data.ultimaAtividadeAt;
               count += 1;
             }
             return { count };
@@ -402,10 +414,10 @@ describe("autenticação E2E", () => {
         id: `00000000-0000-4000-8000-00000000000${sessoes.length + 1}`,
         tokenHash: calcularHashTokenSessao(token)!,
         usuarioId: caso === "inativa" ? ids.inativo : ids.administrador,
-        expiresAt:
+        expiraAt:
           caso === "expirada" ? new Date(0) : new Date("2999-01-01T00:00:00Z"),
-        lastActivityAt: new Date("2998-01-01T00:00:00Z"),
-        revokedAt: caso === "revogada" ? new Date() : null,
+        ultimaAtividadeAt: new Date("2998-01-01T00:00:00Z"),
+        revogadoAt: caso === "revogada" ? new Date() : null,
         createdAt: new Date(),
       });
 
@@ -429,10 +441,10 @@ describe("autenticação E2E", () => {
       .expect(204);
 
     expect(resposta.headers["set-cookie"]?.[0]).toContain("Max-Age=0");
-    expect(sessoes.filter((sessao) => sessao.revokedAt !== null)).toHaveLength(
+    expect(sessoes.filter((sessao) => sessao.revogadoAt !== null)).toHaveLength(
       1,
     );
-    expect(sessoes.filter((sessao) => sessao.revokedAt === null)).toHaveLength(
+    expect(sessoes.filter((sessao) => sessao.revogadoAt === null)).toHaveLength(
       1,
     );
 

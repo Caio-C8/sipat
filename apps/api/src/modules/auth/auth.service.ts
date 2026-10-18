@@ -52,9 +52,9 @@ export class AuthService {
 
     if (
       sessao === null ||
-      sessao.revokedAt !== null ||
-      sessao.expiresAt.getTime() <= agora.getTime() ||
-      sessao.lastActivityAt.getTime() + INATIVIDADE_NOMINAL_SESSAO_MS <=
+      sessao.revogadoAt !== null ||
+      sessao.expiraAt.getTime() <= agora.getTime() ||
+      sessao.ultimaAtividadeAt.getTime() + INATIVIDADE_NOMINAL_SESSAO_MS <=
         agora.getTime() ||
       !sessao.usuario.ativo
     ) {
@@ -73,12 +73,12 @@ export class AuthService {
     }
 
     if (
-      sessao.lastActivityAt.getTime() + INTERVALO_ATUALIZACAO_ATIVIDADE_MS <=
+      sessao.ultimaAtividadeAt.getTime() + INTERVALO_ATUALIZACAO_ATIVIDADE_MS <=
       agora.getTime()
     ) {
       await this.sessoes.atualizarAtividadeSeNecessario(
         sessao.id,
-        sessao.lastActivityAt,
+        sessao.ultimaAtividadeAt,
         new Date(agora.getTime() - INTERVALO_ATUALIZACAO_ATIVIDADE_MS),
         agora,
       );
@@ -192,8 +192,8 @@ export class AuthService {
             await repository.criarSessao({
               usuarioId,
               tokenHash,
-              expiresAt: new Date(agora.getTime() + DURACAO_ABSOLUTA_SESSAO_MS),
-              lastActivityAt: agora,
+              expiraAt: new Date(agora.getTime() + DURACAO_ABSOLUTA_SESSAO_MS),
+              ultimaAtividadeAt: agora,
             });
             await repository.limparTentativasLogin(chaveRateLimit);
 

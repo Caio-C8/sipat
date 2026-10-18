@@ -84,9 +84,9 @@ describe("gestão de usuários", () => {
         if (where.tokenHash === hashAdministrador) {
           return {
             id: "00000000-0000-4000-8000-000000000001",
-            expiresAt: new Date("2999-01-01T00:00:00.000Z"),
-            lastActivityAt: new Date("2998-01-01T00:00:00.000Z"),
-            revokedAt: null,
+            expiraAt: new Date("2999-01-01T00:00:00.000Z"),
+            ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
+            revogadoAt: null,
             usuario: {
               id: ADMIN_ID,
               nome: "Administrador",
@@ -100,9 +100,9 @@ describe("gestão de usuários", () => {
         if (where.tokenHash === hashDiretor) {
           return {
             id: "00000000-0000-4000-8000-000000000002",
-            expiresAt: new Date("2999-01-01T00:00:00.000Z"),
-            lastActivityAt: new Date("2998-01-01T00:00:00.000Z"),
-            revokedAt: null,
+            expiraAt: new Date("2999-01-01T00:00:00.000Z"),
+            ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
+            revogadoAt: null,
             usuario: {
               id: DIRETOR_ID,
               nome: "Diretor",
@@ -435,8 +435,8 @@ describe("gestão de usuários", () => {
     expect(resposta.body.dados.ativo).toBe(false);
     expect(database.$transaction).toHaveBeenCalledTimes(1);
     expect(database.sessaoUsuario.updateMany).toHaveBeenCalledWith({
-      where: { usuarioId: USUARIO_ID, revokedAt: null },
-      data: { revokedAt: expect.any(Date) },
+      where: { usuarioId: USUARIO_ID, revogadoAt: null },
+      data: { revogadoAt: expect.any(Date) },
     });
   });
 

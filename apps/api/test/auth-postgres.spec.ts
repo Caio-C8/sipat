@@ -122,14 +122,14 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
         {
           usuarioId: usuario.id,
           tokenHash: "a".repeat(64),
-          expiresAt: new Date(agora.getTime() - 1),
-          lastActivityAt: agora,
+          expiraAt: new Date(agora.getTime() - 1),
+          ultimaAtividadeAt: agora,
         },
         {
           usuarioId: usuario.id,
           tokenHash: "b".repeat(64),
-          expiresAt: new Date(agora.getTime() + 8 * 60 * 60 * 1_000),
-          lastActivityAt: new Date(agora.getTime() - 30 * 60 * 1_000),
+          expiraAt: new Date(agora.getTime() + 8 * 60 * 60 * 1_000),
+          ultimaAtividadeAt: new Date(agora.getTime() - 30 * 60 * 1_000),
         },
       ],
     });
@@ -163,15 +163,15 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
       await database.sessaoUsuario.count({
         where: {
           usuarioId: usuario.id,
-          revokedAt: null,
-          expiresAt: { gt: new Date() },
-          lastActivityAt: { gt: corteInatividade },
+          revogadoAt: null,
+          expiraAt: { gt: new Date() },
+          ultimaAtividadeAt: { gt: corteInatividade },
         },
       }),
     ).toBe(5);
     expect(
       await database.sessaoUsuario.count({
-        where: { usuarioId: usuario.id, revokedAt: { not: null } },
+        where: { usuarioId: usuario.id, revogadoAt: { not: null } },
       }),
     ).toBe(1);
   });

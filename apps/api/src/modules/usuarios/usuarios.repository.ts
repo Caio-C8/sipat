@@ -100,8 +100,8 @@ export class UsuariosRepository {
 
   async revogarSessoesAtivas(usuarioId: string): Promise<void> {
     await this.database.sessaoUsuario.updateMany({
-      where: { usuarioId, revokedAt: null },
-      data: { revokedAt: new Date() },
+      where: { usuarioId, revogadoAt: null },
+      data: { revogadoAt: new Date() },
     });
   }
 

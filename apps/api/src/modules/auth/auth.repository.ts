@@ -17,8 +17,8 @@ const usuarioParaLoginSelect = {
 interface CriarSessaoData {
   usuarioId: string;
   tokenHash: string;
-  expiresAt: Date;
-  lastActivityAt: Date;
+  expiraAt: Date;
+  ultimaAtividadeAt: Date;
 }
 
 @Injectable()
@@ -130,9 +130,9 @@ export class AuthRepository {
     return this.database.sessaoUsuario.findMany({
       where: {
         usuarioId,
-        revokedAt: null,
-        expiresAt: { gt: agora },
-        lastActivityAt: { gt: limiteInatividade },
+        revogadoAt: null,
+        expiraAt: { gt: agora },
+        ultimaAtividadeAt: { gt: limiteInatividade },
       },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       select: { id: true },
@@ -143,8 +143,8 @@ export class AuthRepository {
     if (ids.length === 0) return;
 
     await this.database.sessaoUsuario.updateMany({
-      where: { id: { in: [...ids] }, revokedAt: null },
-      data: { revokedAt: agora },
+      where: { id: { in: [...ids] }, revogadoAt: null },
+      data: { revogadoAt: agora },
     });
   }
 

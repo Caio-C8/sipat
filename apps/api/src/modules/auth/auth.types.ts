@@ -12,9 +12,9 @@ export interface RequisicaoAutenticada {
 
 export interface SessaoParaAutenticacao {
   id: string;
-  expiresAt: Date;
-  lastActivityAt: Date;
-  revokedAt: Date | null;
+  expiraAt: Date;
+  ultimaAtividadeAt: Date;
+  revogadoAt: Date | null;
   usuario: IdentidadeAutenticadaInput & {
     ativo: boolean;
   };
