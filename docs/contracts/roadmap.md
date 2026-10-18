@@ -33,8 +33,9 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-O contrato de identidade e perfis do `CONTRACTS-001` e os contratos de usuários
-e autenticação do `CONTRACTS-002` estão implementados e validados.
+Os contratos de identidade e perfis do `CONTRACTS-001`, de usuários e
+autenticação do `CONTRACTS-002` e de alteração e recuperação de senha do
+`CONTRACTS-003` estão implementados e validados.
 
 Cada objetivo deve registrar:
 
@@ -108,6 +109,52 @@ mesmo contrato.
 - [x] paginação reutiliza o contrato comum sem remover seu limite finito;
 - [x] contratos de usuário possuem testes antes do consumo pelos apps;
 - [x] lint, typecheck, testes e consumidores afetados passam.
+
+### CONTRACTS-003 — Alteração e recuperação de senha
+
+**Status:** concluído
+
+**Contexto**
+
+`AUTH-002` e `AUTH-003` precisam compartilhar validação de entrada entre a API
+e consumidores futuros, sem transformar models Prisma, token de recuperação ou
+detalhes de SMTP em contratos públicos.
+
+**Escopo**
+
+- primitive pública de senha com 15 a 128 pontos de código Unicode, espaços
+  permitidos e sem regra artificial de composição;
+- preservação da compatibilidade semântica do contrato de senha inicial já
+  consumido por `CriarUsuarioSchema`;
+- `AlterarSenhaBodySchema` com `senhaAtual`, `novaSenha` e
+  `confirmacaoNovaSenha`;
+- `SolicitarRedefinicaoSenhaBodySchema` com e-mail normalizado;
+- `RedefinirSenhaBodySchema` com token Base64url de 43 caracteres,
+  `novaSenha` e `confirmacaoNovaSenha`;
+- refinamento que rejeite confirmação divergente no boundary;
+- response de solicitação com status `202` e mensagem neutra, sem confirmar se
+  a conta existe, está ativa ou recebeu o e-mail;
+- exports públicos, tipos derivados e testes de entradas válidas, limites,
+  propriedades extras e ausência de campos sensíveis.
+
+**Consumidores afetados**
+
+- módulo `auth` da API em `AUTH-002` e `AUTH-003`;
+- Web e mobile somente em objetivos futuros, sem alteração nesta entrega.
+
+**Critérios de aceite**
+
+- [x] schemas são estritos e tipos usam `z.input` ou `z.output` conforme a
+      transformação realmente aplicada;
+- [x] a senha não é normalizada, aparada ou registrada;
+- [x] confirmação divergente é rejeitada;
+- [x] token só aparece no input de redefinição;
+- [x] response pública não diferencia conta elegível, inexistente ou inativa;
+- [x] API pública do package e contratos existentes permanecem compatíveis;
+- [x] lint, typecheck e testes do package e consumidores passam.
+
+A especificação aprovada está em
+[CONTRACTS-003](../tasks/CONTRACTS-003-contratos-senha.md).
 
 ## Histórico do baseline
 

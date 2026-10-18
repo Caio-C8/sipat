@@ -3,8 +3,9 @@
 Este documento registra a arquitetura das primeiras entregas de segurança do
 SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
 do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
-As interfaces Web de usuários e autenticação continuam planejadas nos objetivos
-próprios. O estado e a ordem de execução ficam no
+Os backends de alteração e recuperação de senha estão planejados em `AUTH-002`
+e `AUTH-003`. As interfaces Web e mobile continuam fora dessas entregas. O
+estado e a ordem de execução ficam no
 [roadmap inicial](./roadmap.md).
 
 ## Estado implementado
@@ -159,6 +160,20 @@ proteção própria; não deve copiar cookies do navegador automaticamente.
 Uma rota pública não recebe autorização implícita para mutar estado sem CSRF,
 validação, limite e tratamento de abuso.
 
+### Matriz planejada para senha
+
+| Rota                             | Pública | Identidade exigida | Objetivo |
+| -------------------------------- | ------- | ------------------ | -------- |
+| `POST /api/auth/change-password` | não     | própria sessão     | AUTH-002 |
+| `POST /api/auth/forgot-password` | sim     | não                | AUTH-003 |
+| `POST /api/auth/reset-password`  | sim     | token de uso único | AUTH-003 |
+
+As duas rotas públicas continuam submetidas a Origin exato,
+`X-SIPAT-CSRF: 1`, validação estrita, limite contra abuso e respostas que não
+revelem a existência da conta. O token de redefinição autoriza somente a troca
+da senha da conta à qual seu hash está associado; body, query, e-mail ou ID não
+podem selecionar outro usuário na confirmação.
+
 ## Segurança do CRUD de usuários
 
 - as cinco rotas declaram explicitamente apenas `ADMINISTRADOR` e continuam
@@ -214,6 +229,111 @@ validação, limite e tratamento de abuso.
   sempre expira o cookie com os atributos do ambiente;
 - `GET /auth/me` retorna apenas a identidade segura.
 
+## Alteração autenticada da própria senha
+
+O `AUTH-002` seguirá estas decisões:
+
+- qualquer usuário ativo dos dois perfis pode alterar somente a própria senha;
+- a sessão válida identifica o usuário, e a senha atual é obrigatória como
+  nova comprovação da credencial;
+- o administrador não recebe rota, permissão ou campo para definir, alterar ou
+  redefinir a senha de outra pessoa;
+- o body contém somente `senhaAtual`, `novaSenha` e
+  `confirmacaoNovaSenha`;
+- a nova senha segue a política existente de 15 a 128 pontos de código
+  Unicode, aceita espaços e não impõe composição por classes;
+- senha atual inválida produz erro público estável sem modificar senha, sessão
+  ou redefinição pendente;
+- verificação da senha atual e criação do novo hash passam pela capacidade
+  Argon2 finita já configurada;
+- tentativas usam contador persistente próprio, com chaves HMAC separadas por
+  escopo e as mesmas janelas quantitativas do login;
+- em sucesso, alteração do hash, invalidação da redefinição pendente e
+  revogação de todas as sessões do usuário são atômicas;
+- o cookie atual é expirado e o usuário precisa autenticar novamente; não há
+  criação automática de nova sessão;
+- a response de sucesso é `204 No Content` e nunca contém hash ou credencial.
+
+## Recuperação da senha por e-mail institucional
+
+O `AUTH-003` adota um fluxo simples por link. Nesta etapa, todo e-mail
+cadastrado é considerado institucional, previamente controlado e confiável;
+não será criado `emailVerificadoAt` nem um fluxo de confirmação de endereço.
+Essa premissa deverá ser revista se o cadastro passar a aceitar e-mails que não
+sejam institucionais.
+
+### Solicitação
+
+- `POST /api/auth/forgot-password` recebe somente o e-mail normalizado;
+- conta ativa, inexistente ou inativa recebe `202 Accepted` com exatamente a
+  mesma mensagem pública;
+- nenhuma conta é bloqueada, inativada ou alterada pela solicitação;
+- somente usuário ativo recebe token e mensagem;
+- o limite persistente usa HMAC do e-mail normalizado inclusive para endereços
+  inexistentes, sem registrar o e-mail em logs ou métricas;
+- as janelas quantitativas são as mesmas do login: 20 tentativas por 15 minutos
+  em desenvolvimento, 5 por 15 minutos em staging/produção e 3 por 1 minuto em
+  testes; os contadores permanecem separados por operação;
+- o envio é desacoplado da response por um despachante interno de capacidade
+  finita, sem introduzir broker nesta primeira versão;
+- falha ou saturação do SMTP não muda a response pública nem revela se a conta
+  existe; a falha produz somente observabilidade sem destinatário, token ou
+  conteúdo da mensagem, e o usuário pode realizar nova solicitação;
+- a implantação produtiva permanece desabilitada até existir uma URL HTTPS de
+  consumidor válida para receber o token.
+
+### Token e persistência
+
+- cada token possui 32 bytes gerados por CSPRNG e representação Base64url sem
+  padding;
+- somente o SHA-256 hexadecimal é persistido; o valor reutilizável existe
+  apenas durante a montagem e o despacho da mensagem;
+- o registro possui `usuarioId` único, `tokenHash` único, `expiraAt`,
+  `consumidoAt`, `createdAt` e `updatedAt`;
+- um novo pedido substitui o token anterior do mesmo usuário;
+- o token expira após 15 minutos, é de uso único e não aparece em response,
+  log, métrica ou correlation context;
+- o link usa uma URL-base configurada, nunca o header `Host`, e não contém
+  e-mail, ID ou perfil;
+- a URL de produção usa HTTPS; o futuro consumidor Web deverá aplicar
+  `Referrer-Policy: no-referrer` e retirar o token da barra de endereço assim
+  que o capturar.
+
+### Redefinição
+
+- `POST /api/auth/reset-password` recebe somente `token`, `novaSenha` e
+  `confirmacaoNovaSenha`;
+- a API calcula o hash do token e determina o usuário exclusivamente pela
+  associação persistida;
+- token ausente, malformado, inexistente, expirado, consumido ou associado a
+  usuário inativo produz o mesmo erro público;
+- validação e consumo condicionais impedem dois sucessos concorrentes;
+- consumo do token, alteração do hash, invalidação da redefinição e revogação
+  de todas as sessões são atômicos;
+- o sucesso retorna `204 No Content`, não autentica automaticamente e exige
+  novo login;
+- após a alteração, uma mensagem informa que a senha foi redefinida, sem
+  incluir senha, token ou novo link.
+
+### Transporte de e-mail
+
+- a API usa um serviço de domínio sem dependência direta de SMTP e um adapter
+  de infraestrutura baseado em Nodemailer;
+- host, porta, TLS, usuário, senha, remetente e URL de redefinição vêm de
+  variáveis de ambiente validadas;
+- staging e produção exigem transporte protegido e validação do certificado;
+  não se aceita `rejectUnauthorized: false`;
+- logger e debug do transporte permanecem desabilitados para evitar conteúdo e
+  credenciais em logs;
+- cada mensagem possui um único destinatário e não aceita anexos, caminhos de
+  arquivo nem conteúdo carregado de URL;
+- testes substituem o adapter por fake determinístico; nenhuma suíte envia
+  e-mail real.
+
+MFA, SMS, perguntas de segurança, códigos de recuperação, verificação adicional
+do e-mail institucional, alteração administrativa de senha e recuperação
+assistida permanecem fora desta etapa.
+
 ## Provisionamento inicial
 
 O primeiro administrador é criado exclusivamente pelo comando interativo:
@@ -250,6 +370,11 @@ concorrentes. Não existe endpoint HTTP de bootstrap.
   revogação, provisionamento e corridas de rate limit e limite de sessões;
 - E2E da API: rota pública, `401`, `403`, cada perfil permitido, expiração,
   revogação, usuário inativo, CSRF, login e logout;
+- senha na API: senha atual incorreta, alteração da própria conta pelos dois
+  perfis, impossibilidade de selecionar outro usuário, response neutra da
+  solicitação, token inválido/expirado/consumido, corrida de consumo, usuário
+  inativo, rate limit, falha de SMTP, revogação de sessões e ausência de
+  vazamento;
 - Web: estados, metadata, formulário, foco, teclado e erros normalizados;
 - E2E Web–API: cookie `HttpOnly`, atributos por ambiente, acesso administrativo,
   negação ao diretor e logout sem exposição do segredo.
@@ -275,6 +400,19 @@ login/logout e provisionamento deste documento. `AUTH-001` cobre somente o
 backend. Não existe página de login, formulário, hook, redirect ou integração
 Web; `WEB-AUTH-001` continua planejado no roadmap próprio da Web.
 
+## Decisões confirmadas no AUTH-002 e AUTH-003
+
+- a entrega implementa somente contratos, banco e backend;
+- os e-mails cadastrados são tratados como institucionais e confiáveis, sem
+  verificação adicional nesta etapa;
+- a troca autenticada exige senha atual e afeta somente a identidade da sessão;
+- a recuperação usa link com token aleatório de 32 bytes, validade de 15
+  minutos, armazenamento somente do hash e uso único;
+- alteração e redefinição revogam todas as sessões e exigem novo login;
+- o administrador não pode alterar nem redefinir a senha de outro usuário;
+- SMTP configurável é o transporte inicial, isolado por adapter;
+- MFA e consumidores Web/mobile serão planejados separadamente.
+
 ## Fontes oficiais e de segurança
 
 - [NestJS: autenticação](https://docs.nestjs.com/v11/techniques/authentication)
@@ -286,4 +424,6 @@ Web; `WEB-AUTH-001` continua planejado no roadmap próprio da Web.
 - [OWASP: Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
 - [OWASP: CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 - [OWASP: Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+- [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
 - [NIST SP 800-63B: passwords e autenticação](https://pages.nist.gov/800-63-4/sp800-63b.html)
+- [Nodemailer: transporte SMTP](https://nodemailer.com/smtp)

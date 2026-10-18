@@ -22,7 +22,9 @@ barreira global de autenticação, autorização por perfil, proteção CSRF,
 persistência de sessões revogáveis, contratos e as cinco operações
 administrativas de usuários, além de login, logout, `/auth/me` e
 provisionamento inicial controlado. As interfaces Web de usuários e
-autenticação não estão implementadas.
+autenticação não estão implementadas. Alteração autenticada e recuperação de
+senha ainda não estão implementadas e foram organizadas nos objetivos
+`CONTRACTS-003`, `AUTH-002` e `AUTH-003`.
 
 ## Ordem das primeiras entregas
 
@@ -42,6 +44,19 @@ da Web.
 
 Não enfraqueça temporariamente os Guards nem aceite perfil enviado pelo cliente
 para contornar essa dependência.
+
+## Ordem das entregas de senha
+
+| Ordem | Objetivo                                  | Status    | Dependências                 |
+| ----- | ----------------------------------------- | --------- | ---------------------------- |
+| 4     | `CONTRACTS-003` — Contratos de senha      | concluído | `CONTRACTS-002`, RF01 e UC01 |
+| 5     | `AUTH-002` — Alterar a própria senha      | planejado | `CONTRACTS-003` e `AUTH-001` |
+| 6     | `AUTH-003` — Recuperar a senha por e-mail | planejado | `AUTH-002` e SMTP            |
+
+Esta sequência entrega somente contratos, banco e backend. Não inclui página,
+formulário, operação ou hook Web, nem qualquer alteração no aplicativo mobile.
+Os consumidores deverão ser planejados em objetivos próprios depois que a API
+estiver implementada e verificada.
 
 ## Regras comuns
 
@@ -221,6 +236,131 @@ revogação no servidor, tornando operacionais as rotas protegidas anteriores.
 - [x] contratos, banco, API e E2E backend passam nas verificações aplicáveis;
 - [x] nenhuma implementação ou alteração de Web integra este objetivo.
 
+## CONTRACTS-003 — Contratos de alteração e recuperação de senha
+
+**Status:** concluído
+
+### Resultado esperado
+
+Definir em `@repo/contracts` os inputs e a resposta pública necessários para os
+dois fluxos de senha, sem expor hash, token, existência da conta ou campos de
+persistência.
+
+### Escopo
+
+- promover a regra de senha de 15 a 128 pontos de código Unicode para uma
+  primitive reutilizável, preservando compatibilidade com a criação de usuário;
+- contrato estrito de alteração com senha atual, nova senha e confirmação;
+- contrato estrito de solicitação de redefinição com e-mail;
+- contrato estrito de redefinição com token, nova senha e confirmação;
+- response genérica da solicitação, igual para conta elegível, inexistente ou
+  inativa;
+- testes dos limites, confirmação, propriedades extras e ausência de segredos
+  nas responses e exports públicos.
+
+### Fora do escopo
+
+- persistência, envio de e-mail ou regras transacionais;
+- formulários e qualquer consumidor Web ou mobile;
+- MFA, confirmação de e-mail ou alteração administrativa de senha.
+
+### Critérios de aceite
+
+- [x] schemas são estritos e seus tipos são derivados;
+- [x] confirmação divergente é rejeitada nos dois fluxos que definem senha;
+- [x] token é aceito somente no input de redefinição e nunca em response;
+- [x] mensagem da solicitação não revela a existência ou situação da conta;
+- [x] contratos, exports e consumidores existentes passam nas verificações.
+
+Especificação de execução:
+[CONTRACTS-003](./tasks/CONTRACTS-003-contratos-senha.md).
+
+## AUTH-002 — Alterar a própria senha
+
+**Status:** planejado
+
+### Resultado esperado
+
+Permitir que qualquer usuário ativo e autenticado altere somente a própria
+senha após comprovar a senha atual.
+
+### Escopo
+
+- `POST /api/auth/change-password`, protegido para os dois perfis;
+- verificação da sessão, da senha atual e da política da nova senha;
+- uso da capacidade Argon2 já limitada por instância;
+- atualização do hash e revogação de todas as sessões do usuário em operação
+  atômica;
+- expiração do cookie atual e exigência de novo login;
+- testes unitários, de integração e E2E da API.
+
+### Fora do escopo
+
+- alterar senha de outro usuário, inclusive por administrador;
+- recuperação sem a senha atual;
+- páginas, formulários, hooks ou mudanças Web/mobile;
+- MFA, histórico de senhas ou login automático após a alteração.
+
+### Critérios de aceite
+
+- [ ] somente a identidade da sessão pode ter a senha alterada;
+- [ ] senha atual inválida não modifica senha, sessão ou token de recuperação;
+- [ ] sucesso altera o hash, revoga todas as sessões e expira o cookie;
+- [ ] nenhuma rota administrativa aceita senha de outro usuário;
+- [ ] contratos, banco e API passam nas verificações proporcionais.
+
+Especificação de execução:
+[AUTH-002](./tasks/AUTH-002-alterar-propria-senha.md).
+
+## AUTH-003 — Recuperar a senha por e-mail institucional
+
+**Status:** planejado
+
+### Resultado esperado
+
+Permitir que um usuário ativo redefina a própria senha por um link enviado ao
+e-mail institucional cadastrado, sem permitir enumeração de contas nem escolha
+da conta por identificador fornecido na confirmação.
+
+### Escopo
+
+- `POST /api/auth/forgot-password`, público e com response neutra;
+- `POST /api/auth/reset-password`, público e autorizado exclusivamente por
+  token de alta entropia, temporário e de uso único;
+- persistência somente do SHA-256 do token, associado ao usuário;
+- validade de 15 minutos e invalidação do token anterior ao emitir um novo;
+- limite persistente por chave HMAC do e-mail normalizado;
+- SMTP configurável e envio desacoplado da response HTTP;
+- redefinição, consumo do token e revogação de todas as sessões em operação
+  atômica;
+- integração com `AUTH-002` para invalidar redefinição pendente quando a senha
+  for alterada pelo fluxo autenticado;
+- notificação de alteração sem senha, token ou link de recuperação;
+- testes de enumeração, concorrência, expiração, uso único, inativação, CSRF,
+  rate limit, falha de SMTP e ausência de vazamento.
+
+### Fora do escopo
+
+- verificação adicional de e-mail institucional;
+- MFA, perguntas de segurança, SMS ou recuperação assistida;
+- alteração de senha por administrador;
+- interface Web ou mobile e ativação produtiva antes de existir um consumidor
+  HTTPS válido para o link.
+
+### Critérios de aceite
+
+- [ ] solicitar recuperação produz a mesma response para conta elegível,
+      inexistente ou inativa;
+- [ ] conhecer e-mail, ID ou perfil não permite redefinir a senha;
+- [ ] somente o token original válido determina o usuário da redefinição;
+- [ ] token expirado, consumido ou concorrente não altera a conta;
+- [ ] sucesso altera a senha, consome os tokens e revoga todas as sessões;
+- [ ] segredos de SMTP, senha e token não aparecem em response, log ou métrica;
+- [ ] contratos, banco e API passam nas verificações proporcionais.
+
+Especificação de execução:
+[AUTH-003](./tasks/AUTH-003-recuperar-senha.md).
+
 ## Decisões necessárias antes dos objetivos seguintes
 
 Estas decisões afetam segurança ou comportamento externo e não podem ser
@@ -236,3 +376,9 @@ As decisões de `AUTH-001` foram confirmadas e estão registradas em
 [Identidade, sessão e controle de acesso](./security-and-access.md). Não há
 bloqueio permanente nem atraso artificial; as interfaces Web continuam nos
 objetivos próprios do roadmap da Web.
+
+As decisões de `AUTH-002` e `AUTH-003` estão confirmadas na mesma fonte de
+segurança. Todos os e-mails cadastrados são considerados institucionais e
+confiáveis nesta etapa; verificação de e-mail e MFA permanecem fora do escopo.
+O administrador não recebe permissão para alterar ou redefinir a senha de outra
+pessoa.

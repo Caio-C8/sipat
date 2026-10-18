@@ -6,7 +6,9 @@
 
 ### RF01: Autenticação e Controle de Acesso
 
-**Descrição:** O sistema deve permitir que usuários cadastrados se autentiquem e acessem somente as funcionalidades compatíveis com o seu tipo de usuário.
+**Descrição:** O sistema deve permitir que usuários cadastrados se autentiquem,
+acessem somente as funcionalidades compatíveis com o seu tipo de usuário e
+gerenciem a própria senha com segurança.
 
 **Informações:** E-mail, senha, perfil de usuário e situação do usuário.
 
@@ -16,6 +18,11 @@
 - Usuários inativos não devem conseguir acessar o sistema.
 - O sistema deve validar a permissão do usuário antes de executar operações protegidas.
 - O Administrador gerencia os cadastros administrativos definidos para o sistema; o Diretor de Patrimônio executa as operações patrimoniais previstas para os bens.
+- Todo usuário ativo pode alterar somente a própria senha após confirmar a senha atual.
+- Todo usuário ativo pode redefinir a própria senha por um link temporário e de uso único enviado ao e-mail institucional cadastrado.
+- Para esta etapa, todo e-mail cadastrado é considerado institucional e previamente confiável, sem fluxo adicional de verificação.
+- O Administrador não pode definir, alterar ou redefinir a senha de outro usuário.
+- Alteração e redefinição de senha devem revogar as sessões existentes do usuário.
 
 ### RF02: Gestão de Usuários
 
@@ -539,8 +546,24 @@
 - Credenciais inválidas: o sistema informa o erro e não cria sessão.
 - Usuário inativo: o sistema bloqueia o acesso.
 - Tentativa de acessar função sem permissão: o sistema nega a operação.
+- Alteração autenticada: o usuário informa a senha atual, a nova senha e sua
+  confirmação; o sistema valida os dados, altera somente a senha da identidade
+  autenticada e revoga suas sessões.
+- Senha atual inválida: o sistema rejeita a alteração sem modificar a conta.
+- Esquecimento de senha: o usuário informa o e-mail e recebe uma resposta
+  neutra; quando houver uma conta ativa, o sistema envia ao e-mail cadastrado
+  um link temporário e de uso único.
+- Redefinição: o usuário apresenta o token recebido, a nova senha e sua
+  confirmação; o sistema consome o token, altera a senha e revoga as sessões.
+- Token ausente, inválido, expirado, consumido ou pertencente a usuário
+  inativo: o sistema rejeita a redefinição com a mesma resposta pública.
+- Solicitação para e-mail inexistente ou de usuário inativo: o sistema mantém a
+  mesma resposta apresentada para uma conta elegível e não altera nenhum
+  usuário.
 
-**Pós-condição:** O usuário permanece autenticado com as permissões correspondentes ao seu perfil.
+**Pós-condição:** Após o login, o usuário permanece autenticado com as
+permissões correspondentes ao seu perfil. Após alteração ou redefinição de
+senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 
 **Requisito relacionado:** RF01
 
