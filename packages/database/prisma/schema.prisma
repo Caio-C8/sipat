@@ -121,6 +121,7 @@ model Usuario {
   reavaliacoesCriadas    ReavaliacaoPatrimonio[]
   notasFiscaisCriadas    NotaFiscal[]
   sessoes                SessaoUsuario[]
+  redefinicaoSenha       RedefinicaoSenha?
 
   @@map("usuarios")
 }
@@ -150,6 +151,33 @@ model TentativaLogin {
 
   @@index([janelaExpiraAt], map: "tentativas_login_janela_expira_at_idx")
   @@map("tentativas_login")
+}
+
+model TentativaOperacaoSenha {
+  chaveHash      String   @id @map("chave_hash") @db.Char(64)
+  tentativas     Int
+  janelaExpiraAt DateTime @map("janela_expira_at") @db.Timestamp(6)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  @@index([janelaExpiraAt], map: "tentativas_operacoes_senha_janela_expira_at_idx")
+  @@map("tentativas_operacoes_senha")
+}
+
+model RedefinicaoSenha {
+  id          String    @id @default(uuid()) @db.Uuid
+  tokenHash   String    @unique @map("token_hash") @db.Char(64)
+  expiraAt    DateTime  @map("expira_at") @db.Timestamp(6)
+  consumidoAt DateTime? @map("consumido_at") @db.Timestamp(6)
+  usuarioId   String    @unique @map("usuario_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([expiraAt], map: "redefinicoes_senha_expira_at_idx")
+  @@map("redefinicoes_senha")
 }
 
 model Responsavel {

@@ -6,6 +6,8 @@ import {
   type IdentidadeAutenticada,
   IdentidadeAutenticadaSchema,
   type LoginBody,
+  type RedefinirSenhaBody,
+  type SolicitarRedefinicaoSenhaBody,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { SenhaHasher } from "../../common/security/senha-hasher";
@@ -14,6 +16,7 @@ import type { EnvironmentVariables } from "../../environment";
 import { AuthRepository } from "./auth.repository";
 import {
   DURACAO_ABSOLUTA_SESSAO_MS,
+  DURACAO_TOKEN_REDEFINICAO_SENHA_MS,
   INATIVIDADE_NOMINAL_SESSAO_MS,
   INTERVALO_ATUALIZACAO_ATIVIDADE_MS,
   MAXIMO_SESSOES_ATIVAS,
@@ -22,12 +25,18 @@ import {
   TAMANHO_LOTE_LIMPEZA_RATE_LIMIT,
 } from "./auth.constants";
 import { CapacidadeArgon2 } from "./capacidade-argon2";
+import { DespachanteEmailAuth } from "./despachante-email";
 import {
   criarChaveRateLimitAlteracaoSenha,
   criarChaveRateLimitLogin,
+  criarChaveRateLimitRecuperacaoSenha,
 } from "./rate-limit-login";
 import { SessaoRepository } from "./sessao.repository";
 import { calcularHashTokenSessao, gerarTokenSessao } from "./token-sessao";
+import {
+  calcularHashTokenRedefinicaoSenha,
+  gerarTokenRedefinicaoSenha,
+} from "./token-redefinicao";
 import type { LoginRealizado } from "./auth.types";
 
 const HASH_FICTICIO =
@@ -41,6 +50,7 @@ export class AuthService {
     private readonly senhaHasher: SenhaHasher,
     private readonly capacidadeArgon2: CapacidadeArgon2,
     private readonly config: ConfigService<EnvironmentVariables, true>,
+    private readonly despachanteEmail: DespachanteEmailAuth,
   ) {}
 
   async autenticar(token: unknown): Promise<IdentidadeAutenticada | null> {
@@ -109,6 +119,64 @@ export class AuthService {
     );
   }
 
+  async solicitarRedefinicaoSenha(
+    dados: SolicitarRedefinicaoSenhaBody,
+  ): Promise<void> {
+    if (!this.recuperacaoHabilitada()) return;
+    const agora = new Date();
+    const politica = POLITICA_RATE_LIMIT_LOGIN[this.obterAmbiente()];
+    const chaveRateLimit = criarChaveRateLimitRecuperacaoSenha(
+      dados.email,
+      this.config.getOrThrow("AUTH_RATE_LIMIT_HMAC_SECRET", { infer: true }),
+    );
+
+    await this.authRepository.limparTentativasOperacaoSenhaExpiradas(
+      agora,
+      TAMANHO_LOTE_LIMPEZA_RATE_LIMIT,
+    );
+    const bloqueadoAte =
+      await this.authRepository.reservarTentativaOperacaoSenha(
+        chaveRateLimit,
+        agora,
+        politica.tentativas,
+        politica.janelaMs,
+      );
+
+    if (bloqueadoAte !== null) {
+      throw new MuitasRequisicoesException(
+        Math.max(
+          1,
+          Math.ceil((bloqueadoAte.getTime() - agora.getTime()) / 1_000),
+        ),
+      );
+    }
+
+    const usuario = await this.authRepository.buscarUsuarioAtivoParaRecuperacao(
+      dados.email,
+    );
+    if (usuario === null) return;
+
+    const token = await this.criarRedefinicaoSenha(usuario.id, agora);
+    const link = new URL(
+      this.config.getOrThrow("AUTH_PASSWORD_RESET_URL", { infer: true }),
+    );
+    link.searchParams.set("token", token);
+    this.despachanteEmail.despachar({
+      tipo: "REDEFINIR_SENHA",
+      destinatario: usuario.email,
+      link: link.toString(),
+    });
+  }
+
+  async redefinirSenha(dados: RedefinirSenhaBody): Promise<void> {
+    if (!this.recuperacaoHabilitada()) {
+      throw this.tokenRedefinicaoInvalido();
+    }
+    await this.capacidadeArgon2.executar(() =>
+      this.executarRedefinicaoSenha(dados),
+    );
+  }
+
   private async executarAlteracaoSenha(
     usuarioId: string,
     dados: AlterarSenhaBody,
@@ -121,17 +189,18 @@ export class AuthService {
       this.config.getOrThrow("AUTH_RATE_LIMIT_HMAC_SECRET", { infer: true }),
     );
 
-    await this.authRepository.limparTentativasExpiradas(
+    await this.authRepository.limparTentativasOperacaoSenhaExpiradas(
       agora,
       TAMANHO_LOTE_LIMPEZA_RATE_LIMIT,
     );
 
-    const bloqueadoAte = await this.authRepository.reservarTentativaLogin(
-      chaveRateLimit,
-      agora,
-      politica.tentativas,
-      politica.janelaMs,
-    );
+    const bloqueadoAte =
+      await this.authRepository.reservarTentativaOperacaoSenha(
+        chaveRateLimit,
+        agora,
+        politica.tentativas,
+        politica.janelaMs,
+      );
 
     if (bloqueadoAte !== null) {
       throw new MuitasRequisicoesException(
@@ -188,8 +257,9 @@ export class AuthService {
 
               if (!atualizada) return false;
 
+              await repository.invalidarRedefinicaoSenha(usuarioId, agora);
               await repository.revogarTodasSessoes(usuarioId, agora);
-              await repository.limparTentativasLogin(chaveRateLimit);
+              await repository.limparTentativasOperacaoSenha(chaveRateLimit);
               return true;
             },
           );
@@ -205,6 +275,112 @@ export class AuthService {
           throw new MuitasRequisicoesException(1);
         }
 
+        throw erro;
+      }
+    }
+  }
+
+  private async criarRedefinicaoSenha(
+    usuarioId: string,
+    agora: Date,
+  ): Promise<string> {
+    for (
+      let tentativa = 1;
+      tentativa <= MAXIMO_TENTATIVAS_TRANSACAO;
+      tentativa += 1
+    ) {
+      const token = gerarTokenRedefinicaoSenha();
+      try {
+        await this.authRepository.substituirRedefinicaoSenha(
+          usuarioId,
+          calcularHashTokenRedefinicaoSenha(token),
+          new Date(agora.getTime() + DURACAO_TOKEN_REDEFINICAO_SENHA_MS),
+          agora,
+        );
+        return token;
+      } catch (erro: unknown) {
+        if (
+          erro instanceof Prisma.PrismaClientKnownRequestError &&
+          erro.code === "P2002" &&
+          tentativa < MAXIMO_TENTATIVAS_TRANSACAO
+        ) {
+          continue;
+        }
+        throw erro;
+      }
+    }
+
+    throw new Error("Não foi possível criar a redefinição de senha.");
+  }
+
+  private async executarRedefinicaoSenha(
+    dados: RedefinirSenhaBody,
+  ): Promise<void> {
+    const agora = new Date();
+    const tokenHash = calcularHashTokenRedefinicaoSenha(dados.token);
+    const redefinicao =
+      await this.authRepository.buscarRedefinicaoParaConsumo(tokenHash);
+
+    if (
+      redefinicao === null ||
+      redefinicao.consumidoAt !== null ||
+      redefinicao.expiraAt.getTime() <= agora.getTime() ||
+      !redefinicao.usuario.ativo
+    ) {
+      throw this.tokenRedefinicaoInvalido();
+    }
+
+    const novaSenhaHash = await this.senhaHasher.criarHash(dados.novaSenha);
+
+    for (
+      let tentativa = 1;
+      tentativa <= MAXIMO_TENTATIVAS_TRANSACAO;
+      tentativa += 1
+    ) {
+      try {
+        const redefinida =
+          await this.authRepository.executarTransacaoSerializavel(
+            async (repository) => {
+              const consumida =
+                await repository.consumirRedefinicaoSenhaSeValida(
+                  redefinicao.id,
+                  tokenHash,
+                  agora,
+                );
+              if (!consumida) throw this.tokenRedefinicaoInvalido();
+
+              const atualizada = await repository.atualizarSenhaSeAtual(
+                redefinicao.usuario.id,
+                redefinicao.usuario.senha,
+                novaSenhaHash,
+                agora,
+              );
+              if (!atualizada) throw this.tokenRedefinicaoInvalido();
+
+              await repository.invalidarRedefinicaoSenha(
+                redefinicao.usuario.id,
+                agora,
+              );
+              await repository.revogarTodasSessoes(
+                redefinicao.usuario.id,
+                agora,
+              );
+              return true;
+            },
+          );
+
+        if (!redefinida) throw this.tokenRedefinicaoInvalido();
+
+        this.despachanteEmail.despachar({
+          tipo: "SENHA_REDEFINIDA",
+          destinatario: redefinicao.usuario.email,
+        });
+        return;
+      } catch (erro: unknown) {
+        if (this.ehErroTransacaoRepetivel(erro)) {
+          if (tentativa < MAXIMO_TENTATIVAS_TRANSACAO) continue;
+          throw new MuitasRequisicoesException(1);
+        }
         throw erro;
       }
     }
@@ -346,6 +522,12 @@ export class AuthService {
     }) as AppEnvironment;
   }
 
+  private recuperacaoHabilitada(): boolean {
+    return this.config.getOrThrow("AUTH_PASSWORD_RESET_ENABLED", {
+      infer: true,
+    });
+  }
+
   private credenciaisInvalidas(): UnauthorizedException {
     return new UnauthorizedException({
       codigo: "CREDENCIAIS_INVALIDAS",
@@ -358,6 +540,14 @@ export class AuthService {
     return new UnauthorizedException({
       codigo: "SENHA_ATUAL_INVALIDA",
       mensagem: "A senha atual é inválida.",
+      erros: [],
+    });
+  }
+
+  private tokenRedefinicaoInvalido(): UnauthorizedException {
+    return new UnauthorizedException({
+      codigo: "TOKEN_REDEFINICAO_INVALIDO",
+      mensagem: "O token de redefinição é inválido ou expirou.",
       erros: [],
     });
   }

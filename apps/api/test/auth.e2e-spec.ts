@@ -7,6 +7,9 @@ import { AppModule } from "../src/app.module";
 import { DATABASE_CLIENT } from "../src/common/database/database.constants";
 import { SenhaHasher } from "../src/common/security/senha-hasher";
 import { configurarCors } from "../src/configurar-cors";
+import { PORTA_EMAIL_AUTH } from "../src/modules/auth/email.types";
+import type { MensagemEmailAuth } from "../src/modules/auth/email.types";
+import { calcularHashTokenRedefinicaoSenha } from "../src/modules/auth/token-redefinicao";
 import { calcularHashTokenSessao } from "../src/modules/auth/token-sessao";
 
 type UsuarioMemoria = {
@@ -29,10 +32,22 @@ type SessaoMemoria = {
   createdAt: Date;
 };
 
+type RedefinicaoSenhaMemoria = {
+  id: string;
+  tokenHash: string;
+  usuarioId: string;
+  expiraAt: Date;
+  consumidoAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 describe("autenticação E2E", () => {
   let app: INestApplication;
   let usuarios: UsuarioMemoria[];
   let sessoes: SessaoMemoria[];
+  let redefinicoes: RedefinicaoSenhaMemoria[];
+  const mensagensEmail: MensagemEmailAuth[] = [];
   const tentativas = new Map<
     string,
     { tentativas: number; janelaExpiraAt: Date; updatedAt: Date }
@@ -55,6 +70,13 @@ describe("autenticação E2E", () => {
     const modulo = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DATABASE_CLIENT)
       .useValue(database)
+      .overrideProvider(PORTA_EMAIL_AUTH)
+      .useValue({
+        enviar: jest.fn((mensagem: MensagemEmailAuth) => {
+          mensagensEmail.push(mensagem);
+          return Promise.resolve();
+        }),
+      })
       .compile();
 
     app = modulo.createNestApplication();
@@ -97,6 +119,8 @@ describe("autenticação E2E", () => {
       },
     ];
     sessoes = [];
+    redefinicoes = [];
+    mensagensEmail.length = 0;
     tentativas.clear();
     sequenciaSessao = 0;
   });
@@ -133,6 +157,13 @@ describe("autenticação E2E", () => {
         },
       ),
       usuario: {
+        findFirst: jest.fn(
+          ({ where }: { where: { email: string; ativo: boolean } }) =>
+            usuarios.find(
+              (usuario) =>
+                usuario.email === where.email && usuario.ativo === where.ativo,
+            ) ?? null,
+        ),
         findUnique: jest.fn(
           ({ where }: { where: { email?: string; id?: string } }) =>
             usuarios.find(
@@ -298,6 +329,101 @@ describe("autenticação E2E", () => {
           },
         ),
       },
+      tentativaOperacaoSenha: {
+        findMany: jest.fn(() => []),
+        deleteMany: jest.fn(
+          ({ where }: { where: { chaveHash?: string | { in: string[] } } }) => {
+            if (typeof where.chaveHash === "string") {
+              const removido = tentativas.delete(where.chaveHash);
+              return { count: removido ? 1 : 0 };
+            }
+            return { count: 0 };
+          },
+        ),
+      },
+      redefinicaoSenha: {
+        findUnique: jest.fn(({ where }: { where: { tokenHash: string } }) => {
+          const redefinicao = redefinicoes.find(
+            (item) => item.tokenHash === where.tokenHash,
+          );
+          const usuario = usuarios.find(
+            (item) => item.id === redefinicao?.usuarioId,
+          );
+          return redefinicao && usuario ? { ...redefinicao, usuario } : null;
+        }),
+        upsert: jest.fn(
+          ({
+            where,
+            create,
+            update,
+          }: {
+            where: { usuarioId: string };
+            create: {
+              usuarioId: string;
+              tokenHash: string;
+              expiraAt: Date;
+            };
+            update: Partial<RedefinicaoSenhaMemoria>;
+          }) => {
+            const existente = redefinicoes.find(
+              (item) => item.usuarioId === where.usuarioId,
+            );
+            if (existente) {
+              Object.assign(existente, update);
+              return existente;
+            }
+            const agora = new Date();
+            const redefinicao: RedefinicaoSenhaMemoria = {
+              ...create,
+              id: "68df5e9c-3e60-4a8e-a4d4-8ca70221f4f3",
+              consumidoAt: null,
+              createdAt: agora,
+              updatedAt: agora,
+            };
+            redefinicoes.push(redefinicao);
+            return redefinicao;
+          },
+        ),
+        updateMany: jest.fn(
+          ({
+            where,
+            data,
+          }: {
+            where: {
+              id?: string;
+              tokenHash?: string;
+              usuarioId?: string;
+              consumidoAt?: null;
+              expiraAt?: { gt: Date };
+              usuario?: { ativo: boolean };
+            };
+            data: { consumidoAt: Date };
+          }) => {
+            let count = 0;
+            for (const redefinicao of redefinicoes) {
+              const usuario = usuarios.find(
+                (item) => item.id === redefinicao.usuarioId,
+              );
+              if (
+                (where.id && redefinicao.id !== where.id) ||
+                (where.tokenHash &&
+                  redefinicao.tokenHash !== where.tokenHash) ||
+                (where.usuarioId &&
+                  redefinicao.usuarioId !== where.usuarioId) ||
+                (where.consumidoAt === null &&
+                  redefinicao.consumidoAt !== null) ||
+                (where.expiraAt && redefinicao.expiraAt <= where.expiraAt.gt) ||
+                (where.usuario && usuario?.ativo !== where.usuario.ativo)
+              ) {
+                continue;
+              }
+              redefinicao.consumidoAt = data.consumidoAt;
+              count += 1;
+            }
+            return { count };
+          },
+        ),
+      },
     };
 
     return database;
@@ -325,6 +451,29 @@ describe("autenticação E2E", () => {
       .set(CABECALHO_CSRF, "1")
       .set("Cookie", cookie)
       .send(body);
+  }
+
+  function solicitarRedefinicao(email: string) {
+    return request(app.getHttpServer())
+      .post("/api/auth/esqueceu-senha")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .send({ email });
+  }
+
+  function redefinirSenha(
+    token: string,
+    novaSenha = "uma senha redefinida segura",
+  ) {
+    return request(app.getHttpServer())
+      .post("/api/auth/redefinir-senha")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .send({
+        token,
+        novaSenha,
+        confirmacaoNovaSenha: novaSenha,
+      });
   }
 
   function cookieDaResposta(resposta: request.Response): string {
@@ -490,6 +639,153 @@ describe("autenticação E2E", () => {
     expect(resposta.headers["set-cookie"]).toBeUndefined();
     expect(usuario.senha).toBe(hashAnterior);
     expect(sessoes).toEqual([expect.objectContaining({ revogadoAt: null })]);
+  });
+
+  it("mantém response neutra e limita também e-mail inexistente", async () => {
+    const ativa = await solicitarRedefinicao("admin@example.com").expect(202);
+    const inativa = await solicitarRedefinicao("inativo@example.com").expect(
+      202,
+    );
+    const inexistente = await solicitarRedefinicao(
+      "ausente@example.com",
+    ).expect(202);
+
+    expect(inativa.body).toEqual(ativa.body);
+    expect(inexistente.body).toEqual(ativa.body);
+    expect(mensagensEmail).toHaveLength(1);
+    expect(mensagensEmail[0]).toMatchObject({
+      tipo: "REDEFINIR_SENHA",
+      destinatario: "admin@example.com",
+    });
+    const mensagem = mensagensEmail[0];
+    if (mensagem?.tipo !== "REDEFINIR_SENHA") {
+      throw new Error("Mensagem de redefinição esperada.");
+    }
+    const token = new URL(mensagem.link).searchParams.get("token")!;
+    expect(redefinicoes[0]!.tokenHash).toBe(
+      calcularHashTokenRedefinicaoSenha(token),
+    );
+    expect(JSON.stringify(ativa.body)).not.toContain(token);
+
+    await solicitarRedefinicao("ausente@example.com").expect(202);
+    await solicitarRedefinicao("ausente@example.com").expect(202);
+    await solicitarRedefinicao("ausente@example.com").expect(429);
+  });
+
+  it("substitui o token anterior e redefine senha uma única vez", async () => {
+    const primeiraSessao = await login("admin@example.com").expect(200);
+    await solicitarRedefinicao("admin@example.com").expect(202);
+    const primeiraMensagem = mensagensEmail.at(-1);
+    if (primeiraMensagem?.tipo !== "REDEFINIR_SENHA") {
+      throw new Error("Mensagem de redefinição esperada.");
+    }
+    const primeiroToken = new URL(primeiraMensagem.link).searchParams.get(
+      "token",
+    )!;
+
+    await solicitarRedefinicao("admin@example.com").expect(202);
+    const segundaMensagem = mensagensEmail.at(-1);
+    if (segundaMensagem?.tipo !== "REDEFINIR_SENHA") {
+      throw new Error("Mensagem de redefinição esperada.");
+    }
+    const segundoToken = new URL(segundaMensagem.link).searchParams.get(
+      "token",
+    )!;
+
+    expect(segundoToken).not.toBe(primeiroToken);
+    await redefinirSenha(primeiroToken).expect(401);
+    await redefinirSenha(segundoToken).expect(204);
+    await redefinirSenha(segundoToken).expect(401);
+
+    await request(app.getHttpServer())
+      .get("/api/auth/me")
+      .set("Cookie", cookieDaResposta(primeiraSessao))
+      .expect(401);
+    await login("admin@example.com").expect(401);
+    await login("admin@example.com", "uma senha redefinida segura").expect(200);
+    expect(mensagensEmail.at(-1)).toEqual({
+      tipo: "SENHA_REDEFINIDA",
+      destinatario: "admin@example.com",
+    });
+  });
+
+  it("usa a mesma falha pública para token expirado, consumido e usuário inativo", async () => {
+    const token = "A".repeat(43);
+    const hash = calcularHashTokenRedefinicaoSenha(token);
+    const base = {
+      id: "68df5e9c-3e60-4a8e-a4d4-8ca70221f4f3",
+      tokenHash: hash,
+      usuarioId: ids.administrador,
+      expiraAt: new Date(0),
+      consumidoAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    redefinicoes = [base];
+    const expirada = await redefinirSenha(token).expect(401);
+    redefinicoes = [
+      { ...base, expiraAt: new Date("2999-01-01"), consumidoAt: new Date() },
+    ];
+    const consumida = await redefinirSenha(token).expect(401);
+    redefinicoes = [
+      {
+        ...base,
+        usuarioId: ids.inativo,
+        expiraAt: new Date("2999-01-01"),
+      },
+    ];
+    const inativa = await redefinirSenha(token).expect(401);
+
+    expect(consumida.body.codigo).toBe(expirada.body.codigo);
+    expect(inativa.body.codigo).toBe(expirada.body.codigo);
+  });
+
+  it("mantém Origin, CSRF e body estrito nas rotas públicas de recuperação", async () => {
+    await request(app.getHttpServer())
+      .post("/api/auth/esqueceu-senha")
+      .set(CABECALHO_CSRF, "1")
+      .send({ email: "admin@example.com" })
+      .expect(403);
+    await request(app.getHttpServer())
+      .post("/api/auth/esqueceu-senha")
+      .set("Origin", "http://localhost:3000")
+      .send({ email: "admin@example.com" })
+      .expect(403);
+    await request(app.getHttpServer())
+      .post("/api/auth/esqueceu-senha")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .send({ email: "admin@example.com", usuarioId: ids.administrador })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post("/api/auth/redefinir-senha")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .send({
+        token: "A".repeat(43),
+        novaSenha: "uma senha redefinida segura",
+        confirmacaoNovaSenha: "uma senha redefinida segura",
+        email: "admin@example.com",
+      })
+      .expect(400);
+  });
+
+  it("invalida redefinição pendente ao alterar a senha autenticada", async () => {
+    const respostaLogin = await login("admin@example.com").expect(200);
+    await solicitarRedefinicao("admin@example.com").expect(202);
+    const mensagem = mensagensEmail.at(-1);
+    if (mensagem?.tipo !== "REDEFINIR_SENHA") {
+      throw new Error("Mensagem de redefinição esperada.");
+    }
+    const token = new URL(mensagem.link).searchParams.get("token")!;
+
+    await alterarSenha(cookieDaResposta(respostaLogin)).expect(204);
+    const respostaTokenInvalidado = await redefinirSenha(token);
+    expect(respostaTokenInvalidado.body).toEqual(
+      expect.objectContaining({ codigo: "TOKEN_REDEFINICAO_INVALIDO" }),
+    );
+    expect(respostaTokenInvalidado.status).toBe(401);
   });
 
   it("protege a alteração por autenticação, perfil, CSRF e body estrito", async () => {

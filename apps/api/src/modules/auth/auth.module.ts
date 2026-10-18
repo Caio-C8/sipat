@@ -10,6 +10,9 @@ import { AutorizacaoGuard } from "./guards/autorizacao.guard";
 import { CsrfGuard } from "./guards/csrf.guard";
 import { SessaoRepository } from "./sessao.repository";
 import { SenhaHasher } from "../../common/security/senha-hasher";
+import { DespachanteEmailAuth } from "./despachante-email";
+import { PORTA_EMAIL_AUTH } from "./email.types";
+import { SmtpEmailAdapter } from "./smtp-email.adapter";
 
 @Module({
   imports: [DatabaseModule],
@@ -20,6 +23,8 @@ import { SenhaHasher } from "../../common/security/senha-hasher";
     AuthService,
     SenhaHasher,
     CapacidadeArgon2,
+    DespachanteEmailAuth,
+    { provide: PORTA_EMAIL_AUTH, useClass: SmtpEmailAdapter },
     { provide: APP_GUARD, useClass: AutenticacaoGuard },
     { provide: APP_GUARD, useClass: AutorizacaoGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },

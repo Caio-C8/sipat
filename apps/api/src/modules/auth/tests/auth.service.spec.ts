@@ -9,7 +9,9 @@ import type { AuthRepository } from "../auth.repository";
 import { AuthService } from "../auth.service";
 import type { SessaoParaAutenticacao } from "../auth.types";
 import type { CapacidadeArgon2 } from "../capacidade-argon2";
+import type { DespachanteEmailAuth } from "../despachante-email";
 import type { SessaoRepository } from "../sessao.repository";
+import { calcularHashTokenRedefinicaoSenha } from "../token-redefinicao";
 
 describe("AuthService", () => {
   const agora = new Date("2026-10-18T12:00:00.000Z");
@@ -37,12 +39,20 @@ describe("AuthService", () => {
     revogarTodasSessoes: jest.fn(),
     criarSessao: jest.fn(),
     limparTentativasLogin: jest.fn(),
+    limparTentativasOperacaoSenha: jest.fn(),
+    invalidarRedefinicaoSenha: jest.fn(),
+    consumirRedefinicaoSenhaSeValida: jest.fn(),
   } as unknown as AuthRepository;
   const authRepository = {
     limparTentativasExpiradas: jest.fn(),
     buscarUsuarioParaLogin: jest.fn(),
     buscarUsuarioParaAlteracaoSenha: jest.fn(),
     reservarTentativaLogin: jest.fn(),
+    limparTentativasOperacaoSenhaExpiradas: jest.fn(),
+    reservarTentativaOperacaoSenha: jest.fn(),
+    buscarUsuarioAtivoParaRecuperacao: jest.fn(),
+    buscarRedefinicaoParaConsumo: jest.fn(),
+    substituirRedefinicaoSenha: jest.fn(),
     executarTransacaoSerializavel: jest.fn(
       (operacao: (repository: AuthRepository) => Promise<unknown>) =>
         operacao(repositoryTransacao),
@@ -55,11 +65,17 @@ describe("AuthService", () => {
   const capacidadeArgon2 = {
     executar: jest.fn((operacao: () => Promise<unknown>) => operacao()),
   } as unknown as CapacidadeArgon2;
+  const despachanteEmail = {
+    despachar: jest.fn().mockReturnValue(true),
+  } as unknown as DespachanteEmailAuth;
   const config = {
     getOrThrow: jest.fn((chave: keyof EnvironmentVariables) => {
       if (chave === "APP_ENV") return "test";
       if (chave === "AUTH_RATE_LIMIT_HMAC_SECRET")
         return "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY";
+      if (chave === "AUTH_PASSWORD_RESET_ENABLED") return true;
+      if (chave === "AUTH_PASSWORD_RESET_URL")
+        return "https://sipat.example/redefinir-senha";
       throw new Error(`Configuração inesperada: ${chave}`);
     }),
   } as unknown as ConfigService<EnvironmentVariables, true>;
@@ -69,6 +85,7 @@ describe("AuthService", () => {
     senhaHasher,
     capacidadeArgon2,
     config,
+    despachanteEmail,
   );
 
   function sessaoValida(
@@ -106,6 +123,9 @@ describe("AuthService", () => {
       null,
     );
     (
+      authRepository.reservarTentativaOperacaoSenha as jest.Mock
+    ).mockResolvedValue(null);
+    (
       repositoryTransacao.atualizarUltimoLoginSeAtivo as jest.Mock
     ).mockResolvedValue(true);
     (repositoryTransacao.atualizarSenhaSeAtual as jest.Mock).mockResolvedValue(
@@ -124,9 +144,21 @@ describe("AuthService", () => {
     (repositoryTransacao.limparTentativasLogin as jest.Mock).mockResolvedValue(
       undefined,
     );
+    (
+      repositoryTransacao.limparTentativasOperacaoSenha as jest.Mock
+    ).mockResolvedValue(undefined);
+    (
+      repositoryTransacao.invalidarRedefinicaoSenha as jest.Mock
+    ).mockResolvedValue(undefined);
+    (
+      repositoryTransacao.consumirRedefinicaoSenhaSeValida as jest.Mock
+    ).mockResolvedValue(true);
     (authRepository.limparTentativasExpiradas as jest.Mock).mockResolvedValue(
       0,
     );
+    (
+      authRepository.limparTentativasOperacaoSenhaExpiradas as jest.Mock
+    ).mockResolvedValue(0);
     (senhaHasher.criarHash as jest.Mock).mockResolvedValue("hash-novo");
   });
 
@@ -396,9 +428,13 @@ describe("AuthService", () => {
       identidadeBase.id,
       agora,
     );
-    expect(repositoryTransacao.limparTentativasLogin).toHaveBeenCalledWith(
-      expect.stringMatching(/^[a-f0-9]{64}$/),
+    expect(repositoryTransacao.invalidarRedefinicaoSenha).toHaveBeenCalledWith(
+      identidadeBase.id,
+      agora,
     );
+    expect(
+      repositoryTransacao.limparTentativasOperacaoSenha,
+    ).toHaveBeenCalledWith(expect.stringMatching(/^[a-f0-9]{64}$/));
   });
 
   it("rejeita senha atual inválida sem criar hash nem modificar sessão", async () => {
@@ -443,13 +479,15 @@ describe("AuthService", () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(repositoryTransacao.revogarTodasSessoes).not.toHaveBeenCalled();
-    expect(repositoryTransacao.limparTentativasLogin).not.toHaveBeenCalled();
+    expect(
+      repositoryTransacao.limparTentativasOperacaoSenha,
+    ).not.toHaveBeenCalled();
   });
 
   it("aplica à alteração de senha o rate limit persistente do ambiente", async () => {
-    (authRepository.reservarTentativaLogin as jest.Mock).mockResolvedValue(
-      new Date(agora.getTime() + 60_000),
-    );
+    (
+      authRepository.reservarTentativaOperacaoSenha as jest.Mock
+    ).mockResolvedValue(new Date(agora.getTime() + 60_000));
 
     await expect(
       service.alterarSenha(identidadeBase.id, {
@@ -458,7 +496,7 @@ describe("AuthService", () => {
         confirmacaoNovaSenha: "uma nova senha segura",
       }),
     ).rejects.toBeInstanceOf(MuitasRequisicoesException);
-    expect(authRepository.reservarTentativaLogin).toHaveBeenCalledWith(
+    expect(authRepository.reservarTentativaOperacaoSenha).toHaveBeenCalledWith(
       expect.stringMatching(/^[a-f0-9]{64}$/),
       agora,
       3,
@@ -467,5 +505,136 @@ describe("AuthService", () => {
     expect(
       authRepository.buscarUsuarioParaAlteracaoSenha,
     ).not.toHaveBeenCalled();
+  });
+
+  it("cria redefinição somente para usuário ativo e despacha sem expor o token", async () => {
+    (
+      authRepository.buscarUsuarioAtivoParaRecuperacao as jest.Mock
+    ).mockResolvedValue({ id: identidadeBase.id, email: identidadeBase.email });
+    (authRepository.substituirRedefinicaoSenha as jest.Mock).mockResolvedValue(
+      undefined,
+    );
+
+    await service.solicitarRedefinicaoSenha({ email: identidadeBase.email });
+
+    const mensagem = (despachanteEmail.despachar as jest.Mock).mock
+      .calls[0]![0];
+    const token = new URL(mensagem.link as string).searchParams.get("token");
+    expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(authRepository.substituirRedefinicaoSenha).toHaveBeenCalledWith(
+      identidadeBase.id,
+      calcularHashTokenRedefinicaoSenha(token!),
+      new Date(agora.getTime() + 15 * 60 * 1_000),
+      agora,
+    );
+    expect(JSON.stringify(mensagem)).not.toContain(
+      calcularHashTokenRedefinicaoSenha(token!),
+    );
+  });
+
+  it("mantém solicitação neutra para conta inexistente ou inativa", async () => {
+    (
+      authRepository.buscarUsuarioAtivoParaRecuperacao as jest.Mock
+    ).mockResolvedValue(null);
+
+    await expect(
+      service.solicitarRedefinicaoSenha({ email: "ausente@example.com" }),
+    ).resolves.toBeUndefined();
+
+    expect(authRepository.reservarTentativaOperacaoSenha).toHaveBeenCalled();
+    expect(authRepository.substituirRedefinicaoSenha).not.toHaveBeenCalled();
+    expect(despachanteEmail.despachar).not.toHaveBeenCalled();
+  });
+
+  it("mantém o fluxo indisponível de forma neutra quando a flag está desligada", async () => {
+    (config.getOrThrow as jest.Mock).mockReturnValueOnce(false);
+
+    await expect(
+      service.solicitarRedefinicaoSenha({ email: identidadeBase.email }),
+    ).resolves.toBeUndefined();
+    expect(
+      authRepository.reservarTentativaOperacaoSenha,
+    ).not.toHaveBeenCalled();
+
+    (config.getOrThrow as jest.Mock).mockReturnValueOnce(false);
+    await expect(
+      service.redefinirSenha({
+        token: "A".repeat(43),
+        novaSenha: "uma nova senha segura",
+        confirmacaoNovaSenha: "uma nova senha segura",
+      }),
+    ).rejects.toMatchObject({ status: 401 });
+  });
+
+  it("redefine senha com consumo, revogação e notificação posteriores", async () => {
+    const redefinicao = {
+      id: "78df5e9c-3e60-4a8e-a4d4-8ca70221f4f4",
+      tokenHash: "b".repeat(64),
+      expiraAt: new Date(agora.getTime() + 60_000),
+      consumidoAt: null,
+      usuario: {
+        id: identidadeBase.id,
+        email: identidadeBase.email,
+        ativo: true,
+        senha: "hash-atual",
+      },
+    };
+    (
+      authRepository.buscarRedefinicaoParaConsumo as jest.Mock
+    ).mockResolvedValue(redefinicao);
+
+    await service.redefinirSenha({
+      token: "A".repeat(43),
+      novaSenha: "uma nova senha segura",
+      confirmacaoNovaSenha: "uma nova senha segura",
+    });
+
+    expect(
+      repositoryTransacao.consumirRedefinicaoSenhaSeValida,
+    ).toHaveBeenCalledWith(
+      redefinicao.id,
+      calcularHashTokenRedefinicaoSenha("A".repeat(43)),
+      agora,
+    );
+    expect(repositoryTransacao.revogarTodasSessoes).toHaveBeenCalledWith(
+      identidadeBase.id,
+      agora,
+    );
+    expect(despachanteEmail.despachar).toHaveBeenCalledWith({
+      tipo: "SENHA_REDEFINIDA",
+      destinatario: identidadeBase.email,
+    });
+  });
+
+  it.each([
+    ["inexistente", null],
+    [
+      "expirada",
+      {
+        id: "78df5e9c-3e60-4a8e-a4d4-8ca70221f4f4",
+        tokenHash: "b".repeat(64),
+        expiraAt: agora,
+        consumidoAt: null,
+        usuario: {
+          id: identidadeBase.id,
+          email: identidadeBase.email,
+          ativo: true,
+          senha: "hash-atual",
+        },
+      },
+    ],
+  ])("usa a mesma falha para token %s", async (_caso, redefinicao) => {
+    (
+      authRepository.buscarRedefinicaoParaConsumo as jest.Mock
+    ).mockResolvedValue(redefinicao);
+
+    await expect(
+      service.redefinirSenha({
+        token: "A".repeat(43),
+        novaSenha: "uma nova senha segura",
+        confirmacaoNovaSenha: "uma nova senha segura",
+      }),
+    ).rejects.toMatchObject({ status: 401 });
+    expect(senhaHasher.criarHash).not.toHaveBeenCalled();
   });
 });
