@@ -56,20 +56,27 @@ experiência, mas não substitui a verificação de permissão no servidor.
 
 ## Estado implementado
 
-O repositório permanece na etapa de infraestrutura inicial do SIPAT:
+O repositório permanece na etapa de infraestrutura e primeiros domínios do
+SIPAT:
 
-- a API expõe somente `GET /api/health`, marcado explicitamente como público;
+- a API expõe publicamente `GET /api/health`, `POST /api/auth/login` e o logout
+  idempotente; os dois `POST` continuam exigindo Origin permitido e CSRF;
 - as demais rotas são autenticadas e autorizadas por perfil por padrão;
 - sessões opacas revogáveis são persistidas apenas pelo hash SHA-256 do token;
 - métodos mutáveis exigem Origin permitido e `X-SIPAT-CSRF: 1`;
 - a Web possui home técnica, health check e proxy para a API;
 - o mobile possui tela técnica e consulta direta ao health check da API;
-- o schema Prisma representa o domínio patrimonial e a persistência de sessões;
-- `@repo/contracts` expõe os contratos genéricos e a identidade/perfis seguros;
+- o schema Prisma representa o domínio patrimonial, sessões com atividade e o
+  rate limit persistente de login;
+- `@repo/contracts` expõe os contratos genéricos, de usuários, login e
+  identidade segura;
 - a gestão administrativa de usuários está implementada somente na API;
 - a interface Web de usuários ainda não está implementada;
-- login, logout, `/auth/me`, criação produtiva de sessões e módulos
-  patrimoniais ainda não estão implementados;
+- login, logout, `/auth/me`, criação produtiva de sessões e provisionamento do
+  primeiro administrador estão implementados somente no backend;
+- não existe página, formulário, hook, redirect ou integração Web de
+  autenticação; `WEB-AUTH-001` continua planejado;
+- módulos patrimoniais ainda não estão implementados;
 - os fluxos patrimoniais do aplicativo móvel ainda não estão implementados.
 
 Os documentos de arquitetura descrevem o padrão a seguir durante a evolução.

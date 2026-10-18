@@ -21,6 +21,27 @@ Os arquivos de exemplo são documentação e devem usar valores fictícios segur
 Os arquivos sem `.example` nunca devem ser commitados. A identidade usa `sipat`
 nos valores técnicos e `SIPAT` no nome público exibido pela Web e pelo mobile.
 
+## Capacidade e segredo do login
+
+A API exige as seguintes variáveis em todos os ambientes:
+
+| Variável                      | Semântica                                                   |
+| ----------------------------- | ----------------------------------------------------------- |
+| `AUTH_RATE_LIMIT_HMAC_SECRET` | 32 bytes aleatórios em Base64url sem padding                |
+| `AUTH_ARGON2_MAX_CONCURRENCY` | verificações Argon2 simultâneas por instância, entre 1 e 32 |
+| `AUTH_ARGON2_MAX_QUEUE`       | requests aguardando uma vaga por instância, entre 0 e 1.000 |
+
+O segredo HMAC deve ser gerado por fonte criptograficamente segura, armazenado
+no cofre de cada ambiente e nunca registrado em logs, comandos versionados ou
+variáveis públicas. A API valida tamanho, formato e diversidade aparente na
+inicialização; essa validação não substitui geração aleatória nem gestão de
+segredos.
+
+Os exemplos usam concorrência/fila `2/10` em desenvolvimento e `4/20` em
+staging/produção. Esses números são limites de capacidade, não metas universais:
+meça CPU, memória, latência e saturação antes de alterá-los. Fila cheia retorna
+`429` imediatamente, sem espera ilimitada.
+
 Builds remotos do mobile não recebem automaticamente os arquivos `.env` locais.
 Os perfis de `apps/mobile/eas.json` selecionam os ambientes EAS `development`,
 `preview` e `production`. Configure neles os valores públicos correspondentes e

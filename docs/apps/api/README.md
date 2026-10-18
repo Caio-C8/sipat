@@ -32,8 +32,9 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 
 No estado atual:
 
-- a API expõe `GET /api/health`, explicitamente público, e as cinco rotas
-  protegidas de `/api/usuarios`;
+- a API expõe `GET /api/health`, `POST /api/auth/login`,
+  `POST /api/auth/logout`, `GET /api/auth/me` e as cinco rotas protegidas de
+  `/api/usuarios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -46,7 +47,13 @@ No estado atual:
   determinística; criação usa Argon2id e auditoria derivada da sessão;
 - inativação é atômica com a revogação de sessões e protege autoinativação e o
   último administrador ativo;
-- login, logout, `/auth/me` e criação produtiva de sessões ainda não existem;
+- login, logout e `/auth/me` usam contratos Zod, cookie `HttpOnly`, sessão opaca
+  revogável e rate limit persistente;
+- a duração absoluta é 8 horas, a inatividade efetiva fica entre
+  aproximadamente 25 e 30 minutos e no máximo cinco sessões ficam ativas por
+  usuário;
+- o trabalho Argon2 possui concorrência e fila finitas configuradas por
+  ambiente;
 - `apps/api` usa Zod 4 e `nestjs-zod` 5;
 - `ZodValidationPipe` e `ZodSerializerInterceptor` estão registrados
   globalmente;
@@ -59,10 +66,11 @@ No estado atual:
   módulo consumidor o importa;
 - `AuthModule` e `UsuariosModule` importam `DatabaseModule`; `AppModule` não
   acessa o client diretamente;
-- o model `Usuario` e a relação com `SessaoUsuario` existentes atendem o
-  `USERS-001`; não foi necessária migration ou alteração do schema;
+- `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
+  persiste o rate limit com expiração e limpeza em lotes;
 - testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de
-  usuários, incluindo `401`, `403`, CSRF, conflitos e regras administrativas.
+  usuários e autenticação, incluindo `401`, `403`, `429`, CSRF, conflitos,
+  regras administrativas e corridas reais no PostgreSQL.
 
 Os exemplos desta documentação representam o padrão desejado, não código já
 implementado no SIPAT.

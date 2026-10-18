@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { argon2id, hash } from "argon2";
+import { argon2id, hash, verify } from "argon2";
 
 const ARGON2_MEMORY_COST_KIB = 19_456;
 const ARGON2_TIME_COST = 2;
@@ -14,5 +14,9 @@ export class SenhaHasher {
       timeCost: ARGON2_TIME_COST,
       parallelism: ARGON2_PARALLELISM,
     });
+  }
+
+  verificarHash(hashArmazenado: string, senha: string): Promise<boolean> {
+    return verify(hashArmazenado, senha);
   }
 }

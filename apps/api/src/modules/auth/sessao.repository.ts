@@ -4,8 +4,10 @@ import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import type { SessaoParaAutenticacao } from "./auth.types";
 
 const sessaoParaAutenticacaoSelect = {
-  expiresAt: true,
-  revokedAt: true,
+  id: true,
+  expiraAt: true,
+  ultimaAtividadeAt: true,
+  revogadoAt: true,
   usuario: {
     select: {
       id: true,
@@ -30,6 +32,33 @@ export class SessaoRepository {
     return this.database.sessaoUsuario.findUnique({
       where: { tokenHash },
       select: sessaoParaAutenticacaoSelect,
+    });
+  }
+
+  async atualizarAtividadeSeNecessario(
+    sessaoId: string,
+    atividadeAnterior: Date,
+    limiteAtualizacao: Date,
+    agora: Date,
+  ): Promise<void> {
+    await this.database.sessaoUsuario.updateMany({
+      where: {
+        id: sessaoId,
+        AND: [
+          { ultimaAtividadeAt: atividadeAnterior },
+          { ultimaAtividadeAt: { lte: limiteAtualizacao } },
+        ],
+        expiraAt: { gt: agora },
+        revogadoAt: null,
+      },
+      data: { ultimaAtividadeAt: agora },
+    });
+  }
+
+  async revogarPorTokenHash(tokenHash: string, agora: Date): Promise<void> {
+    await this.database.sessaoUsuario.updateMany({
+      where: { tokenHash, revogadoAt: null },
+      data: { revogadoAt: agora },
     });
   }
 }
