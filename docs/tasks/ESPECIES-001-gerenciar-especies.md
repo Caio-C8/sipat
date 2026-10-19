@@ -1,6 +1,6 @@
 # `ESPECIES-001` — Gerenciar espécies de bens
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -29,11 +29,23 @@ Implementar cadastro, consulta e alteração de espécies, sempre vinculadas a u
 
 ## Critérios de aceite
 
-- [ ] espécie sem natureza ou com natureza inexistente é rejeitada;
-- [ ] cada espécie possui exatamente uma natureza;
-- [ ] duplicidade normalizada é protegida inclusive sob concorrência;
-- [ ] alteração preserva patrimônios já vinculados à espécie;
-- [ ] acesso e responses são cobertos por testes.
+- [x] espécie sem natureza ou com natureza inexistente é rejeitada;
+- [x] cada espécie possui exatamente uma natureza;
+- [x] duplicidade normalizada é protegida inclusive sob concorrência;
+- [x] alteração preserva patrimônios já vinculados à espécie;
+- [x] acesso e responses são cobertos por testes.
+
+## Resultado entregue
+
+- quatro rotas administrativas de cadastro, consulta, listagem e alteração;
+- validação da natureza pelo service do domínio, vínculo único e alteração sem
+  substituir a espécie nem romper patrimônios existentes;
+- nome normalizado sem acentos e em caixa alta, protegido por unicidade no
+  PostgreSQL inclusive sob concorrência;
+- auditoria derivada da sessão, responses por allowlist, busca e filtro por
+  natureza, paginação finita e ordenação determinística;
+- testes unitários, E2E com Guards reais e integração PostgreSQL para corrida de
+  unicidade e preservação do patrimônio ao mudar a natureza.
 
 ## Arquivos ou módulos potencialmente afetados
 
