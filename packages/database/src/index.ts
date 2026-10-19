@@ -27,6 +27,7 @@ export {
   TipoBaixa,
   TipoCorrecaoItemInventario,
   TipoIncorporacao,
+  TipoNumeroPatrimonial,
   TipoManutencao,
   TipoMembroComissao,
 } from "@prisma/client";

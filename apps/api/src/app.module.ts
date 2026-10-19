@@ -13,6 +13,7 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
 import { requisicaoIdMiddleware } from "./common/middleware/requisicao-id.middleware";
 import { AuthModule } from "./modules/auth/auth.module";
+import { PatrimoniosModule } from "./modules/patrimonios/patrimonios.module";
 import { UsuariosModule } from "./modules/usuarios/usuarios.module";
 
 @Module({
@@ -23,6 +24,7 @@ import { UsuariosModule } from "./modules/usuarios/usuarios.module";
       validate: validateEnvironment,
     }),
     AuthModule,
+    PatrimoniosModule,
     UsuariosModule,
   ],
   controllers: [AppController],

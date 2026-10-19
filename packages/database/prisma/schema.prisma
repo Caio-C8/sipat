@@ -35,6 +35,11 @@ enum StatusPatrimonio {
   EM_MANUTENCAO
 }
 
+enum TipoNumeroPatrimonial {
+  OFICIAL
+  SEM_NUMERO_OFICIAL
+}
+
 enum TipoBaixa {
   ALIENACAO
   INVERSIBILIDADE
@@ -360,20 +365,21 @@ model NotaFiscal {
 }
 
 model Patrimonio {
-  id                String           @id @default(uuid()) @db.Uuid
-  numeroPatrimonio  String           @unique @map("numero_patrimonio") @db.VarChar(50)
-  descricao         String           @db.Text
-  marca             String?          @db.VarChar(100)
-  modelo            String?          @db.VarChar(100)
-  numeroSerie       String?          @unique @map("numero_serie") @db.VarChar(100)
-  textoBusca        String?          @map("texto_busca") @db.Text
-  tipoIncorporacao  TipoIncorporacao @default(AQUISICAO) @map("tipo_incorporacao")
-  dataTombamento    DateTime         @map("data_tombamento") @db.Date
-  valorIncorporacao Decimal          @map("valor_incorporacao") @db.Decimal(19, 7)
-  status            StatusPatrimonio @default(ATIVO)
-  especieId         String           @map("especie_id") @db.Uuid
-  setorAtualId      String           @map("setor_atual_id") @db.Uuid
-  processoCompraId  String?          @map("processo_compra_id") @db.Uuid
+  id                    String                @id @default(uuid()) @db.Uuid
+  numeroPatrimonio      String                @unique @map("numero_patrimonio") @db.VarChar(50)
+  tipoNumeroPatrimonial TipoNumeroPatrimonial @map("tipo_numero_patrimonial")
+  descricao             String                @db.Text
+  marca                 String?               @db.VarChar(100)
+  modelo                String?               @db.VarChar(100)
+  numeroSerie           String?               @unique @map("numero_serie") @db.VarChar(100)
+  textoBusca            String?               @map("texto_busca") @db.Text
+  tipoIncorporacao      TipoIncorporacao      @default(AQUISICAO) @map("tipo_incorporacao")
+  dataTombamento        DateTime              @map("data_tombamento") @db.Date
+  valorIncorporacao     Decimal               @map("valor_incorporacao") @db.Decimal(19, 7)
+  status                StatusPatrimonio      @default(ATIVO)
+  especieId             String                @map("especie_id") @db.Uuid
+  setorAtualId          String                @map("setor_atual_id") @db.Uuid
+  processoCompraId      String?               @map("processo_compra_id") @db.Uuid
 
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
