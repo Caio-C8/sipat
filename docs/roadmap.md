@@ -83,7 +83,7 @@ etiquetas permanecem fora do escopo.
 | 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | concluído | RF03, RF04, RF06, RF07 e RF08                      |
 | 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 14    | `NATUREZAS-001` — Gerenciar naturezas                  | concluído | `CONTRACTS-005`, `SEC-001`                         |
-| 15    | `ESPECIES-001` — Gerenciar espécies                    | planejado | `NATUREZAS-001`                                    |
+| 15    | `ESPECIES-001` — Gerenciar espécies                    | concluído | `NATUREZAS-001`                                    |
 | 16    | `SETORES-001` — Gerenciar setores                      | planejado | `RESPONSAVEIS-001`                                 |
 | 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | planejado | `CONTRACTS-005`, `SEC-001`                         |
 | 18    | `CONTRACTS-006` — Contratos de compras e notas         | planejado | RF09, UC09, RNF09                                  |
@@ -702,7 +702,7 @@ Especificação de execução:
 
 ## ESPECIES-001 — Gerenciar espécies de bens
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -711,9 +711,9 @@ garantindo uma única natureza por espécie.
 
 ### Critérios de aceite
 
-- [ ] natureza obrigatória e existente é validada;
-- [ ] unicidade normalizada resiste a concorrência;
-- [ ] mudança de vínculo preserva patrimônios existentes.
+- [x] natureza obrigatória e existente é validada;
+- [x] unicidade normalizada resiste a concorrência;
+- [x] mudança de vínculo preserva patrimônios existentes.
 
 Especificação de execução:
 [ESPECIES-001](./tasks/ESPECIES-001-gerenciar-especies.md).
