@@ -86,7 +86,7 @@ etiquetas permanecem fora do escopo.
 | 15    | `ESPECIES-001` — Gerenciar espécies                    | concluído | `NATUREZAS-001`                                    |
 | 16    | `SETORES-001` — Gerenciar setores                      | concluído | `RESPONSAVEIS-001`                                 |
 | 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | concluído | `CONTRACTS-005`, `SEC-001`                         |
-| 18    | `CONTRACTS-006` — Contratos de compras e notas         | planejado | RF09, UC09, RNF09                                  |
+| 18    | `CONTRACTS-006` — Contratos de compras e notas         | concluído | RF09, UC09, RNF09                                  |
 | 19    | `COMPRAS-001` — Gerenciar processos de compra          | planejado | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
 | 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | planejado | `COMPRAS-001`, `STORAGE-001`                       |
 
@@ -756,7 +756,7 @@ Especificação de execução:
 
 ## CONTRACTS-006 — Contratos de processos de compra e notas fiscais
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -765,10 +765,10 @@ máximo um PDF de 10 MiB por nota.
 
 ### Critérios de aceite
 
-- [ ] o campo `dados` mapeia notas aos arquivos por índice sem ambiguidade;
-- [ ] a criação rejeita a 21ª nota e o 21º arquivo;
-- [ ] arquivos sem nota, índices repetidos e partes excedentes são rejeitados;
-- [ ] responses expõem URL autenticada derivada do `id`, nunca caminho físico.
+- [x] o campo `dados` mapeia notas aos arquivos por índice sem ambiguidade;
+- [x] a criação rejeita a 21ª nota e o 21º arquivo;
+- [x] arquivos sem nota, índices repetidos e partes excedentes são rejeitados;
+- [x] responses expõem URL autenticada derivada do `id`, nunca caminho físico.
 
 Especificação de execução:
 [CONTRACTS-006](./tasks/CONTRACTS-006-processos-compra-notas-fiscais.md).

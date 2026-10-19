@@ -77,6 +77,18 @@ import {
   FornecedorParamsSchema,
   ListarFornecedoresQuerySchema,
   FornecedorDetalheSchema,
+  AlterarAnexoNotaFiscalResponseSchema,
+  AlterarNotaFiscalBodySchema,
+  AlterarProcessoCompraBodySchema,
+  CriarNotaFiscalMultipartSchema,
+  CriarProcessoCompraMultipartSchema,
+  ListarNotasFiscaisQuerySchema,
+  ListarProcessosCompraQuerySchema,
+  NotaFiscalDetalheSchema,
+  NotaFiscalParamsSchema,
+  ProcessoCompraDetalheSchema,
+  ProcessoCompraParamsSchema,
+  SubstituirAnexoNotaFiscalMultipartSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -196,6 +208,25 @@ describe("@repo/contracts — API pública", () => {
       ListarFornecedoresQuerySchema,
       FornecedorDetalheSchema,
       ListarFornecedoresResponseSchema,
+    ]) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
+
+  it("exporta os contratos de processos de compra e notas fiscais", () => {
+    for (const schema of [
+      ProcessoCompraParamsSchema,
+      CriarProcessoCompraMultipartSchema,
+      AlterarProcessoCompraBodySchema,
+      ListarProcessosCompraQuerySchema,
+      ProcessoCompraDetalheSchema,
+      NotaFiscalParamsSchema,
+      CriarNotaFiscalMultipartSchema,
+      AlterarNotaFiscalBodySchema,
+      ListarNotasFiscaisQuerySchema,
+      NotaFiscalDetalheSchema,
+      SubstituirAnexoNotaFiscalMultipartSchema,
+      AlterarAnexoNotaFiscalResponseSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }

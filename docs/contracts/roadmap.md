@@ -234,7 +234,7 @@ Especificação aprovada:
 
 ### CONTRACTS-006 — Processos de compra e notas fiscais
 
-**Status:** planejado
+**Status:** concluído
 
 **Contexto**
 
@@ -253,11 +253,11 @@ limites finitos, sem expor detalhes do filesystem aos consumidores.
 
 **Critérios de aceite**
 
-- [ ] nota sem arquivo e processo sem nota são representáveis;
-- [ ] a 21ª nota ou o 21º arquivo é rejeitado;
-- [ ] índices ambíguos e arquivos sem consumidor são rejeitados;
-- [ ] caminhos físicos ou relativos persistidos não fazem parte da response;
-- [ ] lint, typecheck e testes do package passam.
+- [x] nota sem arquivo e processo sem nota são representáveis;
+- [x] a 21ª nota ou o 21º arquivo é rejeitado;
+- [x] índices ambíguos e arquivos sem consumidor são rejeitados;
+- [x] caminhos físicos ou relativos persistidos não fazem parte da response;
+- [x] lint, typecheck e testes do package passam.
 
 Especificação aprovada:
 [CONTRACTS-006](../tasks/CONTRACTS-006-processos-compra-notas-fiscais.md).
