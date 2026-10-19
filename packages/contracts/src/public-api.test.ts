@@ -43,6 +43,40 @@ import {
   VALOR_CABECALHO_CSRF,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
+  AlterarResponsavelSchema,
+  AlterarNaturezaSchema,
+  AlterarEspecieSchema,
+  AlterarSetorSchema,
+  AlterarFornecedorSchema,
+  CriarResponsavelSchema,
+  CriarNaturezaSchema,
+  CriarEspecieSchema,
+  CriarSetorSchema,
+  CriarFornecedorSchema,
+  ListarResponsaveisResponseSchema,
+  ListarNaturezasResponseSchema,
+  ListarEspeciesResponseSchema,
+  ListarSetoresResponseSchema,
+  ListarFornecedoresResponseSchema,
+  AlterarSituacaoResponsavelSchema,
+  ResponsavelParamsSchema,
+  ListarResponsaveisQuerySchema,
+  ResponsavelDetalheSchema,
+  NaturezaParamsSchema,
+  ListarNaturezasQuerySchema,
+  NaturezaDetalheSchema,
+  EspecieParamsSchema,
+  ListarEspeciesQuerySchema,
+  EspecieDetalheSchema,
+  AlterarSituacaoSetorSchema,
+  SetorParamsSchema,
+  ListarSetoresQuerySchema,
+  SetorDetalheSchema,
+  CnpjFornecedorSchema,
+  AlterarSituacaoFornecedorSchema,
+  FornecedorParamsSchema,
+  ListarFornecedoresQuerySchema,
+  FornecedorDetalheSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -122,6 +156,47 @@ describe("@repo/contracts — API pública", () => {
     ];
 
     for (const schema of schemas) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
+
+  it("exporta os contratos dos cadastros patrimoniais relacionados", () => {
+    for (const schema of [
+      CriarResponsavelSchema,
+      AlterarResponsavelSchema,
+      AlterarSituacaoResponsavelSchema,
+      ResponsavelParamsSchema,
+      ListarResponsaveisQuerySchema,
+      ResponsavelDetalheSchema,
+      ListarResponsaveisResponseSchema,
+      CriarNaturezaSchema,
+      AlterarNaturezaSchema,
+      NaturezaParamsSchema,
+      ListarNaturezasQuerySchema,
+      NaturezaDetalheSchema,
+      ListarNaturezasResponseSchema,
+      CriarEspecieSchema,
+      AlterarEspecieSchema,
+      EspecieParamsSchema,
+      ListarEspeciesQuerySchema,
+      EspecieDetalheSchema,
+      ListarEspeciesResponseSchema,
+      CriarSetorSchema,
+      AlterarSetorSchema,
+      AlterarSituacaoSetorSchema,
+      SetorParamsSchema,
+      ListarSetoresQuerySchema,
+      SetorDetalheSchema,
+      ListarSetoresResponseSchema,
+      CnpjFornecedorSchema,
+      CriarFornecedorSchema,
+      AlterarFornecedorSchema,
+      AlterarSituacaoFornecedorSchema,
+      FornecedorParamsSchema,
+      ListarFornecedoresQuerySchema,
+      FornecedorDetalheSchema,
+      ListarFornecedoresResponseSchema,
+    ]) {
       assert.equal(typeof schema.safeParse, "function");
     }
   });

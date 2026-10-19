@@ -80,7 +80,7 @@ etiquetas permanecem fora do escopo.
 | Ordem | Objetivo                                               | Status    | Dependências principais                            |
 | ----- | ------------------------------------------------------ | --------- | -------------------------------------------------- |
 | 11    | `STORAGE-001` — Armazenamento local de documentos      | concluído | RNF09                                              |
-| 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | planejado | RF03, RF04, RF06, RF07 e RF08                      |
+| 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | concluído | RF03, RF04, RF06, RF07 e RF08                      |
 | 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | planejado | `CONTRACTS-005`, `SEC-001`                         |
 | 14    | `NATUREZAS-001` — Gerenciar naturezas                  | planejado | `CONTRACTS-005`, `SEC-001`                         |
 | 15    | `ESPECIES-001` — Gerenciar espécies                    | planejado | `NATUREZAS-001`                                    |
@@ -647,7 +647,7 @@ Especificação de execução:
 
 ## CONTRACTS-005 — Contratos dos cadastros patrimoniais relacionados
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -656,10 +656,10 @@ setores e fornecedores antes dos respectivos módulos da API.
 
 ### Critérios de aceite
 
-- [ ] operações refletem RF03, RF04, RF06, RF07 e RF08 sem aceitar campos
+- [x] operações refletem RF03, RF04, RF06, RF07 e RF08 sem aceitar campos
       controlados pelo servidor;
-- [ ] listagens possuem limites e responses usam allowlist;
-- [ ] schemas, tipos e exports públicos possuem testes.
+- [x] listagens possuem limites e responses usam allowlist;
+- [x] schemas, tipos e exports públicos possuem testes.
 
 Especificação de execução:
 [CONTRACTS-005](./tasks/CONTRACTS-005-cadastros-patrimoniais-relacionados.md).

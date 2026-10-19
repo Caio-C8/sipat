@@ -207,7 +207,7 @@ A especificação aprovada está em
 
 ### CONTRACTS-005 — Cadastros patrimoniais relacionados
 
-**Status:** planejado
+**Status:** concluído
 
 **Contexto**
 
@@ -225,9 +225,9 @@ promover normalização, auditoria ou estado protegido a input do cliente.
 
 **Critérios de aceite**
 
-- [ ] contratos correspondem a RF03, RF04, RF06, RF07 e RF08;
-- [ ] diferenças entre alteração parcial, `null` e ausência estão explícitas;
-- [ ] lint, typecheck e testes do package passam.
+- [x] contratos correspondem a RF03, RF04, RF06, RF07 e RF08;
+- [x] diferenças entre alteração parcial, `null` e ausência estão explícitas;
+- [x] lint, typecheck e testes do package passam.
 
 Especificação aprovada:
 [CONTRACTS-005](../tasks/CONTRACTS-005-cadastros-patrimoniais-relacionados.md).
