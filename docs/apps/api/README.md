@@ -36,7 +36,8 @@ No estado atual:
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
   `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`,
-  as cinco rotas administrativas de `/api/responsaveis` e
+  as cinco rotas administrativas de `/api/responsaveis`, as quatro rotas
+  administrativas de `/api/naturezas` e
   `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
   `POST /api/patrimonios` e
   `POST /api/patrimonios/:patrimonioId/substituicoes-numero`;
@@ -51,6 +52,9 @@ No estado atual:
 - `ResponsaveisModule` segue o mesmo corte por camadas, restringe as cinco
   operações ao `ADMINISTRADOR`, garante matrícula única no banco e inativa sem
   excluir nem romper vínculos existentes;
+- `NaturezasModule` restringe cadastro, consulta, listagem e alteração ao
+  `ADMINISTRADOR`, deriva nome normalizado e auditoria no servidor e preserva
+  espécies vinculadas durante alterações;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
