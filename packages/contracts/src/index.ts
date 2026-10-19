@@ -2,6 +2,11 @@ export * from "./common";
 export * from "./auth";
 export * from "./usuario";
 export * from "./patrimonio";
+export * from "./responsavel";
+export * from "./natureza";
+export * from "./especie";
+export * from "./setor";
+export * from "./fornecedor";
 
 export type AppEnvironment = "development" | "staging" | "production" | "test";
 
