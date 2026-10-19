@@ -16,15 +16,16 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Estado atual
 
-O `SEC-001`, o backend do `USERS-001`, o backend do `AUTH-001` e o cadastro de
-`PATRIMONIOS-001` estão implementados. A API possui
+O `SEC-001`, o backend do `USERS-001`, o backend do `AUTH-001` e as entregas
+`PATRIMONIOS-001` e `PATRIMONIOS-002` estão implementados. A API possui
 barreira global de autenticação, autorização por perfil, proteção CSRF,
 persistência de sessões revogáveis, contratos e as cinco operações
 administrativas de usuários, além de login, logout, `/auth/me`, provisionamento
 inicial controlado, alteração autenticada e recuperação de senha por e-mail.
 O Diretor de Patrimônio também pode cadastrar bens com identificador oficial ou
 `SP-` gerado por sequences independentes, registros iniciais atômicos e
-auditoria da sessão.
+auditoria da sessão. Administrador e Diretor de Patrimônio podem consultar a
+lista paginada e os detalhes dos bens com busca, filtros e relações atuais.
 Fora do ambiente de desenvolvimento, a recuperação permanece desabilitada até
 a configuração do consumidor HTTPS e SMTP institucional. As interfaces Web de
 usuários e autenticação não estão implementadas.
@@ -67,7 +68,7 @@ estiver implementada e verificada.
 | ----- | --------------------------------------------- | --------- | ------------------------------------ |
 | 7     | `CONTRACTS-004` — Contratos de patrimônios    | concluído | RF10, RF11, RF12, UC10, UC11 e UC12  |
 | 8     | `PATRIMONIOS-001` — Cadastrar patrimônios     | concluído | `CONTRACTS-004`, `SEC-001`           |
-| 9     | `PATRIMONIOS-002` — Consultar patrimônios     | planejado | `PATRIMONIOS-001`                    |
+| 9     | `PATRIMONIOS-002` — Consultar patrimônios     | concluído | `PATRIMONIOS-001`                    |
 | 10    | `PATRIMONIOS-003` — Substituir número oficial | planejado | `PATRIMONIOS-001`, `PATRIMONIOS-002` |
 
 Esta sequência entrega contratos, persistência e backend. Interfaces, hooks e
@@ -500,7 +501,7 @@ Especificação de execução:
 
 ## PATRIMONIOS-002 — Consultar e listar patrimônios
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -527,14 +528,14 @@ de campos internos.
 
 ### Critérios de aceite
 
-- [ ] os dois perfis autenticados consultam; anônimo recebe `401`;
-- [ ] filtros inválidos são rejeitados e ausência de resultados retorna lista
+- [x] os dois perfis autenticados consultam; anônimo recebe `401`;
+- [x] filtros inválidos são rejeitados e ausência de resultados retorna lista
       vazia com metadados consistentes;
-- [ ] busca usa os dados normalizados e `textoBusca`;
-- [ ] responsável e natureza são obtidos pelas relações atuais, sem duplicação
+- [x] busca usa os dados normalizados e `textoBusca`;
+- [x] responsável e natureza são obtidos pelas relações atuais, sem duplicação
       de fonte de verdade;
-- [ ] paginação é estável, finita e não executa N+1;
-- [ ] responses passam pelos schemas e não expõem models Prisma diretamente.
+- [x] paginação é estável, finita e não executa N+1;
+- [x] responses passam pelos schemas e não expõem models Prisma diretamente.
 
 Especificação de execução:
 [PATRIMONIOS-002](./tasks/PATRIMONIOS-002-consultar-patrimonios.md).

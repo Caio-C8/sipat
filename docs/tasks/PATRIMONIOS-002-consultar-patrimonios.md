@@ -1,6 +1,6 @@
 # `PATRIMONIOS-002` — Consultar e listar patrimônios
 
-**Status:** aprovada
+**Status:** concluída
 
 ## Objetivo
 
@@ -67,14 +67,14 @@ perfis, com busca, filtros, relações atuais e payload limitado.
 
 ## Critérios de aceite
 
-- [ ] anônimo recebe `401` e os dois perfis autenticados consultam;
-- [ ] listagem respeita padrões, máximo, filtros e ordenação determinística;
-- [ ] busca usa os dados normalizados e não altera os valores persistidos;
-- [ ] combinações de filtros mantêm total e itens consistentes;
-- [ ] detalhe inexistente retorna erro público previsível;
-- [ ] query não executa N+1 nem carrega relações fora do contrato;
-- [ ] plano e índices são avaliados com volume representativo;
-- [ ] response é validada e não expõe campos internos.
+- [x] anônimo recebe `401` e os dois perfis autenticados consultam;
+- [x] listagem respeita padrões, máximo, filtros e ordenação determinística;
+- [x] busca usa os dados normalizados e não altera os valores persistidos;
+- [x] combinações de filtros mantêm total e itens consistentes;
+- [x] detalhe inexistente retorna erro público previsível;
+- [x] query não executa N+1 nem carrega relações fora do contrato;
+- [x] plano e índices são avaliados com volume representativo;
+- [x] response é validada e não expõe campos internos.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -86,16 +86,22 @@ perfis, com busca, filtros, relações atuais e payload limitado.
 
 ## Verificações esperadas
 
-- `corepack pnpm --filter @repo/contracts test`;
+- [x] `corepack pnpm --filter @repo/contracts test`;
 - `corepack pnpm --filter @repo/database typecheck` se o schema mudar;
-- `corepack pnpm --filter @repo/api lint`;
-- `corepack pnpm --filter @repo/api typecheck`;
-- `corepack pnpm --filter @repo/api test`;
-- `corepack pnpm --filter @repo/api build`;
-- integração PostgreSQL com volume e combinações de filtros representativas;
-- plano de execução para as queries críticas, em ambiente seguro;
-- `corepack pnpm format:check`;
-- `git diff --check`.
+- [x] `corepack pnpm --filter @repo/api lint`;
+- [x] `corepack pnpm --filter @repo/api typecheck`;
+- [x] `corepack pnpm --filter @repo/api test`;
+- [x] `corepack pnpm --filter @repo/api build`;
+- [x] integração PostgreSQL com volume e combinações de filtros representativas;
+- [x] plano de execução para as queries críticas, em ambiente seguro;
+- [x] `corepack pnpm format:check`;
+- [x] `git diff --check`.
+
+As verificações acima passaram em 18 de outubro de 2026. A integração usou 240
+patrimônios e confirmou busca, filtros combinados, contagem, páginas distintas
+e ordenação estável. O plano observado para a combinação de status, setor e
+tipo de numeração executou em 0,177 ms sobre essa massa; por não haver evidência
+de gargalo, nenhum índice ou migration foi adicionado.
 
 ## Pendências ou decisões bloqueantes
 
