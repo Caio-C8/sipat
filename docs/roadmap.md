@@ -84,7 +84,7 @@ etiquetas permanecem fora do escopo.
 | 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 14    | `NATUREZAS-001` — Gerenciar naturezas                  | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 15    | `ESPECIES-001` — Gerenciar espécies                    | concluído | `NATUREZAS-001`                                    |
-| 16    | `SETORES-001` — Gerenciar setores                      | planejado | `RESPONSAVEIS-001`                                 |
+| 16    | `SETORES-001` — Gerenciar setores                      | concluído | `RESPONSAVEIS-001`                                 |
 | 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | planejado | `CONTRACTS-005`, `SEC-001`                         |
 | 18    | `CONTRACTS-006` — Contratos de compras e notas         | planejado | RF09, UC09, RNF09                                  |
 | 19    | `COMPRAS-001` — Gerenciar processos de compra          | planejado | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
@@ -720,7 +720,7 @@ Especificação de execução:
 
 ## SETORES-001 — Gerenciar setores
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -729,9 +729,9 @@ ao Administrador, sempre com responsável atual válido.
 
 ### Critérios de aceite
 
-- [ ] novo vínculo exige responsável ativo;
-- [ ] setor inativo não recebe novos patrimônios;
-- [ ] inativação preserva registros e históricos.
+- [x] novo vínculo exige responsável ativo;
+- [x] setor inativo não recebe novos patrimônios;
+- [x] inativação preserva registros e históricos.
 
 Especificação de execução:
 [SETORES-001](./tasks/SETORES-001-gerenciar-setores.md).

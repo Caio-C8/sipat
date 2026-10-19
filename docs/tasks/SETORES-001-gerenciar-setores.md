@@ -1,6 +1,6 @@
 # `SETORES-001` — Gerenciar setores
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -30,11 +30,11 @@ responsável atual obrigatório.
 
 ## Critérios de aceite
 
-- [ ] setor não é criado sem responsável ativo;
-- [ ] setor inativo não pode receber novos vínculos patrimoniais;
-- [ ] inativação não apaga patrimônios ou históricos;
-- [ ] troca de responsável mantém integridade e auditoria;
-- [ ] acesso, paginação e concorrência são testados.
+- [x] setor não é criado sem responsável ativo;
+- [x] setor inativo não pode receber novos vínculos patrimoniais;
+- [x] inativação não apaga patrimônios ou históricos;
+- [x] troca de responsável mantém integridade e auditoria;
+- [x] acesso, paginação e concorrência são testados.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -45,10 +45,17 @@ responsável atual obrigatório.
 
 ## Verificações esperadas
 
-- lint, typecheck, testes e build dos packages afetados;
-- E2E com Guards reais e integração com patrimônios;
-- testes PostgreSQL das regras de situação;
-- `git diff --check` e formatação.
+- [x] lint, typecheck, testes e build dos packages afetados;
+- [x] E2E com Guards reais e integração com patrimônios;
+- [x] testes PostgreSQL das regras de situação;
+- [x] `git diff --check` e formatação.
+
+As verificações passaram em 19 de outubro de 2026. A suíte completa da API
+passou com 267 testes e manteve 26 testes de integração ignorados por dependerem
+de variáveis de banco próprias. Em seguida, um PostgreSQL 17 temporário recebeu
+as nove migrations desde um banco vazio e executou os três testes de integração
+de setores, incluindo a corrida entre cadastro patrimonial e inativação. O banco
+temporário foi removido após a validação.
 
 ## Pendências ou decisões bloqueantes
 
