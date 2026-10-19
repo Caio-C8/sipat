@@ -75,6 +75,24 @@ use uma URL HTTPS da API alcançável pelo dispositivo. Consulte
 estático do mobile-web usa a porta interna fixa `8080`. Manter essa distinção
 evita quebrar comunicação interna quando uma porta externa muda.
 
+## Armazenamento local de documentos
+
+O serviço da API usa duas variáveis com responsabilidades diferentes:
+
+- `UPLOADS_HOST_PATH`: origem do bind mount no computador host;
+- `UPLOADS_ROOT_PATH`: raiz acessível pelo processo da API.
+
+Em desenvolvimento, `UPLOADS_HOST_PATH=./data/uploads`. Em staging e produção,
+o valor deve ser absoluto e definido no `.env` do host; em Windows, por
+exemplo, `C:/SIPAT/data/uploads`. No Compose, `UPLOADS_ROOT_PATH` permanece
+`/data/uploads`, destino fixo do mount. Uma execução direta fora do Docker deve
+apontar `UPLOADS_ROOT_PATH` para o caminho real do processo.
+
+O diretório precisa existir e permitir leitura e escrita antes da inicialização.
+Seu conteúdo é dado operacional privado, não artefato da imagem, e exige backup
+coordenado com o banco. As decisões completas estão em
+[Armazenamento local de documentos](./file-storage.md).
+
 Para executar os três ambientes localmente ao mesmo tempo, use portas internas
 iguais e portas publicadas diferentes:
 

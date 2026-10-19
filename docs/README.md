@@ -13,7 +13,8 @@ Os documentos abaixo tratam de decisões transversais e permanecem na raiz:
 - [Visão geral do SIPAT](./sipat.md);
 - [Requisitos do SIPAT](./requisitos-SIPAT.md);
 - [Roadmap inicial do SIPAT](./roadmap.md);
-- [Identidade, sessão e controle de acesso](./security-and-access.md).
+- [Identidade, sessão e controle de acesso](./security-and-access.md);
+- [Armazenamento local de documentos](./file-storage.md).
 
 ## Áreas específicas
 
