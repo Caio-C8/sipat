@@ -85,7 +85,7 @@ etiquetas permanecem fora do escopo.
 | 14    | `NATUREZAS-001` — Gerenciar naturezas                  | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 15    | `ESPECIES-001` — Gerenciar espécies                    | concluído | `NATUREZAS-001`                                    |
 | 16    | `SETORES-001` — Gerenciar setores                      | concluído | `RESPONSAVEIS-001`                                 |
-| 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | planejado | `CONTRACTS-005`, `SEC-001`                         |
+| 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 18    | `CONTRACTS-006` — Contratos de compras e notas         | planejado | RF09, UC09, RNF09                                  |
 | 19    | `COMPRAS-001` — Gerenciar processos de compra          | planejado | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
 | 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | planejado | `COMPRAS-001`, `STORAGE-001`                       |
@@ -738,7 +738,7 @@ Especificação de execução:
 
 ## FORNECEDORES-001 — Gerenciar fornecedores
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -747,9 +747,9 @@ somente ao Administrador, preservando aquisições e manutenções históricas.
 
 ### Critérios de aceite
 
-- [ ] CNPJ e demais dados seguem o contrato aprovado;
-- [ ] fornecedor inativo não entra em novo vínculo;
-- [ ] inativação preserva notas e manutenções existentes.
+- [x] CNPJ e demais dados seguem o contrato aprovado;
+- [x] fornecedor inativo não entra em novo vínculo;
+- [x] inativação preserva notas e manutenções existentes.
 
 Especificação de execução:
 [FORNECEDORES-001](./tasks/FORNECEDORES-001-gerenciar-fornecedores.md).

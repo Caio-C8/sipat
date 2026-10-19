@@ -38,7 +38,8 @@ No estado atual:
   `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`,
   as cinco rotas administrativas de `/api/responsaveis`, as quatro rotas
   administrativas de `/api/naturezas`, as quatro rotas administrativas de
-  `/api/especies`, as cinco rotas administrativas de `/api/setores` e
+  `/api/especies`, as cinco rotas administrativas de `/api/setores`, as cinco
+  rotas administrativas de `/api/fornecedores` e
   `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
   `POST /api/patrimonios` e
   `POST /api/patrimonios/:patrimonioId/substituicoes-numero`;
@@ -62,6 +63,9 @@ No estado atual:
 - `SetoresModule` restringe cadastro, consulta, listagem, alteração e mudança de
   situação ao `ADMINISTRADOR`, exige responsável ativo em novos vínculos,
   deriva auditoria da sessão e inativa sem excluir nem romper vínculos;
+- `FornecedoresModule` restringe cadastro, consulta, listagem, alteração e
+  mudança de situação ao `ADMINISTRADOR`, normaliza CNPJ e contato, protege a
+  unicidade sob concorrência e inativa sem excluir nem romper vínculos;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
@@ -101,9 +105,9 @@ No estado atual:
   módulo consumidor o importa;
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
-- `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule` e
-  `PatrimoniosModule` importam `DatabaseModule`; `AppModule` não acessa o client
-  diretamente;
+- `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
+  `FornecedoresModule` e `PatrimoniosModule` importam `DatabaseModule`;
+  `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
 - testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de

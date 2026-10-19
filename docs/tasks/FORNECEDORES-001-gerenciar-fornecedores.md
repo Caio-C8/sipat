@@ -1,6 +1,6 @@
 # `FORNECEDORES-001` — Gerenciar fornecedores
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -30,10 +30,10 @@ fornecedores usados em aquisições e manutenções.
 
 ## Critérios de aceite
 
-- [ ] CNPJ inválido ou duplicado é rejeitado de modo previsível;
-- [ ] fornecedor inativo permanece consultável e não entra em novos vínculos;
-- [ ] inativação não rompe notas ou manutenções existentes;
-- [ ] acesso, paginação, responses e concorrência são testados.
+- [x] CNPJ inválido ou duplicado é rejeitado de modo previsível;
+- [x] fornecedor inativo permanece consultável e não entra em novos vínculos;
+- [x] inativação não rompe notas ou manutenções existentes;
+- [x] acesso, paginação, responses e concorrência são testados.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -44,9 +44,29 @@ fornecedores usados em aquisições e manutenções.
 
 ## Verificações esperadas
 
-- lint, typecheck, testes e build dos packages afetados;
-- E2E com Guards reais e teste PostgreSQL de unicidade;
-- `git diff --check` e formatação.
+- [x] lint, typecheck, testes e build dos packages afetados;
+- [x] E2E com Guards reais e teste PostgreSQL de unicidade;
+- [x] `git diff --check` e formatação.
+
+As verificações passaram em 19 de outubro de 2026. A suíte completa da API
+passou com 280 testes; 28 integrações opt-in permaneceram ignoradas nessa
+execução geral por dependerem de variáveis de banco próprias. Separadamente, um
+PostgreSQL 17 local isolado recebeu as nove migrations e executou os dois testes
+de integração de fornecedores, confirmando a unicidade concorrente do CNPJ e a
+preservação de nota fiscal após a inativação. O banco isolado foi removido após
+a validação.
+
+## Resultado entregue
+
+- cinco rotas administrativas de cadastro, consulta, listagem, alteração e
+  situação, com DTOs Zod e responses por allowlist;
+- CNPJ normalizado, validação contratual, conflito estável e unicidade garantida
+  pelo PostgreSQL mesmo sob concorrência;
+- busca paginada e determinística por razão social, nome fantasia,
+  representante, CNPJ ou e-mail;
+- inativação lógica idempotente, consulta de inativos e operação interna para
+  impedir que consumidores futuros criem vínculos com fornecedor inativo;
+- auditoria de criação derivada da identidade autenticada.
 
 ## Pendências ou decisões bloqueantes
 
