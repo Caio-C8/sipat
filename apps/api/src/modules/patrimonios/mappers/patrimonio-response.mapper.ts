@@ -1,14 +1,11 @@
-import type { PatrimonioDetalhe } from "@repo/contracts";
-import type { PatrimonioDetalhePayload } from "../types";
+import type { PatrimonioDetalhe, PatrimonioResumo } from "@repo/contracts";
+import type {
+  PatrimonioDetalhePayload,
+  PatrimonioResumoPayload,
+} from "../types";
 
 export class PatrimonioResponseMapper {
-  static paraDetalhe(patrimonio: PatrimonioDetalhePayload): PatrimonioDetalhe {
-    if (patrimonio.situacaoContabil === null) {
-      throw new Error("Patrimônio sem situação contábil inicial.");
-    }
-
-    const parametro = patrimonio.parametrosDepreciacao[0] ?? null;
-
+  static paraResumo(patrimonio: PatrimonioResumoPayload): PatrimonioResumo {
     return {
       id: patrimonio.id,
       numeroPatrimonio: patrimonio.numeroPatrimonio,
@@ -20,6 +17,18 @@ export class PatrimonioResponseMapper {
       status: patrimonio.status,
       setorAtual: patrimonio.setorAtual,
       especie: patrimonio.especie,
+    };
+  }
+
+  static paraDetalhe(patrimonio: PatrimonioDetalhePayload): PatrimonioDetalhe {
+    if (patrimonio.situacaoContabil === null) {
+      throw new Error("Patrimônio sem situação contábil inicial.");
+    }
+
+    const parametro = patrimonio.parametrosDepreciacao[0] ?? null;
+
+    return {
+      ...this.paraResumo(patrimonio),
       dataTombamento: this.paraDataCivil(patrimonio.dataTombamento),
       tipoIncorporacao: patrimonio.tipoIncorporacao,
       valorIncorporacao: patrimonio.valorIncorporacao.toString(),

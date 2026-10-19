@@ -36,7 +36,8 @@ No estado atual:
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
   `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`
-  e `POST /api/patrimonios`;
+  e `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
+  `POST /api/patrimonios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -45,11 +46,15 @@ No estado atual:
   request contém somente `id`, `nome`, `email` e `perfil`;
 - `UsuariosModule` separa DTOs Zod, controller, service, repository, tipos e
   mappers; somente `ADMINISTRADOR` acessa suas rotas;
-- `PatrimoniosModule` aplica o mesmo corte por camadas ao cadastro; somente
-  `DIRETOR_PATRIMONIO` cria, e a API deriva numeração, status, normalização,
-  situação contábil e auditoria dentro de uma transação;
-- listagem usa paginação finita, busca e filtros com seleção mínima e ordenação
-  determinística; criação usa Argon2id e auditoria derivada da sessão;
+- `PatrimoniosModule` aplica o mesmo corte por camadas; somente
+  `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
+  status, normalização, situação contábil e auditoria dentro de uma transação;
+- a consulta patrimonial usa paginação finita, busca normalizada, filtros,
+  seleção mínima, ordenação determinística e relações atuais de setor,
+  responsável, espécie e natureza;
+- a listagem de usuários usa paginação finita, busca e filtros com seleção
+  mínima e ordenação determinística; sua criação usa Argon2id e auditoria
+  derivada da sessão;
 - inativação é atômica com a revogação de sessões e protege autoinativação e o
   último administrador ativo;
 - login, logout e `/auth/me` usam contratos Zod, cookie `HttpOnly`, sessão opaca

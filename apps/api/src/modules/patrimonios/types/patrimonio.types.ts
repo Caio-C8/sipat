@@ -1,6 +1,6 @@
 import type { Prisma } from "@repo/database";
 
-export const patrimonioDetalheArgs = {
+export const patrimonioResumoArgs = {
   select: {
     id: true,
     numeroPatrimonio: true,
@@ -10,6 +10,26 @@ export const patrimonioDetalheArgs = {
     modelo: true,
     numeroSerie: true,
     status: true,
+    setorAtual: {
+      select: {
+        id: true,
+        nome: true,
+        responsavel: { select: { id: true, nome: true } },
+      },
+    },
+    especie: {
+      select: {
+        id: true,
+        nome: true,
+        natureza: { select: { id: true, nome: true } },
+      },
+    },
+  },
+} satisfies Prisma.PatrimonioDefaultArgs;
+
+export const patrimonioDetalheArgs = {
+  select: {
+    ...patrimonioResumoArgs.select,
     dataTombamento: true,
     tipoIncorporacao: true,
     valorIncorporacao: true,
@@ -58,5 +78,16 @@ export const patrimonioDetalheArgs = {
 export type PatrimonioDetalhePayload = Prisma.PatrimonioGetPayload<
   typeof patrimonioDetalheArgs
 >;
+export type PatrimonioResumoPayload = Prisma.PatrimonioGetPayload<
+  typeof patrimonioResumoArgs
+>;
+
+export type ListarPatrimoniosResultado = {
+  items: PatrimonioResumoPayload[];
+  total: number;
+  pagina: number;
+  ultimaPagina: number;
+  limite: number;
+};
 
 export type TipoNumeroParaGeracao = "OFICIAL" | "SEM_NUMERO_OFICIAL";

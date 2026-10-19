@@ -2,7 +2,9 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   CABECALHO_CSRF,
+  ConsultarPatrimonioResponseSchema,
   CriarPatrimonioResponseSchema,
+  ListarPatrimoniosResponseSchema,
   RespostaErroSchema,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
@@ -20,7 +22,7 @@ const SETOR_ID = "fbcb9251-7ad8-4d64-ad1f-1fd3b5545fc8";
 const ESPECIE_ID = "24df3a43-5c02-47fb-ab92-03757a058f9f";
 const ORIGEM = "http://localhost:3000";
 
-describe("cadastro de patrimônios", () => {
+describe("patrimônios", () => {
   let app: INestApplication;
   const tokenAdministrador = "A".repeat(43);
   const tokenDiretor = "B".repeat(43);
@@ -37,8 +39,55 @@ describe("cadastro de patrimônios", () => {
     setor: { findUnique: jest.fn() },
     especie: { findUnique: jest.fn() },
     processoCompra: { findUnique: jest.fn() },
-    patrimonio: { create: jest.fn() },
+    patrimonio: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+      findUnique: jest.fn(),
+    },
   };
+
+  function patrimonioPersistido(numeroPatrimonio = "1") {
+    return {
+      id: PATRIMONIO_ID,
+      numeroPatrimonio,
+      tipoNumeroPatrimonial: numeroPatrimonio.startsWith("SP-")
+        ? ("SEM_NUMERO_OFICIAL" as const)
+        : ("OFICIAL" as const),
+      descricao: "CAMERA FOTOGRAFICA",
+      marca: "SAO JOSE",
+      modelo: "OPTICO",
+      numeroSerie: "SERIE-1",
+      status: "ATIVO" as const,
+      dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
+      tipoIncorporacao: "AQUISICAO" as const,
+      valorIncorporacao: new Prisma.Decimal("1000"),
+      createdAt: new Date("2026-10-18T12:00:00.000Z"),
+      updatedAt: null,
+      setorAtual: {
+        id: SETOR_ID,
+        nome: "Almoxarifado",
+        responsavel: {
+          id: "eb70f7e5-61ce-4d90-b8e0-908199ecde77",
+          nome: "Responsável",
+        },
+      },
+      especie: {
+        id: ESPECIE_ID,
+        nome: "Câmera",
+        natureza: {
+          id: "f39c12aa-8823-41ed-889b-0a81d2e7ca13",
+          nome: "Equipamentos",
+        },
+      },
+      processoCompra: null,
+      situacaoContabil: {
+        valorBrutoAtual: new Prisma.Decimal("1000"),
+        depreciacaoAcumuladaAtual: new Prisma.Decimal(0),
+      },
+      parametrosDepreciacao: [],
+    };
+  }
 
   beforeAll(async () => {
     database.$transaction.mockImplementation(
@@ -88,9 +137,7 @@ describe("cadastro de patrimônios", () => {
     });
     database.patrimonio.create.mockImplementation(
       ({ data }: { data: Prisma.PatrimonioCreateInput }) => ({
-        id: PATRIMONIO_ID,
-        numeroPatrimonio: data.numeroPatrimonio,
-        tipoNumeroPatrimonial: data.tipoNumeroPatrimonial,
+        ...patrimonioPersistido(data.numeroPatrimonio),
         descricao: data.descricao,
         marca: data.marca ?? null,
         modelo: data.modelo ?? null,
@@ -99,32 +146,11 @@ describe("cadastro de patrimônios", () => {
         dataTombamento: data.dataTombamento,
         tipoIncorporacao: data.tipoIncorporacao,
         valorIncorporacao: new Prisma.Decimal(String(data.valorIncorporacao)),
-        createdAt: new Date("2026-10-18T12:00:00.000Z"),
-        updatedAt: null,
-        setorAtual: {
-          id: SETOR_ID,
-          nome: "Almoxarifado",
-          responsavel: {
-            id: "eb70f7e5-61ce-4d90-b8e0-908199ecde77",
-            nome: "Responsável",
-          },
-        },
-        especie: {
-          id: ESPECIE_ID,
-          nome: "Câmera",
-          natureza: {
-            id: "f39c12aa-8823-41ed-889b-0a81d2e7ca13",
-            nome: "Equipamentos",
-          },
-        },
-        processoCompra: null,
-        situacaoContabil: {
-          valorBrutoAtual: new Prisma.Decimal(String(data.valorIncorporacao)),
-          depreciacaoAcumuladaAtual: new Prisma.Decimal(0),
-        },
-        parametrosDepreciacao: [],
       }),
     );
+    database.patrimonio.findMany.mockResolvedValue([patrimonioPersistido()]);
+    database.patrimonio.count.mockResolvedValue(1);
+    database.patrimonio.findUnique.mockResolvedValue(patrimonioPersistido());
 
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DATABASE_CLIENT)
@@ -168,6 +194,105 @@ describe("cadastro de patrimônios", () => {
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1");
   }
+
+  function getAutenticado(token: string, caminho = "/api/patrimonios") {
+    return request(app.getHttpServer())
+      .get(caminho)
+      .set("Cookie", `sipat_session=${token}`);
+  }
+
+  it("protege consultas e permite os dois perfis autenticados", async () => {
+    const anonimo = await request(app.getHttpServer()).get("/api/patrimonios");
+    expect(anonimo.status).toBe(401);
+    expect(RespostaErroSchema.safeParse(anonimo.body).success).toBe(true);
+
+    for (const token of [tokenAdministrador, tokenDiretor]) {
+      const response = await getAutenticado(token);
+      expect(response.status).toBe(200);
+      expect(
+        ListarPatrimoniosResponseSchema.safeParse(response.body).success,
+      ).toBe(true);
+    }
+  });
+
+  it("aplica paginação, busca normalizada, filtros e seleção mínima", async () => {
+    const response = await getAutenticado(
+      tokenDiretor,
+      `/api/patrimonios?pagina=2&limite=10&busca=c%C3%A2mera&status=ATIVO&setorId=${SETOR_ID}&especieId=${ESPECIE_ID}&naturezaId=f39c12aa-8823-41ed-889b-0a81d2e7ca13&tipoNumeroPatrimonial=OFICIAL`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.meta).toEqual({
+      total: 1,
+      pagina: 2,
+      ultimaPagina: 1,
+      limite: 10,
+    });
+    expect(response.body.dados[0]).not.toHaveProperty("createdAt");
+    expect(database.patrimonio.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 10,
+        take: 10,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        where: {
+          textoBusca: { contains: "CAMERA" },
+          status: "ATIVO",
+          setorAtualId: SETOR_ID,
+          especieId: ESPECIE_ID,
+          especie: {
+            naturezaId: "f39c12aa-8823-41ed-889b-0a81d2e7ca13",
+          },
+          tipoNumeroPatrimonial: "OFICIAL",
+        },
+      }),
+    );
+  });
+
+  it("rejeita filtros inválidos no boundary", async () => {
+    const response = await getAutenticado(
+      tokenAdministrador,
+      "/api/patrimonios?limite=51&status=DESCONHECIDO",
+    );
+
+    expect(response.status).toBe(400);
+    expect(RespostaErroSchema.safeParse(response.body).success).toBe(true);
+    expect(database.patrimonio.findMany).not.toHaveBeenCalled();
+  });
+
+  it("retorna lista vazia com metadados coerentes", async () => {
+    database.patrimonio.findMany.mockResolvedValueOnce([]);
+    database.patrimonio.count.mockResolvedValueOnce(0);
+
+    const response = await getAutenticado(tokenAdministrador);
+
+    expect(response.status).toBe(200);
+    expect(response.body.dados).toEqual([]);
+    expect(response.body.meta).toEqual({
+      total: 0,
+      pagina: 1,
+      ultimaPagina: 1,
+      limite: 20,
+    });
+  });
+
+  it("consulta detalhes e traduz ausência para erro público", async () => {
+    const encontrado = await getAutenticado(
+      tokenAdministrador,
+      `/api/patrimonios/${PATRIMONIO_ID}`,
+    );
+    expect(encontrado.status).toBe(200);
+    expect(
+      ConsultarPatrimonioResponseSchema.safeParse(encontrado.body).success,
+    ).toBe(true);
+
+    database.patrimonio.findUnique.mockResolvedValueOnce(null);
+    const ausente = await getAutenticado(
+      tokenDiretor,
+      "/api/patrimonios/11111111-1111-4111-8111-111111111111",
+    );
+    expect(ausente.status).toBe(404);
+    expect(ausente.body.codigo).toBe("PATRIMONIO_NAO_ENCONTRADO");
+  });
 
   it("aplica autenticação, perfil e CSRF reais", async () => {
     const anonimo = await request(app.getHttpServer())

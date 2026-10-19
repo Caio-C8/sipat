@@ -7,11 +7,15 @@ import {
 import type {
   CriarPatrimonioBodyData,
   IdentidadeAutenticada,
+  ListarPatrimoniosQueryData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { PatrimonioPersistenceMapper } from "./mappers";
 import { PatrimoniosRepository } from "./patrimonios.repository";
-import type { PatrimonioDetalhePayload } from "./types";
+import type {
+  ListarPatrimoniosResultado,
+  PatrimonioDetalhePayload,
+} from "./types";
 
 @Injectable()
 export class PatrimoniosService {
@@ -50,6 +54,58 @@ export class PatrimoniosService {
     } catch (erro: unknown) {
       this.traduzirErroPersistencia(erro);
     }
+  }
+
+  async listar(
+    query: ListarPatrimoniosQueryData,
+  ): Promise<ListarPatrimoniosResultado> {
+    const where = this.criarFiltro(query);
+    const skip = (query.pagina - 1) * query.limite;
+    const [items, total] = await Promise.all([
+      this.patrimonios.listar({ where, skip, take: query.limite }),
+      this.patrimonios.contar(where),
+    ]);
+
+    return {
+      items,
+      total,
+      pagina: query.pagina,
+      ultimaPagina: Math.max(1, Math.ceil(total / query.limite)),
+      limite: query.limite,
+    };
+  }
+
+  async consultar(patrimonioId: string): Promise<PatrimonioDetalhePayload> {
+    const patrimonio = await this.patrimonios.buscarPorId(patrimonioId);
+
+    if (patrimonio === null) {
+      throw new NotFoundException({
+        codigo: "PATRIMONIO_NAO_ENCONTRADO",
+        mensagem: "O patrimônio informado não foi encontrado.",
+        erros: [],
+      });
+    }
+
+    return patrimonio;
+  }
+
+  private criarFiltro(
+    query: ListarPatrimoniosQueryData,
+  ): Prisma.PatrimonioWhereInput {
+    return {
+      ...(query.busca === undefined
+        ? {}
+        : { textoBusca: { contains: this.normalizarTexto(query.busca) } }),
+      ...(query.status === undefined ? {} : { status: query.status }),
+      ...(query.setorId === undefined ? {} : { setorAtualId: query.setorId }),
+      ...(query.especieId === undefined ? {} : { especieId: query.especieId }),
+      ...(query.naturezaId === undefined
+        ? {}
+        : { especie: { naturezaId: query.naturezaId } }),
+      ...(query.tipoNumeroPatrimonial === undefined
+        ? {}
+        : { tipoNumeroPatrimonial: query.tipoNumeroPatrimonial }),
+    };
   }
 
   private async validarRelacoes(
