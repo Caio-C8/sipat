@@ -7,6 +7,8 @@ export * from "./natureza";
 export * from "./especie";
 export * from "./setor";
 export * from "./fornecedor";
+export * from "./processo-compra";
+export * from "./nota-fiscal";
 
 export type AppEnvironment = "development" | "staging" | "production" | "test";
 
