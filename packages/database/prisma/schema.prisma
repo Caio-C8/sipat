@@ -189,7 +189,7 @@ model RedefinicaoSenha {
 model Responsavel {
   id        String  @id @default(uuid()) @db.Uuid
   nome      String  @db.VarChar(100)
-  matricula String  @db.VarChar(20)
+  matricula String  @unique @db.VarChar(20)
   ativo     Boolean @default(true)
 
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
