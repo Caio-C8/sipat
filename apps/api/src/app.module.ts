@@ -18,6 +18,7 @@ import { NaturezasModule } from "./modules/naturezas/naturezas.module";
 import { ResponsaveisModule } from "./modules/responsaveis/responsaveis.module";
 import { UsuariosModule } from "./modules/usuarios/usuarios.module";
 import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-documentos.module";
+import { EspeciesModule } from "./modules/especies/especies.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-do
     }),
     ArmazenamentoDocumentosModule,
     AuthModule,
+    EspeciesModule,
     NaturezasModule,
     PatrimoniosModule,
     ResponsaveisModule,
