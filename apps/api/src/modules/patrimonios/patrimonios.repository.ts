@@ -4,10 +4,18 @@ import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import {
   patrimonioDetalheArgs,
   type PatrimonioDetalhePayload,
+  patrimonioResumoArgs,
+  type PatrimonioResumoPayload,
   type TipoNumeroParaGeracao,
 } from "./types";
 
 type ClientePatrimonios = DatabaseClient | Prisma.TransactionClient;
+
+type ListarPatrimoniosParametros = {
+  where: Prisma.PatrimonioWhereInput;
+  skip: number;
+  take: number;
+};
 
 @Injectable()
 export class PatrimoniosRepository {
@@ -82,6 +90,31 @@ export class PatrimoniosRepository {
   criar(data: Prisma.PatrimonioCreateInput): Promise<PatrimonioDetalhePayload> {
     return this.database.patrimonio.create({
       data,
+      ...patrimonioDetalheArgs,
+    });
+  }
+
+  listar({
+    where,
+    skip,
+    take,
+  }: ListarPatrimoniosParametros): Promise<PatrimonioResumoPayload[]> {
+    return this.database.patrimonio.findMany({
+      where,
+      skip,
+      take,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      ...patrimonioResumoArgs,
+    });
+  }
+
+  contar(where: Prisma.PatrimonioWhereInput): Promise<number> {
+    return this.database.patrimonio.count({ where });
+  }
+
+  buscarPorId(patrimonioId: string): Promise<PatrimonioDetalhePayload | null> {
+    return this.database.patrimonio.findUnique({
+      where: { id: patrimonioId },
       ...patrimonioDetalheArgs,
     });
   }

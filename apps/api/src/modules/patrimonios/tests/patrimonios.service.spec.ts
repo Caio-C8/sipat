@@ -6,6 +6,7 @@ import {
 import type {
   CriarPatrimonioBodyData,
   IdentidadeAutenticada,
+  ListarPatrimoniosQueryData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import type { PatrimoniosRepository } from "../patrimonios.repository";
@@ -54,6 +55,9 @@ describe("PatrimoniosService", () => {
     processoCompraExiste: jest.fn(),
     gerarProximoNumero: jest.fn(),
     criar: jest.fn(),
+    listar: jest.fn(),
+    contar: jest.fn(),
+    buscarPorId: jest.fn(),
   };
   const service = new PatrimoniosService(
     repository as unknown as PatrimoniosRepository,
@@ -70,6 +74,70 @@ describe("PatrimoniosService", () => {
     repository.processoCompraExiste.mockResolvedValue(true);
     repository.gerarProximoNumero.mockResolvedValue("1");
     repository.criar.mockResolvedValue({ id: "patrimonio" });
+    repository.listar.mockResolvedValue([{ id: "patrimonio" }]);
+    repository.contar.mockResolvedValue(21);
+    repository.buscarPorId.mockResolvedValue({ id: "patrimonio" });
+  });
+
+  it("lista com busca normalizada, filtros e paginação consistente", async () => {
+    const query: ListarPatrimoniosQueryData = {
+      pagina: 2,
+      limite: 20,
+      busca: "câmera São José",
+      status: "ATIVO",
+      setorId: "fbcb9251-7ad8-4d64-ad1f-1fd3b5545fc8",
+      especieId: "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab",
+      naturezaId: "24df3a43-5c02-47fb-ab92-03757a058f9f",
+      tipoNumeroPatrimonial: "OFICIAL",
+    };
+
+    await expect(service.listar(query)).resolves.toEqual({
+      items: [{ id: "patrimonio" }],
+      total: 21,
+      pagina: 2,
+      ultimaPagina: 2,
+      limite: 20,
+    });
+    const where = {
+      textoBusca: { contains: "CAMERA SAO JOSE" },
+      status: "ATIVO",
+      setorAtualId: query.setorId,
+      especieId: query.especieId,
+      especie: { naturezaId: query.naturezaId },
+      tipoNumeroPatrimonial: "OFICIAL",
+    };
+    expect(repository.listar).toHaveBeenCalledWith({
+      where,
+      skip: 20,
+      take: 20,
+    });
+    expect(repository.contar).toHaveBeenCalledWith(where);
+  });
+
+  it("mantém metadados coerentes para uma lista vazia", async () => {
+    repository.listar.mockResolvedValueOnce([]);
+    repository.contar.mockResolvedValueOnce(0);
+
+    await expect(service.listar({ pagina: 1, limite: 20 })).resolves.toEqual({
+      items: [],
+      total: 0,
+      pagina: 1,
+      ultimaPagina: 1,
+      limite: 20,
+    });
+  });
+
+  it("consulta um patrimônio ou retorna erro público previsível", async () => {
+    await expect(service.consultar("patrimonio-id")).resolves.toEqual({
+      id: "patrimonio",
+    });
+
+    repository.buscarPorId.mockResolvedValueOnce(null);
+    await expect(service.consultar("ausente")).rejects.toMatchObject({
+      response: expect.objectContaining({
+        codigo: "PATRIMONIO_NAO_ENCONTRADO",
+      }),
+    });
   });
 
   it("normaliza, gera o número e persiste os registros iniciais atomicamente", async () => {

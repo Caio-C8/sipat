@@ -9,12 +9,13 @@ import { PatrimoniosService } from "../src/modules/patrimonios/patrimonios.servi
 const databaseUrl = process.env.PATRIMONIOS_INTEGRATION_DATABASE_URL;
 const describeComPostgres = databaseUrl ? describe : describe.skip;
 
-describeComPostgres("cadastro de patrimônios no PostgreSQL", () => {
+describeComPostgres("patrimônios no PostgreSQL", () => {
   let database: DatabaseClient;
   let service: PatrimoniosService;
   let identidade: IdentidadeAutenticada;
   let setorId: string;
   let especieId: string;
+  let naturezaId: string;
 
   jest.setTimeout(60_000);
 
@@ -78,6 +79,7 @@ describeComPostgres("cadastro de patrimônios no PostgreSQL", () => {
         createdById: diretor.id,
       },
     });
+    naturezaId = natureza.id;
     const especie = await database.especie.create({
       data: {
         nome: "Câmera",
@@ -159,5 +161,106 @@ describeComPostgres("cadastro de patrimônios no PostgreSQL", () => {
     expect(await database.patrimonio.count()).toBe(1);
     expect(await database.situacaoContabilPatrimonio.count()).toBe(1);
     expect(await database.parametroDepreciacao.count()).toBe(1);
+  });
+
+  it("lista volume representativo com filtros combinados e paginação estável", async () => {
+    const totalPatrimonios = 240;
+    const createdAt = new Date("2026-10-18T12:00:00.000Z");
+    await database.patrimonio.createMany({
+      data: Array.from({ length: totalPatrimonios }, (_, indice) => ({
+        numeroPatrimonio:
+          indice % 2 === 0 ? String(indice + 1_000) : `SP-${indice + 1_000}`,
+        tipoNumeroPatrimonial:
+          indice % 2 === 0 ? "OFICIAL" : "SEM_NUMERO_OFICIAL",
+        descricao: `CAMERA LOTE ${indice}`,
+        marca: "MARCA",
+        modelo: `MODELO ${indice % 3}`,
+        numeroSerie: `SERIE-VOLUME-${indice}`,
+        textoBusca: `CAMERA LOTE ${indice} MARCA MODELO ${indice % 3} SERIE-VOLUME-${indice}`,
+        tipoIncorporacao: "AQUISICAO",
+        dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
+        valorIncorporacao: "1000",
+        status: indice % 4 === 0 ? "ATIVO" : "EM_MANUTENCAO",
+        especieId,
+        setorAtualId: setorId,
+        createdById: identidade.id,
+        createdAt,
+      })),
+    });
+
+    const primeiraPagina = await service.listar({
+      pagina: 1,
+      limite: 20,
+      status: "ATIVO",
+      setorId,
+      especieId,
+      naturezaId,
+      tipoNumeroPatrimonial: "OFICIAL",
+    });
+    const segundaPagina = await service.listar({
+      pagina: 2,
+      limite: 20,
+      status: "ATIVO",
+      setorId,
+      especieId,
+      naturezaId,
+      tipoNumeroPatrimonial: "OFICIAL",
+    });
+
+    expect(primeiraPagina.total).toBe(60);
+    expect(primeiraPagina.ultimaPagina).toBe(3);
+    expect(primeiraPagina.items).toHaveLength(20);
+    expect(segundaPagina.items).toHaveLength(20);
+    expect(
+      new Set(
+        [...primeiraPagina.items, ...segundaPagina.items].map(({ id }) => id),
+      ).size,
+    ).toBe(40);
+    expect(primeiraPagina.items.map(({ id }) => id)).toEqual(
+      [...primeiraPagina.items.map(({ id }) => id)].sort((primeiro, segundo) =>
+        segundo.localeCompare(primeiro),
+      ),
+    );
+
+    const busca = await service.listar({
+      pagina: 1,
+      limite: 20,
+      busca: "câmera lote 12 marca",
+    });
+    expect(busca.total).toBe(1);
+    expect(busca.items[0]?.descricao).toBe("CAMERA LOTE 12");
+  });
+
+  it("executa e observa o plano da query crítica sobre a massa representativa", async () => {
+    await database.patrimonio.createMany({
+      data: Array.from({ length: 240 }, (_, indice) => ({
+        numeroPatrimonio: String(indice + 2_000),
+        tipoNumeroPatrimonial: "OFICIAL",
+        descricao: `ITEM DE PLANO ${indice}`,
+        textoBusca: `ITEM DE PLANO ${indice}`,
+        tipoIncorporacao: "AQUISICAO",
+        dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
+        valorIncorporacao: "1000",
+        status: indice % 2 === 0 ? "ATIVO" : "EM_MANUTENCAO",
+        especieId,
+        setorAtualId: setorId,
+        createdById: identidade.id,
+      })),
+    });
+    await database.$executeRawUnsafe('ANALYZE "patrimonios"');
+
+    const plano = await database.$queryRaw<readonly unknown[]>`
+      EXPLAIN (ANALYZE, FORMAT JSON)
+      SELECT "id"
+      FROM "patrimonios"
+      WHERE "status" = 'ATIVO'::"StatusPatrimonio"
+        AND "setor_atual_id" = ${setorId}::uuid
+        AND "tipo_numero_patrimonial" = 'OFICIAL'::"TipoNumeroPatrimonial"
+      ORDER BY "created_at" DESC, "id" DESC
+      LIMIT 20
+    `;
+
+    expect(plano).toHaveLength(1);
+    expect(plano[0]).toBeDefined();
   });
 });
