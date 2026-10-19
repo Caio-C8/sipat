@@ -16,12 +16,15 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Estado atual
 
-O `SEC-001`, o backend do `USERS-001` e o backend do `AUTH-001` estão
-implementados. A API possui
+O `SEC-001`, o backend do `USERS-001`, o backend do `AUTH-001` e o cadastro de
+`PATRIMONIOS-001` estão implementados. A API possui
 barreira global de autenticação, autorização por perfil, proteção CSRF,
 persistência de sessões revogáveis, contratos e as cinco operações
 administrativas de usuários, além de login, logout, `/auth/me`, provisionamento
 inicial controlado, alteração autenticada e recuperação de senha por e-mail.
+O Diretor de Patrimônio também pode cadastrar bens com identificador oficial ou
+`SP-` gerado por sequences independentes, registros iniciais atômicos e
+auditoria da sessão.
 Fora do ambiente de desenvolvimento, a recuperação permanece desabilitada até
 a configuração do consumidor HTTPS e SMTP institucional. As interfaces Web de
 usuários e autenticação não estão implementadas.
@@ -63,7 +66,7 @@ estiver implementada e verificada.
 | Ordem | Objetivo                                      | Status    | Dependências                         |
 | ----- | --------------------------------------------- | --------- | ------------------------------------ |
 | 7     | `CONTRACTS-004` — Contratos de patrimônios    | concluído | RF10, RF11, RF12, UC10, UC11 e UC12  |
-| 8     | `PATRIMONIOS-001` — Cadastrar patrimônios     | planejado | `CONTRACTS-004`, `SEC-001`           |
+| 8     | `PATRIMONIOS-001` — Cadastrar patrimônios     | concluído | `CONTRACTS-004`, `SEC-001`           |
 | 9     | `PATRIMONIOS-002` — Consultar patrimônios     | planejado | `PATRIMONIOS-001`                    |
 | 10    | `PATRIMONIOS-003` — Substituir número oficial | planejado | `PATRIMONIOS-001`, `PATRIMONIOS-002` |
 
@@ -449,7 +452,7 @@ Especificação de execução:
 
 ## PATRIMONIOS-001 — Cadastrar patrimônios
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -481,16 +484,16 @@ auditoria derivada da sessão.
 
 ### Critérios de aceite
 
-- [ ] requisição anônima recebe `401`, administrador recebe `403` e diretor
+- [x] requisição anônima recebe `401`, administrador recebe `403` e diretor
       autenticado pode cadastrar;
-- [ ] o body não controla número, status, texto de busca ou auditoria;
-- [ ] cada tipo consome somente sua própria sequence e concorrência não produz
+- [x] o body não controla número, status, texto de busca ou auditoria;
+- [x] cada tipo consome somente sua própria sequence e concorrência não produz
       duplicidade;
-- [ ] falha não deixa patrimônio ou registros iniciais parciais, embora possa
+- [x] falha não deixa patrimônio ou registros iniciais parciais, embora possa
       deixar lacuna na sequence;
-- [ ] status, auditoria, normalização e relações são definidos e validados no
+- [x] status, auditoria, normalização e relações são definidos e validados no
       servidor;
-- [ ] contratos, banco, API e testes PostgreSQL passam nas verificações.
+- [x] contratos, banco, API e testes PostgreSQL passam nas verificações.
 
 Especificação de execução:
 [PATRIMONIOS-001](./tasks/PATRIMONIOS-001-cadastrar-patrimonios.md).

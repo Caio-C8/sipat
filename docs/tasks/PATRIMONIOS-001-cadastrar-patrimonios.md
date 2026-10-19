@@ -1,6 +1,6 @@
 # `PATRIMONIOS-001` — Cadastrar patrimônios
 
-**Status:** aprovada
+**Status:** concluída
 
 ## Objetivo
 
@@ -86,16 +86,16 @@ persistência atômica, vínculos válidos, normalização e auditoria da sessã
 
 ## Critérios de aceite
 
-- [ ] anônimo recebe `401`, administrador recebe `403` e diretor pode criar;
-- [ ] propriedades extras e campos controlados pelo servidor são rejeitados;
-- [ ] cada tipo usa somente sua sequence e gera o formato canônico correto;
-- [ ] criações concorrentes não recebem o mesmo identificador;
-- [ ] setor inativo ou relação inexistente não cria registro parcial;
-- [ ] número de série duplicado produz conflito público estável;
-- [ ] normalização, texto de busca, situação contábil e auditoria são
+- [x] anônimo recebe `401`, administrador recebe `403` e diretor pode criar;
+- [x] propriedades extras e campos controlados pelo servidor são rejeitados;
+- [x] cada tipo usa somente sua sequence e gera o formato canônico correto;
+- [x] criações concorrentes não recebem o mesmo identificador;
+- [x] setor inativo ou relação inexistente não cria registro parcial;
+- [x] número de série duplicado produz conflito público estável;
+- [x] normalização, texto de busca, situação contábil e auditoria são
       persistidos corretamente;
-- [ ] responses não expõem model Prisma nem campos fora da allowlist;
-- [ ] nenhuma interface Web/mobile é alterada.
+- [x] responses não expõem model Prisma nem campos fora da allowlist;
+- [x] nenhuma interface Web/mobile é alterada.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -108,17 +108,23 @@ persistência atômica, vínculos válidos, normalização e auditoria da sessã
 
 ## Verificações esperadas
 
-- `corepack pnpm --filter @repo/contracts test`;
-- `corepack pnpm --filter @repo/database db:generate`;
-- `corepack pnpm --filter @repo/database lint`;
-- `corepack pnpm --filter @repo/database typecheck`;
-- `corepack pnpm --filter @repo/api lint`;
-- `corepack pnpm --filter @repo/api typecheck`;
-- `corepack pnpm --filter @repo/api test`;
-- `corepack pnpm --filter @repo/api build`;
-- migration, criação e concorrência em PostgreSQL descartável;
-- `corepack pnpm format:check`;
-- `git diff --check`.
+- [x] `corepack pnpm --filter @repo/contracts test`;
+- [x] `corepack pnpm --filter @repo/database db:generate`;
+- [x] `corepack pnpm --filter @repo/database lint`;
+- [x] `corepack pnpm --filter @repo/database typecheck`;
+- [x] `corepack pnpm --filter @repo/api lint`;
+- [x] `corepack pnpm --filter @repo/api typecheck`;
+- [x] `corepack pnpm --filter @repo/api test`;
+- [x] `corepack pnpm --filter @repo/api build`;
+- [x] migration, criação e concorrência em PostgreSQL descartável;
+- [x] `corepack pnpm format:check`;
+- [x] `git diff --check`.
+
+As verificações acima passaram em 18 de outubro de 2026. A migration foi
+aplicada sobre o histórico completo em `sipat_patrimonios001_test`; o teste
+PostgreSQL confirmou sequences independentes sob concorrência e rollback dos
+registros iniciais diante de série duplicada. Web e mobile permaneceram
+inalterados.
 
 ## Pendências ou decisões bloqueantes
 

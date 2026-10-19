@@ -35,7 +35,8 @@ No estado atual:
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
-  `POST /api/auth/redefinir-senha` e as cinco rotas protegidas de `/api/usuarios`;
+  `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`
+  e `POST /api/patrimonios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -44,6 +45,9 @@ No estado atual:
   request contém somente `id`, `nome`, `email` e `perfil`;
 - `UsuariosModule` separa DTOs Zod, controller, service, repository, tipos e
   mappers; somente `ADMINISTRADOR` acessa suas rotas;
+- `PatrimoniosModule` aplica o mesmo corte por camadas ao cadastro; somente
+  `DIRETOR_PATRIMONIO` cria, e a API deriva numeração, status, normalização,
+  situação contábil e auditoria dentro de uma transação;
 - listagem usa paginação finita, busca e filtros com seleção mínima e ordenação
   determinística; criação usa Argon2id e auditoria derivada da sessão;
 - inativação é atômica com a revogação de sessões e protege autoinativação e o
@@ -71,13 +75,13 @@ No estado atual:
   header `X-SIPAT-CSRF` e expõe somente `X-Request-Id` ao navegador;
 - `DatabaseModule` cria, exporta e encerra um único Prisma Client quando um
   módulo consumidor o importa;
-- `AuthModule` e `UsuariosModule` importam `DatabaseModule`; `AppModule` não
-  acessa o client diretamente;
+- `AuthModule`, `UsuariosModule` e `PatrimoniosModule` importam
+  `DatabaseModule`; `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
 - testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de
-  usuários e autenticação, incluindo `401`, `403`, `429`, CSRF, conflitos,
-  regras administrativas e corridas reais no PostgreSQL.
+  usuários, autenticação e cadastro patrimonial, incluindo `401`, `403`, `429`,
+  CSRF, conflitos, regras administrativas e corridas reais no PostgreSQL.
 
 Os exemplos desta documentação representam o padrão desejado, não código já
 implementado no SIPAT.
