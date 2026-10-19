@@ -14,6 +14,7 @@ import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
 import { requisicaoIdMiddleware } from "./common/middleware/requisicao-id.middleware";
 import { AuthModule } from "./modules/auth/auth.module";
 import { PatrimoniosModule } from "./modules/patrimonios/patrimonios.module";
+import { ResponsaveisModule } from "./modules/responsaveis/responsaveis.module";
 import { UsuariosModule } from "./modules/usuarios/usuarios.module";
 import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-documentos.module";
 
@@ -27,6 +28,7 @@ import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-do
     ArmazenamentoDocumentosModule,
     AuthModule,
     PatrimoniosModule,
+    ResponsaveisModule,
     UsuariosModule,
   ],
   controllers: [AppController],
