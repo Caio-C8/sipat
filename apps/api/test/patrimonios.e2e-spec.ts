@@ -6,6 +6,7 @@ import {
   CriarPatrimonioResponseSchema,
   ListarPatrimoniosResponseSchema,
   RespostaErroSchema,
+  SubstituirNumeroPatrimonialResponseSchema,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import cookieParser from "cookie-parser";
@@ -28,6 +29,12 @@ describe("patrimônios", () => {
   const tokenDiretor = "B".repeat(43);
   let proximoOficial = 1n;
   let proximoSemNumero = 1n;
+  let numeroAtual = "1";
+  const historicosSubstituicao: Array<{
+    numeroAnterior: string;
+    numeroNovo: string;
+    createdById: string;
+  }> = [];
 
   const database = {
     $connect: jest.fn(),
@@ -44,7 +51,9 @@ describe("patrimônios", () => {
       findMany: jest.fn(),
       count: jest.fn(),
       findUnique: jest.fn(),
+      updateMany: jest.fn(),
     },
+    substituicaoNumeroPatrimonial: { create: jest.fn() },
   };
 
   function patrimonioPersistido(numeroPatrimonio = "1") {
@@ -150,7 +159,47 @@ describe("patrimônios", () => {
     );
     database.patrimonio.findMany.mockResolvedValue([patrimonioPersistido()]);
     database.patrimonio.count.mockResolvedValue(1);
-    database.patrimonio.findUnique.mockResolvedValue(patrimonioPersistido());
+    database.patrimonio.findUnique.mockImplementation(() =>
+      Promise.resolve(patrimonioPersistido(numeroAtual)),
+    );
+    database.patrimonio.updateMany.mockImplementation(
+      ({
+        where,
+        data,
+      }: {
+        where: { numeroPatrimonio: string; tipoNumeroPatrimonial: string };
+        data: { numeroPatrimonio: string };
+      }) => {
+        if (
+          where.numeroPatrimonio !== numeroAtual ||
+          where.tipoNumeroPatrimonial !== "OFICIAL" ||
+          numeroAtual.startsWith("SP-")
+        ) {
+          return { count: 0 };
+        }
+
+        numeroAtual = data.numeroPatrimonio;
+        return { count: 1 };
+      },
+    );
+    database.substituicaoNumeroPatrimonial.create.mockImplementation(
+      ({
+        data,
+      }: {
+        data: {
+          numeroAnterior: string;
+          numeroNovo: string;
+          createdBy: { connect: { id: string } };
+        };
+      }) => {
+        historicosSubstituicao.push({
+          numeroAnterior: data.numeroAnterior,
+          numeroNovo: data.numeroNovo,
+          createdById: data.createdBy.connect.id,
+        });
+        return { id: "historico" };
+      },
+    );
 
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DATABASE_CLIENT)
@@ -168,6 +217,8 @@ describe("patrimônios", () => {
     jest.clearAllMocks();
     proximoOficial = 1n;
     proximoSemNumero = 1n;
+    numeroAtual = "1";
+    historicosSubstituicao.length = 0;
   });
 
   afterAll(async () => app.close());
@@ -199,6 +250,14 @@ describe("patrimônios", () => {
     return request(app.getHttpServer())
       .get(caminho)
       .set("Cookie", `sipat_session=${token}`);
+  }
+
+  function postSubstituicao(token: string, caminho = "") {
+    return request(app.getHttpServer())
+      .post(`/api/patrimonios/${PATRIMONIO_ID}/substituicoes-numero${caminho}`)
+      .set("Cookie", `sipat_session=${token}`)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1");
   }
 
   it("protege consultas e permite os dois perfis autenticados", async () => {
@@ -373,5 +432,96 @@ describe("patrimônios", () => {
     expect(response.status).toBe(400);
     expect(RespostaErroSchema.safeParse(response.body).success).toBe(true);
     expect(database.patrimonio.create).not.toHaveBeenCalled();
+  });
+
+  it("protege a substituição com autenticação, perfil e CSRF reais", async () => {
+    const anonimo = await request(app.getHttpServer())
+      .post(`/api/patrimonios/${PATRIMONIO_ID}/substituicoes-numero`)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .send({ numeroPatrimonioAtual: "1" });
+    expect(anonimo.status).toBe(401);
+
+    const administrador = await postSubstituicao(tokenAdministrador).send({
+      numeroPatrimonioAtual: "1",
+    });
+    expect(administrador.status).toBe(403);
+
+    const semCsrf = await request(app.getHttpServer())
+      .post(`/api/patrimonios/${PATRIMONIO_ID}/substituicoes-numero`)
+      .set("Cookie", `sipat_session=${tokenDiretor}`)
+      .set("Origin", ORIGEM)
+      .send({ numeroPatrimonioAtual: "1" });
+    expect(semCsrf.status).toBe(403);
+  });
+
+  it("substitui pelo número gerado, preserva a allowlist e registra a auditoria", async () => {
+    proximoOficial = 2n;
+
+    const response = await postSubstituicao(tokenDiretor, "?numeroNovo=999")
+      .set("X-Numero-Novo", "999")
+      .send({ numeroPatrimonioAtual: "1" });
+
+    expect(response.status).toBe(200);
+    expect(
+      SubstituirNumeroPatrimonialResponseSchema.safeParse(response.body)
+        .success,
+    ).toBe(true);
+    expect(response.body.dados.numeroPatrimonio).toBe("2");
+    expect(response.body.dados.id).toBe(PATRIMONIO_ID);
+    expect(database.patrimonio.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: PATRIMONIO_ID,
+        numeroPatrimonio: "1",
+        tipoNumeroPatrimonial: "OFICIAL",
+      },
+      data: { numeroPatrimonio: "2" },
+    });
+    expect(historicosSubstituicao).toEqual([
+      {
+        numeroAnterior: "1",
+        numeroNovo: "2",
+        createdById: DIRETOR_ID,
+      },
+    ]);
+  });
+
+  it("rejeita patrimônio ausente, tipo inelegível e número divergente", async () => {
+    database.patrimonio.findUnique.mockResolvedValueOnce(null);
+    const ausente = await postSubstituicao(tokenDiretor).send({
+      numeroPatrimonioAtual: "1",
+    });
+    expect(ausente.status).toBe(404);
+    expect(ausente.body.codigo).toBe("PATRIMONIO_NAO_ENCONTRADO");
+
+    numeroAtual = "SP-1";
+    const semNumero = await postSubstituicao(tokenDiretor).send({
+      numeroPatrimonioAtual: "1",
+    });
+    expect(semNumero.status).toBe(409);
+    expect(semNumero.body.codigo).toBe("TIPO_NUMERO_PATRIMONIAL_NAO_ELEGIVEL");
+
+    numeroAtual = "2";
+    const divergente = await postSubstituicao(tokenDiretor).send({
+      numeroPatrimonioAtual: "1",
+    });
+    expect(divergente.status).toBe(409);
+    expect(divergente.body.codigo).toBe("NUMERO_PATRIMONIAL_ATUAL_DIVERGENTE");
+
+    expect(database.$queryRaw).not.toHaveBeenCalled();
+    expect(database.patrimonio.updateMany).not.toHaveBeenCalled();
+    expect(historicosSubstituicao).toEqual([]);
+  });
+
+  it("rejeita número novo e propriedades extras no body", async () => {
+    const response = await postSubstituicao(tokenDiretor).send({
+      numeroPatrimonioAtual: "1",
+      numeroNovo: "999",
+    });
+
+    expect(response.status).toBe(400);
+    expect(RespostaErroSchema.safeParse(response.body).success).toBe(true);
+    expect(database.$queryRaw).not.toHaveBeenCalled();
+    expect(database.patrimonio.updateMany).not.toHaveBeenCalled();
   });
 });

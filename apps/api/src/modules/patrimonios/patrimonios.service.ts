@@ -8,6 +8,7 @@ import type {
   CriarPatrimonioBodyData,
   IdentidadeAutenticada,
   ListarPatrimoniosQueryData,
+  SubstituirNumeroPatrimonialBodyData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { PatrimonioPersistenceMapper } from "./mappers";
@@ -87,6 +88,73 @@ export class PatrimoniosService {
     }
 
     return patrimonio;
+  }
+
+  async substituirNumero(
+    patrimonioId: string,
+    dados: SubstituirNumeroPatrimonialBodyData,
+    identidade: IdentidadeAutenticada,
+  ): Promise<PatrimonioDetalhePayload> {
+    try {
+      return await this.patrimonios.executarTransacao(async (transacao) => {
+        const patrimonio = await transacao.buscarParaSubstituicao(patrimonioId);
+
+        if (patrimonio === null) {
+          throw this.patrimonioNaoEncontrado();
+        }
+
+        if (patrimonio.tipoNumeroPatrimonial !== "OFICIAL") {
+          throw new ConflictException({
+            codigo: "TIPO_NUMERO_PATRIMONIAL_NAO_ELEGIVEL",
+            mensagem:
+              "Somente patrimônios com número oficial podem ter o número substituído.",
+            erros: [],
+          });
+        }
+
+        if (patrimonio.numeroPatrimonio !== dados.numeroPatrimonioAtual) {
+          throw this.numeroPatrimonialAtualDivergente();
+        }
+
+        const numeroNovo = await transacao.gerarProximoNumero("OFICIAL");
+        const atualizado = await transacao.atualizarNumeroCondicional(
+          patrimonio.id,
+          dados.numeroPatrimonioAtual,
+          numeroNovo,
+        );
+
+        if (!atualizado) {
+          throw this.numeroPatrimonialAtualDivergente();
+        }
+
+        await transacao.criarHistoricoSubstituicao(
+          patrimonio.id,
+          dados.numeroPatrimonioAtual,
+          numeroNovo,
+          identidade.id,
+        );
+
+        const detalhe = await transacao.buscarPorId(patrimonio.id);
+        if (detalhe === null) {
+          throw new Error(
+            "O patrimônio substituído não pôde ser relido na transação.",
+          );
+        }
+
+        return detalhe;
+      });
+    } catch (erro: unknown) {
+      if (this.ehErroPrisma(erro, "P2002")) {
+        throw new ConflictException({
+          codigo: "IDENTIFICADOR_PATRIMONIAL_CONFLITANTE",
+          mensagem:
+            "Não foi possível gerar um identificador patrimonial exclusivo.",
+          erros: [],
+        });
+      }
+
+      throw erro;
+    }
   }
 
   private criarFiltro(
@@ -269,6 +337,30 @@ export class PatrimoniosService {
       codigo,
       mensagem,
       erros: [{ campo, codigo: "RELACAO_NAO_ENCONTRADA", mensagem }],
+    });
+  }
+
+  private patrimonioNaoEncontrado(): NotFoundException {
+    return new NotFoundException({
+      codigo: "PATRIMONIO_NAO_ENCONTRADO",
+      mensagem: "O patrimônio informado não foi encontrado.",
+      erros: [],
+    });
+  }
+
+  private numeroPatrimonialAtualDivergente(): ConflictException {
+    return new ConflictException({
+      codigo: "NUMERO_PATRIMONIAL_ATUAL_DIVERGENTE",
+      mensagem:
+        "O número patrimonial atual não corresponde mais ao patrimônio informado.",
+      erros: [
+        {
+          campo: "numeroPatrimonioAtual",
+          codigo: "PRECONDICAO_DIVERGENTE",
+          mensagem:
+            "Atualize os dados do patrimônio antes de tentar novamente.",
+        },
+      ],
     });
   }
 

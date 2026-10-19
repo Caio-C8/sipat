@@ -163,6 +163,121 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     expect(await database.parametroDepreciacao.count()).toBe(1);
   });
 
+  it("substitui o número preservando o patrimônio e registra a auditoria", async () => {
+    const criado = await service.criar(dados(1), identidade);
+    const antes = await database.patrimonio.findUniqueOrThrow({
+      where: { id: criado.id },
+      include: {
+        situacaoContabil: true,
+        parametrosDepreciacao: true,
+      },
+    });
+
+    const substituido = await service.substituirNumero(
+      criado.id,
+      { numeroPatrimonioAtual: criado.numeroPatrimonio },
+      identidade,
+    );
+    const depois = await database.patrimonio.findUniqueOrThrow({
+      where: { id: criado.id },
+      include: {
+        situacaoContabil: true,
+        parametrosDepreciacao: true,
+      },
+    });
+    const historicos = await database.substituicaoNumeroPatrimonial.findMany({
+      where: { patrimonioId: criado.id },
+    });
+
+    expect(substituido.numeroPatrimonio).toBe("2");
+    expect(depois).toEqual({ ...antes, numeroPatrimonio: "2" });
+    expect(historicos).toHaveLength(1);
+    expect(historicos[0]).toMatchObject({
+      patrimonioId: criado.id,
+      numeroAnterior: "1",
+      numeroNovo: "2",
+      createdById: identidade.id,
+    });
+    expect(historicos[0]?.createdAt).toBeInstanceOf(Date);
+  });
+
+  it("rejeita SP sem consumir a sequence oficial", async () => {
+    const semNumero = await service.criar(dados(1, true), identidade);
+
+    await expect(
+      service.substituirNumero(
+        semNumero.id,
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        codigo: "TIPO_NUMERO_PATRIMONIAL_NAO_ELEGIVEL",
+      }),
+    });
+
+    const oficial = await service.criar(dados(2), identidade);
+    expect(oficial.numeroPatrimonio).toBe("1");
+    expect(await database.substituicaoNumeroPatrimonial.count()).toBe(0);
+  });
+
+  it("permite exatamente uma substituição sob concorrência", async () => {
+    const criado = await service.criar(dados(1), identidade);
+
+    const resultados = await Promise.allSettled([
+      service.substituirNumero(
+        criado.id,
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+      service.substituirNumero(
+        criado.id,
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ]);
+
+    expect(
+      resultados.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    const rejeitado = resultados.find(({ status }) => status === "rejected");
+    expect(rejeitado).toMatchObject({
+      status: "rejected",
+      reason: {
+        response: expect.objectContaining({
+          codigo: "NUMERO_PATRIMONIAL_ATUAL_DIVERGENTE",
+        }),
+      },
+    });
+    expect(
+      await database.substituicaoNumeroPatrimonial.count({
+        where: { patrimonioId: criado.id },
+      }),
+    ).toBe(1);
+  });
+
+  it("reverte a troca quando o histórico falha e mantém a lacuna da sequence", async () => {
+    const criado = await service.criar(dados(1), identidade);
+
+    await expect(
+      service.substituirNumero(
+        criado.id,
+        { numeroPatrimonioAtual: "1" },
+        { ...identidade, id: "11111111-1111-4111-8111-111111111111" },
+      ),
+    ).rejects.toBeDefined();
+
+    const preservado = await database.patrimonio.findUniqueOrThrow({
+      where: { id: criado.id },
+      select: { numeroPatrimonio: true },
+    });
+    expect(preservado.numeroPatrimonio).toBe("1");
+    expect(await database.substituicaoNumeroPatrimonial.count()).toBe(0);
+
+    const seguinte = await service.criar(dados(2), identidade);
+    expect(seguinte.numeroPatrimonio).toBe("3");
+  });
+
   it("lista volume representativo com filtros combinados e paginação estável", async () => {
     const totalPatrimonios = 240;
     const createdAt = new Date("2026-10-18T12:00:00.000Z");

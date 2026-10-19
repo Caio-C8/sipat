@@ -107,26 +107,27 @@ model Usuario {
   updatedAt     DateTime? @map("updated_at") @db.Timestamp(6)
   createdById   String?   @map("created_by_id") @db.Uuid
 
-  createdBy              Usuario?                  @relation("UsuarioCriadoPor", fields: [createdById], references: [id])
-  usuariosCriados        Usuario[]                 @relation("UsuarioCriadoPor")
-  responsaveisCriados    Responsavel[]
-  naturezasCriadas       Natureza[]
-  especiesCriadas        Especie[]
-  processosCompraCriados ProcessoCompra[]
-  setoresCriados         Setor[]
-  manutencoesCriadas     Manutencao[]
-  transferenciasCriadas  TransferenciaPatrimonio[]
-  fornecedoresCriados    Fornecedor[]
-  comissoesCriadas       Comissao[]
-  emprestimosCriados     EmprestimoPatrimonio[]
-  inventariosCriados     Inventario[]
-  baixasCriadas          BaixaPatrimonio[]
-  patrimoniosCriados     Patrimonio[]
-  depreciacoesCriadas    DepreciacaoPatrimonio[]
-  reavaliacoesCriadas    ReavaliacaoPatrimonio[]
-  notasFiscaisCriadas    NotaFiscal[]
-  sessoes                SessaoUsuario[]
-  redefinicaoSenha       RedefinicaoSenha?
+  createdBy                             Usuario?                        @relation("UsuarioCriadoPor", fields: [createdById], references: [id])
+  usuariosCriados                       Usuario[]                       @relation("UsuarioCriadoPor")
+  responsaveisCriados                   Responsavel[]
+  naturezasCriadas                      Natureza[]
+  especiesCriadas                       Especie[]
+  processosCompraCriados                ProcessoCompra[]
+  setoresCriados                        Setor[]
+  manutencoesCriadas                    Manutencao[]
+  transferenciasCriadas                 TransferenciaPatrimonio[]
+  fornecedoresCriados                   Fornecedor[]
+  comissoesCriadas                      Comissao[]
+  emprestimosCriados                    EmprestimoPatrimonio[]
+  inventariosCriados                    Inventario[]
+  baixasCriadas                         BaixaPatrimonio[]
+  patrimoniosCriados                    Patrimonio[]
+  substituicoesNumeroPatrimonialCriadas SubstituicaoNumeroPatrimonial[]
+  depreciacoesCriadas                   DepreciacaoPatrimonio[]
+  reavaliacoesCriadas                   ReavaliacaoPatrimonio[]
+  notasFiscaisCriadas                   NotaFiscal[]
+  sessoes                               SessaoUsuario[]
+  redefinicaoSenha                      RedefinicaoSenha?
 
   @@map("usuarios")
 }
@@ -385,10 +386,10 @@ model Patrimonio {
   updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
   createdById String    @map("created_by_id") @db.Uuid
 
-  especie               Especie                     @relation(fields: [especieId], references: [id])
-  setorAtual            Setor                       @relation(fields: [setorAtualId], references: [id])
-  processoCompra        ProcessoCompra?             @relation(fields: [processoCompraId], references: [id])
-  createdBy             Usuario                     @relation(fields: [createdById], references: [id])
+  especie               Especie                         @relation(fields: [especieId], references: [id])
+  setorAtual            Setor                           @relation(fields: [setorAtualId], references: [id])
+  processoCompra        ProcessoCompra?                 @relation(fields: [processoCompraId], references: [id])
+  createdBy             Usuario                         @relation(fields: [createdById], references: [id])
   situacaoContabil      SituacaoContabilPatrimonio?
   parametrosDepreciacao ParametroDepreciacao[]
   depreciacoes          DepreciacaoPatrimonio[]
@@ -398,8 +399,24 @@ model Patrimonio {
   itensManutencao       ItemManutencao[]
   itensInventario       ItemInventario[]
   baixas                BaixaPatrimonio[]
+  substituicoesNumero   SubstituicaoNumeroPatrimonial[]
 
   @@map("patrimonios")
+}
+
+model SubstituicaoNumeroPatrimonial {
+  id             String   @id @default(uuid()) @db.Uuid
+  patrimonioId   String   @map("patrimonio_id") @db.Uuid
+  numeroAnterior String   @map("numero_anterior") @db.VarChar(50)
+  numeroNovo     String   @map("numero_novo") @db.VarChar(50)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById    String   @map("created_by_id") @db.Uuid
+
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id])
+  createdBy  Usuario    @relation(fields: [createdById], references: [id])
+
+  @@index([patrimonioId, createdAt], map: "substituicoes_numero_patrimonial_patrimonio_id_created_at_idx")
+  @@map("substituicoes_numero_patrimonial")
 }
 
 model TransferenciaPatrimonio {

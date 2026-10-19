@@ -82,6 +82,18 @@ export type PatrimonioResumoPayload = Prisma.PatrimonioGetPayload<
   typeof patrimonioResumoArgs
 >;
 
+export const patrimonioParaSubstituicaoArgs = {
+  select: {
+    id: true,
+    numeroPatrimonio: true,
+    tipoNumeroPatrimonial: true,
+  },
+} satisfies Prisma.PatrimonioDefaultArgs;
+
+export type PatrimonioParaSubstituicaoPayload = Prisma.PatrimonioGetPayload<
+  typeof patrimonioParaSubstituicaoArgs
+>;
+
 export type ListarPatrimoniosResultado = {
   items: PatrimonioResumoPayload[];
   total: number;

@@ -37,7 +37,8 @@ No estado atual:
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
   `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`
   e `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
-  `POST /api/patrimonios`;
+  `POST /api/patrimonios` e
+  `POST /api/patrimonios/:patrimonioId/substituicoes-numero`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -49,6 +50,9 @@ No estado atual:
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
+- a substituição do número oficial usa o número atual como precondição
+  otimista, gera o novo valor pela sequence oficial e atualiza o mesmo patrimônio
+  com histórico auditável na mesma transação;
 - a consulta patrimonial usa paginação finita, busca normalizada, filtros,
   seleção mínima, ordenação determinística e relações atuais de setor,
   responsável, espécie e natureza;

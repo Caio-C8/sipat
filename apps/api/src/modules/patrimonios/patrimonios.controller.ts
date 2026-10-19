@@ -13,6 +13,7 @@ import type {
   ConsultarPatrimonioResponse,
   CriarPatrimonioResponse,
   ListarPatrimoniosResponse,
+  SubstituirNumeroPatrimonialResponse,
 } from "@repo/contracts";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { RequisicaoAutenticada } from "../auth/auth.types";
@@ -24,6 +25,8 @@ import {
   ListarPatrimoniosQueryDto,
   ListarPatrimoniosResponseDto,
   PatrimonioParamsDto,
+  SubstituirNumeroPatrimonialBodyDto,
+  SubstituirNumeroPatrimonialResponseDto,
 } from "./dtos";
 import { PatrimonioResponseMapper } from "./mappers";
 import { PatrimoniosService } from "./patrimonios.service";
@@ -89,6 +92,29 @@ export class PatrimoniosController {
       status: HttpStatus.CREATED,
       sucesso: true,
       mensagem: "Patrimônio criado com sucesso.",
+      dados: PatrimonioResponseMapper.paraDetalhe(patrimonio),
+    };
+  }
+
+  @Post(":patrimonioId/substituicoes-numero")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @HttpCode(HttpStatus.OK)
+  @ZodSerializerDto(SubstituirNumeroPatrimonialResponseDto)
+  async substituirNumero(
+    @Param() params: PatrimonioParamsDto,
+    @Body() body: SubstituirNumeroPatrimonialBodyDto,
+    @Req() request: RequisicaoAutenticada,
+  ): Promise<SubstituirNumeroPatrimonialResponse> {
+    const patrimonio = await this.patrimoniosService.substituirNumero(
+      params.patrimonioId,
+      body,
+      request.identidadeAutenticada!,
+    );
+
+    return {
+      status: HttpStatus.OK,
+      sucesso: true,
+      mensagem: "Número patrimonial substituído com sucesso.",
       dados: PatrimonioResponseMapper.paraDetalhe(patrimonio),
     };
   }
