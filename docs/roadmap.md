@@ -69,7 +69,7 @@ estiver implementada e verificada.
 | 7     | `CONTRACTS-004` — Contratos de patrimônios    | concluído | RF10, RF11, RF12, UC10, UC11 e UC12  |
 | 8     | `PATRIMONIOS-001` — Cadastrar patrimônios     | concluído | `CONTRACTS-004`, `SEC-001`           |
 | 9     | `PATRIMONIOS-002` — Consultar patrimônios     | concluído | `PATRIMONIOS-001`                    |
-| 10    | `PATRIMONIOS-003` — Substituir número oficial | planejado | `PATRIMONIOS-001`, `PATRIMONIOS-002` |
+| 10    | `PATRIMONIOS-003` — Substituir número oficial | concluído | `PATRIMONIOS-001`, `PATRIMONIOS-002` |
 
 Esta sequência entrega contratos, persistência e backend. Interfaces, hooks e
 formatação visual da Web, operações mobile, impressão ou reimpressão de
@@ -542,7 +542,7 @@ Especificação de execução:
 
 ## PATRIMONIOS-003 — Substituir número patrimonial oficial
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -573,15 +573,15 @@ preservando sua identidade e registrando a substituição para auditoria.
 
 ### Critérios de aceite
 
-- [ ] somente diretor autenticado pode executar a operação;
-- [ ] patrimônio `SP-` é rejeitado sem consumir a sequence oficial;
-- [ ] número atual divergente rejeita repetição ou concorrência sem nova troca;
-- [ ] uma troca bem-sucedida preserva `id`, relações e demais atributos;
-- [ ] número anterior, novo, data e usuário são gravados atomicamente;
-- [ ] o número anterior nunca volta ao conjunto de números disponíveis;
-- [ ] duas confirmações concorrentes para o mesmo estado produzem exatamente
+- [x] somente diretor autenticado pode executar a operação;
+- [x] patrimônio `SP-` é rejeitado sem consumir a sequence oficial;
+- [x] número atual divergente rejeita repetição ou concorrência sem nova troca;
+- [x] uma troca bem-sucedida preserva `id`, relações e demais atributos;
+- [x] número anterior, novo, data e usuário são gravados atomicamente;
+- [x] o número anterior nunca volta ao conjunto de números disponíveis;
+- [x] duas confirmações concorrentes para o mesmo estado produzem exatamente
       uma substituição bem-sucedida;
-- [ ] falha pode consumir número da sequence, mas não deixa atualização ou
+- [x] falha pode consumir número da sequence, mas não deixa atualização ou
       histórico parcial.
 
 Especificação de execução:
