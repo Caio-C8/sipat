@@ -75,6 +75,36 @@ Esta sequência entrega contratos, persistência e backend. Interfaces, hooks e
 formatação visual da Web, operações mobile, impressão ou reimpressão de
 etiquetas permanecem fora do escopo.
 
+## Ordem dos cadastros relacionados ao patrimônio
+
+| Ordem | Objetivo                                               | Status    | Dependências principais                            |
+| ----- | ------------------------------------------------------ | --------- | -------------------------------------------------- |
+| 11    | `STORAGE-001` — Armazenamento local de documentos      | concluído | RNF09                                              |
+| 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | planejado | RF03, RF04, RF06, RF07 e RF08                      |
+| 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | planejado | `CONTRACTS-005`, `SEC-001`                         |
+| 14    | `NATUREZAS-001` — Gerenciar naturezas                  | planejado | `CONTRACTS-005`, `SEC-001`                         |
+| 15    | `ESPECIES-001` — Gerenciar espécies                    | planejado | `NATUREZAS-001`                                    |
+| 16    | `SETORES-001` — Gerenciar setores                      | planejado | `RESPONSAVEIS-001`                                 |
+| 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | planejado | `CONTRACTS-005`, `SEC-001`                         |
+| 18    | `CONTRACTS-006` — Contratos de compras e notas         | planejado | RF09, UC09, RNF09                                  |
+| 19    | `COMPRAS-001` — Gerenciar processos de compra          | planejado | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
+| 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | planejado | `COMPRAS-001`, `STORAGE-001`                       |
+
+A ordem respeita os vínculos obrigatórios existentes: responsáveis precedem
+setores, naturezas precedem espécies e fornecedores precedem notas fiscais.
+`STORAGE-001` estabelece o boundary seguro do filesystem antes de qualquer
+operação multipart. Interfaces Web e mobile permanecem fora de todas essas
+entregas.
+
+Processos e notas são separados em módulos, mas a criação inicial de um
+processo aceita de zero a 20 notas em uma única operação multipart. Cada nota
+aceita no máximo um PDF opcional de 10 MiB. Os fornecedores do processo são
+derivados das notas vinculadas, conforme o schema atual.
+
+A fonte de verdade da persistência, entrega autenticada, nomenclatura,
+compensação e reconciliação de anexos é
+[Armazenamento local de documentos](./file-storage.md).
+
 ### Decisões comuns da numeração patrimonial
 
 - O cadastro recebe somente a escolha entre numeração oficial e ausência de
@@ -586,6 +616,209 @@ preservando sua identidade e registrando a substituição para auditoria.
 
 Especificação de execução:
 [PATRIMONIOS-003](./tasks/PATRIMONIOS-003-substituir-numero-patrimonial.md).
+
+## STORAGE-001 — Preparar armazenamento local de documentos
+
+**Status:** concluído
+
+### Resultado esperado
+
+Persistir documentos no host por bind mount, fora do filesystem do container,
+com chaves lógicas portáveis, validação de caminho, compensação e reconciliação
+de órfãos.
+
+### Escopo
+
+- `./data/uploads` no host em desenvolvimento e `UPLOADS_HOST_PATH` absoluto em
+  staging e produção;
+- destino `/data/uploads` no container e `UPLOADS_ROOT_PATH` na aplicação;
+- adapter reutilizável de filesystem sem rota estática pública;
+- staging, limpeza compensatória e reconciliação após falhas ou interrupções.
+
+### Critérios de aceite
+
+- [x] recriação do container preserva os dados no host;
+- [x] paths que escapem da raiz são rejeitados;
+- [x] falhas não deixam órfãos permanentes nem removem arquivos referenciados;
+- [x] configuração e comportamento possuem testes isolados.
+
+Especificação de execução:
+[STORAGE-001](./tasks/STORAGE-001-armazenamento-local-documentos.md).
+
+## CONTRACTS-005 — Contratos dos cadastros patrimoniais relacionados
+
+**Status:** planejado
+
+### Resultado esperado
+
+Definir requests, queries e responses de responsáveis, naturezas, espécies,
+setores e fornecedores antes dos respectivos módulos da API.
+
+### Critérios de aceite
+
+- [ ] operações refletem RF03, RF04, RF06, RF07 e RF08 sem aceitar campos
+      controlados pelo servidor;
+- [ ] listagens possuem limites e responses usam allowlist;
+- [ ] schemas, tipos e exports públicos possuem testes.
+
+Especificação de execução:
+[CONTRACTS-005](./tasks/CONTRACTS-005-cadastros-patrimoniais-relacionados.md).
+
+## RESPONSAVEIS-001 — Gerenciar responsáveis
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar cadastro, consulta, alteração e inativação de responsáveis somente ao
+Administrador, preservando vínculos históricos.
+
+### Critérios de aceite
+
+- [ ] matrícula obrigatória e conflitos são tratados de modo previsível;
+- [ ] inativação não exclui o registro nem rompe históricos;
+- [ ] paginação, auditoria e autorização possuem cobertura.
+
+Especificação de execução:
+[RESPONSAVEIS-001](./tasks/RESPONSAVEIS-001-gerenciar-responsaveis.md).
+
+## NATUREZAS-001 — Gerenciar naturezas de bens
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar cadastro, consulta e alteração de naturezas somente ao Administrador,
+com normalização e unicidade controladas pelo servidor.
+
+### Critérios de aceite
+
+- [ ] nomes equivalentes após normalização não geram duplicatas;
+- [ ] vínculos existentes são preservados;
+- [ ] paginação, auditoria e autorização possuem cobertura.
+
+Especificação de execução:
+[NATUREZAS-001](./tasks/NATUREZAS-001-gerenciar-naturezas.md).
+
+## ESPECIES-001 — Gerenciar espécies de bens
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar cadastro, consulta e alteração de espécies somente ao Administrador,
+garantindo uma única natureza por espécie.
+
+### Critérios de aceite
+
+- [ ] natureza obrigatória e existente é validada;
+- [ ] unicidade normalizada resiste a concorrência;
+- [ ] mudança de vínculo preserva patrimônios existentes.
+
+Especificação de execução:
+[ESPECIES-001](./tasks/ESPECIES-001-gerenciar-especies.md).
+
+## SETORES-001 — Gerenciar setores
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar cadastro, consulta, alteração, ativação e inativação de setores somente
+ao Administrador, sempre com responsável atual válido.
+
+### Critérios de aceite
+
+- [ ] novo vínculo exige responsável ativo;
+- [ ] setor inativo não recebe novos patrimônios;
+- [ ] inativação preserva registros e históricos.
+
+Especificação de execução:
+[SETORES-001](./tasks/SETORES-001-gerenciar-setores.md).
+
+## FORNECEDORES-001 — Gerenciar fornecedores
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar cadastro, consulta, alteração, ativação e inativação de fornecedores
+somente ao Administrador, preservando aquisições e manutenções históricas.
+
+### Critérios de aceite
+
+- [ ] CNPJ e demais dados seguem o contrato aprovado;
+- [ ] fornecedor inativo não entra em novo vínculo;
+- [ ] inativação preserva notas e manutenções existentes.
+
+Especificação de execução:
+[FORNECEDORES-001](./tasks/FORNECEDORES-001-gerenciar-fornecedores.md).
+
+## CONTRACTS-006 — Contratos de processos de compra e notas fiscais
+
+**Status:** planejado
+
+### Resultado esperado
+
+Definir contratos JSON e multipart para processos, até 20 notas opcionais e no
+máximo um PDF de 10 MiB por nota.
+
+### Critérios de aceite
+
+- [ ] o campo `dados` mapeia notas aos arquivos por índice sem ambiguidade;
+- [ ] a criação rejeita a 21ª nota e o 21º arquivo;
+- [ ] arquivos sem nota, índices repetidos e partes excedentes são rejeitados;
+- [ ] responses expõem URL autenticada derivada do `id`, nunca caminho físico.
+
+Especificação de execução:
+[CONTRACTS-006](./tasks/CONTRACTS-006-processos-compra-notas-fiscais.md).
+
+## COMPRAS-001 — Gerenciar processos de compra
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar cadastro multipart, consulta e alteração de processos para
+Administrador e Diretor de Patrimônio, incluindo de zero a 20 notas na criação
+inicial.
+
+### Critérios de aceite
+
+- [ ] processo, notas e referências são consistentes como uma operação lógica;
+- [ ] fornecedor inexistente ou inativo impede novo vínculo;
+- [ ] qualquer falha limpa registros e arquivos parciais;
+- [ ] consultas são paginadas e não expõem caminhos físicos.
+
+Especificação de execução:
+[COMPRAS-001](./tasks/COMPRAS-001-gerenciar-processos-compra.md).
+
+## NOTAS-FISCAIS-001 — Gerenciar notas fiscais e anexos
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar consulta, criação posterior e alteração de notas, além de inclusão,
+substituição, remoção e leitura autenticada do PDF pelo próprio domínio.
+
+### Escopo
+
+- operações de dados em `/api/notas-fiscais`;
+- `GET`, `PUT` e `DELETE /api/notas-fiscais/:notaFiscalId/anexo`;
+- streaming privado, sem `ServeStaticModule` ou `/api/uploads` genérico;
+- remoção do arquivo anterior e reconciliação de órfãos.
+
+### Critérios de aceite
+
+- [ ] somente sessão válida acessa o conteúdo;
+- [ ] PDF inválido ou maior que 10 MiB é rejeitado;
+- [ ] substituição e remoção não deixam órfãos permanentes;
+- [ ] a Web pode futuramente consumir
+      `/api/backend/notas-fiscais/:notaFiscalId/anexo` pelo rewrite existente.
+
+Especificação de execução:
+[NOTAS-FISCAIS-001](./tasks/NOTAS-FISCAIS-001-gerenciar-notas-anexos.md).
 
 ## Decisões necessárias antes dos objetivos seguintes
 

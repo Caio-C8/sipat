@@ -1,5 +1,21 @@
+import { mkdirSync, rmSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
 process.env.NODE_ENV = "test";
 process.env.APP_ENV = "test";
+process.env.UPLOADS_ROOT_PATH ??= path.join(
+  os.tmpdir(),
+  `sipat-api-tests-${process.pid}`,
+  "uploads",
+);
+mkdirSync(process.env.UPLOADS_ROOT_PATH, { recursive: true });
+process.once("exit", () => {
+  rmSync(path.dirname(process.env.UPLOADS_ROOT_PATH!), {
+    recursive: true,
+    force: true,
+  });
+});
 process.env.AUTH_RATE_LIMIT_HMAC_SECRET ??=
   "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY";
 process.env.AUTH_ARGON2_MAX_CONCURRENCY ??= "1";

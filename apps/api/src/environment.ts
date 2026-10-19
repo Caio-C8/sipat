@@ -1,4 +1,5 @@
 import { z } from "zod";
+import path from "node:path";
 
 function possuiEntropiaAparenteAdequada(segredo: string): boolean {
   const bytes = Buffer.from(segredo, "base64url");
@@ -75,6 +76,13 @@ const environmentSchema = z
     APP_VERSION: z.string().min(1).default("0.1.0"),
 
     API_PORT: z.coerce.number().int().positive().default(3001),
+
+    UPLOADS_ROOT_PATH: z
+      .string()
+      .min(1)
+      .refine((valor) => path.isAbsolute(valor), {
+        error: "UPLOADS_ROOT_PATH deve ser um caminho absoluto.",
+      }),
 
     CORS_ORIGINS: z
       .string()

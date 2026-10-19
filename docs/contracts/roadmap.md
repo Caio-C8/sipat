@@ -205,6 +205,63 @@ pertencem ao servidor e não podem ser promovidos acidentalmente a inputs.
 A especificação aprovada está em
 [CONTRACTS-004](../tasks/CONTRACTS-004-contratos-patrimonios.md).
 
+### CONTRACTS-005 — Cadastros patrimoniais relacionados
+
+**Status:** planejado
+
+**Contexto**
+
+Responsáveis, naturezas, espécies, setores e fornecedores precisam de contratos
+explícitos antes que os módulos da API sejam implementados. Os contratos devem
+preservar as dependências responsável → setor e natureza → espécie e não
+promover normalização, auditoria ou estado protegido a input do cliente.
+
+**Escopo**
+
+- params, criação, alteração, situação, listagens e responses aplicáveis;
+- paginação e filtros finitos;
+- objetos estritos e allowlists de resposta;
+- testes de limites, normalização esperada e API pública.
+
+**Critérios de aceite**
+
+- [ ] contratos correspondem a RF03, RF04, RF06, RF07 e RF08;
+- [ ] diferenças entre alteração parcial, `null` e ausência estão explícitas;
+- [ ] lint, typecheck e testes do package passam.
+
+Especificação aprovada:
+[CONTRACTS-005](../tasks/CONTRACTS-005-cadastros-patrimoniais-relacionados.md).
+
+### CONTRACTS-006 — Processos de compra e notas fiscais
+
+**Status:** planejado
+
+**Contexto**
+
+O cadastro inicial de processo aceita até 20 notas e arquivos opcionais em uma
+requisição multipart. Metadados e partes precisam de associação inequívoca e
+limites finitos, sem expor detalhes do filesystem aos consumidores.
+
+**Escopo**
+
+- contratos de processo e nota para criação, alteração, consulta e listagem;
+- envelope multipart com `dados`, `anexos` e `anexoIndice`;
+- no máximo 20 notas e 20 arquivos na criação de um processo;
+- no máximo um PDF de 10 MiB por nota;
+- `anexoUrl` autenticada derivada do identificador da nota;
+- testes de índices, partes excedentes, limites e API pública.
+
+**Critérios de aceite**
+
+- [ ] nota sem arquivo e processo sem nota são representáveis;
+- [ ] a 21ª nota ou o 21º arquivo é rejeitado;
+- [ ] índices ambíguos e arquivos sem consumidor são rejeitados;
+- [ ] caminhos físicos ou relativos persistidos não fazem parte da response;
+- [ ] lint, typecheck e testes do package passam.
+
+Especificação aprovada:
+[CONTRACTS-006](../tasks/CONTRACTS-006-processos-compra-notas-fiscais.md).
+
 ## Histórico do baseline
 
 ### CONTRACTS-BASELINE-001 — Consolidar contratos genéricos antes do domínio SIPAT

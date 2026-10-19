@@ -20,7 +20,9 @@ coverage/
 *.key
 
 # Runtime data
-uploads/
+/uploads/
+data/uploads/*
+!data/uploads/.gitkeep
 *.db
 *.db-journal
 

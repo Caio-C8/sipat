@@ -84,6 +84,8 @@ No estado atual:
   header `X-SIPAT-CSRF` e expõe somente `X-Request-Id` ao navegador;
 - `DatabaseModule` cria, exporta e encerra um único Prisma Client quando um
   módulo consumidor o importa;
+- `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
+  porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule` e `PatrimoniosModule` importam
   `DatabaseModule`; `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
@@ -145,7 +147,6 @@ Antes de implementar recursos relacionados, documente:
 - catálogo de erros e exceptions de domínio;
 - formato e limites de paginação;
 - limites e propagação de transações;
-- upload, armazenamento e entrega de arquivos;
 - logging, observabilidade e dados sensíveis;
 - metas e alertas de performance para fluxos críticos;
 - versionamento da API e geração de OpenAPI.
@@ -153,3 +154,9 @@ Antes de implementar recursos relacionados, documente:
 Quando uma decisão afetar consumidores, registre-a também em
 [Integrações](../../integrations/README.md) e, se mudar formatos compartilhados,
 em [Contratos](../../contracts/README.md).
+
+O armazenamento local e a entrega privada de documentos já possuem decisão
+aprovada em [Armazenamento local de documentos](../../file-storage.md).
+`STORAGE-001` entregou a infraestrutura local; os contratos e fluxos de domínio
+continuam incrementais em `CONTRACTS-006`, `COMPRAS-001` e
+`NOTAS-FISCAIS-001`.

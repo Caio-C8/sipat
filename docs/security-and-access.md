@@ -129,9 +129,13 @@ infraestrutura Web/API. Ele prova que a chamada passou pelo cliente esperado e
 força preflight em contexto cross-origin; não funciona como credencial e não
 contém segredo.
 
-Uploads futuros exigem revisão própria porque `multipart/form-data` pode ser
-uma requisição simples. O mobile nativo também terá política de autenticação e
-proteção própria; não deve copiar cookies do navegador automaticamente.
+Uploads continuam sujeitos à validação exata de origem e ao header
+`X-SIPAT-CSRF: 1` nas mutações; `multipart/form-data` não reduz esses controles.
+Documentos privados não são publicados por middleware estático: a entrega usa
+controller protegido pelos Guards globais, conforme
+[Armazenamento local de documentos](./file-storage.md). O mobile nativo também
+terá política de autenticação e proteção própria; não deve copiar cookies do
+navegador automaticamente.
 
 ## Autenticação e autorização na API
 
