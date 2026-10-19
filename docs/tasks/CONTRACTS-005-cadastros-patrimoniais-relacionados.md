@@ -1,6 +1,6 @@
 # `CONTRACTS-005` — Contratos dos cadastros patrimoniais relacionados
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -36,11 +36,21 @@ setores e fornecedores antes da implementação dos módulos da API.
 
 ## Critérios de aceite
 
-- [ ] inputs não aceitam auditoria, normalização ou estado protegido;
-- [ ] updates distinguem ausência de campo e limpeza permitida;
-- [ ] listagens possuem paginação e filtros finitos;
-- [ ] responses não expõem models Prisma;
-- [ ] API pública e testes de limites passam.
+- [x] inputs não aceitam auditoria, normalização ou estado protegido;
+- [x] updates distinguem ausência de campo e limpeza permitida;
+- [x] listagens possuem paginação e filtros finitos;
+- [x] responses não expõem models Prisma;
+- [x] API pública e testes de limites passam.
+
+## Resultado entregue
+
+- contratos públicos de params, criação, alteração, situação, listagem e
+  response para as cinco entidades;
+- campos opcionais admitem limpeza explícita com `null` somente nos PATCHes;
+- CNPJ é normalizado sem pontuação, validado por dígitos verificadores e aceita
+  as representações numérica e alfanumérica vigentes;
+- lint, typecheck e 61 testes de `@repo/contracts` passam; os typechecks de API,
+  Web e mobile também passam após a geração do Prisma Client.
 
 ## Arquivos ou módulos potencialmente afetados
 

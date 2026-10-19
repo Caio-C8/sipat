@@ -59,3 +59,8 @@ será um Pipe personalizado.
 O Codex combina instruções da raiz até o diretório de trabalho. Por isso, as
 regras gerais ficam no `AGENTS.md` da raiz e apontam para esta documentação
 detalhada, em vez de copiá-la.
+
+## CNPJ
+
+- [CNPJ Alfanumérico — Receita Federal](https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/programas-e-atividades/cnpj-alfanumerico)
+- [Cálculo dos dígitos verificadores — Receita Federal/Serpro](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf)
