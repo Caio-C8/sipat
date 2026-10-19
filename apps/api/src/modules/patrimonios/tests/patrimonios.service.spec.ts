@@ -58,6 +58,9 @@ describe("PatrimoniosService", () => {
     listar: jest.fn(),
     contar: jest.fn(),
     buscarPorId: jest.fn(),
+    buscarParaSubstituicao: jest.fn(),
+    atualizarNumeroCondicional: jest.fn(),
+    criarHistoricoSubstituicao: jest.fn(),
   };
   const service = new PatrimoniosService(
     repository as unknown as PatrimoniosRepository,
@@ -77,6 +80,13 @@ describe("PatrimoniosService", () => {
     repository.listar.mockResolvedValue([{ id: "patrimonio" }]);
     repository.contar.mockResolvedValue(21);
     repository.buscarPorId.mockResolvedValue({ id: "patrimonio" });
+    repository.buscarParaSubstituicao.mockResolvedValue({
+      id: "patrimonio",
+      numeroPatrimonio: "1",
+      tipoNumeroPatrimonial: "OFICIAL",
+    });
+    repository.atualizarNumeroCondicional.mockResolvedValue(true);
+    repository.criarHistoricoSubstituicao.mockResolvedValue(undefined);
   });
 
   it("lista com busca normalizada, filtros e paginação consistente", async () => {
@@ -292,6 +302,124 @@ describe("PatrimoniosService", () => {
       }),
     );
     await expect(service.criar(dados(), identidade)).rejects.toMatchObject({
+      response: expect.objectContaining({
+        codigo: "IDENTIFICADOR_PATRIMONIAL_CONFLITANTE",
+      }),
+    });
+  });
+
+  it("substitui o número oficial e registra o histórico na mesma transação", async () => {
+    repository.gerarProximoNumero.mockResolvedValueOnce("2");
+
+    await expect(
+      service.substituirNumero(
+        "patrimonio",
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).resolves.toEqual({ id: "patrimonio" });
+
+    expect(repository.executarTransacao).toHaveBeenCalledTimes(1);
+    expect(repository.gerarProximoNumero).toHaveBeenCalledWith("OFICIAL");
+    expect(repository.atualizarNumeroCondicional).toHaveBeenCalledWith(
+      "patrimonio",
+      "1",
+      "2",
+    );
+    expect(repository.criarHistoricoSubstituicao).toHaveBeenCalledWith(
+      "patrimonio",
+      "1",
+      "2",
+      DIRETOR_ID,
+    );
+    expect(repository.buscarPorId).toHaveBeenCalledWith("patrimonio");
+  });
+
+  it("rejeita ausência, tipo inelegível e número divergente antes da sequence", async () => {
+    repository.buscarParaSubstituicao.mockResolvedValueOnce(null);
+    await expect(
+      service.substituirNumero(
+        "ausente",
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    repository.buscarParaSubstituicao.mockResolvedValueOnce({
+      id: "patrimonio",
+      numeroPatrimonio: "SP-1",
+      tipoNumeroPatrimonial: "SEM_NUMERO_OFICIAL",
+    });
+    await expect(
+      service.substituirNumero(
+        "patrimonio",
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        codigo: "TIPO_NUMERO_PATRIMONIAL_NAO_ELEGIVEL",
+      }),
+    });
+
+    repository.buscarParaSubstituicao.mockResolvedValueOnce({
+      id: "patrimonio",
+      numeroPatrimonio: "2",
+      tipoNumeroPatrimonial: "OFICIAL",
+    });
+    await expect(
+      service.substituirNumero(
+        "patrimonio",
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        codigo: "NUMERO_PATRIMONIAL_ATUAL_DIVERGENTE",
+      }),
+    });
+
+    expect(repository.gerarProximoNumero).not.toHaveBeenCalled();
+    expect(repository.atualizarNumeroCondicional).not.toHaveBeenCalled();
+    expect(repository.criarHistoricoSubstituicao).not.toHaveBeenCalled();
+  });
+
+  it("rejeita a segunda atualização quando a precondição concorrente perde a corrida", async () => {
+    repository.gerarProximoNumero.mockResolvedValueOnce("2");
+    repository.atualizarNumeroCondicional.mockResolvedValueOnce(false);
+
+    await expect(
+      service.substituirNumero(
+        "patrimonio",
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        codigo: "NUMERO_PATRIMONIAL_ATUAL_DIVERGENTE",
+      }),
+    });
+
+    expect(repository.criarHistoricoSubstituicao).not.toHaveBeenCalled();
+    expect(repository.buscarPorId).not.toHaveBeenCalled();
+  });
+
+  it("traduz conflito inesperado do novo número", async () => {
+    repository.executarTransacao.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+        code: "P2002",
+        clientVersion: "7.10.1",
+        meta: { target: ["numero_patrimonio"] },
+      }),
+    );
+
+    await expect(
+      service.substituirNumero(
+        "patrimonio",
+        { numeroPatrimonioAtual: "1" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
       response: expect.objectContaining({
         codigo: "IDENTIFICADOR_PATRIMONIAL_CONFLITANTE",
       }),

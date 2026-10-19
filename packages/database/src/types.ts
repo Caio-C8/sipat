@@ -25,6 +25,7 @@ export type {
   TentativaLogin,
   TentativaOperacaoSenha,
   SituacaoContabilPatrimonio,
+  SubstituicaoNumeroPatrimonial,
   TransferenciaPatrimonio,
   Usuario,
 } from "@prisma/client";

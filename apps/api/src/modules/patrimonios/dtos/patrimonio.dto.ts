@@ -5,6 +5,8 @@ import {
   ListarPatrimoniosQuerySchema,
   ListarPatrimoniosResponseSchema,
   PatrimonioParamsSchema,
+  SubstituirNumeroPatrimonialBodySchema,
+  SubstituirNumeroPatrimonialResponseSchema,
 } from "@repo/contracts";
 import { createZodDto } from "nestjs-zod";
 
@@ -25,4 +27,10 @@ export class ListarPatrimoniosResponseDto extends createZodDto(
 ) {}
 export class ConsultarPatrimonioResponseDto extends createZodDto(
   ConsultarPatrimonioResponseSchema,
+) {}
+export class SubstituirNumeroPatrimonialBodyDto extends createZodDto(
+  SubstituirNumeroPatrimonialBodySchema,
+) {}
+export class SubstituirNumeroPatrimonialResponseDto extends createZodDto(
+  SubstituirNumeroPatrimonialResponseSchema,
 ) {}

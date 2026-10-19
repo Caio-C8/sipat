@@ -4,6 +4,8 @@ import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import {
   patrimonioDetalheArgs,
   type PatrimonioDetalhePayload,
+  patrimonioParaSubstituicaoArgs,
+  type PatrimonioParaSubstituicaoPayload,
   patrimonioResumoArgs,
   type PatrimonioResumoPayload,
   type TipoNumeroParaGeracao,
@@ -116,6 +118,49 @@ export class PatrimoniosRepository {
     return this.database.patrimonio.findUnique({
       where: { id: patrimonioId },
       ...patrimonioDetalheArgs,
+    });
+  }
+
+  buscarParaSubstituicao(
+    patrimonioId: string,
+  ): Promise<PatrimonioParaSubstituicaoPayload | null> {
+    return this.database.patrimonio.findUnique({
+      where: { id: patrimonioId },
+      ...patrimonioParaSubstituicaoArgs,
+    });
+  }
+
+  async atualizarNumeroCondicional(
+    patrimonioId: string,
+    numeroAtual: string,
+    numeroNovo: string,
+  ): Promise<boolean> {
+    const resultado = await this.database.patrimonio.updateMany({
+      where: {
+        id: patrimonioId,
+        numeroPatrimonio: numeroAtual,
+        tipoNumeroPatrimonial: "OFICIAL",
+      },
+      data: { numeroPatrimonio: numeroNovo },
+    });
+
+    return resultado.count === 1;
+  }
+
+  async criarHistoricoSubstituicao(
+    patrimonioId: string,
+    numeroAnterior: string,
+    numeroNovo: string,
+    createdById: string,
+  ): Promise<void> {
+    await this.database.substituicaoNumeroPatrimonial.create({
+      data: {
+        patrimonio: { connect: { id: patrimonioId } },
+        numeroAnterior,
+        numeroNovo,
+        createdBy: { connect: { id: createdById } },
+      },
+      select: { id: true },
     });
   }
 }
