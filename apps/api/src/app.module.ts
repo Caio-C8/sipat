@@ -20,6 +20,7 @@ import { UsuariosModule } from "./modules/usuarios/usuarios.module";
 import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-documentos.module";
 import { EspeciesModule } from "./modules/especies/especies.module";
 import { SetoresModule } from "./modules/setores/setores.module";
+import { FornecedoresModule } from "./modules/fornecedores/fornecedores.module";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { SetoresModule } from "./modules/setores/setores.module";
     ArmazenamentoDocumentosModule,
     AuthModule,
     EspeciesModule,
+    FornecedoresModule,
     NaturezasModule,
     PatrimoniosModule,
     ResponsaveisModule,
