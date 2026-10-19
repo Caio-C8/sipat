@@ -1,6 +1,6 @@
 # `NATUREZAS-001` — Gerenciar naturezas de bens
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -31,10 +31,20 @@ unicidade definidas pelo servidor.
 
 ## Critérios de aceite
 
-- [ ] nomes semanticamente duplicados são rejeitados;
-- [ ] cliente não controla `nomeNormalizado` nem auditoria;
-- [ ] natureza vinculada continua preservada após alteração;
-- [ ] acesso, paginação e responses são cobertos por testes.
+- [x] nomes semanticamente duplicados são rejeitados;
+- [x] cliente não controla `nomeNormalizado` nem auditoria;
+- [x] natureza vinculada continua preservada após alteração;
+- [x] acesso, paginação e responses são cobertos por testes.
+
+## Resultado entregue
+
+- quatro rotas administrativas de cadastro, consulta, listagem e alteração;
+- nome normalizado sem acentos e em caixa alta, derivado no servidor e protegido
+  por unicidade no PostgreSQL, inclusive sob concorrência;
+- auditoria derivada da sessão, responses por allowlist, busca normalizada,
+  paginação finita e ordenação determinística;
+- testes unitários, E2E com Guards reais e integração PostgreSQL para corrida de
+  unicidade e preservação do vínculo com espécie.
 
 ## Arquivos ou módulos potencialmente afetados
 

@@ -82,7 +82,7 @@ etiquetas permanecem fora do escopo.
 | 11    | `STORAGE-001` — Armazenamento local de documentos      | concluído | RNF09                                              |
 | 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | concluído | RF03, RF04, RF06, RF07 e RF08                      |
 | 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | concluído | `CONTRACTS-005`, `SEC-001`                         |
-| 14    | `NATUREZAS-001` — Gerenciar naturezas                  | planejado | `CONTRACTS-005`, `SEC-001`                         |
+| 14    | `NATUREZAS-001` — Gerenciar naturezas                  | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 15    | `ESPECIES-001` — Gerenciar espécies                    | planejado | `NATUREZAS-001`                                    |
 | 16    | `SETORES-001` — Gerenciar setores                      | planejado | `RESPONSAVEIS-001`                                 |
 | 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | planejado | `CONTRACTS-005`, `SEC-001`                         |
@@ -684,7 +684,7 @@ Especificação de execução:
 
 ## NATUREZAS-001 — Gerenciar naturezas de bens
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -693,9 +693,9 @@ com normalização e unicidade controladas pelo servidor.
 
 ### Critérios de aceite
 
-- [ ] nomes equivalentes após normalização não geram duplicatas;
-- [ ] vínculos existentes são preservados;
-- [ ] paginação, auditoria e autorização possuem cobertura.
+- [x] nomes equivalentes após normalização não geram duplicatas;
+- [x] vínculos existentes são preservados;
+- [x] paginação, auditoria e autorização possuem cobertura.
 
 Especificação de execução:
 [NATUREZAS-001](./tasks/NATUREZAS-001-gerenciar-naturezas.md).
