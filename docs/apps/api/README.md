@@ -178,6 +178,6 @@ em [Contratos](../../contracts/README.md).
 
 O armazenamento local e a entrega privada de documentos já possuem decisão
 aprovada em [Armazenamento local de documentos](../../file-storage.md).
-`STORAGE-001` entregou a infraestrutura local; os contratos e fluxos de domínio
-continuam incrementais em `CONTRACTS-006`, `COMPRAS-001` e
-`NOTAS-FISCAIS-001`.
+`STORAGE-001` entregou a infraestrutura local e `CONTRACTS-006` entregou os
+contratos compartilhados; os fluxos de domínio continuam incrementais em
+`COMPRAS-001` e `NOTAS-FISCAIS-001`.
