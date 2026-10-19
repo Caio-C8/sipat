@@ -1,6 +1,6 @@
 # `RESPONSAVEIS-001` — Gerenciar responsáveis
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -31,11 +31,11 @@ preservação dos vínculos históricos.
 
 ## Critérios de aceite
 
-- [ ] anônimo recebe `401` e diretor recebe `403`;
-- [ ] matrícula ausente ou duplicada é rejeitada de modo previsível;
-- [ ] responsável inativo permanece consultável e nos vínculos históricos;
-- [ ] listagem é paginada e determinística;
-- [ ] auditoria deriva da sessão.
+- [x] anônimo recebe `401` e diretor recebe `403`;
+- [x] matrícula ausente ou duplicada é rejeitada de modo previsível;
+- [x] responsável inativo permanece consultável e nos vínculos históricos;
+- [x] listagem é paginada e determinística;
+- [x] auditoria deriva da sessão.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -46,10 +46,18 @@ preservação dos vínculos históricos.
 
 ## Verificações esperadas
 
-- geração do Prisma Client e validação da migration quando houver;
-- lint, typecheck, testes e build de contratos, banco e API afetados;
-- E2E com Guards reais e concorrência de matrícula;
-- `git diff --check` e formatação.
+- [x] geração do Prisma Client e aplicação da migration desde banco vazio;
+- [x] lint, typecheck e testes de contratos; lint e typecheck de banco; lint,
+      typecheck, testes e build da API;
+- [x] E2E com Guards reais e concorrência de matrícula no PostgreSQL;
+- [x] `git diff --check` e formatação.
+
+As verificações passaram em 19 de outubro de 2026. A integração aplicou as nove
+migrations em um PostgreSQL 17 temporário e confirmou que duas criações
+concorrentes com a mesma matrícula produzem exatamente um sucesso e um conflito
+público estável. A suíte completa da API passou com 232 testes; 19 testes de
+integração de outros domínios permaneceram ignorados por dependerem de variáveis
+de banco próprias. O banco temporário foi removido após a validação.
 
 ## Pendências ou decisões bloqueantes
 

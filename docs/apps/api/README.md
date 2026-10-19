@@ -35,8 +35,9 @@ No estado atual:
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
-  `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`
-  e `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
+  `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`,
+  as cinco rotas administrativas de `/api/responsaveis` e
+  `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
   `POST /api/patrimonios` e
   `POST /api/patrimonios/:patrimonioId/substituicoes-numero`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
@@ -47,6 +48,9 @@ No estado atual:
   request contém somente `id`, `nome`, `email` e `perfil`;
 - `UsuariosModule` separa DTOs Zod, controller, service, repository, tipos e
   mappers; somente `ADMINISTRADOR` acessa suas rotas;
+- `ResponsaveisModule` segue o mesmo corte por camadas, restringe as cinco
+  operações ao `ADMINISTRADOR`, garante matrícula única no banco e inativa sem
+  excluir nem romper vínculos existentes;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
@@ -86,13 +90,14 @@ No estado atual:
   módulo consumidor o importa;
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
-- `AuthModule`, `UsuariosModule` e `PatrimoniosModule` importam
+- `AuthModule`, `UsuariosModule`, `ResponsaveisModule` e `PatrimoniosModule` importam
   `DatabaseModule`; `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
 - testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de
-  usuários, autenticação e cadastro patrimonial, incluindo `401`, `403`, `429`,
-  CSRF, conflitos, regras administrativas e corridas reais no PostgreSQL.
+  usuários, responsáveis, autenticação e cadastro patrimonial, incluindo `401`,
+  `403`, `429`, CSRF, conflitos, regras administrativas e corridas reais no
+  PostgreSQL.
 
 Os exemplos desta documentação representam o padrão desejado, não código já
 implementado no SIPAT.

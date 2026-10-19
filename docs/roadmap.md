@@ -81,7 +81,7 @@ etiquetas permanecem fora do escopo.
 | ----- | ------------------------------------------------------ | --------- | -------------------------------------------------- |
 | 11    | `STORAGE-001` — Armazenamento local de documentos      | concluído | RNF09                                              |
 | 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | concluído | RF03, RF04, RF06, RF07 e RF08                      |
-| 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | planejado | `CONTRACTS-005`, `SEC-001`                         |
+| 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | concluído | `CONTRACTS-005`, `SEC-001`                         |
 | 14    | `NATUREZAS-001` — Gerenciar naturezas                  | planejado | `CONTRACTS-005`, `SEC-001`                         |
 | 15    | `ESPECIES-001` — Gerenciar espécies                    | planejado | `NATUREZAS-001`                                    |
 | 16    | `SETORES-001` — Gerenciar setores                      | planejado | `RESPONSAVEIS-001`                                 |
@@ -666,7 +666,7 @@ Especificação de execução:
 
 ## RESPONSAVEIS-001 — Gerenciar responsáveis
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -675,9 +675,9 @@ Administrador, preservando vínculos históricos.
 
 ### Critérios de aceite
 
-- [ ] matrícula obrigatória e conflitos são tratados de modo previsível;
-- [ ] inativação não exclui o registro nem rompe históricos;
-- [ ] paginação, auditoria e autorização possuem cobertura.
+- [x] matrícula obrigatória e conflitos são tratados de modo previsível;
+- [x] inativação não exclui o registro nem rompe históricos;
+- [x] paginação, auditoria e autorização possuem cobertura.
 
 Especificação de execução:
 [RESPONSAVEIS-001](./tasks/RESPONSAVEIS-001-gerenciar-responsaveis.md).
