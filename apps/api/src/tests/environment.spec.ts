@@ -1,4 +1,5 @@
 import { validateEnvironment } from "../environment";
+import path from "node:path";
 
 const SEGREDO_TESTE = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY";
 
@@ -9,6 +10,7 @@ function ambienteValido(): Record<string, unknown> {
     APP_NAME: "sipat",
     APP_VERSION: "0.1.0",
     API_PORT: "3001",
+    UPLOADS_ROOT_PATH: path.resolve("diretorio-de-testes/uploads"),
     CORS_ORIGINS: "http://localhost:3000",
     AUTH_RATE_LIMIT_HMAC_SECRET: SEGREDO_TESTE,
     AUTH_ARGON2_MAX_CONCURRENCY: "2",
@@ -74,6 +76,18 @@ describe("validateEnvironment", () => {
       validateEnvironment({ ...ambienteValido(), ...alteracao }),
     ).toThrow();
   });
+
+  it.each(["uploads", "./data/uploads"])(
+    "rejeita UPLOADS_ROOT_PATH relativo: %s",
+    (uploadsRootPath) => {
+      expect(() =>
+        validateEnvironment({
+          ...ambienteValido(),
+          UPLOADS_ROOT_PATH: uploadsRootPath,
+        }),
+      ).toThrow("UPLOADS_ROOT_PATH deve ser um caminho absoluto");
+    },
+  );
 
   it("exige consumidor seguro e SMTP completo quando habilitado", () => {
     expect(() =>

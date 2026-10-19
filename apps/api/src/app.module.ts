@@ -15,6 +15,7 @@ import { requisicaoIdMiddleware } from "./common/middleware/requisicao-id.middle
 import { AuthModule } from "./modules/auth/auth.module";
 import { PatrimoniosModule } from "./modules/patrimonios/patrimonios.module";
 import { UsuariosModule } from "./modules/usuarios/usuarios.module";
+import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-documentos.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { UsuariosModule } from "./modules/usuarios/usuarios.module";
       isGlobal: true,
       validate: validateEnvironment,
     }),
+    ArmazenamentoDocumentosModule,
     AuthModule,
     PatrimoniosModule,
     UsuariosModule,

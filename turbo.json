@@ -6,6 +6,7 @@
     "APP_NAME",
     "APP_VERSION",
     "API_PORT",
+    "UPLOADS_ROOT_PATH",
     "WEB_PORT",
     "API_INTERNAL_URL",
     "CORS_ORIGINS",
