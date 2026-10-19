@@ -19,6 +19,7 @@ import { ResponsaveisModule } from "./modules/responsaveis/responsaveis.module";
 import { UsuariosModule } from "./modules/usuarios/usuarios.module";
 import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-documentos.module";
 import { EspeciesModule } from "./modules/especies/especies.module";
+import { SetoresModule } from "./modules/setores/setores.module";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { EspeciesModule } from "./modules/especies/especies.module";
     NaturezasModule,
     PatrimoniosModule,
     ResponsaveisModule,
+    SetoresModule,
     UsuariosModule,
   ],
   controllers: [AppController],
