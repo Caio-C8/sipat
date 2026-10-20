@@ -14,6 +14,7 @@ import { ApiExceptionFilter } from "./common/filters/api-exception.filter";
 import { requisicaoIdMiddleware } from "./common/middleware/requisicao-id.middleware";
 import { AuthModule } from "./modules/auth/auth.module";
 import { PatrimoniosModule } from "./modules/patrimonios/patrimonios.module";
+import { ProcessosCompraModule } from "./modules/processos-compra/processos-compra.module";
 import { NaturezasModule } from "./modules/naturezas/naturezas.module";
 import { ResponsaveisModule } from "./modules/responsaveis/responsaveis.module";
 import { UsuariosModule } from "./modules/usuarios/usuarios.module";
@@ -35,6 +36,7 @@ import { FornecedoresModule } from "./modules/fornecedores/fornecedores.module";
     FornecedoresModule,
     NaturezasModule,
     PatrimoniosModule,
+    ProcessosCompraModule,
     ResponsaveisModule,
     SetoresModule,
     UsuariosModule,
