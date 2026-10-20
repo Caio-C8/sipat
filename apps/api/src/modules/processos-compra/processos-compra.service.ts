@@ -1,9 +1,7 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
-  UnsupportedMediaTypeException,
 } from "@nestjs/common";
 import type {
   AlterarProcessoCompraBodyData,
@@ -11,17 +9,15 @@ import type {
   IdentidadeAutenticada,
   ListarProcessosCompraQueryData,
 } from "@repo/contracts";
-import {
-  CriarProcessoCompraMultipartSchema,
-  EXTENSAO_ANEXO_NOTA_FISCAL,
-  TIPO_MIME_ANEXO_NOTA_FISCAL,
-} from "@repo/contracts";
+import { CriarProcessoCompraMultipartSchema } from "@repo/contracts";
 import { Prisma } from "@repo/database";
-import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { open } from "node:fs/promises";
 import { ZodValidationException } from "nestjs-zod";
 import { CoordenadorDocumentosService } from "../../common/storage/coordenador-documentos.service";
+import {
+  criarChaveAnexoNotaFiscal,
+  validarAnexoNotaFiscal,
+} from "../../common/utils/anexo-nota-fiscal";
 import { FornecedoresService } from "../fornecedores/fornecedores.service";
 import { ProcessosCompraRepository } from "./processos-compra.repository";
 import type {
@@ -65,7 +61,10 @@ export class ProcessosCompraService {
     const chaves = new Map<number, string>();
     for (const [indiceNota, nota] of dados.notas.entries()) {
       if (nota.anexoIndice !== undefined) {
-        chaves.set(indiceNota, this.criarChaveDocumento(nota.numeroNotaFiscal));
+        chaves.set(
+          indiceNota,
+          criarChaveAnexoNotaFiscal(nota.numeroNotaFiscal),
+        );
       }
     }
 
@@ -209,57 +208,8 @@ export class ProcessosCompraService {
     arquivos: readonly ArquivoMultipart[],
   ): Promise<void> {
     for (const [indice, arquivo] of arquivos.entries()) {
-      if (
-        arquivo.mimetype !== TIPO_MIME_ANEXO_NOTA_FISCAL ||
-        !arquivo.originalname.toLowerCase().endsWith(EXTENSAO_ANEXO_NOTA_FISCAL)
-      ) {
-        throw new UnsupportedMediaTypeException({
-          codigo: "ANEXO_NOTA_FISCAL_INVALIDO",
-          mensagem: "O anexo da nota fiscal deve ser um arquivo PDF.",
-          erros: [
-            {
-              campo: `anexos.${indice}`,
-              codigo: "TIPO_DE_ARQUIVO_INVALIDO",
-              mensagem:
-                "Envie um arquivo com extensão .pdf e MIME application/pdf.",
-            },
-          ],
-        });
-      }
-
-      const handle = await open(arquivo.path, "r");
-      try {
-        const assinatura = Buffer.alloc(5);
-        const { bytesRead } = await handle.read(assinatura, 0, 5, 0);
-        if (bytesRead !== 5 || assinatura.toString("ascii") !== "%PDF-") {
-          throw new BadRequestException({
-            codigo: "CONTEUDO_PDF_INVALIDO",
-            mensagem: "O conteúdo do anexo não corresponde a um PDF válido.",
-            erros: [
-              {
-                campo: `anexos.${indice}`,
-                codigo: "ASSINATURA_DE_ARQUIVO_INVALIDA",
-                mensagem: "O arquivo não possui uma assinatura PDF válida.",
-              },
-            ],
-          });
-        }
-      } finally {
-        await handle.close();
-      }
+      await validarAnexoNotaFiscal(arquivo, `anexos.${indice}`);
     }
-  }
-
-  private criarChaveDocumento(numeroNotaFiscal: string): string {
-    const numero =
-      numeroNotaFiscal
-        .normalize("NFD")
-        .replace(/\p{M}/gu, "")
-        .replace(/[^A-Za-z0-9_-]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 80) || "nota";
-    const dataUtc = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    return `uploads/notas-fiscais/${numero}_${dataUtc}_${randomUUID()}.pdf`;
   }
 
   private ehErroPrisma(erro: unknown, codigo: string): boolean {

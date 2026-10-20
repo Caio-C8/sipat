@@ -22,6 +22,7 @@ import { ArmazenamentoDocumentosModule } from "./common/storage/armazenamento-do
 import { EspeciesModule } from "./modules/especies/especies.module";
 import { SetoresModule } from "./modules/setores/setores.module";
 import { FornecedoresModule } from "./modules/fornecedores/fornecedores.module";
+import { NotasFiscaisModule } from "./modules/notas-fiscais/notas-fiscais.module";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { FornecedoresModule } from "./modules/fornecedores/fornecedores.module";
     EspeciesModule,
     FornecedoresModule,
     NaturezasModule,
+    NotasFiscaisModule,
     PatrimoniosModule,
     ProcessosCompraModule,
     ResponsaveisModule,

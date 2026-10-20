@@ -11,9 +11,14 @@ export interface ResultadoReconciliacaoDocumentos {
   orfaosRemovidos: number;
 }
 
+export interface DocumentoAberto {
+  conteudo: Readable;
+  tamanho: number;
+}
+
 export interface ArmazenamentoDocumentosPorta {
   gravar(chave: string, conteudo: Readable): Promise<void>;
-  abrir(chave: string): Promise<Readable>;
+  abrir(chave: string): Promise<DocumentoAberto>;
   substituir(
     chaveAtual: string,
     novaChave: string,

@@ -23,6 +23,7 @@ import { randomUUID } from "node:crypto";
 import type { EnvironmentVariables } from "../../environment";
 import {
   type ArmazenamentoDocumentosPorta,
+  type DocumentoAberto,
   type OpcoesReconciliacaoDocumentos,
   type ResultadoReconciliacaoDocumentos,
 } from "./armazenamento-documentos.port";
@@ -106,9 +107,18 @@ export class SistemaArquivosLocalAdapter
     }
   }
 
-  async abrir(chave: string): Promise<Readable> {
+  async abrir(chave: string): Promise<DocumentoAberto> {
     const arquivo = await this.resolverArquivoExistente(chave);
-    return createReadStream(arquivo);
+    const estado = await lstat(arquivo).catch((error: unknown) => {
+      throw new ErroArmazenamentoDocumentos(
+        "Não foi possível abrir o documento.",
+        { cause: error },
+      );
+    });
+    return {
+      conteudo: createReadStream(arquivo),
+      tamanho: estado.size,
+    };
   }
 
   async substituir(
