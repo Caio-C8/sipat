@@ -1,6 +1,6 @@
 # `COMPRAS-001` — Gerenciar processos de compra
 
-**Status:** `aprovada`
+**Status:** `em execução`
 
 ## Objetivo
 
@@ -66,6 +66,28 @@ zero a 20 notas fiscais e seus PDFs opcionais.
 - teste PostgreSQL de rollback e concorrência;
 - teste de ausência de órfãos após cada falha injetada;
 - `git diff --check` e formatação.
+
+## Estado da implementação
+
+Em 19 de outubro de 2026 foram implementados o módulo da API, as quatro rotas,
+o parser multipart em disco, a validação de MIME, extensão e assinatura PDF, a
+transação de processo e notas, o bloqueio concorrente de fornecedores, a
+compensação de arquivos, os mappers de response e os índices das consultas.
+
+Também foram adicionados testes unitários, E2E e PostgreSQL específicos. A
+conclusão permanece pendente porque o ambiente desta execução bloqueou os
+sockets loopback usados pelo Supertest e não disponibilizou o banco PostgreSQL
+de integração. As verificações executadas foram:
+
+- geração do Prisma Client, lint, typecheck e build de `@repo/api`: passaram;
+- 4 testes unitários específicos de processos de compra: passaram;
+- suíte unitária de `src`: 191 testes passaram; 4 testes preexistentes do
+  adapter de filesystem falharam porque o sandbox negou `rename` com `EPERM`;
+- 2 testes PostgreSQL específicos: adicionados e ignorados sem
+  `PROCESSOS_COMPRA_INTEGRATION_DATABASE_URL`;
+- E2E específico: adicionado, mas a execução foi bloqueada pelo sandbox com
+  `connect EACCES` antes das assertions;
+- `git diff --check`: passou.
 
 ## Pendências ou decisões bloqueantes
 

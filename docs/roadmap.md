@@ -77,18 +77,18 @@ etiquetas permanecem fora do escopo.
 
 ## Ordem dos cadastros relacionados ao patrimônio
 
-| Ordem | Objetivo                                               | Status    | Dependências principais                            |
-| ----- | ------------------------------------------------------ | --------- | -------------------------------------------------- |
-| 11    | `STORAGE-001` — Armazenamento local de documentos      | concluído | RNF09                                              |
-| 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | concluído | RF03, RF04, RF06, RF07 e RF08                      |
-| 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | concluído | `CONTRACTS-005`, `SEC-001`                         |
-| 14    | `NATUREZAS-001` — Gerenciar naturezas                  | concluído | `CONTRACTS-005`, `SEC-001`                         |
-| 15    | `ESPECIES-001` — Gerenciar espécies                    | concluído | `NATUREZAS-001`                                    |
-| 16    | `SETORES-001` — Gerenciar setores                      | concluído | `RESPONSAVEIS-001`                                 |
-| 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | concluído | `CONTRACTS-005`, `SEC-001`                         |
-| 18    | `CONTRACTS-006` — Contratos de compras e notas         | concluído | RF09, UC09, RNF09                                  |
-| 19    | `COMPRAS-001` — Gerenciar processos de compra          | planejado | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
-| 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | planejado | `COMPRAS-001`, `STORAGE-001`                       |
+| Ordem | Objetivo                                               | Status      | Dependências principais                            |
+| ----- | ------------------------------------------------------ | ----------- | -------------------------------------------------- |
+| 11    | `STORAGE-001` — Armazenamento local de documentos      | concluído   | RNF09                                              |
+| 12    | `CONTRACTS-005` — Contratos dos cadastros relacionados | concluído   | RF03, RF04, RF06, RF07 e RF08                      |
+| 13    | `RESPONSAVEIS-001` — Gerenciar responsáveis            | concluído   | `CONTRACTS-005`, `SEC-001`                         |
+| 14    | `NATUREZAS-001` — Gerenciar naturezas                  | concluído   | `CONTRACTS-005`, `SEC-001`                         |
+| 15    | `ESPECIES-001` — Gerenciar espécies                    | concluído   | `NATUREZAS-001`                                    |
+| 16    | `SETORES-001` — Gerenciar setores                      | concluído   | `RESPONSAVEIS-001`                                 |
+| 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | concluído   | `CONTRACTS-005`, `SEC-001`                         |
+| 18    | `CONTRACTS-006` — Contratos de compras e notas         | concluído   | RF09, UC09, RNF09                                  |
+| 19    | `COMPRAS-001` — Gerenciar processos de compra          | em execução | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
+| 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | planejado   | `COMPRAS-001`, `STORAGE-001`                       |
 
 A ordem respeita os vínculos obrigatórios existentes: responsáveis precedem
 setores, naturezas precedem espécies e fornecedores precedem notas fiscais.
@@ -775,7 +775,7 @@ Especificação de execução:
 
 ## COMPRAS-001 — Gerenciar processos de compra
 
-**Status:** planejado
+**Status:** em execução
 
 ### Resultado esperado
 
