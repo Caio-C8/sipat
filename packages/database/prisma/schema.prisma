@@ -254,6 +254,9 @@ model ProcessoCompra {
   notasFiscais NotaFiscal[]
   patrimonios  Patrimonio[]
 
+  @@index([createdAt(sort: Desc), id(sort: Desc)], map: "processos_compra_created_at_id_idx")
+  @@index([anoProcesso], map: "processos_compra_ano_processo_idx")
+  @@index([anoEmpenho], map: "processos_compra_ano_empenho_idx")
   @@map("processos_compra")
 }
 
@@ -362,6 +365,8 @@ model NotaFiscal {
   fornecedor     Fornecedor     @relation(fields: [fornecedorId], references: [id])
   createdBy      Usuario        @relation(fields: [createdById], references: [id])
 
+  @@index([processoCompraId, createdAt, id], map: "notas_fiscais_processo_compra_created_at_id_idx")
+  @@index([fornecedorId, processoCompraId], map: "notas_fiscais_fornecedor_processo_compra_idx")
   @@map("notas_fiscais")
 }
 
