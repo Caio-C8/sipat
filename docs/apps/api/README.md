@@ -42,7 +42,10 @@ No estado atual:
   rotas administrativas de `/api/fornecedores` e
   `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
   `POST /api/patrimonios` e
-  `POST /api/patrimonios/:patrimonioId/substituicoes-numero`;
+  `POST /api/patrimonios/:patrimonioId/substituicoes-numero`, além de
+  `GET /api/processos-compra`, `GET /api/processos-compra/:processoCompraId`,
+  `POST /api/processos-compra` multipart e
+  `PATCH /api/processos-compra/:processoCompraId`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -69,6 +72,10 @@ No estado atual:
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
+- `ProcessosCompraModule` permite aos dois perfis criar, listar, consultar e
+  alterar processos; a criação recebe até 20 notas e PDFs, valida fornecedores
+  ativos, assinatura dos documentos e persiste notas e auditoria na mesma
+  transação, com compensação dos arquivos em falhas;
 - a substituição do número oficial usa o número atual como precondição
   otimista, gera o novo valor pela sequence oficial e atualiza o mesmo patrimônio
   com histórico auditável na mesma transação;
@@ -106,7 +113,8 @@ No estado atual:
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
-  `FornecedoresModule` e `PatrimoniosModule` importam `DatabaseModule`;
+  `FornecedoresModule`, `PatrimoniosModule` e `ProcessosCompraModule` importam
+  `DatabaseModule`;
   `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
@@ -179,5 +187,5 @@ em [Contratos](../../contracts/README.md).
 O armazenamento local e a entrega privada de documentos já possuem decisão
 aprovada em [Armazenamento local de documentos](../../file-storage.md).
 `STORAGE-001` entregou a infraestrutura local e `CONTRACTS-006` entregou os
-contratos compartilhados; os fluxos de domínio continuam incrementais em
-`COMPRAS-001` e `NOTAS-FISCAIS-001`.
+contratos compartilhados. A implementação de `COMPRAS-001` está em validação e
+o fluxo complementar permanece planejado em `NOTAS-FISCAIS-001`.
