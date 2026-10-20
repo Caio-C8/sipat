@@ -47,9 +47,9 @@ describe("SistemaArquivosLocalAdapter", () => {
 
     await adapter.gravar(chave, Readable.from("%PDF-conteudo"));
 
-    await expect(ler(await adapter.abrir(chave))).resolves.toBe(
-      "%PDF-conteudo",
-    );
+    const aberto = await adapter.abrir(chave);
+    expect(aberto.tamanho).toBe(Buffer.byteLength("%PDF-conteudo"));
+    await expect(ler(aberto.conteudo)).resolves.toBe("%PDF-conteudo");
     await expect(readdir(path.join(raiz, ".staging"))).resolves.toEqual([]);
 
     await adapter.remover(chave);
@@ -79,7 +79,9 @@ describe("SistemaArquivosLocalAdapter", () => {
     await expect(adapter.gravar(chave, Readable.from("novo"))).rejects.toThrow(
       "Não foi possível gravar",
     );
-    await expect(ler(await adapter.abrir(chave))).resolves.toBe("original");
+    await expect(ler((await adapter.abrir(chave)).conteudo)).resolves.toBe(
+      "original",
+    );
   });
 
   it("remove o temporário quando o stream falha", async () => {
@@ -104,7 +106,9 @@ describe("SistemaArquivosLocalAdapter", () => {
     await expect(
       adapter.substituir(antiga, nova, Readable.from("nova")),
     ).rejects.toThrow();
-    await expect(ler(await adapter.abrir(antiga))).resolves.toBe("antiga");
+    await expect(ler((await adapter.abrir(antiga)).conteudo)).resolves.toBe(
+      "antiga",
+    );
   });
 
   it("rejeita arquivo e diretório permitido que sejam symlink", async () => {
@@ -161,10 +165,12 @@ describe("SistemaArquivosLocalAdapter", () => {
       temporariosRemovidos: 0,
       orfaosRemovidos: 0,
     });
-    await expect(ler(await adapter.abrir(referenciada))).resolves.toBe(
-      "referenciada",
+    await expect(
+      ler((await adapter.abrir(referenciada)).conteudo),
+    ).resolves.toBe("referenciada");
+    await expect(ler((await adapter.abrir(recente)).conteudo)).resolves.toBe(
+      "recente",
     );
-    await expect(ler(await adapter.abrir(recente))).resolves.toBe("recente");
   });
 
   it("falha na inicialização quando a raiz não existe", async () => {

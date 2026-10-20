@@ -35,7 +35,10 @@ describe("processos de compra", () => {
 
   const armazenamento: jest.Mocked<ArmazenamentoDocumentosPorta> = {
     gravar: jest.fn().mockResolvedValue(undefined),
-    abrir: jest.fn().mockResolvedValue(Readable.from("%PDF-1.7")),
+    abrir: jest.fn().mockResolvedValue({
+      conteudo: Readable.from("%PDF-1.7"),
+      tamanho: 8,
+    }),
     substituir: jest.fn().mockResolvedValue(undefined),
     remover: jest.fn().mockResolvedValue(undefined),
     reconciliar: jest.fn(),
