@@ -160,7 +160,7 @@ describe("processos de compra", () => {
     armazenamento.remover.mockClear();
   });
 
-  function dados(anexoIndice: number | undefined = 0) {
+  function dados(anexoIndice: number | null = 0) {
     return JSON.stringify({
       numeroProcesso: "123/2026",
       anoProcesso: 2026,
@@ -174,7 +174,7 @@ describe("processos de compra", () => {
           anoNotaFiscal: 2026,
           dataEmissao: "2026-10-19",
           fornecedorId: FORNECEDOR_ID,
-          ...(anexoIndice === undefined ? {} : { anexoIndice }),
+          ...(anexoIndice === null ? {} : { anexoIndice }),
         },
       ],
     });
@@ -236,7 +236,7 @@ describe("processos de compra", () => {
 
   it("rejeita arquivo sem nota consumidora", async () => {
     const response = await postAutenticado()
-      .field("dados", dados(undefined))
+      .field("dados", dados(null))
       .attach("anexos", Buffer.from("%PDF-1.7"), {
         filename: "nota.pdf",
         contentType: "application/pdf",
