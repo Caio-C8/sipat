@@ -1,6 +1,6 @@
 # `NOTAS-FISCAIS-001` — Gerenciar notas fiscais e anexos
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -51,14 +51,30 @@ anexo e preserva a nota e a rastreabilidade fiscal.
 
 ## Critérios de aceite
 
-- [ ] sessão ausente recebe `401` em todas as rotas;
-- [ ] PDF maior que 10 MiB ou conteúdo incompatível é rejeitado;
-- [ ] download transmite o PDF sem revelar caminho físico;
-- [ ] substituição bem-sucedida remove o arquivo antigo;
-- [ ] falha antes ou depois da persistência é compensada ou reconciliada sem
+- [x] sessão ausente recebe `401` em todas as rotas;
+- [x] PDF maior que 10 MiB ou conteúdo incompatível é rejeitado;
+- [x] download transmite o PDF sem revelar caminho físico;
+- [x] substituição bem-sucedida remove o arquivo antigo;
+- [x] falha antes ou depois da persistência é compensada ou reconciliada sem
       remover o arquivo ainda referenciado;
-- [ ] remoção é idempotente e não apaga o registro fiscal;
-- [ ] chave malformada, traversal e arquivo sem referência não são servidos.
+- [x] remoção é idempotente e não apaga o registro fiscal;
+- [x] chave malformada, traversal e arquivo sem referência não são servidos.
+
+## Resultado entregue
+
+- módulo `notas-fiscais` com listagem paginada, detalhe, criação multipart,
+  alteração de metadados e inclusão, substituição, remoção e leitura do PDF;
+- autorização explícita para `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`, mantendo
+  autenticação e CSRF nos Guards globais;
+- upload em disco limitado a 10 MiB, validação de extensão, MIME e assinatura
+  PDF e remoção do temporário ao encerrar a request;
+- streaming privado com `Content-Type`, `Content-Disposition`,
+  `Content-Length` e `Cache-Control`, sem expor a chave persistida;
+- troca otimista da referência para preservar o arquivo ainda válido sob
+  concorrência, compensação imediata e reconciliação na inicialização com
+  carência de 24 horas;
+- teste do rewrite Web existente para
+  `/api/backend/notas-fiscais/:notaFiscalId/anexo`, sem interface nova.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -77,6 +93,22 @@ anexo e preserva a nota e a rastreabilidade fiscal.
 - matriz de falhas de substituição/remoção e ausência de órfãos;
 - teste pelo rewrite `/api/backend/notas-fiscais/:id/anexo`, sem criar UI;
 - `git diff --check` e formatação.
+
+## Verificações executadas
+
+- geração do Prisma Client, lint, typecheck e build de `@repo/api`: passaram;
+- suíte completa de `@repo/api`: 304 testes passaram e 30 testes de integração
+  preexistentes ficaram ignorados sem as variáveis de banco correspondentes;
+- E2E específico com Guards e CSRF reais: 8 testes passaram, incluindo limite
+  multipart, streaming, substituição, remoção e referências inválidas;
+- testes focados de service, filesystem e regressão de processos de compra: 23
+  testes passaram;
+- teste do rewrite e lint do arquivo afetado em `@repo/web`: passaram;
+- formatação e `git diff --check`: passaram.
+
+As verificações foram executadas em 19 de outubro de 2026. Os testes que usam
+filesystem e sockets loopback precisaram ser executados fora do sandbox do
+agente; nenhum serviço externo foi acessado.
 
 ## Pendências ou decisões bloqueantes
 

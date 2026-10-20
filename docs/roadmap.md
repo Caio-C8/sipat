@@ -88,7 +88,7 @@ etiquetas permanecem fora do escopo.
 | 17    | `FORNECEDORES-001` — Gerenciar fornecedores            | concluído   | `CONTRACTS-005`, `SEC-001`                         |
 | 18    | `CONTRACTS-006` — Contratos de compras e notas         | concluído   | RF09, UC09, RNF09                                  |
 | 19    | `COMPRAS-001` — Gerenciar processos de compra          | em execução | `CONTRACTS-006`, `STORAGE-001`, `FORNECEDORES-001` |
-| 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | planejado   | `COMPRAS-001`, `STORAGE-001`                       |
+| 20    | `NOTAS-FISCAIS-001` — Gerenciar notas e anexos         | concluído   | `COMPRAS-001`, `STORAGE-001`                       |
 
 A ordem respeita os vínculos obrigatórios existentes: responsáveis precedem
 setores, naturezas precedem espécies e fornecedores precedem notas fiscais.
@@ -795,7 +795,7 @@ Especificação de execução:
 
 ## NOTAS-FISCAIS-001 — Gerenciar notas fiscais e anexos
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -811,10 +811,10 @@ substituição, remoção e leitura autenticada do PDF pelo próprio domínio.
 
 ### Critérios de aceite
 
-- [ ] somente sessão válida acessa o conteúdo;
-- [ ] PDF inválido ou maior que 10 MiB é rejeitado;
-- [ ] substituição e remoção não deixam órfãos permanentes;
-- [ ] a Web pode futuramente consumir
+- [x] somente sessão válida acessa o conteúdo;
+- [x] PDF inválido ou maior que 10 MiB é rejeitado;
+- [x] substituição e remoção não deixam órfãos permanentes;
+- [x] a Web pode futuramente consumir
       `/api/backend/notas-fiscais/:notaFiscalId/anexo` pelo rewrite existente.
 
 Especificação de execução:

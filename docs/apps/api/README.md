@@ -45,7 +45,10 @@ No estado atual:
   `POST /api/patrimonios/:patrimonioId/substituicoes-numero`, além de
   `GET /api/processos-compra`, `GET /api/processos-compra/:processoCompraId`,
   `POST /api/processos-compra` multipart e
-  `PATCH /api/processos-compra/:processoCompraId`;
+  `PATCH /api/processos-compra/:processoCompraId`, além das rotas de listagem,
+  detalhe, criação e alteração em `/api/notas-fiscais` e de inclusão,
+  substituição, remoção e streaming em
+  `/api/notas-fiscais/:notaFiscalId/anexo`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -76,6 +79,10 @@ No estado atual:
   alterar processos; a criação recebe até 20 notas e PDFs, valida fornecedores
   ativos, assinatura dos documentos e persiste notas e auditoria na mesma
   transação, com compensação dos arquivos em falhas;
+- `NotasFiscaisModule` permite aos dois perfis criar, listar, consultar e
+  alterar notas e gerenciar o PDF privado; substituições atualizam a referência
+  antes da remoção física, conflitos são compensados e o download usa streaming
+  sem revelar a chave persistida;
 - a substituição do número oficial usa o número atual como precondição
   otimista, gera o novo valor pela sequence oficial e atualiza o mesmo patrimônio
   com histórico auditável na mesma transação;
@@ -113,8 +120,8 @@ No estado atual:
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
-  `FornecedoresModule`, `PatrimoniosModule` e `ProcessosCompraModule` importam
-  `DatabaseModule`;
+  `FornecedoresModule`, `PatrimoniosModule`, `ProcessosCompraModule` e
+  `NotasFiscaisModule` importam `DatabaseModule`;
   `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
@@ -186,6 +193,6 @@ em [Contratos](../../contracts/README.md).
 
 O armazenamento local e a entrega privada de documentos já possuem decisão
 aprovada em [Armazenamento local de documentos](../../file-storage.md).
-`STORAGE-001` entregou a infraestrutura local e `CONTRACTS-006` entregou os
-contratos compartilhados. A implementação de `COMPRAS-001` está em validação e
-o fluxo complementar permanece planejado em `NOTAS-FISCAIS-001`.
+`STORAGE-001` entregou a infraestrutura local, `CONTRACTS-006` entregou os
+contratos compartilhados e `NOTAS-FISCAIS-001` entregou o fluxo complementar de
+notas e anexos. A implementação de `COMPRAS-001` permanece em validação.
