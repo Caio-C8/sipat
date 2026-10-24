@@ -4,8 +4,8 @@ Este diretório documenta o padrão de desenvolvimento de `apps/mobile`.
 
 ## Objetivo
 
-O aplicativo é o cliente Android e iOS do SIPAT. O baseline usa Expo SDK 57,
-React Native 0.86.3, React 19.2.3, Expo Router, TypeScript estrito e React Native
+O aplicativo é o cliente Android e iOS do SIPAT. O baseline usa Expo SDK 58,
+React Native 0.88.0, React 19.3.0, Expo Router, TypeScript estrito e React Native
 Web para inspeção da interface no navegador.
 
 O mobile pode importar contratos agnósticos de plataforma de

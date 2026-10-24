@@ -7,6 +7,11 @@ configuração pública, health check, export Android/iOS/Web e perfis EAS. A te
 funciona no navegador, possui imagem estática para os stacks Docker de staging
 e produção, e os builds remotos possuem runtime alinhado ao monorepo.
 
+O baseline usa Expo SDK 58, React Native 0.88 e React 19.3. A migração passou
+nas verificações locais, nos três exports, no Expo Doctor e no smoke test do
+container `mobile-web`; o novo binário ainda precisa ser gerado no EAS e
+validado em dispositivo real.
+
 Vitest cobre configuração pública e cliente do health check. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
 raiz serve HTML. Ainda não existem autenticação, navegação de domínio, dados

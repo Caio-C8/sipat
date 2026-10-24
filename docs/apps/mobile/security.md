@@ -86,27 +86,53 @@ rota normalizados, com baixa cardinalidade.
 - revise config plugins, permissões e código gerado;
 - preserve lockfile e versões de Node/pnpm do EAS;
 - mantenha os patches transitivos registrados em `pnpm-workspace.yaml` enquanto
-  `braces`, `node-forge` e `decode-uri-component` não tiverem uma atualização
-  compatível com o Expo SDK 57;
+  `node-forge` e o Zod 3 da cadeia de build não tiverem atualização oficial
+  compatível;
 - execute `pnpm security:patches` após instalar dependências e remova cada patch
   assim que uma versão oficial corrigida puder substituí-lo;
 - não versione keystore, certificado, profile ou chave privada;
 - restrinja acesso ao projeto, token Expo e credenciais de loja;
 - verifique o artefato assinado e a origem do build antes de distribuir.
 
-Os patches atuais limitam a profundidade de chaves processada pelo `braces`,
-validam a quantidade de elementos ASN.1 aninhados no `node-forge` e substituem
-o decoder recursivo de URI por uma leitura linear compatível com CommonJS. Eles
-mitigam, respectivamente,
-[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
+As correções oficiais transitivas atualmente fixadas por `overrides` incluem
+`fast-uri@3.1.9`, `body-parser@2.4.0`, `multer@2.5.0`, `vite@8.3.5`,
+`source-map-js@1.2.2` e `uuid@11.1.1`, além das linhas corrigidas de
+`brace-expansion`. A fonte de verdade permanece `pnpm-workspace.yaml`, e o
+`pnpm-lock.yaml` registra as versões efetivamente resolvidas.
+
+Os patches atuais validam a quantidade de elementos ASN.1 aninhados no
+`node-forge` e fazem o Zod 3 rejeitar arrays e sets que excedem um limite
+superior antes de percorrer seus elementos. Eles mitigam, respectivamente,
 [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) e
-[GHSA-vcc3-ghjq-m6fr](https://github.com/advisories/GHSA-vcc3-ghjq-m6fr), sem
-alterar Expo, React Native, Metro ou Expo Router.
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+
+Na reavaliação de 24 de outubro de 2026, `node-forge@1.4.0` continuava sendo a
+versão mais recente publicada e sem release oficial corrigida.
+`decode-uri-component@0.5.1` já possuía a correção, mas migrou para ESM e ficava
+fora do intervalo `^0.2.2` consumido por `query-string@7.1.3` no antigo Expo
+Router 57. A migração para Expo Router 58 removeu essa cadeia da árvore
+instalada; o patch local e sua regressão foram retirados depois de `pnpm why`
+deixar de encontrar o pacote.
+
+O patch anterior de `braces@3.0.3` foi removido depois que o GitHub retirou o
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) em 23
+de outubro de 2026 por não considerar a falha explorável na prática. Não há
+motivo para manter um limite local de profundidade para um advisory retirado.
 
 Auditorias baseadas apenas no número da versão, incluindo `pnpm audit` e o
-Dependabot, podem continuar exibindo esses três avisos porque não inspecionam o
-conteúdo dos patches locais. Não ignore nem encerre os avisos sem registrar a
-existência dos patches e a execução bem-sucedida de `pnpm security:patches`.
+Dependabot, podem continuar exibindo os avisos mitigados porque não
+inspecionam o conteúdo dos patches locais. Não ignore nem encerre os avisos sem
+registrar a existência dos patches e a execução bem-sucedida de
+`pnpm security:patches`.
+
+O Expo CLI 58.1.15 ainda declara `zod@^3.25.76`; forçar Zod 4 por override
+quebraria o contrato de major do consumidor. O commit oficial da correção atua
+na implementação V4, por isso o patch local faz o backport mínimo equivalente
+na implementação V3 realmente consumida. `pnpm security:patches` comprova que
+arrays com `max`/`length` e sets com `max` não validam seus elementos depois de
+uma violação do limite. Remova esse patch quando o Expo CLI adotar uma versão
+oficial corrigida e a árvore instalada comprovar que o Zod 3 deixou de ser
+necessário.
 
 ## Checklist de uma feature protegida
 

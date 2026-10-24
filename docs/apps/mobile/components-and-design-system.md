@@ -53,7 +53,7 @@ ações internas. Não transmita sucesso ou falha apenas por cor ou ícone.
 
 Antes de adicionar uma biblioteca, confirme:
 
-- compatibilidade com Expo SDK 57, React 19 e React Native 0.86;
+- compatibilidade com Expo SDK 58, React 19.3 e React Native 0.88;
 - suporte a Android, iOS e Web exigido pela feature;
 - necessidade de código nativo, config plugin e novo build;
 - manutenção, licença, tamanho e dependências transitivas;

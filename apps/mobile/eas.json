@@ -4,15 +4,15 @@
   },
   "build": {
     "development": {
-      "node": "24.19.0",
-      "pnpm": "11.19.0",
+      "node": "24.22.1",
+      "pnpm": "11.28.8",
       "environment": "development",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
-      "node": "24.19.0",
-      "pnpm": "11.19.0",
+      "node": "24.22.1",
+      "pnpm": "11.28.8",
       "environment": "preview",
       "distribution": "internal",
       "android": {
@@ -20,8 +20,8 @@
       }
     },
     "production": {
-      "node": "24.19.0",
-      "pnpm": "11.19.0",
+      "node": "24.22.1",
+      "pnpm": "11.28.8",
       "environment": "production",
       "autoIncrement": true
     }
