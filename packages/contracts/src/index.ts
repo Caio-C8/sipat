@@ -10,6 +10,7 @@ export * from "./fornecedor";
 export * from "./processo-compra";
 export * from "./nota-fiscal";
 export * from "./comissao";
+export * from "./inventario";
 
 export type AppEnvironment = "development" | "staging" | "production" | "test";
 

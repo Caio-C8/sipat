@@ -33,7 +33,7 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-Os contratos de `CONTRACTS-001` a `CONTRACTS-007` estão implementados e
+Os contratos de `CONTRACTS-001` a `CONTRACTS-008` estão implementados e
 validados.
 
 Cada objetivo deve registrar:
@@ -310,6 +310,52 @@ refinements do contrato compartilhado.
 
 Especificação aprovada:
 [CONTRACTS-007](../tasks/CONTRACTS-007-contratos-comissoes.md).
+
+### CONTRACTS-008 — Operações de inventários
+
+**Status:** concluído
+
+**Contexto**
+
+`INVENTARIOS-001` e `INVENTARIOS-002` precisam compartilhar os boundaries de
+criação, consulta, conferência, correção e finalização sem expor models Prisma.
+As transições são operações de domínio distintas e não devem ser representadas
+por um PATCH genérico de status.
+
+**Escopo**
+
+- enums públicos de inventário, setor, situação, verificação e correção;
+- params UUID de inventário, setor do inventário e item;
+- criação sem estados, datas, setores, itens ou auditoria enviados pelo cliente;
+- listagens paginadas, filtros finitos, resumos e detalhes com agregados;
+- início e conclusão de setor e finalização do inventário;
+- conferência por número patrimonial com resultados correto, divergente,
+  idempotente e já verificado em outro setor;
+- correção estrita por retorno ao setor cadastrado ou transferência cadastral;
+- snapshot do status patrimonial observado e referências opcionais ao empréstimo
+  ou item de manutenção que justifique um bem não localizado;
+- confirmação explícita para finalizar com correções pendentes;
+- códigos públicos estáveis para transições e conflitos concorrentes.
+
+**Consumidores afetados**
+
+- módulo `inventarios` da API;
+- Web e mobile somente em objetivos futuros, sem alteração nesta entrega.
+
+**Critérios de aceite**
+
+- [x] schema é a fonte de verdade e os tipos são derivados;
+- [x] inputs não aceitam estado, datas, auditoria ou transferência criada pelo
+      cliente;
+- [x] cada transição possui contrato próprio e combinações inválidas falham no
+      boundary quando independem do banco;
+- [x] responses usam allowlist, paginação e agregados finitos;
+- [x] idempotência, segunda conferência, correções e finalização com pendências
+      possuem resultados discriminados;
+- [x] API pública, lint, typecheck, testes e consumidores afetados passam.
+
+Especificação aprovada:
+[CONTRACTS-008](../tasks/CONTRACTS-008-contratos-inventarios.md).
 
 ## Histórico do baseline
 
