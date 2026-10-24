@@ -118,6 +118,30 @@ de `COMISSOES-001` corrigir o modelo persistido e expor as operações da API.
 Objetivos patrimoniais futuros que exigirem comissão dependerão de
 `COMISSOES-001` e deverão validar a vigência inclusiva no momento da operação.
 
+## Ordem das entregas de inventários
+
+| Ordem | Objetivo                                           | Status    | Dependências principais                                    |
+| ----- | -------------------------------------------------- | --------- | ---------------------------------------------------------- |
+| 23    | `CONTRACTS-008` — Contratos de inventários         | concluído | RF19, UC19, `CONTRACTS-004`, `CONTRACTS-007`               |
+| 24    | `INVENTARIOS-001` — Criar e consultar inventários  | planejado | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
+| 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | planejado | `INVENTARIOS-001`, concorrência e política de movimentação |
+
+Esta sequência entrega somente contratos, persistência e API. Interfaces Web e
+mobile, câmera, scanner, fila offline e armazenamento de credencial permanecem
+fora dos três objetivos. Os consumidores de interface deverão ser planejados
+depois que a API estiver implementada e verificada.
+
+A população do inventário é formada na criação por todos os setores ativos e
+patrimônios ATIVOS daquele instante. Somente um setor do inventário pode ficar
+EM_ANDAMENTO por vez. O bloqueio de movimentações é restrito ao setor em
+conferência; operações legítimas nos demais setores mantêm atualizado apenas o
+item ainda pendente. Item verificado não é transferido entre setores do
+inventário nem conferido novamente. Empréstimo ou manutenção vigente não impede
+iniciar o setor: se o bem continuar ausente ao encerrá-lo, o item preserva tanto
+NAO_LOCALIZADO quanto o estado e a operação que justificavam a ausência. Baixas
+de patrimônios incluídos e inativações de setores do inventário ficam bloqueadas
+até a finalização.
+
 ### Decisões comuns da numeração patrimonial
 
 - O cadastro recebe somente a escolha entre numeração oficial e ausência de
@@ -905,6 +929,132 @@ entre presidentes, a vigência inclusiva e o congelamento após uso patrimonial.
 
 Especificação de execução:
 [COMISSOES-001](./tasks/COMISSOES-001-gerenciar-comissoes.md).
+
+## CONTRACTS-008 — Contratos de inventários
+
+**Status:** concluído
+
+### Resultado esperado
+
+Definir os contratos compartilhados para criar, consultar, conferir, corrigir e
+finalizar inventários, com estados discriminados e conflitos públicos estáveis,
+antes da implementação do módulo da API.
+
+### Escopo
+
+- criação e consultas paginadas de inventários, setores e itens;
+- enums, params, filtros, responses e agregados de progresso;
+- operações próprias para iniciar e concluir setor, verificar e corrigir item e
+  finalizar inventário;
+- identificação pelo número patrimonial, sem acoplamento a câmera ou scanner;
+- resultados idempotentes e conflitos de item previamente verificado;
+- confirmação explícita da finalização com correções pendentes.
+
+### Fora do escopo
+
+- banco, migration ou NestJS;
+- contratos das operações gerais de movimentação patrimonial;
+- Web, mobile, câmera, scanner ou autenticação de clientes.
+
+### Critérios de aceite
+
+- [x] inputs não aceitam estados, datas, vínculos ou auditoria derivados;
+- [x] schemas distinguem todas as transições e correções sem PATCH genérico;
+- [x] listagens e filtros possuem limites finitos;
+- [x] responses usam allowlist e não importam models Prisma;
+- [x] idempotência e conflitos possuem payloads discriminados e testes;
+- [x] lint, typecheck, testes e consumidores dos exports passam.
+
+Especificação de execução:
+[CONTRACTS-008](./tasks/CONTRACTS-008-contratos-inventarios.md).
+
+## INVENTARIOS-001 — Criar e consultar inventários
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar ao Diretor de Patrimônio a API que cria atomicamente o inventário, os
+setores ativos e os itens dos patrimônios ATIVOS, além das consultas finitas do
+snapshot e de seu progresso.
+
+### Escopo
+
+- migration aditiva e revisão dos models de inventário existentes;
+- auditoria das transições e garantia de um setor EM_ANDAMENTO por inventário;
+- snapshot do status cadastral na verificação e vínculos opcionais ao empréstimo
+  ou item de manutenção vigente;
+- criação transacional sob comissão vigente;
+- listagem e detalhe de inventários, setores e itens;
+- agregados, paginação, ordenação determinística e queries sem N+1.
+
+### Fora do escopo
+
+- iniciar ou concluir setor, verificar ou corrigir item e finalizar inventário;
+- cancelar, excluir ou editar genericamente inventário;
+- Web e mobile.
+
+### Critérios de aceite
+
+- [ ] criação inclui somente setores ativos e patrimônios ATIVOS do instante da
+      operação;
+- [ ] setores e itens começam pendentes, sem datas nem correções;
+- [ ] setor esperado e vínculo com o setor do inventário refletem a localização
+      cadastral inicial;
+- [ ] falha em qualquer parte desfaz toda a criação;
+- [ ] comissão e autorização são validadas e a auditoria deriva da sessão;
+- [ ] migration, PostgreSQL, API e consumidores dos contratos passam nas
+      verificações aplicáveis.
+
+Especificação de execução:
+[INVENTARIOS-001](./tasks/INVENTARIOS-001-criar-consultar-inventarios.md).
+
+## INVENTARIOS-002 — Conferir, corrigir e finalizar inventários
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar o ciclo operacional da API com uma conferência de setor por vez,
+classificação consistente dos itens, correções rastreáveis, bloqueio setorial de
+operações incompatíveis e concorrência comprovada no PostgreSQL.
+
+### Escopo
+
+- iniciar e concluir setor e finalizar inventário por operações próprias;
+- registrar CORRETO, DIVERGENCIA e NAO_LOCALIZADO com datas e usuários;
+- preservar, em cada verificação, o status do patrimônio e a operação vigente
+  que explique ausência por empréstimo ou manutenção;
+- corrigir por retorno físico ou transferência cadastral atômica;
+- preservar leitura idempotente e rejeitar segunda conferência em outro setor;
+- bloquear localização ou elegibilidade no setor em andamento e sincronizar
+  movimentações legítimas dos itens ainda pendentes nos demais setores;
+- bloquear baixa de patrimônio incluído e inativação de setor até a finalização;
+- impedir qualquer mutação depois da finalização;
+- cobrir as corridas de início, leitura, conclusão, correção e finalização.
+
+### Fora do escopo
+
+- reabertura, cancelamento ou exclusão;
+- APIs gerais de transferência, empréstimo, devolução, manutenção ou baixa;
+- Web, mobile, câmera, scanner ou fila offline.
+
+### Critérios de aceite
+
+- [ ] somente um setor por inventário fica EM_ANDAMENTO e um mesmo setor físico
+      não possui duas conferências simultâneas;
+- [ ] estados e auditoria de setor, item e inventário mudam atomicamente;
+- [ ] conclusão transforma todos os itens ainda pendentes em NAO_LOCALIZADO e
+      VERIFICADO;
+- [ ] correções preservam DIVERGENCIA e criam transferência somente na correção
+      cadastral;
+- [ ] finalização exige todos os setores concluídos, confirmação de pendências e
+      torna o conjunto imutável;
+- [ ] testes PostgreSQL reais comprovam locks, isolamento e conflitos;
+- [ ] API, contratos, banco e documentação passam nas verificações aplicáveis.
+
+Especificação de execução:
+[INVENTARIOS-002](./tasks/INVENTARIOS-002-conferir-corrigir-finalizar.md).
 
 ## Decisões necessárias antes dos objetivos seguintes
 

@@ -269,19 +269,71 @@ gerenciem a própria senha com segurança.
 
 ### RF19: Inventário Patrimonial
 
-**Descrição:** O sistema deve permitir que o Diretor de Patrimônio realize inventários por setor, identificando bens e registrando divergências.
+**Descrição:** O sistema deve permitir que o Diretor de Patrimônio cadastre um
+inventário dos setores ativos e realize, um setor por vez, a conferência dos
+patrimônios ativos incluídos, identificando bens e registrando divergências.
 
-**Informações:** Setor, comissão, datas de início e encerramento, patrimônio identificado, situação do item, divergência encontrada, transferência de correção quando houver e usuário responsável.
+**Informações:** Inventário, setores incluídos, comissão, datas de início e
+encerramento, patrimônio identificado, setor esperado, setor encontrado,
+situação do item, estado e tipo de correção, transferência de correção quando
+houver e usuário responsável.
 
 **Regras:**
 
-- O inventário deve ser realizado para um setor ativo.
-- A conferência física deve considerar os patrimônios ATIVOS.
+- A criação deve incluir somente os setores ativos e os patrimônios com status
+  ATIVO existentes naquele momento.
+- A criação deve gerar um `SetorInventario` pendente para cada setor incluído e
+  um `ItemInventario` pendente para cada patrimônio incluído, preservando como
+  setor esperado o setor atual do patrimônio.
+- O inventário e seus setores devem iniciar pendentes e sem data de início.
+- Somente um setor do inventário pode permanecer EM_ANDAMENTO por vez. O início
+  do primeiro setor marca o inventário como EM_ANDAMENTO e define sua data de
+  início.
+- Enquanto um setor estiver EM_ANDAMENTO, operações que alterem localização ou
+  elegibilidade de patrimônios desse setor, ou que usem esse setor como origem
+  ou destino, devem ser bloqueadas. Os demais setores podem continuar operando.
+- Movimentações registradas antes do início da conferência de um setor devem
+  manter atualizados o setor esperado e o vínculo do item ainda pendente, sem
+  alterar itens já verificados.
+- Empréstimos e manutenções iniciados antes da conferência não impedem o início
+  do setor. Se o patrimônio não estiver fisicamente disponível, o encerramento
+  deve registrá-lo como NAO_LOCALIZADO e preservar o status do patrimônio e o
+  vínculo com a operação vigente no momento da verificação.
+- A baixa de qualquer patrimônio incluído e a inativação de qualquer setor do
+  inventário devem permanecer bloqueadas até a finalização do inventário.
 - O bem poderá ser identificado por leitura da etiqueta patrimonial ou por busca manual quando a leitura não for possível.
-- Quando o patrimônio estiver no setor correto, o item deve ser registrado como CORRETO.
-- Quando houver divergência de localização, o sistema deve registrá-la e permitir corrigi-la imediatamente ou deixá-la pendente.
-- Se a correção for feita, transferindo o item que estava em outro setor para o setor correto, deve ser criado o respectivo registro de transferência.
+- Uma nova leitura do mesmo patrimônio no mesmo setor deve devolver o resultado
+  já consolidado sem duplicar ou alterar a conferência.
+- Se um patrimônio já verificado for informado em outro setor, o sistema deve
+  rejeitar a segunda conferência e informar o setor e o momento da primeira. A
+  existência de transferência posterior explica a nova localização; sem esse
+  histórico, o caso deve ser sinalizado como movimentação física não registrada.
+  Esse conflito não deve sobrescrever o item nem bloquear sozinho a conclusão
+  ou a finalização.
+- Quando o patrimônio estiver no setor esperado, o item deve ser registrado
+  como CORRETO, VERIFICADO e sem correção.
+- Quando for encontrado em outro setor, o item deve preservar o setor esperado,
+  registrar o setor encontrado e ficar como DIVERGENCIA, VERIFICADO e com
+  correção PENDENTE.
+- A divergência pode ser corrigida durante o inventário ou permanecer pendente.
+  Se o bem retornar fisicamente ao setor cadastrado, a correção deve ser
+  registrada como RETORNO_AO_SETOR_CADASTRADO sem criar transferência.
+- Se a correção alterar o cadastro para o setor onde o bem foi encontrado, deve
+  ser criada a transferência correspondente e vinculada ao item como
+  TRANSFERENCIA_CADASTRAL.
 - O item do inventário deve preservar o fato de que houve divergência, vinculando a transferência usada para a correção.
+- Ao concluir um setor, seus itens ainda pendentes devem ser classificados como
+  NAO_LOCALIZADO e VERIFICADO na data da conclusão, registrando também o status
+  cadastral observado. Quando o bem estiver EMPRESTADO ou EM_MANUTENCAO, o item
+  deve apontar para o empréstimo ou item de manutenção vigente que justifica a
+  ausência conhecida.
+- A conclusão de um setor libera as operações que estavam bloqueadas por sua
+  conferência. Divergências pendentes ainda podem ser corrigidas enquanto o
+  inventário não estiver FINALIZADO.
+- O inventário só pode ser finalizado depois que todos os seus setores estiverem
+  CONCLUIDOS. A finalização pode preservar correções pendentes, mas deve exigir
+  confirmação explícita e bloquear qualquer alteração posterior em seus setores,
+  itens e correções.
 
 ### RF20: Consulta do Histórico Patrimonial
 
@@ -989,16 +1041,24 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 
 **Ator(es):** Diretor de Patrimônio
 
-**Pré-condição:** O Diretor deve estar autenticado; o setor deve estar ativo e a comissão exigida deve estar vigente.
+**Pré-condição:** O Diretor deve estar autenticado; os setores e patrimônios a
+incluir devem estar ativos e a comissão deve estar vigente.
 
 **Fluxo principal:**
 
-1. O Diretor inicia um inventário sob uma comissão em um setor.
-2. O sistema carrega os patrimônios ativos esperados para o setor.
-3. O Diretor identifica cada bem por leitura da etiqueta ou busca manual.
-4. O sistema compara o setor físico informado com o setor cadastrado, marcando itens corretos com CORRETO e itens com divergência com DIVERGENCIA.
-5. O Diretor pode corrigir a divergência imediatamente por transferência ou deixá-la para correção posterior.
-6. Ao finalizar, o sistema registra o encerramento e consolida os resultados.
+1. O Diretor cadastra um inventário sob uma comissão vigente.
+2. O sistema cria os setores do inventário para todos os setores ativos e os
+   itens pendentes para todos os patrimônios ativos, preservando o setor esperado.
+3. O Diretor inicia um setor; o sistema impede outro setor simultâneo e bloqueia
+   operações incompatíveis com a conferência em andamento.
+4. O Diretor identifica cada bem por leitura da etiqueta ou busca manual.
+5. O sistema compara o setor da conferência com o setor esperado, registrando
+   CORRETO ou DIVERGENCIA e consolidando cada patrimônio uma única vez.
+6. O Diretor pode corrigir a divergência imediatamente ou deixá-la pendente.
+7. Ao concluir o setor, o sistema marca como NAO_LOCALIZADO cada item ainda
+   pendente daquele setor e libera as operações bloqueadas.
+8. Depois de concluir todos os setores, o Diretor finaliza o inventário, com
+   confirmação explícita caso existam correções pendentes.
 
 **Fluxos alternativos / exceções:**
 
@@ -1006,8 +1066,16 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 - Patrimônio localizado em outro setor: o sistema registra divergência.
 - Correção imediata: o sistema cria a transferência e vincula a correção ao item de inventário.
 - Correção posterior: a divergência permanece pendente.
+- Leitura repetida no mesmo setor: o sistema devolve o resultado existente sem
+  nova gravação.
+- Patrimônio já verificado em outro setor: o sistema rejeita a nova conferência,
+  informa o resultado anterior e diferencia transferência posterior de
+  movimentação física não registrada.
+- Início concorrente de setores: somente uma operação vence; as demais recebem
+  conflito estável indicando o setor já em andamento.
 
-**Pós-condição:** O inventário fica encerrado com os bens conferidos, divergências registradas e correções rastreáveis.
+**Pós-condição:** O inventário fica finalizado e imutável, com os bens
+conferidos, itens não localizados, divergências e correções rastreáveis.
 
 **Requisito relacionado:** RF19
 
