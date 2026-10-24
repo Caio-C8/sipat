@@ -89,6 +89,23 @@ import {
   ProcessoCompraDetalheSchema,
   ProcessoCompraParamsSchema,
   SubstituirAnexoNotaFiscalMultipartSchema,
+  AdicionarMembroComissaoBodySchema,
+  AdicionarMembroComissaoResponseSchema,
+  AlterarComissaoBodySchema,
+  AlterarComissaoResponseSchema,
+  AlterarMembroComissaoBodySchema,
+  AlterarMembroComissaoResponseSchema,
+  ComissaoDetalheSchema,
+  ComissaoParamsSchema,
+  ComissaoResumoSchema,
+  CriarComissaoBodySchema,
+  CriarComissaoResponseSchema,
+  ConsultarComissaoResponseSchema,
+  ListarComissoesQuerySchema,
+  ListarComissoesResponseSchema,
+  MembroComissaoParamsSchema,
+  MembroComissaoResponseSchema,
+  TipoMembroComissaoSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -227,6 +244,30 @@ describe("@repo/contracts — API pública", () => {
       NotaFiscalDetalheSchema,
       SubstituirAnexoNotaFiscalMultipartSchema,
       AlterarAnexoNotaFiscalResponseSchema,
+    ]) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
+
+  it("exporta os contratos de comissões e integrantes", () => {
+    for (const schema of [
+      TipoMembroComissaoSchema,
+      ComissaoParamsSchema,
+      MembroComissaoParamsSchema,
+      CriarComissaoBodySchema,
+      CriarComissaoResponseSchema,
+      ConsultarComissaoResponseSchema,
+      AlterarComissaoBodySchema,
+      AlterarComissaoResponseSchema,
+      AdicionarMembroComissaoBodySchema,
+      AdicionarMembroComissaoResponseSchema,
+      AlterarMembroComissaoBodySchema,
+      AlterarMembroComissaoResponseSchema,
+      ListarComissoesQuerySchema,
+      MembroComissaoResponseSchema,
+      ComissaoResumoSchema,
+      ComissaoDetalheSchema,
+      ListarComissoesResponseSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }

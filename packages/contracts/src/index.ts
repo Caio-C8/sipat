@@ -9,6 +9,7 @@ export * from "./setor";
 export * from "./fornecedor";
 export * from "./processo-compra";
 export * from "./nota-fiscal";
+export * from "./comissao";
 
 export type AppEnvironment = "development" | "staging" | "production" | "test";
 

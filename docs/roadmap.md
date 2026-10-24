@@ -105,6 +105,19 @@ A fonte de verdade da persistência, entrega autenticada, nomenclatura,
 compensação e reconciliação de anexos é
 [Armazenamento local de documentos](./file-storage.md).
 
+## Ordem das entregas de comissões
+
+| Ordem | Objetivo                                 | Status    | Dependências principais                        |
+| ----- | ---------------------------------------- | --------- | ---------------------------------------------- |
+| 21    | `CONTRACTS-007` — Contratos de comissões | concluído | RF03, RF05, UC05, RN11, RNF05 e RNF06          |
+| 22    | `COMISSOES-001` — Gerenciar comissões    | planejado | `CONTRACTS-007`, `RESPONSAVEIS-001`, `SEC-001` |
+
+Esta sequência entrega somente contratos, persistência e backend. Web e mobile
+permanecem fora do escopo. `CONTRACTS-007` fecha os boundaries públicos antes
+de `COMISSOES-001` corrigir o modelo persistido e expor as operações da API.
+Objetivos patrimoniais futuros que exigirem comissão dependerão de
+`COMISSOES-001` e deverão validar a vigência inclusiva no momento da operação.
+
 ### Decisões comuns da numeração patrimonial
 
 - O cadastro recebe somente a escolha entre numeração oficial e ausência de
@@ -819,6 +832,74 @@ substituição, remoção e leitura autenticada do PDF pelo próprio domínio.
 
 Especificação de execução:
 [NOTAS-FISCAIS-001](./tasks/NOTAS-FISCAIS-001-gerenciar-notas-anexos.md).
+
+## CONTRACTS-007 — Contratos de comissões
+
+**Status:** concluído
+
+### Resultado esperado
+
+Definir contratos compartilhados de cadastro, consulta e alteração de
+comissões e de inclusão, alteração de papel e remoção de seus integrantes antes
+da implementação do módulo da API.
+
+### Escopo
+
+- params, criação, alteração, listagem paginada e responses de comissão;
+- enum público `PRESIDENTE | MEMBRO` e contratos próprios para as operações de
+  integrantes;
+- criação com zero a 50 integrantes e datas civis de vigência com limites
+  inclusivos;
+- número do ato como texto opcional, sem expor auditoria como input;
+- schemas estritos, limites finitos, tipos derivados e exports públicos.
+
+### Critérios de aceite
+
+- [x] criação vazia e criação com até 50 responsáveis são representáveis;
+- [x] responsável repetido, papel inválido, segundo presidente e 51º integrante
+      são rejeitados pelo boundary quando a inconsistência estiver no payload;
+- [x] alteração de integrante aceita somente o novo papel e não permite trocar
+      o responsável;
+- [x] data final anterior à inicial é rejeitada e as datas permanecem `DateOnly`;
+- [x] responses usam allowlist e não expõem models Prisma nem campos internos;
+- [x] lint, typecheck, testes e consumidores afetados passam.
+
+Especificação de execução:
+[CONTRACTS-007](./tasks/CONTRACTS-007-contratos-comissoes.md).
+
+## COMISSOES-001 — Gerenciar comissões
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar ao Administrador cadastro, consulta e alteração de comissões, incluindo
+a gestão transacional de integrantes ativos e a preservação das características
+históricas depois do primeiro uso patrimonial.
+
+### Escopo
+
+- listagem, detalhe, cadastro e alteração em `/api/comissoes`;
+- inclusão, alteração de papel e remoção em
+  `/api/comissoes/:comissaoId/membros`;
+- correção de `numeroAto` para texto, papel obrigatório e garantias de unicidade
+  no PostgreSQL;
+- criação atômica da comissão e de zero a 50 integrantes;
+- vigência inclusiva e bloqueio de número do ato, datas e integrantes após uso.
+
+### Critérios de aceite
+
+- [ ] somente `ADMINISTRADOR` acessa as rotas e a auditoria deriva da sessão;
+- [ ] somente responsável ativo entra em novo vínculo e o mesmo responsável não
+      se repete na comissão;
+- [ ] no máximo um presidente é garantido também sob concorrência;
+- [ ] falha em qualquer integrante desfaz a criação inteira;
+- [ ] após uso patrimonial, somente nome e descrição podem mudar;
+- [ ] listagens são paginadas, determinísticas e sem N+1;
+- [ ] migration, integração PostgreSQL, testes da API e build passam.
+
+Especificação de execução:
+[COMISSOES-001](./tasks/COMISSOES-001-gerenciar-comissoes.md).
 
 ## Decisões necessárias antes dos objetivos seguintes
 
