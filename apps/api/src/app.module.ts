@@ -23,6 +23,7 @@ import { EspeciesModule } from "./modules/especies/especies.module";
 import { SetoresModule } from "./modules/setores/setores.module";
 import { FornecedoresModule } from "./modules/fornecedores/fornecedores.module";
 import { NotasFiscaisModule } from "./modules/notas-fiscais/notas-fiscais.module";
+import { ComissoesModule } from "./modules/comissoes/comissoes.module";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { NotasFiscaisModule } from "./modules/notas-fiscais/notas-fiscais.module
     }),
     ArmazenamentoDocumentosModule,
     AuthModule,
+    ComissoesModule,
     EspeciesModule,
     FornecedoresModule,
     NaturezasModule,

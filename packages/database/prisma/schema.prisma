@@ -1,6 +1,7 @@
 generator client {
-  provider     = "prisma-client-js"
-  moduleFormat = "cjs"
+  provider        = "prisma-client-js"
+  moduleFormat    = "cjs"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -307,12 +308,12 @@ model Fornecedor {
 }
 
 model Comissao {
-  id                 String    @id @default(uuid()) @db.Uuid
-  nome               String    @db.VarChar(150)
-  descricao          String?   @db.Text
-  numeroAto          DateTime? @map("numero_ato") @db.Date
-  dataVigenciaInicio DateTime  @map("data_vigencia_inicio") @db.Date
-  dataVigenciaFim    DateTime  @map("data_vigencia_fim") @db.Date
+  id                 String   @id @default(uuid()) @db.Uuid
+  nome               String   @db.VarChar(150)
+  descricao          String?  @db.Text
+  numeroAto          String?  @map("numero_ato") @db.VarChar(100)
+  dataVigenciaInicio DateTime @map("data_vigencia_inicio") @db.Date
+  dataVigenciaFim    DateTime @map("data_vigencia_fim") @db.Date
 
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
@@ -329,14 +330,15 @@ model Comissao {
   depreciacoes   DepreciacaoPatrimonio[]
   reavaliacoes   ReavaliacaoPatrimonio[]
 
+  @@index([createdAt, id], map: "comissoes_created_at_id_idx")
   @@map("comissoes")
 }
 
 model MembroComissao {
-  id                 String              @id @default(uuid()) @db.Uuid
-  tipoMembroComissao TipoMembroComissao? @map("tipo_membro_comissao")
-  comissaoId         String              @map("comissao_id") @db.Uuid
-  responsavelId      String              @map("responsavel_id") @db.Uuid
+  id                 String             @id @default(uuid()) @db.Uuid
+  tipoMembroComissao TipoMembroComissao @map("tipo_membro_comissao")
+  comissaoId         String             @map("comissao_id") @db.Uuid
+  responsavelId      String             @map("responsavel_id") @db.Uuid
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
@@ -345,6 +347,7 @@ model MembroComissao {
   responsavel Responsavel @relation(fields: [responsavelId], references: [id])
 
   @@unique([comissaoId, responsavelId])
+  @@unique([comissaoId], map: "membros_comissao_presidente_unico_idx", where: { tipoMembroComissao: "PRESIDENTE" })
   @@map("membros_comissao")
 }
 
@@ -443,6 +446,7 @@ model TransferenciaPatrimonio {
   createdBy              Usuario         @relation(fields: [createdById], references: [id])
   itemInventarioCorrecao ItemInventario?
 
+  @@index([comissaoId], map: "transferencias_patrimoniais_comissao_id_idx")
   @@map("transferencias_patrimoniais")
 }
 
@@ -465,6 +469,7 @@ model EmprestimoPatrimonio {
   createdBy  Usuario              @relation(fields: [createdById], references: [id])
   devolucao  DevolucaoPatrimonio?
 
+  @@index([comissaoId], map: "emprestimos_patrimoniais_comissao_id_idx")
   @@map("emprestimos_patrimoniais")
 }
 
@@ -480,6 +485,7 @@ model DevolucaoPatrimonio {
   emprestimo EmprestimoPatrimonio @relation(fields: [emprestimoId], references: [id])
   comissao   Comissao             @relation(fields: [comissaoId], references: [id])
 
+  @@index([comissaoId], map: "devolucoes_patrimoniais_comissao_id_idx")
   @@map("devolucoes_patrimoniais")
 }
 
@@ -509,6 +515,7 @@ model Manutencao {
   createdBy  Usuario          @relation(fields: [createdById], references: [id])
   itens      ItemManutencao[]
 
+  @@index([comissaoId], map: "manutencoes_comissao_id_idx")
   @@map("manutencoes")
 }
 
@@ -554,6 +561,7 @@ model Inventario {
   setores   SetorInventario[]
   itens     ItemInventario[]
 
+  @@index([comissaoId], map: "inventarios_comissao_id_idx")
   @@map("inventarios")
 }
 
@@ -623,6 +631,7 @@ model BaixaPatrimonio {
   comissao   Comissao   @relation(fields: [comissaoId], references: [id])
   createdBy  Usuario    @relation(fields: [createdById], references: [id])
 
+  @@index([comissaoId], map: "baixas_patrimoniais_comissao_id_idx")
   @@map("baixas_patrimoniais")
 }
 
@@ -683,6 +692,7 @@ model DepreciacaoPatrimonio {
   createdBy            Usuario              @relation(fields: [createdById], references: [id])
 
   @@unique([patrimonioId, parametroDepreciacaoId, dataCompetencia])
+  @@index([comissaoId], map: "depreciacoes_patrimoniais_comissao_id_idx")
   @@map("depreciacoes_patrimoniais")
 }
 
@@ -708,5 +718,6 @@ model ReavaliacaoPatrimonio {
   createdBy            Usuario               @relation(fields: [createdById], references: [id])
   parametroDepreciacao ParametroDepreciacao?
 
+  @@index([comissaoId], map: "reavaliacoes_patrimoniais_comissao_id_idx")
   @@map("reavaliacoes_patrimoniais")
 }

@@ -48,7 +48,9 @@ No estado atual:
   `PATCH /api/processos-compra/:processoCompraId`, além das rotas de listagem,
   detalhe, criação e alteração em `/api/notas-fiscais` e de inclusão,
   substituição, remoção e streaming em
-  `/api/notas-fiscais/:notaFiscalId/anexo`;
+  `/api/notas-fiscais/:notaFiscalId/anexo`, além das quatro operações de
+  comissão em `/api/comissoes` e das três mutações de integrantes em
+  `/api/comissoes/:comissaoId/membros`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -72,6 +74,10 @@ No estado atual:
 - `FornecedoresModule` restringe cadastro, consulta, listagem, alteração e
   mudança de situação ao `ADMINISTRADOR`, normaliza CNPJ e contato, protege a
   unicidade sob concorrência e inativa sem excluir nem romper vínculos;
+- `ComissoesModule` restringe todas as rotas ao `ADMINISTRADOR`, cria comissão
+  e composição atomicamente, limita integrantes ativos, garante presidente
+  único no PostgreSQL e congela ato, vigência e composição após o primeiro uso
+  patrimonial;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
@@ -120,8 +126,8 @@ No estado atual:
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
-  `FornecedoresModule`, `PatrimoniosModule`, `ProcessosCompraModule` e
-  `NotasFiscaisModule` importam `DatabaseModule`;
+  `FornecedoresModule`, `ComissoesModule`, `PatrimoniosModule`,
+  `ProcessosCompraModule` e `NotasFiscaisModule` importam `DatabaseModule`;
   `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;

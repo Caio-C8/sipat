@@ -1,6 +1,6 @@
 # `COMISSOES-001` — Gerenciar comissões
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -127,25 +127,31 @@ Todas as mutações usam a proteção CSRF global existente. Usuário anônimo r
 
 ## Critérios de aceite
 
-- [ ] migration parte do estado atual, preserva valores convertíveis de
+- [x] migration parte do estado atual, preserva valores convertíveis de
       `numero_ato` e aplica todas as constraints desde banco vazio;
-- [ ] criação vazia funciona e uma falha entre até 50 integrantes desfaz a
+- [x] criação vazia funciona e uma falha entre até 50 integrantes desfaz a
       comissão inteira;
-- [ ] responsável inexistente, inativo ou repetido não cria vínculo;
-- [ ] adições individuais não permitem ultrapassar 50 integrantes;
-- [ ] a API nunca persiste dois presidentes na mesma comissão, inclusive sob
+- [x] responsável inexistente, inativo ou repetido não cria vínculo;
+- [x] adições individuais não permitem ultrapassar 50 integrantes;
+- [x] a API nunca persiste dois presidentes na mesma comissão, inclusive sob
       concorrência real no PostgreSQL;
-- [ ] alteração de papel não troca o responsável e remoção não apaga o cadastro
+- [x] alteração de papel não troca o responsável e remoção não apaga o cadastro
       do responsável;
-- [ ] datas invertidas são rejeitadas e os dias inicial e final contam como
+- [x] datas invertidas são rejeitadas e os dias inicial e final contam como
       vigentes;
-- [ ] após qualquer uso patrimonial, número do ato, datas e integrantes ficam
+- [x] após qualquer uso patrimonial, número do ato, datas e integrantes ficam
       imutáveis, enquanto nome e descrição continuam editáveis;
-- [ ] listagem e detalhe usam responses por allowlist, paginação finita e
+- [x] listagem e detalhe usam responses por allowlist, paginação finita e
       queries sem N+1;
-- [ ] autorização, CSRF, auditoria e conflitos possuem cobertura;
-- [ ] documentação de estado só é marcada como concluída após todas as
+- [x] autorização, CSRF, auditoria e conflitos possuem cobertura;
+- [x] documentação de estado só é marcada como concluída após todas as
       verificações correspondentes.
+
+As verificações passaram em 24 de outubro de 2026. As onze migrations foram
+aplicadas desde um PostgreSQL 17 vazio; testes opt-in confirmaram conversão de
+`numero_ato`, falha diagnóstica para papel nulo, atomicidade, vigência,
+congelamento após uso e concorrência entre presidentes. Lint, tipos, testes e
+build dos pacotes afetados passaram, assim como os typechecks de Web e mobile.
 
 ## Arquivos ou módulos potencialmente afetados
 
