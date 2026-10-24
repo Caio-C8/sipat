@@ -1,55 +1,52 @@
 import assert from "node:assert/strict";
-import { readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const require = createRequire(import.meta.url);
 const repositoryRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const pnpmStore = join(repositoryRoot, "node_modules", ".pnpm");
-
-function requireDependencyFrom(consumerName, consumerVersion, dependencyName) {
-  const encodedConsumerName = consumerName.replace("/", "+");
-  const prefix = `${encodedConsumerName}@${consumerVersion}`;
-  const packageDirectory = readdirSync(pnpmStore).find((entry) =>
-    entry.startsWith(prefix),
-  );
-
-  assert.ok(
-    packageDirectory,
-    `${consumerName}@${consumerVersion} não está instalado`,
-  );
-
-  const consumerManifest = join(
-    pnpmStore,
-    packageDirectory,
-    "node_modules",
-    ...consumerName.split("/"),
-    "package.json",
-  );
-
-  return createRequire(consumerManifest)(dependencyName);
-}
-
-const braces = requireDependencyFrom("micromatch", "4.0.8", "braces");
-
-assert.doesNotThrow(() => braces("src/{api,web}/**/*.ts"));
-assert.throws(
-  () => braces(`${"{".repeat(101)}value${"}".repeat(101)}`),
-  /Brace nesting depth \(101\), exceeds max depth \(100\)/,
+const mobileRequire = createRequire(
+  join(repositoryRoot, "apps", "mobile", "package.json"),
 );
-
-const decodeUriComponent = requireDependencyFrom(
-  "query-string",
-  "7.1.3",
-  "decode-uri-component",
+const expoRequire = createRequire(mobileRequire.resolve("expo/package.json"));
+const expoCliRequire = createRequire(
+  expoRequire.resolve("@expo/cli/package.json"),
 );
+const expoCliManifest = expoCliRequire("./package.json");
 
-assert.equal(decodeUriComponent("hello+world"), "hello world");
-assert.equal(decodeUriComponent("%E2%82%AC"), "€");
-assert.doesNotThrow(() => decodeUriComponent("%C2".repeat(5_000)));
+assert.equal(expoCliManifest.version, "58.1.15");
 
-const forge = requireDependencyFrom("@expo/cli", "57.0.31", "node-forge");
+const { z: zodV3 } = expoCliRequire("zod");
+let parsedArrayElements = 0;
+const arrayElement = zodV3.string().superRefine(() => {
+  parsedArrayElements += 1;
+});
+
+assert.equal(
+  zodV3.array(arrayElement).max(1).safeParse(["first", "second"]).success,
+  false,
+);
+assert.equal(parsedArrayElements, 0);
+assert.equal(
+  zodV3.array(arrayElement).length(1).safeParse(["first", "second"]).success,
+  false,
+);
+assert.equal(parsedArrayElements, 0);
+
+let parsedSetElements = 0;
+const setElement = zodV3.string().superRefine(() => {
+  parsedSetElements += 1;
+});
+
+assert.equal(
+  zodV3
+    .set(setElement)
+    .max(1)
+    .safeParse(new Set(["first", "second"])).success,
+  false,
+);
+assert.equal(parsedSetElements, 0);
+
+const forge = expoCliRequire("node-forge");
 const keyPair = forge.pki.rsa.generateKeyPair({ bits: 512, e: 0x10001 });
 const message = "sipat-security-regression";
 const signingDigest = forge.md.sha256.create();

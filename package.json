@@ -5,10 +5,10 @@
   "description": "Sistema de Gestão Patrimonial da Câmara Municipal de Patos de Minas.",
   "license": "UNLICENSED",
   "engines": {
-    "node": "24.19.0",
-    "pnpm": "11.19.0"
+    "node": "24.22.1",
+    "pnpm": "11.28.8"
   },
-  "packageManager": "pnpm@11.19.0",
+  "packageManager": "pnpm@11.28.8",
   "scripts": {
     "dev": "dotenv -e .env.development -- turbo run dev",
     "dev:web": "dotenv -e .env.development -- turbo run dev --filter=@repo/web",
