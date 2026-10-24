@@ -110,7 +110,7 @@ compensação e reconciliação de anexos é
 | Ordem | Objetivo                                 | Status    | Dependências principais                        |
 | ----- | ---------------------------------------- | --------- | ---------------------------------------------- |
 | 21    | `CONTRACTS-007` — Contratos de comissões | concluído | RF03, RF05, UC05, RN11, RNF05 e RNF06          |
-| 22    | `COMISSOES-001` — Gerenciar comissões    | planejado | `CONTRACTS-007`, `RESPONSAVEIS-001`, `SEC-001` |
+| 22    | `COMISSOES-001` — Gerenciar comissões    | concluído | `CONTRACTS-007`, `RESPONSAVEIS-001`, `SEC-001` |
 
 Esta sequência entrega somente contratos, persistência e backend. Web e mobile
 permanecem fora do escopo. `CONTRACTS-007` fecha os boundaries públicos antes
@@ -869,7 +869,7 @@ Especificação de execução:
 
 ## COMISSOES-001 — Gerenciar comissões
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -889,14 +889,19 @@ históricas depois do primeiro uso patrimonial.
 
 ### Critérios de aceite
 
-- [ ] somente `ADMINISTRADOR` acessa as rotas e a auditoria deriva da sessão;
-- [ ] somente responsável ativo entra em novo vínculo e o mesmo responsável não
+- [x] somente `ADMINISTRADOR` acessa as rotas e a auditoria deriva da sessão;
+- [x] somente responsável ativo entra em novo vínculo e o mesmo responsável não
       se repete na comissão;
-- [ ] no máximo um presidente é garantido também sob concorrência;
-- [ ] falha em qualquer integrante desfaz a criação inteira;
-- [ ] após uso patrimonial, somente nome e descrição podem mudar;
-- [ ] listagens são paginadas, determinísticas e sem N+1;
-- [ ] migration, integração PostgreSQL, testes da API e build passam.
+- [x] no máximo um presidente é garantido também sob concorrência;
+- [x] falha em qualquer integrante desfaz a criação inteira;
+- [x] após uso patrimonial, somente nome e descrição podem mudar;
+- [x] listagens são paginadas, determinísticas e sem N+1;
+- [x] migration, integração PostgreSQL, testes da API e build passam.
+
+Concluído em 24 de outubro de 2026. A validação aplicou as onze migrations desde
+um PostgreSQL 17 vazio e confirmou em banco a conversão preservadora de
+`numero_ato`, o diagnóstico de papel nulo, a atomicidade da criação, a corrida
+entre presidentes, a vigência inclusiva e o congelamento após uso patrimonial.
 
 Especificação de execução:
 [COMISSOES-001](./tasks/COMISSOES-001-gerenciar-comissoes.md).
