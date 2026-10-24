@@ -66,13 +66,21 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e altere comissões relacionadas às operações patrimoniais.
 
-**Informações:** Nome, descrição, período de vigência, membros, papel de cada membro e informações de auditoria.
+**Informações:** Nome, descrição, número do ato em formato textual, período de vigência, membros, papel de cada membro e informações de auditoria.
 
 **Regras:**
 
 - A vigência da comissão deve ser definida pelas datas.
-- Os integrantes da comissão devem ser responsáveis cadastrados no sistema.
+- As datas inicial e final integram o período de vigência; a comissão está vigente quando a data de referência estiver entre ambas, inclusive.
+- A data final da vigência não pode ser anterior à data inicial.
+- A comissão pode ser cadastrada sem integrantes e pode possuir, no máximo, 50 integrantes no total.
+- Somente responsáveis ativos podem ser adicionados como integrantes da comissão.
 - Os papéis previstos para os integrantes são: PRESIDENTE; MEMBRO.
+- Um responsável não pode ocupar mais de um papel na mesma comissão e cada comissão pode possuir, no máximo, um PRESIDENTE.
+- Após a criação, integrantes podem ser adicionados e removidos; a alteração de um vínculo existente pode modificar somente seu papel, sem substituir o responsável vinculado.
+- A inativação posterior do responsável não apaga o vínculo já registrado com a comissão.
+- Enquanto a comissão não tiver sido selecionada em uma operação patrimonial, nome, descrição, número do ato, período de vigência e integrantes podem ser alterados conforme as demais regras.
+- Depois que a comissão tiver sido selecionada em uma operação patrimonial, somente seu nome e sua descrição podem ser alterados.
 - Quando uma operação patrimonial exigir comissão, somente uma comissão vigente poderá ser selecionada.
 
 ### RF06: Gestão de Naturezas de Bens
@@ -653,15 +661,17 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 **Fluxo principal:**
 
 1. O Administrador acessa a gestão de comissões.
-2. O Administrador informa identificação e período de vigência.
-3. O Administrador seleciona os responsáveis integrantes.
-4. O Administrador define o papel de cada integrante como PRESIDENTE ou MEMBRO.
+2. O Administrador informa identificação, número do ato, quando houver, e período de vigência.
+3. O Administrador pode selecionar até 50 responsáveis ativos como integrantes ou prosseguir sem integrantes.
+4. Para cada integrante selecionado, o Administrador define o papel como PRESIDENTE ou MEMBRO, sem repetir responsável nem definir mais de um presidente.
 5. O sistema valida e salva a comissão.
 
 **Fluxos alternativos / exceções:**
 
 - Datas de vigência inválidas: o sistema solicita correção.
 - Integrante indisponível para vínculo: o sistema impede a operação.
+- Responsável repetido ou segundo presidente: o sistema impede a operação.
+- Comissão já utilizada em operação patrimonial: o sistema permite alterar somente nome e descrição.
 
 **Pós-condição:** A comissão fica disponível para seleção nas operações patrimoniais durante sua vigência.
 

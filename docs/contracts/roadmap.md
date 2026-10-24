@@ -33,10 +33,8 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-Os contratos de identidade e perfis do `CONTRACTS-001`, de usuários e
-autenticação do `CONTRACTS-002` e de alteração e recuperação de senha do
-`CONTRACTS-003` e os contratos das operações básicas de patrimônios do
-`CONTRACTS-004` estão implementados e validados.
+Os contratos de `CONTRACTS-001` a `CONTRACTS-007` estão implementados e
+validados.
 
 Cada objetivo deve registrar:
 
@@ -261,6 +259,57 @@ limites finitos, sem expor detalhes do filesystem aos consumidores.
 
 Especificação aprovada:
 [CONTRACTS-006](../tasks/CONTRACTS-006-processos-compra-notas-fiscais.md).
+
+### CONTRACTS-007 — Operações de comissões
+
+**Status:** concluído
+
+**Contexto**
+
+`COMISSOES-001` precisa compartilhar os boundaries de comissões e integrantes
+sem expor models Prisma. A criação deve aceitar a composição inicial, inclusive
+vazia, e as mutações posteriores de integrantes possuem semânticas distintas.
+
+**Escopo**
+
+- enum público `PRESIDENTE | MEMBRO`;
+- params UUID de comissão e de integrante;
+- criação estrita com nome de até 150 caracteres, descrição opcional de até
+  2.000 caracteres, número do ato textual opcional de até 100 caracteres, datas
+  civis de vigência e zero a 50 integrantes, sem permitir que adições
+  posteriores ultrapassem esse total;
+- alteração parcial de comissão e operações próprias para adicionar integrante,
+  alterar somente seu papel e removê-lo;
+- listagem paginada com máximo 50, busca textual finita, resumo e detalhe com
+  integrantes;
+- responses com datas `DateOnly`, auditoria permitida e allowlist explícita;
+- testes de limites, duplicidade local, presidente único local, datas, PATCH,
+  propriedades extras e API pública.
+
+As validações que dependem do banco — responsável ativo, uso patrimonial prévio
+e concorrência entre requisições — pertencem a `COMISSOES-001`, não a
+refinements do contrato compartilhado.
+
+**Consumidores afetados**
+
+- módulo `comissoes` da API;
+- Web e mobile somente em objetivos futuros, sem alteração nesta entrega.
+
+**Critérios de aceite**
+
+- [x] schema é a fonte de verdade e os tipos são derivados;
+- [x] criação aceita zero integrantes e rejeita o 51º;
+- [x] o mesmo responsável não aparece duas vezes no payload e há no máximo um
+      presidente;
+- [x] alteração de integrante não aceita `responsavelId`;
+- [x] data final anterior à inicial é rejeitada sem conversão dependente de
+      fuso;
+- [x] inputs não aceitam auditoria, estado derivado ou identificadores criados
+      pelo servidor;
+- [x] lint, typecheck, testes e consumidores afetados passam.
+
+Especificação aprovada:
+[CONTRACTS-007](../tasks/CONTRACTS-007-contratos-comissoes.md).
 
 ## Histórico do baseline
 
