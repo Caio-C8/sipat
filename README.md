@@ -68,8 +68,8 @@ concluídas.
 | ------------------------- | --------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Git                       | atual suportada | Clonar o repositório e versionar as alterações                         | [Downloads oficiais](https://git-scm.com/downloads/)                                                                               |
 | NVM                       | atual suportada | Instalar e alternar a versão fixada do Node.js                         | [Windows](https://docs.nvm-windows.com/install/installers/) · [macOS/Linux](https://github.com/nvm-sh/nvm#installing-and-updating) |
-| Node.js                   | 24.19.0         | Executar pnpm, scripts, API, Web e Mobile localmente                   | Instale pelo NVM ou use o [download oficial da versão 24.19.0](https://nodejs.org/download/release/v24.19.0/)                      |
-| pnpm                      | 11.19.0         | Instalar dependências e executar o monorepo                            | Ativado pelo Corepack incluído no Node.js; consulte a [documentação do pnpm](https://pnpm.io/installation)                         |
+| Node.js                   | 24.22.1         | Executar pnpm, scripts, API, Web e Mobile localmente                   | Instale pelo NVM ou use o [download oficial da versão 24.22.1](https://nodejs.org/en/download/archive/v24.22.1)                    |
+| pnpm                      | 11.28.8         | Instalar dependências e executar o monorepo                            | Ativado pelo [Corepack](https://github.com/nodejs/corepack#how-to-install) incluído no Node.js 24                                  |
 | Docker com Docker Compose | atual suportada | Executar o PostgreSQL e, opcionalmente, toda a aplicação em containers | [Docker Desktop](https://docs.docker.com/desktop/) · [Docker Engine e Compose](https://docs.docker.com/compose/install/)           |
 
 O NVM é recomendado, mas não obrigatório: use o gerenciador correspondente ao seu sistema operacional ou instale diretamente a versão exata do Node.js. No Windows, NVM for Windows e `nvm-sh` são ferramentas diferentes; use NVM for Windows fora do WSL e `nvm-sh` dentro do WSL, macOS ou Linux. Depois de instalar uma ferramenta que altera o `PATH`, feche e reabra o terminal ou o VS Code.
@@ -79,10 +79,10 @@ O Docker Desktop já inclui Docker Engine e Docker Compose. Não é necessário 
 As versões são fixadas em `.nvmrc`, `package.json`, Docker e CI. Em uma máquina nova ou depois de trocar a versão do Node, prepare o ambiente com:
 
 ```powershell
-nvm install 24.19.0
-nvm use 24.19.0
+nvm install 24.22.1
+nvm use 24.22.1
 corepack enable
-corepack prepare pnpm@11.19.0 --activate
+corepack install --global pnpm@11.28.8
 node --version
 pnpm --version
 docker --version
@@ -90,7 +90,31 @@ docker compose version
 git --version
 ```
 
+O resultado esperado é `v24.22.1` para o Node.js e `11.28.8` para o pnpm. O
+campo `packageManager` do `package.json` também faz o Corepack selecionar essa
+versão ao executar comandos dentro do repositório. O comando
+`corepack install --global` substitui o antigo
+`corepack prepare pnpm@... --activate` nesta documentação.
+
 No Windows, se `pnpm --version` ainda mostrar uma instalação global antiga, localize todos os executáveis com `where.exe pnpm`, remova a instalação global com `npm uninstall --global pnpm`, reabra o terminal e execute novamente `corepack enable`. Enquanto o `PATH` não for corrigido, use `corepack pnpm <comando>` para garantir a versão declarada pelo projeto.
+
+### Versões principais da aplicação
+
+Esta visão resume o baseline atual e, quando o manifest usa uma faixa, informa
+a versão resolvida pelo lockfile. Os manifests e o `pnpm-lock.yaml` continuam
+sendo as fontes de verdade.
+
+| Área            | Versões adotadas                                                            |
+| --------------- | --------------------------------------------------------------------------- |
+| Toolchain       | Node.js 24.22.1 · pnpm 11.28.8                                              |
+| API e contratos | NestJS 11.2.7 · Prisma 7.10.1 · Zod 4.6.7 · Nodemailer 10.2.1               |
+| Web             | Next.js 16.4.3 · React/React DOM 19.3.1 · Zod 4.6.7                         |
+| Mobile          | Expo SDK 58.0.19 · Expo Router 58.0.26 · React Native 0.88.0 · React 19.3.0 |
+| Testes com Vite | Vitest 5.0.5 · Vite 8.3.5 resolvido por override de segurança               |
+
+As resoluções transitivas e os patches que ainda não possuem substituição
+oficial compatível estão explicados em
+[Segurança mobile](docs/apps/mobile/security.md#dependências-e-cadeia-de-build).
 
 ## Desenvolvimento local
 

@@ -2,7 +2,7 @@
 
 ## Baseline concluído
 
-- [x] Expo SDK 57, React Native, TypeScript e Expo Router configurados.
+- [x] Expo SDK 58, React Native, TypeScript e Expo Router configurados.
 - [x] Layout raiz, safe area e tela inicial técnica.
 - [x] React Native Web e bundling Metro funcionando.
 - [x] Configuração pública validada por ambiente.
@@ -20,6 +20,9 @@
       amplas;
 - [ ] validar o novo APK e build iOS em tablet Android e iPad reais, em retrato
       e paisagem, sem bordas laterais de compatibilidade;
+- [ ] [`MOBILE-DEPS-001`](../../tasks/MOBILE-DEPS-001-atualizar-expo-sdk-58.md):
+      atualização e validações locais concluídas; aguarda build EAS e teste em
+      dispositivo real;
 
 Nenhuma feature patrimonial do SIPAT está implementada no mobile. Antes de uma
 nova entrega, registre contexto, requisitos relacionados, plataformas, rotas,

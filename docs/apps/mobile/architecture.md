@@ -108,7 +108,7 @@ por tela exige necessidade funcional documentada e teste nas duas plataformas.
 
 ## Dependências nativas
 
-Instale pacotes compatíveis pelo `expo install`, confira suporte ao SDK 57 e
+Instale pacotes compatíveis pelo `expo install`, confira suporte ao SDK 58 e
 revise se há config plugin ou permissão nativa. Mudanças em código nativo,
 plugins, ícone, splash ou permissões exigem novo binário; reiniciar apenas o
 Metro não é suficiente. Quando esse caso surgir, adote e documente um

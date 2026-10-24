@@ -15,13 +15,18 @@ Android, iOS e Web. Ele não gera um binário nativo instalável.
 
 ## Pré-requisitos locais
 
-- Node.js 24.19.0 e pnpm 11.19.0, conforme a raiz do monorepo;
+- Node.js 24.22.1 e pnpm 11.28.8, conforme a raiz do monorepo;
 - dependências instaladas com `pnpm install`;
 - `.env.development` criado a partir de `.env.development.example`;
 - API e PostgreSQL preparados conforme o README principal;
 - Expo Go compatível ou emulador/simulador para desenvolvimento;
 - conta Expo para builds EAS;
 - conta Apple Developer paga e app no App Store Connect para TestFlight.
+
+Prepare o runtime pela raiz do repositório com os comandos documentados em
+[Pré-requisitos](../../../README.md#pré-requisitos). Eles instalam Node.js
+24.22.1 pelo NVM, habilitam o Corepack e disponibilizam pnpm 11.28.8; não
+instale uma versão global diferente do pnpm para o aplicativo mobile.
 
 Valide o ambiente mobile com:
 
@@ -189,7 +194,7 @@ npx eas-cli@latest login
 pnpm mobile:build:android
 ```
 
-O EAS instala Node.js 24.19.0 e pnpm 11.19.0, gera ou reutiliza a keystore
+O EAS instala Node.js 24.22.1 e pnpm 11.28.8, gera ou reutiliza a keystore
 remota, compila e retorna uma página de build. Nessa página, abra o link no
 Android ou baixe o APK e transfira-o ao aparelho. O Android pode pedir permissão
 para instalar apps dessa fonte.
@@ -255,7 +260,7 @@ sistema.
 
 ### Versão do Node incompatível
 
-O workspace usa `engineStrict`. Os perfis fixam Node.js 24.19.0 e pnpm 11.19.0
+O workspace usa `engineStrict`. Os perfis fixam Node.js 24.22.1 e pnpm 11.28.8
 porque a imagem padrão do EAS pode possuir versões diferentes. Confirme o perfil:
 
 ```bash
