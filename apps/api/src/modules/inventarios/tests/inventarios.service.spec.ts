@@ -8,6 +8,7 @@ const IDENTIDADE: IdentidadeAutenticada = {
   nome: "Diretor",
   email: "diretor@example.com",
   perfil: "DIRETOR_PATRIMONIO",
+  trocaSenhaObrigatoria: false,
 };
 const COMISSAO_ID = "00000000-0000-4000-8000-000000000002";
 const INVENTARIO_ID = "00000000-0000-4000-8000-000000000003";

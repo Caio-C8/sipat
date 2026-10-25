@@ -68,6 +68,7 @@ describeComPostgres("setores no PostgreSQL", () => {
       nome: administrador.nome,
       email: administrador.email,
       perfil: administrador.perfil,
+      trocaSenhaObrigatoria: false,
     };
     const [responsavelAtivo, responsavelInativo] = await Promise.all([
       database.responsavel.create({

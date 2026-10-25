@@ -117,6 +117,7 @@ describe("ProcessosCompraService", () => {
       nome: "Diretor",
       email: "diretor@example.com",
       perfil: "DIRETOR_PATRIMONIO",
+      trocaSenhaObrigatoria: false,
     });
 
     expect(criado).toBe(detalhe);
@@ -161,6 +162,7 @@ describe("ProcessosCompraService", () => {
         nome: "Diretor",
         email: "diretor@example.com",
         perfil: "DIRETOR_PATRIMONIO",
+        trocaSenhaObrigatoria: false,
       }),
     ).rejects.toMatchObject({ status: 400 });
     expect(documentos.criarMuitos).not.toHaveBeenCalled();
@@ -179,6 +181,7 @@ describe("ProcessosCompraService", () => {
         nome: "Diretor",
         email: "diretor@example.com",
         perfil: "DIRETOR_PATRIMONIO",
+        trocaSenhaObrigatoria: false,
       }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(documentos.criarMuitos).not.toHaveBeenCalled();
@@ -206,6 +209,7 @@ describe("ProcessosCompraService", () => {
         nome: "Diretor",
         email: "diretor@example.com",
         perfil: "DIRETOR_PATRIMONIO",
+        trocaSenhaObrigatoria: false,
       }),
     ).rejects.toMatchObject({ status: 409 });
 

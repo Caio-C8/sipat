@@ -13,6 +13,7 @@ const identidade: IdentidadeAutenticada = {
   nome: "Administrador",
   email: "admin@example.com",
   perfil: "ADMINISTRADOR",
+  trocaSenhaObrigatoria: false,
 };
 
 function membroBase(): MembroComissaoPayload {

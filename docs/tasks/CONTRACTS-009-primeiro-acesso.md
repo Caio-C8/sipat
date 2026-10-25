@@ -53,7 +53,7 @@ inicial, sem expor senha, hash, token ou detalhes de persistência.
 - [x] propriedades extras, confirmação divergente e limites inválidos falham;
 - [x] testes impedem senha, hash, token, cookie e campos de banco nas responses;
 - [x] exports públicos, lint, typecheck e testes de `@repo/contracts` passam;
-- [ ] consumidores afetados compilam depois da atualização coordenada.
+- [x] consumidores afetados compilam depois da atualização coordenada.
 
 ## Arquivos ou módulos potencialmente afetados
 

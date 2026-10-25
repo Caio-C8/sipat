@@ -19,6 +19,7 @@ const identidade: IdentidadeAutenticada = {
   nome: "Diretor",
   email: "diretor@example.com",
   perfil: "DIRETOR_PATRIMONIO",
+  trocaSenhaObrigatoria: false,
 };
 
 function dados(

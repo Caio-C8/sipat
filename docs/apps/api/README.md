@@ -58,7 +58,9 @@ No estado atual:
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
   perfis nega acesso;
 - a sessão é consultada pelo hash SHA-256 do token e a identidade anexada à
-  request contém somente `id`, `nome`, `email` e `perfil`;
+  request contém somente `id`, `nome`, `email`, `perfil` e
+  `trocaSenhaObrigatoria`; enquanto `AUTH-004` não persiste esse estado, a API
+  usa temporariamente `false` para manter o contrato coordenado;
 - `UsuariosModule` separa DTOs Zod, controller, service, repository, tipos e
   mappers; somente `ADMINISTRADOR` acessa suas rotas;
 - `ResponsaveisModule` segue o mesmo corte por camadas, restringe as cinco
@@ -115,8 +117,9 @@ No estado atual:
 - login, logout e `/auth/me` usam contratos Zod, cookie `HttpOnly`, sessão opaca
   revogável e rate limit persistente;
 - `AUTH-004` está aprovado, mas ainda não implementado: ele acrescentará o
-  estado persistente de troca obrigatória da senha inicial, sessão restrita e
-  conclusão com rotação de cookie;
+  estado persistente de troca obrigatória da senha inicial, substituirá o
+  fallback temporário, criará a sessão restrita e concluirá o fluxo com rotação
+  de cookie;
 - alteração da própria senha exige a senha atual, usa limite persistente por
   escopo, troca o hash e revoga todas as sessões atomicamente e expira o cookie;
 - recuperação usa response neutra, token aleatório armazenado somente por hash,

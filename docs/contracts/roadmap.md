@@ -75,8 +75,8 @@ hash ou campos do banco a contrato público.
 - [x] senha não é normalizada nem aparece em response;
 - [x] a identidade expõe somente o boolean necessário, sem detalhes internos;
 - [x] lint, typecheck e testes de `@repo/contracts` passam;
-- [ ] consumidores afetados passam após a integração coordenada em `AUTH-004`
-      e `WEB-AUTH-001`.
+- [x] consumidores afetados compilam com a compatibilidade transitória; a
+      semântica persistente permanece em `AUTH-004` e `WEB-AUTH-001`.
 
 Especificação aprovada:
 [CONTRACTS-009](../tasks/CONTRACTS-009-primeiro-acesso.md).

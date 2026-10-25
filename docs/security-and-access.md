@@ -50,7 +50,7 @@ navegador
 API
    │ valida sessão, expiração, revogação e usuário ativo
    ▼
-identidade { id, nome, email, perfil }
+identidade { id, nome, email, perfil, trocaSenhaObrigatoria }
    │
    ├── Guard de perfil para autorização por função
    └── service/policy para regras que dependam do recurso
@@ -58,6 +58,9 @@ identidade { id, nome, email, perfil }
 
 A API é a autoridade. A Web pode redirecionar ou esconder controles depois de
 consultar a identidade, mas isso não concede nem revoga permissão.
+
+Até `AUTH-004` adicionar a fonte persistente e a sessão restrita, a API publica
+`trocaSenhaObrigatoria: false` como compatibilidade transitória do contrato.
 
 ## Mecanismo de sessão
 
