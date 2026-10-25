@@ -24,11 +24,13 @@ fronteiras entre UI, contratos e integração HTTP.
 - `components/ui` contém primitives visuais genéricas já instaladas;
 - Vitest cobre infraestrutura HTTP, configuração e observabilidade;
 - Playwright cobre home, acessibilidade automatizável e headers de segurança;
-- não existem páginas, formulários, hooks, cache remoto ou regras de domínio.
+- as rotas `/login`, `/redefinir-senha` e `/senha-atualizada` possuem somente
+  interface visual; os formulários ainda não enviam dados;
+- não existem hooks de autenticação, cache remoto ou regras de domínio na Web.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
-ainda não possuem consumidor Web. Login, logout, `/auth/me` e criação produtiva
-de sessão também não existem.
+ainda não possuem consumidor Web. A interface de login ainda não cria sessão;
+logout e consumo de `/auth/me` não existem.
 
 ## Princípios
 

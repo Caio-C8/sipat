@@ -1,0 +1,423 @@
+.shell {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 41.7% minmax(0, 1fr);
+  background: #f6f8fc;
+}
+
+.brandPanel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(2rem, 4vw, 5rem);
+  color: #fff;
+  background: #102747;
+}
+.brandTop {
+  display: grid;
+  gap: 1.35rem;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: fit-content;
+  color: #fff;
+  font-size: clamp(1.5rem, 1.65vw, 2.25rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+.brandIcon {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.65rem;
+  color: #f0b600;
+  background: #1d3b61;
+}
+.brandCaption {
+  margin: 0;
+  color: #c8d7e9;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+.brandBody {
+  margin-block: auto;
+  padding-block: 2rem;
+}
+.brandTitle {
+  max-width: 31rem;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 2.65vw, 3.5rem);
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+.brandDescription {
+  max-width: 29rem;
+  margin: 1.3rem 0 0;
+  color: #b9cce2;
+  font-size: clamp(0.95rem, 1vw, 1.25rem);
+  line-height: 1.7;
+}
+.deviceNote {
+  max-width: 37rem;
+  margin-top: 3rem;
+  padding: 1.4rem 1.6rem;
+  border: 1px solid #244469;
+  border-radius: 0.85rem;
+  background: #193759;
+}
+.deviceHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.deviceIcons {
+  display: flex;
+  gap: 0.55rem;
+  margin-right: 0.4rem;
+  color: #bfd1e6;
+}
+.deviceNote p {
+  margin: 0.8rem 0 0;
+  color: #b7cce2;
+  font-size: 0.78rem;
+}
+.cityFooter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #274260;
+}
+.cityMark {
+  width: 2.8rem;
+  height: 2.8rem;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 0.5rem;
+  color: #1873ad;
+  background: #fff;
+}
+.cityFooter strong {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.cityFooter span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #adc2d9;
+  font-size: 0.73rem;
+}
+
+.content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem clamp(1.5rem, 5vw, 6rem);
+}
+.contentInner {
+  width: min(100%, 35.4vw);
+}
+.card {
+  width: 100%;
+  padding: clamp(1.35rem, 2.1vw, 2.5rem);
+  border: 1px solid #e2e8f1;
+  border-radius: 1.1rem;
+  background: #fff;
+}
+.loginCard {
+  margin-top: 11vw;
+}
+.cardTall {
+  min-height: clamp(32rem, 38vw, 45rem);
+  margin-top: 2rem;
+  padding-bottom: 0.7rem;
+}
+.cardSuccess {
+  min-height: clamp(32rem, 40vw, 49rem);
+  margin-top: 3rem;
+  padding-top: clamp(2rem, 3vw, 4rem);
+}
+.pageSignature {
+  margin: 2rem 0 0;
+  color: #7c8da7;
+  font-size: 0.74rem;
+  text-align: center;
+}
+.title {
+  margin: 0;
+  color: #1d3c67;
+  font-size: clamp(1.5rem, 1.55vw, 2rem);
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+.description {
+  margin: 0.45rem 0 0;
+  color: #70819d;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 0.6rem;
+  padding: 0.45rem 1.15rem;
+  border-radius: 999px;
+  color: #2864b5;
+  background: #eff5ff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.form {
+  display: grid;
+  gap: clamp(0.65rem, 0.95vw, 1.2rem);
+  margin-top: clamp(0.7rem, 1vw, 1.25rem);
+}
+.field {
+  display: grid;
+  gap: 0.55rem;
+}
+.label {
+  color: #244163;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.inputWrap,
+.passwordWrap {
+  position: relative;
+}
+.fieldIcon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b809c;
+  pointer-events: none;
+}
+.input {
+  height: clamp(2.4rem, 2.9vw, 3.5rem);
+  border-color: #cbd8e8;
+  border-radius: 0.5rem;
+  padding-inline: 2.8rem 1rem;
+  color: #294665;
+  background: #fff;
+  font-size: 0.88rem;
+}
+.input::placeholder {
+  color: #8a9bb2;
+}
+.passwordWrap .input {
+  padding-right: 3.2rem;
+}
+.visibilityButton {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.4rem;
+  color: #667f9e;
+}
+.visibilityButton:hover {
+  background: #edf3fa;
+}
+.textAction {
+  border: 0;
+  padding: 0.15rem 0;
+  background: none;
+  color: #2469bc;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.textAction:hover,
+.backLink:hover {
+  text-decoration: underline;
+}
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+}
+.smallNote {
+  margin: 0.2rem 0 0;
+  color: #8294ad;
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+.submit {
+  width: 100%;
+  height: clamp(2rem, 2.25vw, 2.75rem);
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.8rem;
+  border-radius: 0.4rem;
+  padding-inline: 1.15rem;
+  background: #223d64;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.submit:hover {
+  background: #2b507e;
+}
+.submit:focus-visible,
+.textAction:focus-visible,
+.backLink:focus-visible,
+.brand:focus-visible {
+  outline: 3px solid #8dbbf0;
+  outline-offset: 3px;
+}
+.formFoot {
+  margin: 1.3rem 0 0;
+  color: #8294ad;
+  font-size: 0.72rem;
+  text-align: center;
+}
+.cardTall .description {
+  margin-top: 0.25rem;
+}
+.cardTall .form {
+  margin-top: 0.25rem;
+}
+.cardTall .centerLink {
+  margin-top: 0.65rem;
+}
+.cardTall .formFoot {
+  margin-top: 0.7rem;
+}
+.notice {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.5rem;
+  color: #224367;
+  background: #eef5ff;
+}
+.noticeIcon {
+  flex: none;
+  margin-top: 0.1rem;
+  color: #3678ce;
+}
+.notice strong,
+.notice span {
+  display: block;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.notice span {
+  margin-top: 0.35rem;
+  color: #6f83a0;
+}
+.helpText {
+  margin: 0.1rem 0 0;
+  color: #70819d;
+  font-size: 0.77rem;
+  line-height: 1.8;
+}
+.backLink {
+  color: #286bc2;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.centerLink {
+  margin: 1.15rem 0 0;
+  text-align: center;
+}
+.successIcon {
+  width: clamp(3rem, 3.75vw, 4.5rem);
+  height: clamp(3rem, 3.75vw, 4.5rem);
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.4rem;
+  border-radius: 1rem;
+  color: #00896b;
+  background: #e9fbf3;
+}
+.successLead {
+  margin-top: 0.9rem;
+  color: #31527a;
+  font-size: 0.95rem;
+}
+.successCopy {
+  margin-top: 0.7rem;
+  color: #7285a0;
+  font-size: 0.82rem;
+  line-height: 1.9;
+}
+.successNotice {
+  margin-top: 0.8rem;
+}
+.successButton {
+  margin-top: 1.7rem;
+}
+.mobileBrand {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .shell {
+    display: block;
+  }
+  .brandPanel {
+    display: none;
+  }
+  .content {
+    min-height: 100svh;
+    padding: 2rem 1.25rem;
+  }
+  .mobileBrand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 42rem;
+    margin-bottom: 1.5rem;
+    color: #17385f;
+    font-size: 1.4rem;
+    font-weight: 750;
+  }
+  .mobileBrand .brandIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .cardTall,
+  .cardSuccess {
+    min-height: 0;
+  }
+  .loginCard {
+    margin-top: 0;
+  }
+  .contentInner {
+    width: min(100%, 42rem);
+  }
+  .cardSuccess {
+    padding-top: 2rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .card {
+    padding: 1.2rem;
+  }
+}
