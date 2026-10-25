@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Landmark, Monitor, Package, Smartphone } from "lucide-react";
+import { Monitor, Smartphone } from "lucide-react";
 import styles from "./auth.module.css";
+
+const BRASAO_SRC = "/images/brasao.png";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -10,7 +13,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className={styles.brandTop}>
           <Link className={styles.brand} href="/login">
             <span className={styles.brandIcon}>
-              <Package size={22} aria-hidden="true" />
+              <Image
+                className={styles.brandLogo}
+                src={BRASAO_SRC}
+                alt=""
+                width={89}
+                height={90}
+              />
             </span>
             <span>SIPAT</span>
           </Link>
@@ -39,7 +48,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </div>
         <div className={styles.cityFooter}>
           <span className={styles.cityMark}>
-            <Landmark size={22} aria-hidden="true" />
+            <Image
+              className={styles.cityLogo}
+              src={BRASAO_SRC}
+              alt=""
+              width={89}
+              height={90}
+            />
           </span>
           <div>
             <strong>Câmara Municipal de Patos de Minas</strong>
@@ -50,7 +65,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <section className={styles.content} aria-label="Acesso ao SIPAT">
         <div className={styles.mobileBrand}>
           <span className={styles.brandIcon}>
-            <Package size={19} aria-hidden="true" />
+            <Image
+              className={styles.brandLogo}
+              src={BRASAO_SRC}
+              alt=""
+              width={89}
+              height={90}
+            />
           </span>
           SIPAT
         </div>
