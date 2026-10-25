@@ -44,6 +44,7 @@ export async function provisionarPrimeiroAdministrador(
               senha: senhaHash,
               perfil: "ADMINISTRADOR",
               ativo: true,
+              trocaSenhaObrigatoria: true,
               createdById: null,
             },
           });

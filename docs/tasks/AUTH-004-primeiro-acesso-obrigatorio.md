@@ -1,6 +1,6 @@
 # `AUTH-004` — Obrigar a troca da senha inicial
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -66,21 +66,21 @@ senha e rotação da sessão.
 
 ## Critérios de aceite
 
-- [ ] usuário novo e administrador provisionado recebem
+- [x] usuário novo e administrador provisionado recebem
       `trocaSenhaObrigatoria = true`;
-- [ ] login válido nesse estado cria sessão restrita e informa a pendência;
-- [ ] sessão restrita recebe `403` com código público estável nas demais rotas
+- [x] login válido nesse estado cria sessão restrita e informa a pendência;
+- [x] sessão restrita recebe `403` com código público estável nas demais rotas
       protegidas, sem alterar a autorização por perfil;
-- [ ] `/auth/me`, conclusão e logout continuam acessíveis nesse estado;
-- [ ] conclusão inválida não modifica senha, estado, sessão ou token de
+- [x] `/auth/me`, conclusão e logout continuam acessíveis nesse estado;
+- [x] conclusão inválida não modifica senha, estado, sessão ou token de
       recuperação;
-- [ ] conclusão concorrente produz um único sucesso;
-- [ ] sucesso troca o hash, limpa a pendência, invalida redefinição pendente,
+- [x] conclusão concorrente produz um único sucesso;
+- [x] sucesso troca o hash, limpa a pendência, invalida redefinição pendente,
       revoga sessões antigas, cria uma sessão nova e substitui o cookie;
-- [ ] a nova sessão acessa rotas permitidas pelo perfil e a antiga não;
-- [ ] limpeza da tabela de sessões não altera o estado de primeiro acesso;
-- [ ] logs, métricas e responses não contêm senha, hash ou token;
-- [ ] migrations, client Prisma, contratos, API, E2E e integração PostgreSQL
+- [x] a nova sessão acessa rotas permitidas pelo perfil e a antiga não;
+- [x] limpeza da tabela de sessões não altera o estado de primeiro acesso;
+- [x] logs, métricas e responses não contêm senha, hash ou token;
+- [x] migrations, client Prisma, contratos, API, E2E e integração PostgreSQL
       passam nas verificações aplicáveis.
 
 ## Arquivos ou módulos potencialmente afetados
@@ -108,5 +108,5 @@ senha e rotação da sessão.
 
 ## Pendências ou decisões bloqueantes
 
-- Nenhuma de produto. A forma exata de metadata do Guard deve respeitar a
-  revisão exigida pelas instruções da API antes da implementação.
+- Nenhuma de produto. A exceção do Guard usa metadata direta, sem decorator
+  novo, e está limitada a `/auth/me` e à conclusão do primeiro acesso.

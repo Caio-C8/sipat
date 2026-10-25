@@ -35,6 +35,7 @@ describe("AuthService", () => {
   const repositoryTransacao = {
     atualizarUltimoLoginSeAtivo: jest.fn(),
     atualizarSenhaSeAtual: jest.fn(),
+    concluirPrimeiroAcessoSePendente: jest.fn(),
     listarSessoesAtivas: jest.fn(),
     revogarSessoes: jest.fn(),
     revogarTodasSessoes: jest.fn(),
@@ -132,6 +133,9 @@ describe("AuthService", () => {
     (repositoryTransacao.atualizarSenhaSeAtual as jest.Mock).mockResolvedValue(
       true,
     );
+    (
+      repositoryTransacao.concluirPrimeiroAcessoSePendente as jest.Mock
+    ).mockResolvedValue(true);
     (repositoryTransacao.listarSessoesAtivas as jest.Mock).mockResolvedValue(
       [],
     );
@@ -483,6 +487,54 @@ describe("AuthService", () => {
     expect(
       repositoryTransacao.limparTentativasOperacaoSenha,
     ).not.toHaveBeenCalled();
+  });
+
+  it("conclui o primeiro acesso com rotação atômica da sessão", async () => {
+    const resultado = await service.concluirPrimeiroAcesso(identidadeBase.id, {
+      novaSenha: "uma nova senha segura",
+      confirmacaoNovaSenha: "uma nova senha segura",
+    });
+
+    expect(capacidadeArgon2.executar).toHaveBeenCalledTimes(1);
+    expect(senhaHasher.criarHash).toHaveBeenCalledWith("uma nova senha segura");
+    expect(
+      repositoryTransacao.concluirPrimeiroAcessoSePendente,
+    ).toHaveBeenCalledWith(identidadeBase.id, "hash-novo", agora);
+    expect(repositoryTransacao.invalidarRedefinicaoSenha).toHaveBeenCalledWith(
+      identidadeBase.id,
+      agora,
+    );
+    expect(repositoryTransacao.revogarTodasSessoes).toHaveBeenCalledWith(
+      identidadeBase.id,
+      agora,
+    );
+    expect(repositoryTransacao.criarSessao).toHaveBeenCalledWith({
+      usuarioId: identidadeBase.id,
+      tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+      expiraAt: new Date("2026-10-18T20:00:00.000Z"),
+      ultimaAtividadeAt: agora,
+    });
+    expect(resultado.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+  });
+
+  it("não modifica estado quando o primeiro acesso já foi concluído", async () => {
+    (
+      repositoryTransacao.concluirPrimeiroAcessoSePendente as jest.Mock
+    ).mockResolvedValue(false);
+
+    await expect(
+      service.concluirPrimeiroAcesso(identidadeBase.id, {
+        novaSenha: "uma nova senha segura",
+        confirmacaoNovaSenha: "uma nova senha segura",
+      }),
+    ).rejects.toMatchObject({
+      response: { codigo: "PRIMEIRO_ACESSO_JA_CONCLUIDO" },
+    });
+    expect(
+      repositoryTransacao.invalidarRedefinicaoSenha,
+    ).not.toHaveBeenCalled();
+    expect(repositoryTransacao.revogarTodasSessoes).not.toHaveBeenCalled();
+    expect(repositoryTransacao.criarSessao).not.toHaveBeenCalled();
   });
 
   it("aplica à alteração de senha o rate limit persistente do ambiente", async () => {

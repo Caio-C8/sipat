@@ -53,6 +53,7 @@ describe("gestão de naturezas", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     sessaoUsuario: {
       findUnique: jest.fn(),
       updateMany: jest.fn(),
@@ -92,6 +93,7 @@ describe("gestão de naturezas", () => {
             email: administrador ? "admin@example.com" : "diretor@example.com",
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },

@@ -1,5 +1,7 @@
 export const CHAVE_ROTA_PUBLICA = "sipat:rota-publica";
 export const CHAVE_PERFIS_PERMITIDOS = "sipat:perfis-permitidos";
+export const CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA =
+  "sipat:permite-troca-senha-obrigatoria";
 
 export const DURACAO_ABSOLUTA_SESSAO_MS = 8 * 60 * 60 * 1_000;
 export const INATIVIDADE_NOMINAL_SESSAO_MS = 30 * 60 * 1_000;

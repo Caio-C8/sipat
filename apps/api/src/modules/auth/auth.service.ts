@@ -1,10 +1,15 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   type AppEnvironment,
   type AlterarSenhaBody,
   type IdentidadeAutenticada,
   IdentidadeAutenticadaSchema,
+  type ConcluirPrimeiroAcessoBody,
   type LoginBody,
   type RedefinirSenhaBody,
   type SolicitarRedefinicaoSenhaBody,
@@ -29,6 +34,7 @@ import { DespachanteEmailAuth } from "./despachante-email";
 import {
   criarChaveRateLimitAlteracaoSenha,
   criarChaveRateLimitLogin,
+  criarChaveRateLimitPrimeiroAcesso,
   criarChaveRateLimitRecuperacaoSenha,
 } from "./rate-limit-login";
 import { SessaoRepository } from "./sessao.repository";
@@ -37,11 +43,10 @@ import {
   calcularHashTokenRedefinicaoSenha,
   gerarTokenRedefinicaoSenha,
 } from "./token-redefinicao";
-import type { LoginRealizado } from "./auth.types";
+import type { LoginRealizado, PrimeiroAcessoConcluido } from "./auth.types";
 
 const HASH_FICTICIO =
   "$argon2id$v=19$m=19456,t=2,p=1$7k3jXdW9HljY+Hh5z2L9Lg$n+/QIxGmny4eYuES0YUW9KF2xQGYCuBsWb/EDz0cbU0";
-const TROCA_SENHA_OBRIGATORIA_ATE_AUTH_004 = false;
 
 @Injectable()
 export class AuthService {
@@ -81,7 +86,7 @@ export class AuthService {
       nome: sessao.usuario.nome,
       email: sessao.usuario.email,
       perfil: sessao.usuario.perfil,
-      trocaSenhaObrigatoria: TROCA_SENHA_OBRIGATORIA_ATE_AUTH_004,
+      trocaSenhaObrigatoria: sessao.usuario.trocaSenhaObrigatoria,
     });
 
     if (!identidade.success) {
@@ -118,6 +123,15 @@ export class AuthService {
   alterarSenha(usuarioId: string, dados: AlterarSenhaBody): Promise<void> {
     return this.capacidadeArgon2.executar(() =>
       this.executarAlteracaoSenha(usuarioId, dados),
+    );
+  }
+
+  concluirPrimeiroAcesso(
+    usuarioId: string,
+    dados: ConcluirPrimeiroAcessoBody,
+  ): Promise<PrimeiroAcessoConcluido> {
+    return this.capacidadeArgon2.executar(() =>
+      this.executarConclusaoPrimeiroAcesso(usuarioId, dados),
     );
   }
 
@@ -232,6 +246,87 @@ export class AuthService {
       chaveRateLimit,
       agora,
     );
+  }
+
+  private async executarConclusaoPrimeiroAcesso(
+    usuarioId: string,
+    dados: ConcluirPrimeiroAcessoBody,
+  ): Promise<PrimeiroAcessoConcluido> {
+    const agora = new Date();
+    const politica = POLITICA_RATE_LIMIT_LOGIN[this.obterAmbiente()];
+    const chaveRateLimit = criarChaveRateLimitPrimeiroAcesso(
+      usuarioId,
+      this.config.getOrThrow("AUTH_RATE_LIMIT_HMAC_SECRET", { infer: true }),
+    );
+
+    await this.authRepository.limparTentativasOperacaoSenhaExpiradas(
+      agora,
+      TAMANHO_LOTE_LIMPEZA_RATE_LIMIT,
+    );
+    const bloqueadoAte =
+      await this.authRepository.reservarTentativaOperacaoSenha(
+        chaveRateLimit,
+        agora,
+        politica.tentativas,
+        politica.janelaMs,
+      );
+
+    if (bloqueadoAte !== null) {
+      throw new MuitasRequisicoesException(
+        Math.max(
+          1,
+          Math.ceil((bloqueadoAte.getTime() - agora.getTime()) / 1_000),
+        ),
+      );
+    }
+
+    const novaSenhaHash = await this.senhaHasher.criarHash(dados.novaSenha);
+
+    for (
+      let tentativa = 1;
+      tentativa <= MAXIMO_TENTATIVAS_TRANSACAO;
+      tentativa += 1
+    ) {
+      const token = gerarTokenSessao();
+      try {
+        const concluido =
+          await this.authRepository.executarTransacaoSerializavel(
+            async (repository) => {
+              const atualizada =
+                await repository.concluirPrimeiroAcessoSePendente(
+                  usuarioId,
+                  novaSenhaHash,
+                  agora,
+                );
+              if (!atualizada) return false;
+
+              await repository.invalidarRedefinicaoSenha(usuarioId, agora);
+              await repository.revogarTodasSessoes(usuarioId, agora);
+              await repository.criarSessao({
+                usuarioId,
+                tokenHash: calcularHashTokenSessao(token)!,
+                expiraAt: new Date(
+                  agora.getTime() + DURACAO_ABSOLUTA_SESSAO_MS,
+                ),
+                ultimaAtividadeAt: agora,
+              });
+              await repository.limparTentativasOperacaoSenha(chaveRateLimit);
+              return true;
+            },
+          );
+
+        if (!concluido) throw this.primeiroAcessoJaConcluido();
+        return { token };
+      } catch (erro: unknown) {
+        if (this.ehErroTransacaoRepetivel(erro)) {
+          if (tentativa < MAXIMO_TENTATIVAS_TRANSACAO) continue;
+          throw new MuitasRequisicoesException(1);
+        }
+        throw erro;
+      }
+    }
+
+    throw new Error("Não foi possível concluir o primeiro acesso.");
   }
 
   private async persistirAlteracaoSenha(
@@ -435,7 +530,7 @@ export class AuthService {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil,
-      trocaSenhaObrigatoria: TROCA_SENHA_OBRIGATORIA_ATE_AUTH_004,
+      trocaSenhaObrigatoria: usuario.trocaSenhaObrigatoria,
     });
     const token = await this.criarSessao(usuario.id, chaveRateLimit, agora);
 
@@ -543,6 +638,14 @@ export class AuthService {
     return new UnauthorizedException({
       codigo: "SENHA_ATUAL_INVALIDA",
       mensagem: "A senha atual é inválida.",
+      erros: [],
+    });
+  }
+
+  private primeiroAcessoJaConcluido(): ConflictException {
+    return new ConflictException({
+      codigo: "PRIMEIRO_ACESSO_JA_CONCLUIDO",
+      mensagem: "O primeiro acesso deste usuário já foi concluído.",
       erros: [],
     });
   }

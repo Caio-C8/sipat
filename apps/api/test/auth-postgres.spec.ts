@@ -311,6 +311,81 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     expect(hashesValidos.filter(Boolean)).toHaveLength(1);
   });
 
+  it("conclui uma única vez o primeiro acesso e rotaciona a sessão atomicamente", async () => {
+    const senhaHasher = new SenhaHasher();
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Primeiro acesso",
+        email: "primeiro-acesso@example.com",
+        senha: await senhaHasher.criarHash("uma senha inicial segura"),
+        perfil: "ADMINISTRADOR",
+        ativo: true,
+      },
+    });
+    await database.sessaoUsuario.createMany({
+      data: ["a", "b"].map((prefixo) => ({
+        tokenHash: prefixo.repeat(64),
+        usuarioId: usuario.id,
+        expiraAt: new Date("2999-01-01"),
+        ultimaAtividadeAt: new Date(),
+      })),
+    });
+    await database.redefinicaoSenha.create({
+      data: {
+        usuarioId: usuario.id,
+        tokenHash: "c".repeat(64),
+        expiraAt: new Date("2999-01-01"),
+      },
+    });
+    const service = criarAuthService(database, "development", senhaHasher);
+    const senhas = ["primeira senha definitiva", "segunda senha definitiva"];
+
+    const resultados = await Promise.allSettled(
+      senhas.map((novaSenha) =>
+        service.concluirPrimeiroAcesso(usuario.id, {
+          novaSenha,
+          confirmacaoNovaSenha: novaSenha,
+        }),
+      ),
+    );
+
+    expect(
+      resultados.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      resultados.filter(
+        (resultado): resultado is PromiseRejectedResult =>
+          resultado.status === "rejected" &&
+          resultado.reason?.response?.codigo === "PRIMEIRO_ACESSO_JA_CONCLUIDO",
+      ),
+    ).toHaveLength(1);
+    const persistido = await database.usuario.findUniqueOrThrow({
+      where: { id: usuario.id },
+      select: { senha: true, trocaSenhaObrigatoria: true },
+    });
+    expect(persistido.trocaSenhaObrigatoria).toBe(false);
+    const hashesValidos = await Promise.all(
+      senhas.map((senha) => senhaHasher.verificarHash(persistido.senha, senha)),
+    );
+    expect(hashesValidos.filter(Boolean)).toHaveLength(1);
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, revogadoAt: null },
+      }),
+    ).toBe(1);
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, revogadoAt: { not: null } },
+      }),
+    ).toBe(2);
+    expect(
+      await database.redefinicaoSenha.findUnique({
+        where: { usuarioId: usuario.id },
+        select: { consumidoAt: true },
+      }),
+    ).toEqual({ consumidoAt: expect.any(Date) });
+  });
+
   it("reabre atomicamente a janela de rate limit no instante de expiração", async () => {
     const repository = new AuthRepository(database);
     const inicio = new Date("2026-10-18T12:00:00.000Z");

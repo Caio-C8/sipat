@@ -149,6 +149,7 @@ describe("notas fiscais", () => {
             email: `${perfil.toLowerCase()}@example.com`,
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },

@@ -35,6 +35,7 @@ describe("AutenticacaoGuard", () => {
     nome: "Maria da Silva",
     email: "maria@example.com",
     perfil: "ADMINISTRADOR" as const,
+    trocaSenhaObrigatoria: false,
   };
 
   it("permite rota explicitamente pública sem consultar sessão", async () => {
@@ -90,6 +91,7 @@ describe("AutorizacaoGuard", () => {
     nome: "Maria da Silva",
     email: "maria@example.com",
     perfil: "ADMINISTRADOR" as const,
+    trocaSenhaObrigatoria: false,
   };
 
   it("permite rota pública sem exigir perfil", () => {
@@ -117,6 +119,7 @@ describe("AutorizacaoGuard", () => {
       getAllAndOverride: jest
         .fn()
         .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(undefined)
         .mockReturnValueOnce(undefined),
     } as unknown as Reflector;
 
@@ -132,11 +135,13 @@ describe("AutorizacaoGuard", () => {
       getAllAndOverride: jest
         .fn()
         .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(undefined)
         .mockReturnValueOnce(["ADMINISTRADOR"]),
     } as unknown as Reflector;
     const reflectorNegado = {
       getAllAndOverride: jest
         .fn()
+        .mockReturnValueOnce(undefined)
         .mockReturnValueOnce(undefined)
         .mockReturnValueOnce(["DIRETOR_PATRIMONIO"]),
     } as unknown as Reflector;
@@ -148,6 +153,41 @@ describe("AutorizacaoGuard", () => {
     expect(() =>
       new AutorizacaoGuard(reflectorNegado).canActivate(contexto),
     ).toThrow(ForbiddenException);
+  });
+
+  it("restringe sessão pendente antes da autorização por perfil", () => {
+    const reflectorNegado = {
+      getAllAndOverride: jest
+        .fn()
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(undefined),
+    } as unknown as Reflector;
+    const reflectorPermitido = {
+      getAllAndOverride: jest
+        .fn()
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(["ADMINISTRADOR"]),
+    } as unknown as Reflector;
+    const contexto = criarContexto({
+      identidadeAutenticada: {
+        ...identidade,
+        trocaSenhaObrigatoria: true,
+      },
+    });
+
+    expect(() =>
+      new AutorizacaoGuard(reflectorNegado).canActivate(contexto),
+    ).toThrow(
+      expect.objectContaining({
+        response: expect.objectContaining({
+          codigo: "TROCA_SENHA_OBRIGATORIA",
+        }),
+      }),
+    );
+    expect(new AutorizacaoGuard(reflectorPermitido).canActivate(contexto)).toBe(
+      true,
+    );
   });
 });
 

@@ -15,6 +15,7 @@ const sessaoParaAutenticacaoSelect = {
       email: true,
       perfil: true,
       ativo: true,
+      trocaSenhaObrigatoria: true,
     },
   },
 } satisfies Prisma.SessaoUsuarioSelect;

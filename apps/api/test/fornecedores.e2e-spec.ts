@@ -65,6 +65,7 @@ describe("gestão de fornecedores", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     sessaoUsuario: {
       findUnique: jest.fn(),
       updateMany: jest.fn(),
@@ -104,6 +105,7 @@ describe("gestão de fornecedores", () => {
             email: administrador ? "admin@example.com" : "diretor@example.com",
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },

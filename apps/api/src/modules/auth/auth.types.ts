@@ -3,10 +3,7 @@ import type {
   IdentidadeAutenticadaInput,
 } from "@repo/contracts";
 
-type IdentidadePersistidaAtual = Omit<
-  IdentidadeAutenticadaInput,
-  "trocaSenhaObrigatoria"
->;
+type IdentidadePersistidaAtual = IdentidadeAutenticadaInput;
 
 export interface RequisicaoAutenticada {
   cookies?: unknown;
@@ -33,6 +30,10 @@ export interface UsuarioParaLogin extends IdentidadePersistidaAtual {
 export interface UsuarioParaAlteracaoSenha {
   ativo: boolean;
   senha: string;
+}
+
+export interface PrimeiroAcessoConcluido {
+  token: string;
 }
 
 export interface UsuarioParaRecuperacaoSenha {

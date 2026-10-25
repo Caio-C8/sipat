@@ -16,6 +16,7 @@ export class UsuarioPersistenceMapper {
       senha: usuario.senhaHash,
       perfil: usuario.perfil,
       ativo: true,
+      trocaSenhaObrigatoria: true,
       createdBy: { connect: { id: createdById } },
     };
   }

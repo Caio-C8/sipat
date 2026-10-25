@@ -49,6 +49,7 @@ describe("processos de compra", () => {
     $disconnect: jest.fn(),
     $transaction: jest.fn(),
     $queryRaw: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     sessaoUsuario: { findUnique: jest.fn(), updateMany: jest.fn() },
     fornecedor: { findUnique: jest.fn() },
     processoCompra: {
@@ -113,6 +114,7 @@ describe("processos de compra", () => {
             email: `${perfil.toLowerCase()}@example.com`,
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },

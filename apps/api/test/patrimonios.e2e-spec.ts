@@ -39,6 +39,7 @@ describe("patrimônios", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     $transaction: jest.fn(),
     $queryRaw: jest.fn(),
     usuario: { findUnique: jest.fn() },
@@ -127,6 +128,7 @@ describe("patrimônios", () => {
                 : "diretor@example.com",
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },

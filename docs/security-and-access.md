@@ -5,9 +5,10 @@ SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
 do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
 O backend de alteração autenticada da própria senha do `AUTH-002` também está
 implementado, assim como a recuperação de senha do `AUTH-003`. As interfaces
-Web e mobile continuam fora dessas entregas. `CONTRACTS-009` está concluído;
-`AUTH-004` e `WEB-AUTH-001` estão aprovados e ainda não implementados. O estado
-e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
+Web e mobile continuam fora dessas entregas. `CONTRACTS-009` está concluído e
+o backend do `AUTH-004` está implementado; `WEB-AUTH-001` continua aprovado e
+ainda não implementado. O estado e a ordem de execução ficam no
+[roadmap inicial](./roadmap.md).
 
 ## Estado implementado
 
@@ -26,6 +27,9 @@ e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
   atual e `POST /api/auth/logout` encerra a sessão de forma idempotente;
 - `POST /api/auth/alterar-senha` exige a senha atual, altera somente a
   identidade da sessão, revoga todas as sessões e expira o cookie;
+- `POST /api/auth/concluir-primeiro-acesso` substitui a senha inicial e
+  rotaciona a sessão; enquanto a pendência persistida estiver ativa, somente
+  essa rota, `/auth/me` e logout ficam acessíveis entre as rotas protegidas;
 - recuperação de senha usa response neutra, token de uso único e revoga todas
   as sessões após sucesso.
 
@@ -59,8 +63,9 @@ identidade { id, nome, email, perfil, trocaSenhaObrigatoria }
 A API é a autoridade. A Web pode redirecionar ou esconder controles depois de
 consultar a identidade, mas isso não concede nem revoga permissão.
 
-Até `AUTH-004` adicionar a fonte persistente e a sessão restrita, a API publica
-`trocaSenhaObrigatoria: false` como compatibilidade transitória do contrato.
+`Usuario.trocaSenhaObrigatoria` é a fonte persistente do estado. A API a
+carrega no login e na autenticação de cada sessão; remover sessões não altera a
+pendência.
 
 ## Mecanismo de sessão
 
@@ -244,9 +249,8 @@ podem selecionar outro usuário na confirmação.
 
 ## Primeiro acesso e senha inicial
 
-`CONTRACTS-009` está concluído e `AUTH-004` está aprovado, mas ainda não
-implementado. Eles separam explicitamente senha inicial, sessão e histórico de
-login:
+`CONTRACTS-009` e o backend do `AUTH-004` estão implementados. Eles separam
+explicitamente senha inicial, sessão e histórico de login:
 
 - `Usuario.trocaSenhaObrigatoria` será a fonte de verdade persistente;
 - usuários criados administrativamente e o primeiro administrador provisionado

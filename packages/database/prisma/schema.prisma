@@ -96,12 +96,13 @@ enum MetodoDepreciacao {
 }
 
 model Usuario {
-  id     String        @id @default(uuid()) @db.Uuid
-  nome   String        @db.VarChar(100)
-  email  String        @unique @db.VarChar(150)
-  senha  String        @db.VarChar(255)
-  perfil PerfilUsuario
-  ativo  Boolean       @default(true)
+  id                    String        @id @default(uuid()) @db.Uuid
+  nome                  String        @db.VarChar(100)
+  email                 String        @unique @db.VarChar(150)
+  senha                 String        @db.VarChar(255)
+  perfil                PerfilUsuario
+  ativo                 Boolean       @default(true)
+  trocaSenhaObrigatoria Boolean       @default(true) @map("troca_senha_obrigatoria")
 
   ultimoLoginAt DateTime? @map("ultimo_login_at") @db.Timestamp(6)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamp(6)

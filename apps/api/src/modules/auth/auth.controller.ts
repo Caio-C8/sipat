@@ -7,6 +7,7 @@ import {
   Post,
   Req,
   Res,
+  SetMetadata,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
@@ -19,12 +20,14 @@ import {
 import { ZodSerializerDto } from "nestjs-zod";
 import type { EnvironmentVariables } from "../../environment";
 import { AuthService } from "./auth.service";
+import { CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA } from "./auth.constants";
 import type { RequisicaoAutenticada } from "./auth.types";
 import { PerfisPermitidos } from "./decorators/perfis-permitidos.decorator";
 import { Publica } from "./decorators/publica.decorator";
 import {
   AlterarSenhaBodyDto,
   AuthMeResponseDto,
+  ConcluirPrimeiroAcessoBodyDto,
   LoginBodyDto,
   LoginResponseDto,
   RedefinirSenhaBodyDto,
@@ -79,6 +82,7 @@ export class AuthController {
   }
 
   @Get("me")
+  @SetMetadata(CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA, true)
   @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(AuthMeResponseDto)
   me(@Req() request: RequisicaoAutenticada): AuthMeResponse {
@@ -88,6 +92,28 @@ export class AuthController {
       mensagem: "Identidade autenticada consultada com sucesso.",
       dados: request.identidadeAutenticada!,
     };
+  }
+
+  @Post("concluir-primeiro-acesso")
+  @SetMetadata(CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA, true)
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async concluirPrimeiroAcesso(
+    @Body() body: ConcluirPrimeiroAcessoBodyDto,
+    @Req() request: RequisicaoAutenticada,
+    @Res({ passthrough: true }) response: RespostaComCookie,
+  ): Promise<void> {
+    const resultado = await this.authService.concluirPrimeiroAcesso(
+      request.identidadeAutenticada!.id,
+      body,
+    );
+    const ambiente = this.obterAmbiente();
+
+    response.cookie(
+      obterNomeCookieSessao(ambiente),
+      resultado.token,
+      obterOpcoesCriacaoCookieSessao(ambiente),
+    );
   }
 
   @Post("alterar-senha")
