@@ -37,11 +37,6 @@
   color: #f0b600;
   background: #1d3b61;
 }
-.brandLogo {
-  width: 2rem;
-  height: auto;
-  object-fit: contain;
-}
 .brandCaption {
   margin: 0;
   color: #c8d7e9;
@@ -107,13 +102,16 @@
 .cityMark {
   width: 2.8rem;
   height: 2.8rem;
+  display: grid;
+  flex: none;
+  place-items: center;
   border-radius: 0.5rem;
-  color: #1873ad;
   background: #fff;
 }
 .cityLogo {
   width: 2.15rem;
-  height: auto;
+  height: 2.15rem;
+  object-fit: contain;
 }
 .cityFooter strong {
   display: block;
@@ -406,10 +404,7 @@
   .mobileBrand .brandIcon {
     width: 2.5rem;
     height: 2.5rem;
-    background: #fff;
-  }
-  .mobileBrand .brandLogo {
-    width: 1.85rem;
+    background: #1d3b61;
   }
   .cardTall,
   .cardSuccess {

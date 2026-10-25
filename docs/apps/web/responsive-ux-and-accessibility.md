@@ -2,10 +2,15 @@
 
 ## Estado atual
 
-A home usa uma composição simples e responsiva para apresentar a infraestrutura
-e os health checks. Ela não contém fluxo, formulário ou modal de domínio. As
-primitives mantidas em `components/ui` são infraestrutura visual; cada nova
-composição precisa ser verificada no contexto real.
+A home apresenta uma visão geral ilustrativa e responsiva. Seus números,
+pendências, atividades e nome de usuário são exemplos fixos do desenho, sem
+integração com a API; os demais módulos da navegação são apenas apresentação.
+Em larguras menores, a navegação é apresentada por um menu expansível e os
+cartões passam de quatro para duas ou uma coluna conforme o espaço disponível.
+Em monitores amplos, a área principal ocupa a largura útil e amplia tipografia,
+espaçamento e cartões para evitar conteúdo comprimido no topo.
+As primitives mantidas em `components/ui` são infraestrutura visual; cada
+nova composição precisa ser verificada no contexto real.
 
 ## Responsividade
 
