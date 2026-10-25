@@ -42,12 +42,20 @@ describe("IdentidadeAutenticadaSchema", () => {
     nome: "Maria da Silva",
     email: "maria@example.com",
     perfil: "ADMINISTRADOR",
+    trocaSenhaObrigatoria: true,
   } as const;
 
   it("aceita a identidade mínima e segura", () => {
     assert.deepEqual(
       parseValido(IdentidadeAutenticadaSchema, identidadeValida),
       identidadeValida,
+    );
+    assert.deepEqual(
+      parseValido(IdentidadeAutenticadaSchema, {
+        ...identidadeValida,
+        trocaSenhaObrigatoria: false,
+      }),
+      { ...identidadeValida, trocaSenhaObrigatoria: false },
     );
   });
 
@@ -65,14 +73,39 @@ describe("IdentidadeAutenticadaSchema", () => {
   });
 
   it("rejeita propriedades inesperadas e campos sensíveis", () => {
-    esperaInvalido(IdentidadeAutenticadaSchema, {
-      ...identidadeValida,
-      senha: "nao-pode-vazar",
-    });
-    esperaInvalido(IdentidadeAutenticadaSchema, {
-      ...identidadeValida,
-      token: "nao-pode-vazar",
-    });
+    for (const campo of [
+      "senha",
+      "senhaHash",
+      "token",
+      "cookie",
+      "ultimoLoginAt",
+      "sessaoId",
+    ] as const) {
+      esperaInvalido(IdentidadeAutenticadaSchema, {
+        ...identidadeValida,
+        [campo]: "nao-pode-vazar",
+      });
+    }
+  });
+
+  it("exige um boolean para o estado de primeiro acesso", () => {
+    const semEstadoPrimeiroAcesso = {
+      id: identidadeValida.id,
+      nome: identidadeValida.nome,
+      email: identidadeValida.email,
+      perfil: identidadeValida.perfil,
+    };
+
+    esperaInvalido(
+      IdentidadeAutenticadaSchema,
+      semEstadoPrimeiroAcesso,
+      "trocaSenhaObrigatoria",
+    );
+    esperaInvalido(
+      IdentidadeAutenticadaSchema,
+      { ...identidadeValida, trocaSenhaObrigatoria: "true" },
+      "trocaSenhaObrigatoria",
+    );
   });
 });
 
