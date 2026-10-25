@@ -3,7 +3,7 @@
 ## Baseline concluído
 
 - [x] Next.js com App Router, TypeScript, ESLint e Vitest configurados.
-- [x] Layout raiz, metadata e página inicial neutra.
+- [x] Layout raiz e metadata.
 - [x] Health check próprio e rewrite para a API.
 - [x] Clientes HTTP separados para navegador e servidor.
 - [x] Erros, timeout, cancelamento e validação de responses padronizados.
@@ -12,6 +12,7 @@
 - [x] Primitives visuais genéricas disponíveis.
 - [x] Playwright configurado para o build de produção.
 - [x] Testes de home, acessibilidade automatizável e headers de segurança.
+- [x] Interface visual da home com dados ilustrativos, sem integração Web–API.
 
 ## Próximos objetivos
 

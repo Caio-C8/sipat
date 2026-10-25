@@ -10,8 +10,8 @@ fronteiras entre UI, contratos e integração HTTP.
 
 ## Estado atual
 
-- `/` apresenta a infraestrutura atual e links para os health checks; sua
-  evolução para catálogo público de rotas está aprovada em `WEB-AUTH-001`;
+- `/` apresenta a visão geral visual com dados ilustrativos do Figma, sem
+  consultar a API;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;
@@ -24,12 +24,17 @@ fronteiras entre UI, contratos e integração HTTP.
   normalizados;
 - `components/ui` contém primitives visuais genéricas já instaladas;
 - Vitest cobre infraestrutura HTTP, configuração e observabilidade;
-- Playwright cobre home, acessibilidade automatizável e headers de segurança;
+- Playwright cobre a home ilustrativa, acessibilidade automatizável e headers
+  de segurança;
 - as rotas `/login`, `/redefinir-senha` e `/senha-atualizada` possuem somente
   interface visual; os formulários ainda não enviam dados;
 - não existem hooks de autenticação, cache remoto ou regras de domínio na Web;
 - `WEB-AUTH-001` foi aprovado, mas depende dos contratos e do backend de
   primeiro acesso antes de integrar as telas.
+
+O plano `WEB-AUTH-001` prevê transformar `/` em catálogo público de rotas e
+criar `/dashboard` protegido. A visão geral atual permanece em `/` até essa
+implementação; a mudança de rota ainda não foi feita.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
 ainda não possuem consumidor Web. A interface de login ainda não cria sessão;

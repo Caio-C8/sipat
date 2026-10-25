@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Monitor, Smartphone } from "lucide-react";
+import { Monitor, Package, Smartphone } from "lucide-react";
 import styles from "./auth.module.css";
 
 const BRASAO_SRC = "/images/brasao.png";
@@ -13,13 +13,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className={styles.brandTop}>
           <Link className={styles.brand} href="/login">
             <span className={styles.brandIcon}>
-              <Image
-                className={styles.brandLogo}
-                src={BRASAO_SRC}
-                alt=""
-                width={89}
-                height={90}
-              />
+              <Package size={23} aria-hidden="true" />
             </span>
             <span>SIPAT</span>
           </Link>
@@ -54,6 +48,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               alt=""
               width={89}
               height={90}
+              unoptimized
             />
           </span>
           <div>
@@ -65,13 +60,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <section className={styles.content} aria-label="Acesso ao SIPAT">
         <div className={styles.mobileBrand}>
           <span className={styles.brandIcon}>
-            <Image
-              className={styles.brandLogo}
-              src={BRASAO_SRC}
-              alt=""
-              width={89}
-              height={90}
-            />
+            <Package size={20} aria-hidden="true" />
           </span>
           SIPAT
         </div>

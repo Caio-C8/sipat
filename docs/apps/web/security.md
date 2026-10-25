@@ -7,8 +7,9 @@ CSRF e respostas da API pertencem também à
 
 ## Estado atual
 
-O SIPAT ainda não possui rotas Web de domínio. A API já aplica autenticação,
-autorização por perfil e CSRF às rotas administrativas de usuários, mas a Web
+O SIPAT ainda não possui rotas Web operacionais de domínio. A home exibe somente
+dados ilustrativos e não consulta identidade ou dados patrimoniais. A API já
+aplica autenticação, autorização por perfil e CSRF às rotas administrativas de usuários, mas a Web
 não possui operações ou mutações que as consumam. As telas de login e criação
 de nova senha são apenas visuais; logout, consumo de `/auth/me`, emissão do cookie
 e criação produtiva de sessão continuam ausentes.
