@@ -4,6 +4,11 @@ import { ComissoesRepository } from "../src/modules/comissoes/comissoes.reposito
 import { ComissoesService } from "../src/modules/comissoes/comissoes.service";
 import { InventariosRepository } from "../src/modules/inventarios/inventarios.repository";
 import { InventariosService } from "../src/modules/inventarios/inventarios.service";
+import { InventariosPolicyService } from "../src/modules/inventarios/inventarios-policy.service";
+import { ResponsaveisRepository } from "../src/modules/responsaveis/responsaveis.repository";
+import { ResponsaveisService } from "../src/modules/responsaveis/responsaveis.service";
+import { SetoresRepository } from "../src/modules/setores/setores.repository";
+import { SetoresService } from "../src/modules/setores/setores.service";
 
 const databaseUrl = process.env.INVENTARIOS_INTEGRATION_DATABASE_URL;
 const describeComPostgres = databaseUrl ? describe : describe.skip;
@@ -11,6 +16,7 @@ const describeComPostgres = databaseUrl ? describe : describe.skip;
 describeComPostgres("inventários no PostgreSQL", () => {
   let database: DatabaseClient;
   let service: InventariosService;
+  let setoresService: SetoresService;
   let identidade: IdentidadeAutenticada;
   let comissaoId: string;
   let setorAtivoId: string;
@@ -29,6 +35,11 @@ describeComPostgres("inventários no PostgreSQL", () => {
     service = new InventariosService(
       new InventariosRepository(database),
       new ComissoesService(new ComissoesRepository(database)),
+    );
+    setoresService = new SetoresService(
+      new SetoresRepository(database),
+      new ResponsaveisService(new ResponsaveisRepository(database)),
+      new InventariosPolicyService(new InventariosRepository(database)),
     );
   });
 
@@ -220,6 +231,425 @@ describeComPostgres("inventários no PostgreSQL", () => {
         }),
       ).toBe(1);
     }
+  });
+
+  it("executa conferência idempotente, conclusão e finalização", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário operacional", comissaoId },
+      identidade,
+    );
+    const setores = await database.setorInventario.findMany({
+      where: { inventarioId: inventario.id },
+      orderBy: { setorId: "asc" },
+    });
+    const setorEsperado = setores.find(
+      ({ setorId }) => setorId === setorAtivoId,
+    )!;
+    const outroSetor = setores.find(({ setorId }) => setorId !== setorAtivoId)!;
+
+    await service.iniciarSetor(inventario.id, setorEsperado.id, identidade);
+    const primeira = await service.verificarItem(
+      inventario.id,
+      setorEsperado.id,
+      { numeroPatrimonial: "1001" },
+      identidade,
+    );
+    const repetida = await service.verificarItem(
+      inventario.id,
+      setorEsperado.id,
+      { numeroPatrimonial: "1001" },
+      identidade,
+    );
+    await service.concluirSetor(inventario.id, setorEsperado.id, identidade);
+    await service.iniciarSetor(inventario.id, outroSetor.id, identidade);
+    await service.concluirSetor(inventario.id, outroSetor.id, identidade);
+    const finalizado = await service.finalizar(
+      inventario.id,
+      { confirmarCorrecoesPendentes: false },
+      identidade,
+    );
+
+    expect(primeira).toMatchObject({
+      tipo: "CONFERENCIA_REGISTRADA",
+      item: { situacao: "CORRETO", statusVerificacao: "VERIFICADO" },
+    });
+    expect(repetida).toMatchObject({ tipo: "LEITURA_IDEMPOTENTE" });
+    expect(repetida.item.dataVerificacao).toEqual(
+      primeira.item.dataVerificacao,
+    );
+    expect(finalizado.status).toBe("FINALIZADO");
+    await expect(
+      service.verificarItem(
+        inventario.id,
+        outroSetor.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({ response: { codigo: "INVENTARIO_FINALIZADO" } });
+  });
+
+  it("corrige divergência com transferência atômica", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário com divergência", comissaoId },
+      identidade,
+    );
+    const setores = await database.setorInventario.findMany({
+      where: { inventarioId: inventario.id },
+    });
+    const setorEsperado = setores.find(
+      ({ setorId }) => setorId === setorAtivoId,
+    )!;
+    const setorEncontrado = setores.find(
+      ({ setorId }) => setorId !== setorAtivoId,
+    )!;
+
+    await service.iniciarSetor(inventario.id, setorEncontrado.id, identidade);
+    const verificado = await service.verificarItem(
+      inventario.id,
+      setorEncontrado.id,
+      { numeroPatrimonial: "1001" },
+      identidade,
+    );
+    const corrigido = await service.corrigirItem(
+      inventario.id,
+      verificado.item.id,
+      { tipoCorrecao: "TRANSFERENCIA_CADASTRAL" },
+      identidade,
+    );
+
+    expect(corrigido).toMatchObject({
+      situacao: "DIVERGENCIA",
+      statusCorrecao: "CORRIGIDO",
+      tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
+    });
+    expect(corrigido.transferenciaCorrecaoId).not.toBeNull();
+    await expect(
+      database.patrimonio.findUniqueOrThrow({
+        where: { numeroPatrimonio: "1001" },
+        select: { setorAtualId: true },
+      }),
+    ).resolves.toEqual({ setorAtualId: setorEncontrado.setorId });
+    expect(
+      await database.transferenciaPatrimonio.count({
+        where: { patrimonioId: verificado.item.patrimonio.id },
+      }),
+    ).toBe(1);
+
+    await service.concluirSetor(inventario.id, setorEncontrado.id, identidade);
+    await service.iniciarSetor(inventario.id, setorEsperado.id, identidade);
+    await service.concluirSetor(inventario.id, setorEsperado.id, identidade);
+    await expect(
+      service.finalizar(
+        inventario.id,
+        { confirmarCorrecoesPendentes: false },
+        identidade,
+      ),
+    ).resolves.toMatchObject({ status: "FINALIZADO" });
+  });
+
+  it("preserva empréstimo vigente ao encerrar item não localizado", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário com empréstimo", comissaoId },
+      identidade,
+    );
+    const setor = await database.setorInventario.findFirstOrThrow({
+      where: { inventarioId: inventario.id, setorId: setorAtivoId },
+    });
+    const patrimonio = await database.patrimonio.findUniqueOrThrow({
+      where: { numeroPatrimonio: "1001" },
+    });
+    const emprestimo = await database.emprestimoPatrimonio.create({
+      data: {
+        dataEmprestimo: new Date(),
+        grupoEmprestimoId: "00000000-0000-4000-8000-000000000098",
+        comissaoId,
+        patrimonioId: patrimonio.id,
+        createdById: identidade.id,
+      },
+    });
+    await database.patrimonio.update({
+      where: { id: patrimonio.id },
+      data: { status: "EMPRESTADO" },
+    });
+
+    await service.iniciarSetor(inventario.id, setor.id, identidade);
+    await service.concluirSetor(inventario.id, setor.id, identidade);
+    await expect(
+      database.itemInventario.findFirstOrThrow({
+        where: { inventarioId: inventario.id, patrimonioId: patrimonio.id },
+      }),
+    ).resolves.toMatchObject({
+      situacao: "NAO_LOCALIZADO",
+      statusVerificacao: "VERIFICADO",
+      statusPatrimonioNaVerificacao: "EMPRESTADO",
+      emprestimoPatrimonioId: emprestimo.id,
+    });
+  });
+
+  it("preserva manutenção vigente ao encerrar item não localizado", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário com manutenção", comissaoId },
+      identidade,
+    );
+    const setor = await database.setorInventario.findFirstOrThrow({
+      where: { inventarioId: inventario.id, setorId: setorAtivoId },
+    });
+    const patrimonio = await database.patrimonio.findUniqueOrThrow({
+      where: { numeroPatrimonio: "1001" },
+    });
+    const manutencao = await database.manutencao.create({
+      data: {
+        tipo: "CORRETIVA",
+        dataEnvio: new Date("2026-10-24T00:00:00.000Z"),
+        comissaoId,
+        createdById: identidade.id,
+        itens: { create: { patrimonioId: patrimonio.id } },
+      },
+      include: { itens: true },
+    });
+    await database.patrimonio.update({
+      where: { id: patrimonio.id },
+      data: { status: "EM_MANUTENCAO" },
+    });
+
+    await service.iniciarSetor(inventario.id, setor.id, identidade);
+    await service.concluirSetor(inventario.id, setor.id, identidade);
+    await expect(
+      database.itemInventario.findFirstOrThrow({
+        where: { inventarioId: inventario.id, patrimonioId: patrimonio.id },
+      }),
+    ).resolves.toMatchObject({
+      situacao: "NAO_LOCALIZADO",
+      statusPatrimonioNaVerificacao: "EM_MANUTENCAO",
+      itemManutencaoId: manutencao.itens[0]!.id,
+    });
+  });
+
+  it("bloqueia inativação de setor participante até finalizar o inventário", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário que bloqueia setor", comissaoId },
+      identidade,
+    );
+
+    await expect(
+      setoresService.alterarSituacao(setorAtivoId, { ativo: false }),
+    ).rejects.toMatchObject({
+      response: { codigo: "SETOR_PARTICIPANTE_INVENTARIO_ABERTO" },
+    });
+    const patrimonio = await database.patrimonio.findUniqueOrThrow({
+      where: { numeroPatrimonio: "1001" },
+    });
+    await expect(
+      database.baixaPatrimonio.create({
+        data: {
+          dataBaixa: new Date(),
+          tipo: "PERDA_FISICA",
+          motivo: "Teste de bloqueio durante inventário",
+          patrimonioId: patrimonio.id,
+          comissaoId,
+          createdById: identidade.id,
+        },
+      }),
+    ).rejects.toThrow();
+
+    const setores = await database.setorInventario.findMany({
+      where: { inventarioId: inventario.id },
+    });
+    for (const setor of setores) {
+      await service.iniciarSetor(inventario.id, setor.id, identidade);
+      await service.concluirSetor(inventario.id, setor.id, identidade);
+    }
+    await service.finalizar(
+      inventario.id,
+      { confirmarCorrecoesPendentes: false },
+      identidade,
+    );
+    await expect(
+      setoresService.alterarSituacao(setorAtivoId, { ativo: false }),
+    ).resolves.toMatchObject({ ativo: false });
+    await expect(
+      database.baixaPatrimonio.create({
+        data: {
+          dataBaixa: new Date(),
+          tipo: "PERDA_FISICA",
+          motivo: "Teste permitido após finalização",
+          patrimonioId: patrimonio.id,
+          comissaoId,
+          createdById: identidade.id,
+        },
+      }),
+    ).resolves.toMatchObject({ patrimonioId: patrimonio.id });
+  });
+
+  it("consolida somente uma escrita em leituras concorrentes", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário concorrente", comissaoId },
+      identidade,
+    );
+    const setor = await database.setorInventario.findFirstOrThrow({
+      where: { inventarioId: inventario.id, setorId: setorAtivoId },
+    });
+    await service.iniciarSetor(inventario.id, setor.id, identidade);
+
+    const resultados = await Promise.all([
+      service.verificarItem(
+        inventario.id,
+        setor.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+      service.verificarItem(
+        inventario.id,
+        setor.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+    ]);
+
+    expect(resultados.map(({ tipo }) => tipo).sort()).toEqual([
+      "CONFERENCIA_REGISTRADA",
+      "LEITURA_IDEMPOTENTE",
+    ]);
+    expect(
+      await database.itemInventario.count({
+        where: { inventarioId: inventario.id },
+      }),
+    ).toBe(1);
+    expect(
+      await database.itemInventario.count({
+        where: { inventarioId: inventario.id, statusVerificacao: "VERIFICADO" },
+      }),
+    ).toBe(1);
+  });
+
+  it("mantém somente um setor em andamento sob inícios concorrentes", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário com início concorrente", comissaoId },
+      identidade,
+    );
+    const setores = await database.setorInventario.findMany({
+      where: { inventarioId: inventario.id },
+    });
+
+    const resultados = await Promise.allSettled(
+      setores.map((setor) =>
+        service.iniciarSetor(inventario.id, setor.id, identidade),
+      ),
+    );
+
+    expect(
+      resultados.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      resultados.filter(({ status }) => status === "rejected"),
+    ).toHaveLength(1);
+    expect(
+      await database.setorInventario.count({
+        where: { inventarioId: inventario.id, status: "EM_ANDAMENTO" },
+      }),
+    ).toBe(1);
+  });
+
+  it("não perde leitura confirmada nem aceita escrita após conclusão concorrente", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário conclusão versus leitura", comissaoId },
+      identidade,
+    );
+    const setor = await database.setorInventario.findFirstOrThrow({
+      where: { inventarioId: inventario.id, setorId: setorAtivoId },
+    });
+    await service.iniciarSetor(inventario.id, setor.id, identidade);
+
+    const resultados = await Promise.allSettled([
+      service.concluirSetor(inventario.id, setor.id, identidade),
+      service.verificarItem(
+        inventario.id,
+        setor.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+    ]);
+    const estado = await database.itemInventario.findFirstOrThrow({
+      where: { inventarioId: inventario.id },
+    });
+
+    expect(resultados[0]?.status).toBe("fulfilled");
+    expect(estado).toMatchObject({
+      statusVerificacao: "VERIFICADO",
+      verificadoPorId: identidade.id,
+    });
+    expect(
+      await database.setorInventario.findUniqueOrThrow({
+        where: { id: setor.id },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "CONCLUIDO" });
+    await expect(
+      service.verificarItem(
+        inventario.id,
+        setor.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: { codigo: "SETOR_INVENTARIO_FORA_DE_ANDAMENTO" },
+    });
+  });
+
+  it("não aceita correção depois da finalização concorrente", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário finalização versus correção", comissaoId },
+      identidade,
+    );
+    const setores = await database.setorInventario.findMany({
+      where: { inventarioId: inventario.id },
+    });
+    const setorEsperado = setores.find(
+      ({ setorId }) => setorId === setorAtivoId,
+    )!;
+    const setorEncontrado = setores.find(
+      ({ setorId }) => setorId !== setorAtivoId,
+    )!;
+    await service.iniciarSetor(inventario.id, setorEncontrado.id, identidade);
+    const verificacao = await service.verificarItem(
+      inventario.id,
+      setorEncontrado.id,
+      { numeroPatrimonial: "1001" },
+      identidade,
+    );
+    await service.concluirSetor(inventario.id, setorEncontrado.id, identidade);
+    await service.iniciarSetor(inventario.id, setorEsperado.id, identidade);
+    await service.concluirSetor(inventario.id, setorEsperado.id, identidade);
+
+    const resultados = await Promise.allSettled([
+      service.finalizar(
+        inventario.id,
+        { confirmarCorrecoesPendentes: true },
+        identidade,
+      ),
+      service.corrigirItem(
+        inventario.id,
+        verificacao.item.id,
+        { tipoCorrecao: "RETORNO_AO_SETOR_CADASTRADO" },
+        identidade,
+      ),
+    ]);
+
+    expect(resultados[0]?.status).toBe("fulfilled");
+    expect(
+      await database.inventario.findUniqueOrThrow({
+        where: { id: inventario.id },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "FINALIZADO" });
+    await expect(
+      service.corrigirItem(
+        inventario.id,
+        verificacao.item.id,
+        { tipoCorrecao: "RETORNO_AO_SETOR_CADASTRADO" },
+        identidade,
+      ),
+    ).rejects.toMatchObject({ response: { codigo: "INVENTARIO_FINALIZADO" } });
   });
 
   it("impede dois setores em andamento no inventário e o mesmo setor físico em inventários distintos", async () => {

@@ -124,7 +124,7 @@ Objetivos patrimoniais futuros que exigirem comissão dependerão de
 | ----- | -------------------------------------------------- | --------- | ---------------------------------------------------------- |
 | 23    | `CONTRACTS-008` — Contratos de inventários         | concluído | RF19, UC19, `CONTRACTS-004`, `CONTRACTS-007`               |
 | 24    | `INVENTARIOS-001` — Criar e consultar inventários  | concluído | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
-| 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | planejado | `INVENTARIOS-001`, concorrência e política de movimentação |
+| 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | concluído | `INVENTARIOS-001`, concorrência e política de movimentação |
 
 Esta sequência entrega somente contratos, persistência e API. Interfaces Web e
 mobile, câmera, scanner, fila offline e armazenamento de credencial permanecem
@@ -1011,7 +1011,7 @@ Especificação de execução:
 
 ## INVENTARIOS-002 — Conferir, corrigir e finalizar inventários
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -1041,17 +1041,26 @@ operações incompatíveis e concorrência comprovada no PostgreSQL.
 
 ### Critérios de aceite
 
-- [ ] somente um setor por inventário fica EM_ANDAMENTO e um mesmo setor físico
+- [x] somente um setor por inventário fica EM_ANDAMENTO e um mesmo setor físico
       não possui duas conferências simultâneas;
-- [ ] estados e auditoria de setor, item e inventário mudam atomicamente;
-- [ ] conclusão transforma todos os itens ainda pendentes em NAO_LOCALIZADO e
+- [x] estados e auditoria de setor, item e inventário mudam atomicamente;
+- [x] conclusão transforma todos os itens ainda pendentes em NAO_LOCALIZADO e
       VERIFICADO;
-- [ ] correções preservam DIVERGENCIA e criam transferência somente na correção
+- [x] correções preservam DIVERGENCIA e criam transferência somente na correção
       cadastral;
-- [ ] finalização exige todos os setores concluídos, confirmação de pendências e
+- [x] finalização exige todos os setores concluídos, confirmação de pendências e
       torna o conjunto imutável;
-- [ ] testes PostgreSQL reais comprovam locks, isolamento e conflitos;
-- [ ] API, contratos, banco e documentação passam nas verificações aplicáveis.
+- [x] testes PostgreSQL reais comprovam locks, isolamento e conflitos;
+- [x] API, contratos, banco e documentação passam nas verificações aplicáveis.
+
+Concluído em 25 de outubro de 2026. A entrega adicionou as cinco mutações
+operacionais, constraints e índices para os estados consultados, retry finito
+para conflitos de serialização e proteção de inativação/baixa enquanto o
+inventário permanece aberto. A integração foi validada em PostgreSQL 17
+descartável com as migrations aplicadas desde banco vazio e corridas reais de
+início, leitura, conclusão e finalização. Como as APIs gerais de movimentação,
+empréstimo, manutenção e baixa ainda não existem, seus futuros módulos devem
+usar a política de inventários e declarar `INVENTARIOS-002` como dependência.
 
 Especificação de execução:
 [INVENTARIOS-002](./tasks/INVENTARIOS-002-conferir-corrigir-finalizar.md).

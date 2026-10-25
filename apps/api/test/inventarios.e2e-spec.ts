@@ -1,13 +1,18 @@
-import { type INestApplication } from "@nestjs/common";
+import { ConflictException, type INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   CABECALHO_CSRF,
+  ConcluirSetorInventarioResponseSchema,
   ConsultarInventarioResponseSchema,
   CriarInventarioResponseSchema,
+  FinalizarInventarioResponseSchema,
+  IniciarSetorInventarioResponseSchema,
+  ItemJaVerificadoOutroSetorResponseSchema,
   ListarInventariosResponseSchema,
   ListarItensInventarioResponseSchema,
   ListarSetoresInventarioResponseSchema,
   RespostaErroSchema,
+  VerificarItemInventarioResponseSchema,
 } from "@repo/contracts";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -76,6 +81,11 @@ describe("inventários", () => {
     listarSetores: jest.fn(),
     listarItens: jest.fn(),
     criar: jest.fn(),
+    iniciarSetor: jest.fn(),
+    verificarItem: jest.fn(),
+    corrigirItem: jest.fn(),
+    concluirSetor: jest.fn(),
+    finalizar: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -186,6 +196,73 @@ describe("inventários", () => {
       ultimaPagina: 1,
       limite: 20,
     });
+    const setorEmAndamento = {
+      id: SETOR_INVENTARIO_ID,
+      status: "EM_ANDAMENTO" as const,
+      dataInicio: new Date("2026-10-24T13:00:00.000Z"),
+      dataFim: null,
+      iniciadoPorId: DIRETOR_ID,
+      concluidoPorId: null,
+      setor: { id: SETOR_ID, nome: "Almoxarifado" },
+      progresso: {
+        totalItens: 1,
+        itensPendentes: 0,
+        itensVerificados: 1,
+        corretos: 1,
+        divergencias: 0,
+        naoLocalizados: 0,
+      },
+    };
+    const itemCorreto = {
+      id: ITEM_ID,
+      statusVerificacao: "VERIFICADO" as const,
+      situacao: "CORRETO" as const,
+      observacao: null,
+      dataVerificacao: new Date("2026-10-24T13:05:00.000Z"),
+      verificadoPorId: DIRETOR_ID,
+      statusPatrimonioNaVerificacao: "ATIVO" as const,
+      emprestimoPatrimonioId: null,
+      itemManutencaoId: null,
+      statusCorrecao: null,
+      tipoCorrecao: null,
+      dataCorrecao: null,
+      corrigidoPorId: null,
+      transferenciaCorrecaoId: null,
+      patrimonio: {
+        id: PATRIMONIO_ID,
+        numeroPatrimonio: "1001",
+        descricao: "Notebook",
+      },
+      setorEsperado: { id: SETOR_ID, nome: "Almoxarifado" },
+      setorEncontrado: null,
+    };
+    service.iniciarSetor.mockResolvedValue(setorEmAndamento);
+    service.verificarItem.mockResolvedValue({
+      tipo: "CONFERENCIA_REGISTRADA",
+      item: itemCorreto,
+    });
+    service.concluirSetor.mockResolvedValue({
+      ...setorEmAndamento,
+      status: "CONCLUIDO",
+      dataFim: new Date("2026-10-24T14:00:00.000Z"),
+      concluidoPorId: DIRETOR_ID,
+    });
+    service.finalizar.mockResolvedValue({
+      ...inventario(),
+      status: "FINALIZADO",
+      dataInicio: new Date("2026-10-24T00:00:00.000Z"),
+      dataFim: new Date("2026-10-24T00:00:00.000Z"),
+      iniciadoPorId: DIRETOR_ID,
+      finalizadoPorId: DIRETOR_ID,
+      progresso: {
+        ...progresso,
+        setoresPendentes: 0,
+        setoresConcluidos: 1,
+        itensPendentes: 0,
+        itensVerificados: 1,
+        corretos: 1,
+      },
+    });
   });
 
   afterAll(async () => app.close());
@@ -264,6 +341,74 @@ describe("inventários", () => {
     ).toBe(true);
     expect(
       ListarItensInventarioResponseSchema.safeParse(itens.body).success,
+    ).toBe(true);
+  });
+
+  it("protege e serializa as transições operacionais", async () => {
+    const rotaSetor = `/api/inventarios/${INVENTARIO_ID}/setores/${SETOR_INVENTARIO_ID}`;
+    const semCsrf = await request(app.getHttpServer())
+      .post(`${rotaSetor}/iniciar`)
+      .set("Cookie", cookie(tokenDiretor))
+      .set("Origin", ORIGEM)
+      .send({});
+    const administrador = await request(app.getHttpServer())
+      .post(`${rotaSetor}/iniciar`)
+      .set("Cookie", cookie(tokenAdministrador))
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .send({});
+    const iniciar = await postDiretor(`${rotaSetor}/iniciar`).send({});
+    const verificar = await postDiretor(`${rotaSetor}/verificacoes`).send({
+      numeroPatrimonial: "1001",
+    });
+    const concluir = await postDiretor(`${rotaSetor}/concluir`).send({});
+    const finalizar = await postDiretor(
+      `/api/inventarios/${INVENTARIO_ID}/finalizar`,
+    ).send({ confirmarCorrecoesPendentes: false });
+
+    expect(semCsrf.status).toBe(403);
+    expect(administrador.status).toBe(403);
+    expect(
+      IniciarSetorInventarioResponseSchema.safeParse(iniciar.body).success,
+    ).toBe(true);
+    expect(
+      VerificarItemInventarioResponseSchema.safeParse(verificar.body).success,
+    ).toBe(true);
+    expect(
+      ConcluirSetorInventarioResponseSchema.safeParse(concluir.body).success,
+    ).toBe(true);
+    expect(
+      FinalizarInventarioResponseSchema.safeParse(finalizar.body).success,
+    ).toBe(true);
+    expect(service.verificarItem).toHaveBeenCalledWith(
+      INVENTARIO_ID,
+      SETOR_INVENTARIO_ID,
+      { numeroPatrimonial: "1001" },
+      expect.objectContaining({ id: DIRETOR_ID }),
+    );
+
+    service.verificarItem.mockRejectedValueOnce(
+      new ConflictException({
+        codigo: "ITEM_INVENTARIO_JA_VERIFICADO",
+        mensagem: "O patrimônio já foi verificado em outro setor.",
+        erros: [],
+        dados: {
+          itemInventarioId: ITEM_ID,
+          setorPrimeiraVerificacao: {
+            id: SETOR_ID,
+            nome: "Almoxarifado",
+          },
+          verificadoEm: "2026-10-24T13:05:00.000Z",
+          contextoLocalizacao: "MOVIMENTACAO_FISICA_SEM_HISTORICO",
+        },
+      }),
+    );
+    const conflito = await postDiretor(`${rotaSetor}/verificacoes`).send({
+      numeroPatrimonial: "1001",
+    });
+    expect(conflito.status).toBe(409);
+    expect(
+      ItemJaVerificadoOutroSetorResponseSchema.safeParse(conflito.body).success,
     ).toBe(true);
   });
 });

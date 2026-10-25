@@ -14,6 +14,8 @@ const INVENTARIO_ID = "00000000-0000-4000-8000-000000000003";
 const SETOR_ID = "00000000-0000-4000-8000-000000000004";
 const SETOR_INVENTARIO_ID = "00000000-0000-4000-8000-000000000005";
 const PATRIMONIO_ID = "00000000-0000-4000-8000-000000000006";
+const ITEM_ID = "00000000-0000-4000-8000-000000000007";
+const SETOR_ENCONTRADO_ID = "00000000-0000-4000-8000-000000000008";
 
 function progressoVazio() {
   return {
@@ -42,6 +44,26 @@ describe("InventariosService", () => {
     criarSetores: jest.fn(),
     criarItens: jest.fn(),
     obterProgressosInventarios: jest.fn(),
+    obterProgressosSetores: jest.fn(),
+    bloquearInventario: jest.fn(),
+    bloquearSetorInventario: jest.fn(),
+    bloquearItemPorNumero: jest.fn(),
+    bloquearItem: jest.fn(),
+    iniciarInventario: jest.fn(),
+    iniciarSetor: jest.fn(),
+    verificarItem: jest.fn(),
+    buscarItem: jest.fn(),
+    buscarSetorInventario: jest.fn(),
+    buscarSetorPorId: jest.fn(),
+    buscarTransferenciaPosterior: jest.fn(),
+    corrigirRetorno: jest.fn(),
+    corrigirComTransferencia: jest.fn(),
+    concluirItensPendentes: jest.fn(),
+    contarAusenciasSemJustificativaVigente: jest.fn(),
+    concluirSetor: jest.fn(),
+    contarSetoresNaoConcluidos: jest.fn(),
+    contarCorrecoesPendentes: jest.fn(),
+    finalizarInventario: jest.fn(),
   };
   const comissoes = { consultarVigente: jest.fn() };
   const service = new InventariosService(
@@ -87,6 +109,42 @@ describe("InventariosService", () => {
     repository.obterProgressosInventarios.mockResolvedValue(
       new Map([[INVENTARIO_ID, progressoVazio()]]),
     );
+    repository.bloquearInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      status: "PENDENTE",
+      comissaoId: COMISSAO_ID,
+    });
+    repository.bloquearSetorInventario.mockResolvedValue({
+      id: SETOR_INVENTARIO_ID,
+      inventarioId: INVENTARIO_ID,
+      setorId: SETOR_ID,
+      status: "PENDENTE",
+    });
+    repository.buscarSetorInventario.mockResolvedValue({
+      id: SETOR_INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      dataInicio: new Date(),
+      dataFim: null,
+      iniciadoPorId: IDENTIDADE.id,
+      concluidoPorId: null,
+      setor: { id: SETOR_ID, nome: "Almoxarifado" },
+    });
+    repository.obterProgressosSetores.mockResolvedValue(
+      new Map([
+        [
+          SETOR_INVENTARIO_ID,
+          {
+            totalItens: 1,
+            itensPendentes: 1,
+            itensVerificados: 0,
+            corretos: 0,
+            divergencias: 0,
+            naoLocalizados: 0,
+          },
+        ],
+      ]),
+    );
+    repository.contarAusenciasSemJustificativaVigente.mockResolvedValue(0);
   });
 
   it("materializa setores e patrimônios ativos na mesma transação", async () => {
@@ -139,5 +197,130 @@ describe("InventariosService", () => {
       response: { codigo: "PATRIMONIO_ATIVO_EM_SETOR_INATIVO" },
     });
     expect(repository.criarInventario).not.toHaveBeenCalled();
+  });
+
+  it("inicia o primeiro setor e o inventário no mesmo commit", async () => {
+    const resultado = await service.iniciarSetor(
+      INVENTARIO_ID,
+      SETOR_INVENTARIO_ID,
+      IDENTIDADE,
+    );
+
+    expect(repository.iniciarInventario).toHaveBeenCalledWith(
+      INVENTARIO_ID,
+      expect.any(Date),
+      IDENTIDADE.id,
+    );
+    expect(repository.iniciarSetor).toHaveBeenCalledWith(
+      SETOR_INVENTARIO_ID,
+      expect.any(Date),
+      IDENTIDADE.id,
+    );
+    expect(resultado).toMatchObject({ status: "EM_ANDAMENTO" });
+  });
+
+  it("registra divergência e preserva a população fixa", async () => {
+    repository.bloquearInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      comissaoId: COMISSAO_ID,
+    });
+    repository.bloquearSetorInventario.mockResolvedValue({
+      id: SETOR_INVENTARIO_ID,
+      inventarioId: INVENTARIO_ID,
+      setorId: SETOR_ENCONTRADO_ID,
+      status: "EM_ANDAMENTO",
+    });
+    repository.bloquearItemPorNumero.mockResolvedValue({
+      id: ITEM_ID,
+      inventarioId: INVENTARIO_ID,
+      patrimonioId: PATRIMONIO_ID,
+      setorEsperadoId: SETOR_ID,
+      setorEncontradoId: null,
+      statusVerificacao: "PENDENTE",
+      situacao: null,
+      statusCorrecao: null,
+      dataVerificacao: null,
+      patrimonioStatus: "ATIVO",
+      patrimonioSetorAtualId: SETOR_ID,
+    });
+    repository.buscarItem.mockResolvedValue({ id: ITEM_ID });
+
+    await expect(
+      service.verificarItem(
+        INVENTARIO_ID,
+        SETOR_INVENTARIO_ID,
+        { numeroPatrimonial: "1001" },
+        IDENTIDADE,
+      ),
+    ).resolves.toMatchObject({ tipo: "CONFERENCIA_REGISTRADA" });
+    expect(repository.verificarItem).toHaveBeenCalledWith(
+      ITEM_ID,
+      expect.objectContaining({
+        situacao: "DIVERGENCIA",
+        setorEncontradoId: SETOR_ENCONTRADO_ID,
+        statusPatrimonio: "ATIVO",
+      }),
+    );
+  });
+
+  it("cria transferência e corrige a divergência atomicamente", async () => {
+    repository.bloquearInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      comissaoId: COMISSAO_ID,
+    });
+    repository.bloquearItem.mockResolvedValue({
+      id: ITEM_ID,
+      inventarioId: INVENTARIO_ID,
+      patrimonioId: PATRIMONIO_ID,
+      setorEsperadoId: SETOR_ID,
+      setorEncontradoId: SETOR_ENCONTRADO_ID,
+      statusVerificacao: "VERIFICADO",
+      situacao: "DIVERGENCIA",
+      statusCorrecao: "PENDENTE",
+      dataVerificacao: new Date(),
+      patrimonioStatus: "ATIVO",
+      patrimonioSetorAtualId: SETOR_ID,
+    });
+    repository.buscarItem.mockResolvedValue({ id: ITEM_ID });
+
+    await service.corrigirItem(
+      INVENTARIO_ID,
+      ITEM_ID,
+      { tipoCorrecao: "TRANSFERENCIA_CADASTRAL" },
+      IDENTIDADE,
+    );
+
+    expect(repository.corrigirComTransferencia).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemInventarioId: ITEM_ID,
+        patrimonioId: PATRIMONIO_ID,
+        setorAntigoId: SETOR_ID,
+        setorAtualId: SETOR_ENCONTRADO_ID,
+        comissaoId: COMISSAO_ID,
+      }),
+    );
+  });
+
+  it("exige confirmação para finalizar com correções pendentes", async () => {
+    repository.bloquearInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      comissaoId: COMISSAO_ID,
+    });
+    repository.contarSetoresNaoConcluidos.mockResolvedValue(0);
+    repository.contarCorrecoesPendentes.mockResolvedValue(1);
+
+    await expect(
+      service.finalizar(
+        INVENTARIO_ID,
+        { confirmarCorrecoesPendentes: false },
+        IDENTIDADE,
+      ),
+    ).rejects.toMatchObject({
+      response: { codigo: "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL" },
+    });
+    expect(repository.finalizarInventario).not.toHaveBeenCalled();
   });
 });

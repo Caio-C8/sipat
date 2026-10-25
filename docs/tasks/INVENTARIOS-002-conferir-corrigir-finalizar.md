@@ -1,6 +1,6 @@
 # `INVENTARIOS-002` — Conferir, corrigir e finalizar inventários
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -178,28 +178,42 @@ Todas as mutações usam a proteção CSRF global existente. Usuário anônimo r
 
 ## Critérios de aceite
 
-- [ ] transições válidas preenchem status, datas e usuários no mesmo commit;
-- [ ] nunca existem dois setores EM_ANDAMENTO no mesmo inventário nem duas
+- [x] transições válidas preenchem status, datas e usuários no mesmo commit;
+- [x] nunca existem dois setores EM_ANDAMENTO no mesmo inventário nem duas
       conferências ativas do mesmo setor físico;
-- [ ] item correto, divergente e não localizado produz exatamente os estados
+- [x] item correto, divergente e não localizado produz exatamente os estados
       aprovados;
-- [ ] item não localizado preserva o status cadastral do instante e diferencia
+- [x] item não localizado preserva o status cadastral do instante e diferencia
       ausência sem justificativa, empréstimo vigente e manutenção vigente;
-- [ ] retorno físico não cria transferência; transferência cadastral cria
+- [x] retorno físico não cria transferência; transferência cadastral cria
       histórico, atualiza o patrimônio e vincula o item atomicamente;
-- [ ] conclusão classifica todos os pendentes sem deixar item do setor em estado
+- [x] conclusão classifica todos os pendentes sem deixar item do setor em estado
       incompatível;
-- [ ] finalização exige todos os setores concluídos, confirma pendências e
+- [x] finalização exige todos os setores concluídos, confirma pendências e
       bloqueia mutações posteriores;
-- [ ] operações concorrentes possuem testes PostgreSQL reais para cada corrida
+- [x] operações concorrentes possuem testes PostgreSQL reais para cada corrida
       descrita no escopo;
-- [ ] bloqueios e sincronização de movimentações possuem códigos públicos
+- [x] bloqueios e sincronização de movimentações possuem códigos públicos
       estáveis e testes de integração nos consumidores existentes;
-- [ ] autorização, CSRF, auditoria, idempotência e conflitos possuem E2E com
+- [x] autorização, CSRF, auditoria, idempotência e conflitos possuem E2E com
       Guards reais;
-- [ ] queries críticas são finitas, indexadas e sem N+1;
-- [ ] documentação de estado só é marcada como concluída após todas as
+- [x] queries críticas são finitas, indexadas e sem N+1;
+- [x] documentação de estado só é marcada como concluída após todas as
       verificações correspondentes.
+
+Concluída em 25 de outubro de 2026. As cinco mutações foram implementadas com
+locks e isolamento `Serializable`, retry finito para `P2034` e SQLSTATE `40001`,
+constraints de coerência, índices para as consultas novas e respostas conforme
+`CONTRACTS-008`. A inativação de setor foi integrada ao consumidor existente e
+reforçada no banco; a baixa também é impedida por trigger até a finalização.
+Não existem ainda APIs gerais de transferência, empréstimo, manutenção ou
+baixa às quais aplicar sincronização; esses módulos continuam obrigados a
+declarar esta tarefa como dependência e coordenar a política no mesmo commit.
+
+A validação aplicou todas as 13 migrations em PostgreSQL 17 descartável desde
+banco vazio e cobriu conferência correta, divergência, correção, ausências por
+empréstimo e manutenção, idempotência, bloqueios e as corridas de início,
+leitura, conclusão e finalização.
 
 ## Arquivos ou módulos potencialmente afetados
 

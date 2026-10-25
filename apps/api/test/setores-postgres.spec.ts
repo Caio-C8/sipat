@@ -9,6 +9,8 @@ import { ResponsaveisRepository } from "../src/modules/responsaveis/responsaveis
 import { ResponsaveisService } from "../src/modules/responsaveis/responsaveis.service";
 import { SetoresRepository } from "../src/modules/setores/setores.repository";
 import { SetoresService } from "../src/modules/setores/setores.service";
+import { InventariosPolicyService } from "../src/modules/inventarios/inventarios-policy.service";
+import { InventariosRepository } from "../src/modules/inventarios/inventarios.repository";
 
 const databaseUrl = process.env.SETORES_INTEGRATION_DATABASE_URL;
 const describeComPostgres = databaseUrl ? describe : describe.skip;
@@ -36,7 +38,11 @@ describeComPostgres("setores no PostgreSQL", () => {
     const responsaveis = new ResponsaveisService(
       new ResponsaveisRepository(database),
     );
-    setores = new SetoresService(new SetoresRepository(database), responsaveis);
+    setores = new SetoresService(
+      new SetoresRepository(database),
+      responsaveis,
+      new InventariosPolicyService(new InventariosRepository(database)),
+    );
     patrimonios = new PatrimoniosService(new PatrimoniosRepository(database));
   });
 

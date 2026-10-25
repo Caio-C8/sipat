@@ -105,3 +105,46 @@ export type ResultadoPaginado<T> = {
   ultimaPagina: number;
   limite: number;
 };
+
+export type InventarioOperacional = {
+  id: string;
+  status: "PENDENTE" | "EM_ANDAMENTO" | "FINALIZADO";
+  comissaoId: string;
+};
+
+export type SetorInventarioOperacional = {
+  id: string;
+  inventarioId: string;
+  setorId: string;
+  status: "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDO";
+};
+
+export type ItemInventarioOperacional = {
+  id: string;
+  inventarioId: string;
+  patrimonioId: string;
+  setorEsperadoId: string;
+  setorEncontradoId: string | null;
+  statusVerificacao: "PENDENTE" | "VERIFICADO";
+  situacao: "CORRETO" | "DIVERGENCIA" | "NAO_LOCALIZADO" | null;
+  statusCorrecao: "PENDENTE" | "CORRIGIDO" | null;
+  dataVerificacao: Date | null;
+  patrimonioStatus: "ATIVO" | "EMPRESTADO" | "EM_MANUTENCAO" | "BAIXADO";
+  patrimonioSetorAtualId: string;
+};
+
+export type TransferenciaPosterior = { id: string };
+
+export type VerificacaoItemResultado = {
+  tipo: "CONFERENCIA_REGISTRADA" | "LEITURA_IDEMPOTENTE";
+  item: ItemInventarioPayload;
+};
+
+export type ItemJaVerificadoDados = {
+  itemInventarioId: string;
+  setorPrimeiraVerificacao: { id: string; nome: string };
+  verificadoEm: string;
+  contextoLocalizacao:
+    "TRANSFERENCIA_POSTERIOR_REGISTRADA" | "MOVIMENTACAO_FISICA_SEM_HISTORICO";
+  transferenciaId?: string;
+};

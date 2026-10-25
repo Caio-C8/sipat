@@ -453,6 +453,7 @@ model TransferenciaPatrimonio {
   itemInventarioCorrecao ItemInventario?
 
   @@index([comissaoId], map: "transferencias_patrimoniais_comissao_id_idx")
+  @@index([patrimonioId, dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_patrimonio_data_id_idx")
   @@map("transferencias_patrimoniais")
 }
 
@@ -478,6 +479,7 @@ model EmprestimoPatrimonio {
 
   @@unique([id, patrimonioId], map: "emprestimos_patrimonio_id_patrimonio_id_key")
   @@index([comissaoId], map: "emprestimos_patrimoniais_comissao_id_idx")
+  @@index([patrimonioId, dataEmprestimo(sort: Desc), id(sort: Desc)], map: "emprestimos_patrimonio_data_id_idx")
   @@map("emprestimos_patrimoniais")
 }
 
@@ -549,6 +551,7 @@ model ItemManutencao {
   itensInventarioJustificados ItemInventario[]
 
   @@unique([id, patrimonioId], map: "itens_manutencao_id_patrimonio_id_key")
+  @@index([patrimonioId, id], map: "itens_manutencao_patrimonio_id_idx")
   @@map("itens_manutencao")
 }
 
@@ -604,6 +607,7 @@ model SetorInventario {
   @@unique([inventarioId], map: "setores_inventario_um_em_andamento_por_inventario_idx", where: { status: "EM_ANDAMENTO" })
   @@unique([setorId], map: "setores_inventario_setor_fisico_em_andamento_idx", where: { status: "EM_ANDAMENTO" })
   @@index([inventarioId, status, id], map: "setores_inventario_inventario_status_idx")
+  @@index([setorId, inventarioId], map: "setores_inventario_setor_inventario_idx")
   @@map("setores_inventario")
 }
 
