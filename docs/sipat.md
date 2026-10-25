@@ -64,7 +64,8 @@ SIPAT:
 - as demais rotas são autenticadas e autorizadas por perfil por padrão;
 - sessões opacas revogáveis são persistidas apenas pelo hash SHA-256 do token;
 - métodos mutáveis exigem Origin permitido e `X-SIPAT-CSRF: 1`;
-- a Web possui home técnica, health check e proxy para a API;
+- a Web possui home técnica, health check, proxy para a API e três interfaces
+  visuais de autenticação ainda sem integração;
 - o mobile possui tela técnica e consulta direta ao health check da API;
 - o schema Prisma representa o domínio patrimonial, sessões com atividade e o
   rate limit persistente de login;
@@ -74,8 +75,8 @@ SIPAT:
 - a interface Web de usuários ainda não está implementada;
 - login, logout, `/auth/me`, criação produtiva de sessões e provisionamento do
   primeiro administrador estão implementados somente no backend;
-- não existe página, formulário, hook, redirect ou integração Web de
-  autenticação; `WEB-AUTH-001` continua planejado;
+- não existe operação, hook, redirect ou integração Web de autenticação;
+  `WEB-AUTH-001` está aprovado e depende de `CONTRACTS-009` e `AUTH-004`;
 - módulos patrimoniais ainda não estão implementados;
 - os fluxos patrimoniais do aplicativo móvel ainda não estão implementados.
 

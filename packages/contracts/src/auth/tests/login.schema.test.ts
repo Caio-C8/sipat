@@ -17,6 +17,7 @@ const identidade = {
   nome: "Maria da Silva",
   email: "maria@example.com",
   perfil: "ADMINISTRADOR",
+  trocaSenhaObrigatoria: true,
 } as const;
 
 describe("LoginBodySchema", () => {
@@ -61,8 +62,15 @@ describe("responses de autenticação", () => {
     assert.deepEqual(parseValido(AuthMeResponseSchema, resposta), resposta);
   });
 
-  it("rejeita senha, hash, token e cookie nas respostas", () => {
-    for (const campo of ["senha", "senhaHash", "token", "cookie"] as const) {
+  it("rejeita segredos e campos internos nas respostas", () => {
+    for (const campo of [
+      "senha",
+      "senhaHash",
+      "token",
+      "cookie",
+      "ultimoLoginAt",
+      "sessaoId",
+    ] as const) {
       esperaInvalido(LoginResponseSchema, {
         ...resposta,
         dados: { ...identidade, [campo]: "segredo" },

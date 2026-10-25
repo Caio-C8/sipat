@@ -3,6 +3,11 @@ import type {
   IdentidadeAutenticadaInput,
 } from "@repo/contracts";
 
+type IdentidadePersistidaAtual = Omit<
+  IdentidadeAutenticadaInput,
+  "trocaSenhaObrigatoria"
+>;
+
 export interface RequisicaoAutenticada {
   cookies?: unknown;
   headers: Readonly<Record<string, string | readonly string[] | undefined>>;
@@ -15,12 +20,12 @@ export interface SessaoParaAutenticacao {
   expiraAt: Date;
   ultimaAtividadeAt: Date;
   revogadoAt: Date | null;
-  usuario: IdentidadeAutenticadaInput & {
+  usuario: IdentidadePersistidaAtual & {
     ativo: boolean;
   };
 }
 
-export interface UsuarioParaLogin extends IdentidadeAutenticadaInput {
+export interface UsuarioParaLogin extends IdentidadePersistidaAtual {
   ativo: boolean;
   senha: string;
 }

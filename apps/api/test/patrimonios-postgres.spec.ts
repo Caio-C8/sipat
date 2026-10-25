@@ -56,6 +56,7 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
       nome: diretor.nome,
       email: diretor.email,
       perfil: diretor.perfil,
+      trocaSenhaObrigatoria: false,
     };
     const responsavel = await database.responsavel.create({
       data: {

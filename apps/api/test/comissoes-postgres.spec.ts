@@ -45,6 +45,7 @@ describeComPostgres("comissões no PostgreSQL", () => {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil,
+      trocaSenhaObrigatoria: false,
     };
     const responsaveis = await Promise.all([
       database.responsavel.create({

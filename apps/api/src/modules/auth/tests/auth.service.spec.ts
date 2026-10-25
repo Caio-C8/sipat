@@ -20,6 +20,7 @@ describe("AuthService", () => {
     id: "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0",
     nome: "Maria da Silva",
     email: "maria@example.com",
+    trocaSenhaObrigatoria: false,
   } as const;
 
   const buscarPorTokenHash = jest.fn();

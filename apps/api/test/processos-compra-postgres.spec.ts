@@ -90,6 +90,7 @@ describeComPostgres("processos de compra no PostgreSQL", () => {
       nome: "Diretor",
       email: "diretor-compras@example.com",
       perfil: "DIRETOR_PATRIMONIO" as const,
+      trocaSenhaObrigatoria: false,
     };
   }
 

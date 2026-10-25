@@ -140,6 +140,7 @@ import {
   TipoCorrecaoItemInventarioSchema,
   VerificarItemInventarioBodySchema,
   VerificarItemInventarioResponseSchema,
+  ConcluirPrimeiroAcessoBodySchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -173,6 +174,7 @@ describe("@repo/contracts — API pública", () => {
       LoginResponseSchema,
       AuthMeResponseSchema,
       AlterarSenhaBodySchema,
+      ConcluirPrimeiroAcessoBodySchema,
       SolicitarRedefinicaoSenhaBodySchema,
       RedefinirSenhaBodySchema,
       SolicitarRedefinicaoSenhaResponseSchema,

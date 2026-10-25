@@ -9,6 +9,7 @@ export const IdentidadeAutenticadaSchema = z.strictObject({
   nome: z.string().trim().min(1).max(100),
   email: z.email().max(150),
   perfil: PerfilUsuarioSchema,
+  trocaSenhaObrigatoria: z.boolean(),
 });
 
 export const CABECALHO_CSRF = "X-SIPAT-CSRF";

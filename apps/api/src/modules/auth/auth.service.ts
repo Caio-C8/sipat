@@ -41,6 +41,7 @@ import type { LoginRealizado } from "./auth.types";
 
 const HASH_FICTICIO =
   "$argon2id$v=19$m=19456,t=2,p=1$7k3jXdW9HljY+Hh5z2L9Lg$n+/QIxGmny4eYuES0YUW9KF2xQGYCuBsWb/EDz0cbU0";
+const TROCA_SENHA_OBRIGATORIA_ATE_AUTH_004 = false;
 
 @Injectable()
 export class AuthService {
@@ -80,6 +81,7 @@ export class AuthService {
       nome: sessao.usuario.nome,
       email: sessao.usuario.email,
       perfil: sessao.usuario.perfil,
+      trocaSenhaObrigatoria: TROCA_SENHA_OBRIGATORIA_ATE_AUTH_004,
     });
 
     if (!identidade.success) {
@@ -433,6 +435,7 @@ export class AuthService {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil,
+      trocaSenhaObrigatoria: TROCA_SENHA_OBRIGATORIA_ATE_AUTH_004,
     });
     const token = await this.criarSessao(usuario.id, chaveRateLimit, agora);
 

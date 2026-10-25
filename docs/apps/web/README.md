@@ -10,7 +10,8 @@ fronteiras entre UI, contratos e integração HTTP.
 
 ## Estado atual
 
-- `/` apresenta a infraestrutura atual e links para os health checks;
+- `/` apresenta a infraestrutura atual e links para os health checks; sua
+  evolução para catálogo público de rotas está aprovada em `WEB-AUTH-001`;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;
@@ -26,7 +27,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - Playwright cobre home, acessibilidade automatizável e headers de segurança;
 - as rotas `/login`, `/redefinir-senha` e `/senha-atualizada` possuem somente
   interface visual; os formulários ainda não enviam dados;
-- não existem hooks de autenticação, cache remoto ou regras de domínio na Web.
+- não existem hooks de autenticação, cache remoto ou regras de domínio na Web;
+- `WEB-AUTH-001` foi aprovado, mas depende dos contratos e do backend de
+  primeiro acesso antes de integrar as telas.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
 ainda não possuem consumidor Web. A interface de login ainda não cria sessão;
@@ -77,7 +80,7 @@ esse template.
 
 - identidade visual, temas e tokens definitivos;
 - biblioteca de formulários e estado remoto;
-- autenticação Web, identidade atual, redirects, login e logout;
+- implementação da autenticação Web já especificada em `WEB-AUTH-001`;
 - duração e política operacional das sessões e do cookie;
 - serviço de observabilidade e analytics;
 - internacionalização;

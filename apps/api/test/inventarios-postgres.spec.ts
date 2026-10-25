@@ -60,6 +60,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil,
+      trocaSenhaObrigatoria: false,
     };
     const responsavel = await database.responsavel.create({
       data: {

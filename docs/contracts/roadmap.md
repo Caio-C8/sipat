@@ -33,8 +33,9 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-Os contratos de `CONTRACTS-001` a `CONTRACTS-008` estão implementados e
-validados.
+Os contratos de `CONTRACTS-001` a `CONTRACTS-009` estão implementados e
+validados. A integração do estado de primeiro acesso pela API e pela Web
+permanece, respectivamente, em `AUTH-004` e `WEB-AUTH-001`.
 
 Cada objetivo deve registrar:
 
@@ -43,6 +44,42 @@ Cada objetivo deve registrar:
 - consumidores afetados;
 - critérios de aceite verificáveis;
 - decisões semânticas que não podem ser inferidas apenas do tipo.
+
+### CONTRACTS-009 — Primeiro acesso
+
+**Status:** concluído
+
+**Contexto**
+
+`AUTH-004` e `WEB-AUTH-001` precisam compartilhar o estado mínimo que indica
+troca obrigatória da senha inicial e o body da conclusão, sem promover sessão,
+hash ou campos do banco a contrato público.
+
+**Escopo**
+
+- acrescentar `trocaSenhaObrigatoria` à identidade autenticada usada por login
+  e `/auth/me`;
+- body estrito de conclusão com nova senha e confirmação;
+- resposta `204 No Content` sem payload;
+- exports e testes de limites, confirmação, propriedades extras e ausência de
+  campos sensíveis.
+
+**Consumidores afetados**
+
+- API em `AUTH-004`;
+- Web em `WEB-AUTH-001`.
+
+**Critérios de aceite**
+
+- [x] schemas e tipos derivam de Zod 4 e preservam allowlists estritas;
+- [x] senha não é normalizada nem aparece em response;
+- [x] a identidade expõe somente o boolean necessário, sem detalhes internos;
+- [x] lint, typecheck e testes de `@repo/contracts` passam;
+- [x] consumidores afetados compilam com a compatibilidade transitória; a
+      semântica persistente permanece em `AUTH-004` e `WEB-AUTH-001`.
+
+Especificação aprovada:
+[CONTRACTS-009](../tasks/CONTRACTS-009-primeiro-acesso.md).
 
 ### CONTRACTS-001 — Identidade e perfis para controle de acesso
 

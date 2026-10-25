@@ -8,6 +8,8 @@
 - [Segurança de dados](https://nextjs.org/docs/app/guides/data-security)
 - [Variáveis de ambiente](https://nextjs.org/docs/app/guides/environment-variables)
 - [Caching](https://nextjs.org/docs/app/guides/caching)
+- [Autenticação](https://nextjs.org/docs/app/guides/authentication)
+- [Proxy e seus limites](https://nextjs.org/docs/app/getting-started/proxy)
 
 ## React
 

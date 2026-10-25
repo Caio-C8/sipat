@@ -50,6 +50,7 @@ describeComPostgres("espécies no PostgreSQL", () => {
       nome: administrador.nome,
       email: administrador.email,
       perfil: administrador.perfil,
+      trocaSenhaObrigatoria: false,
     };
     const [natureza, outraNatureza] = await Promise.all([
       database.natureza.create({

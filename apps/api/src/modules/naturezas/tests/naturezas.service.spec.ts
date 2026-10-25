@@ -13,6 +13,7 @@ const identidade: IdentidadeAutenticada = {
   nome: "Administração",
   email: "admin@example.com",
   perfil: "ADMINISTRADOR",
+  trocaSenhaObrigatoria: false,
 };
 
 function natureza(

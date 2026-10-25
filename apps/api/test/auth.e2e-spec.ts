@@ -488,7 +488,11 @@ describe("autenticação E2E", () => {
     const resposta = await login(email).expect(200);
 
     expect(resposta.body.dados).toEqual(
-      expect.objectContaining({ email, perfil }),
+      expect.objectContaining({
+        email,
+        perfil,
+        trocaSenhaObrigatoria: false,
+      }),
     );
     expect(resposta.body).not.toHaveProperty("token");
     expect(JSON.stringify(resposta.body)).not.toContain(senhaHash);
@@ -573,7 +577,9 @@ describe("autenticação E2E", () => {
         .get("/api/auth/me")
         .set("Cookie", cookieDaResposta(respostaLogin))
         .expect(200);
-      expect(respostaMe.body.dados).toEqual(expect.objectContaining({ email }));
+      expect(respostaMe.body.dados).toEqual(
+        expect.objectContaining({ email, trocaSenhaObrigatoria: false }),
+      );
       expect(JSON.stringify(respostaMe.body)).not.toContain("senha");
     }
 

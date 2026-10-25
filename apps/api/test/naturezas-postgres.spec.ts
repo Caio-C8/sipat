@@ -43,6 +43,7 @@ describeComPostgres("naturezas no PostgreSQL", () => {
       nome: administrador.nome,
       email: administrador.email,
       perfil: administrador.perfil,
+      trocaSenhaObrigatoria: false,
     };
   });
 
