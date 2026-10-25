@@ -115,11 +115,16 @@ export function HomeDashboard() {
                 disabled
               />
             </div>
-            <span className={styles.topIcon} aria-label="Ajuda indisponível">
+            <span
+              className={styles.topIcon}
+              role="img"
+              aria-label="Ajuda indisponível"
+            >
               <CircleHelp size={17} aria-hidden="true" />
             </span>
             <span
               className={styles.topIcon}
+              role="img"
               aria-label="Notificações indisponíveis"
             >
               <Bell size={17} aria-hidden="true" />

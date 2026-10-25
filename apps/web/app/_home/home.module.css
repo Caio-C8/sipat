@@ -2,7 +2,7 @@
   --home-blue: #2860eb;
   --home-navy: #102847;
   --home-text: #17253d;
-  --home-muted: #7183a0;
+  --home-muted: #62748e;
   --home-border: #dfe7f1;
   display: grid;
   grid-template-columns: clamp(164px, 12.8vw, 220px) minmax(0, 1fr);
@@ -163,7 +163,7 @@
 }
 .breadcrumb {
   gap: 12px;
-  color: #7285a1;
+  color: var(--home-muted);
   font-size: 10px;
   white-space: nowrap;
 }
@@ -206,7 +206,7 @@
   gap: 8px;
   padding-left: 11px;
   border-left: 1px solid var(--home-border);
-  color: #7d90aa;
+  color: var(--home-muted);
 }
 .avatar {
   display: grid;
@@ -368,7 +368,7 @@
 }
 .cardHint {
   margin: 4px 0 0;
-  color: #7183a0;
+  color: #62748e;
   font-size: 9px;
 }
 .upperGrid,
@@ -507,7 +507,7 @@
   line-height: 1.1;
 }
 .donut span {
-  color: #7386a0;
+  color: var(--home-muted);
   font-size: 9px;
 }
 .legend {
@@ -524,7 +524,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #657994;
+  color: #637792;
   font-size: 9px;
 }
 .legend li strong {
@@ -563,7 +563,7 @@
   grid-template-columns: minmax(105px, 130px) minmax(0, 1fr) 23px;
   align-items: center;
   gap: 8px;
-  color: #657994;
+  color: #637792;
   font-size: 9px;
 }
 .sectorRow strong {
@@ -598,7 +598,7 @@
 .activityList time {
   width: 30px;
   flex: none;
-  color: #7c8da6;
+  color: #61738c;
   font-size: 9px;
 }
 .activityList li > span {
@@ -619,7 +619,7 @@
 }
 .activityList small {
   margin-top: 1px;
-  color: #7183a0;
+  color: #62748e;
   font-size: 8px;
 }
 .activityList svg {
@@ -660,7 +660,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  color: #798ba3;
+  color: #60728a;
   font-size: 9px;
 }
 .brandLink:focus-visible,
