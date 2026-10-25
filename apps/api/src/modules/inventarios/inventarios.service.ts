@@ -4,11 +4,14 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import type {
+  CorrigirItemInventarioBodyData,
   CriarInventarioBodyData,
+  FinalizarInventarioBodyData,
   IdentidadeAutenticada,
   ListarInventariosQueryData,
   ListarItensInventarioQueryData,
   ListarSetoresInventarioQueryData,
+  VerificarItemInventarioBodyData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { ComissoesService } from "../comissoes/comissoes.service";
@@ -23,6 +26,7 @@ import type {
   ProgressoSetorPayload,
   ResultadoPaginado,
   SetorInventarioResumoPayload,
+  VerificacaoItemResultado,
 } from "./types";
 
 @Injectable()
@@ -31,6 +35,302 @@ export class InventariosService {
     private readonly inventarios: InventariosRepository,
     private readonly comissoes: ComissoesService,
   ) {}
+
+  async iniciarSetor(
+    inventarioId: string,
+    setorInventarioId: string,
+    identidade: IdentidadeAutenticada,
+  ): Promise<
+    ComProgresso<SetorInventarioResumoPayload, ProgressoSetorPayload>
+  > {
+    return this.executarOperacao(async (repository) => {
+      const inventario = await repository.bloquearInventario(inventarioId);
+      if (inventario === null) throw this.inventarioNaoEncontrado();
+      if (inventario.status === "FINALIZADO") throw this.inventarioFinalizado();
+
+      const setor = await repository.bloquearSetorInventario(
+        inventarioId,
+        setorInventarioId,
+      );
+      if (setor === null) throw this.setorInventarioNaoEncontrado();
+      if (setor.status !== "PENDENTE") {
+        throw this.conflitoEstado(
+          "SETOR_INVENTARIO_FORA_DE_ANDAMENTO",
+          "Somente um setor pendente pode ser iniciado.",
+        );
+      }
+
+      const instante = new Date();
+      if (inventario.status === "PENDENTE") {
+        await repository.iniciarInventario(
+          inventarioId,
+          new Date(`${instante.toISOString().slice(0, 10)}T00:00:00.000Z`),
+          identidade.id,
+        );
+      }
+      await repository.iniciarSetor(setorInventarioId, instante, identidade.id);
+      return this.carregarSetorComProgresso(repository, setorInventarioId);
+    });
+  }
+
+  async verificarItem(
+    inventarioId: string,
+    setorInventarioId: string,
+    dados: VerificarItemInventarioBodyData,
+    identidade: IdentidadeAutenticada,
+  ): Promise<VerificacaoItemResultado> {
+    return this.executarOperacao(async (repository) => {
+      const inventario = await repository.bloquearInventario(inventarioId);
+      if (inventario === null) throw this.inventarioNaoEncontrado();
+      if (inventario.status === "FINALIZADO") throw this.inventarioFinalizado();
+
+      const setor = await repository.bloquearSetorInventario(
+        inventarioId,
+        setorInventarioId,
+      );
+      if (setor === null) throw this.setorInventarioNaoEncontrado();
+      if (setor.status !== "EM_ANDAMENTO") {
+        throw this.conflitoEstado(
+          "SETOR_INVENTARIO_FORA_DE_ANDAMENTO",
+          "O setor informado não está em andamento.",
+        );
+      }
+
+      const item = await repository.bloquearItemPorNumero(
+        inventarioId,
+        dados.numeroPatrimonial,
+      );
+      if (item === null) {
+        throw new NotFoundException({
+          codigo: "ITEM_INVENTARIO_NAO_ENCONTRADO",
+          mensagem:
+            "O patrimônio não pertence à população fixa deste inventário.",
+          erros: [],
+        });
+      }
+
+      if (item.statusVerificacao === "VERIFICADO") {
+        const setorPrimeiraVerificacaoId =
+          item.situacao === "DIVERGENCIA"
+            ? item.setorEncontradoId!
+            : item.setorEsperadoId;
+        if (setorPrimeiraVerificacaoId === setor.setorId) {
+          return {
+            tipo: "LEITURA_IDEMPOTENTE",
+            item: await this.exigirItem(repository, item.id),
+          };
+        }
+
+        const [setorPrimeiraVerificacao, transferencia] = await Promise.all([
+          repository.buscarSetorPorId(setorPrimeiraVerificacaoId),
+          repository.buscarTransferenciaPosterior(
+            item.patrimonioId,
+            setor.setorId,
+            item.dataVerificacao!,
+          ),
+        ]);
+        if (setorPrimeiraVerificacao === null) {
+          throw new Error("Setor da primeira verificação não encontrado.");
+        }
+        throw new ConflictException({
+          codigo: "ITEM_INVENTARIO_JA_VERIFICADO",
+          mensagem: "O patrimônio já foi verificado em outro setor.",
+          erros: [],
+          dados:
+            transferencia === null
+              ? {
+                  itemInventarioId: item.id,
+                  setorPrimeiraVerificacao,
+                  verificadoEm: item.dataVerificacao!.toISOString(),
+                  contextoLocalizacao: "MOVIMENTACAO_FISICA_SEM_HISTORICO",
+                }
+              : {
+                  itemInventarioId: item.id,
+                  setorPrimeiraVerificacao,
+                  verificadoEm: item.dataVerificacao!.toISOString(),
+                  contextoLocalizacao: "TRANSFERENCIA_POSTERIOR_REGISTRADA",
+                  transferenciaId: transferencia.id,
+                },
+        });
+      }
+
+      if (item.patrimonioStatus === "BAIXADO") {
+        throw this.conflitoEstado(
+          "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL",
+          "O patrimônio deixou de estar elegível durante o inventário.",
+        );
+      }
+      const correto = item.setorEsperadoId === setor.setorId;
+      await repository.verificarItem(item.id, {
+        situacao: correto ? "CORRETO" : "DIVERGENCIA",
+        setorEncontradoId: correto ? null : setor.setorId,
+        statusPatrimonio: item.patrimonioStatus,
+        instante: new Date(),
+        usuarioId: identidade.id,
+      });
+      return {
+        tipo: "CONFERENCIA_REGISTRADA",
+        item: await this.exigirItem(repository, item.id),
+      };
+    });
+  }
+
+  async corrigirItem(
+    inventarioId: string,
+    itemInventarioId: string,
+    dados: {
+      tipoCorrecao: CorrigirItemInventarioBodyData["tipoCorrecao"];
+      observacao?: string;
+    },
+    identidade: IdentidadeAutenticada,
+  ): Promise<ItemInventarioPayload> {
+    return this.executarOperacao(async (repository) => {
+      const inventario = await repository.bloquearInventario(inventarioId);
+      if (inventario === null) throw this.inventarioNaoEncontrado();
+      if (inventario.status === "FINALIZADO") throw this.inventarioFinalizado();
+      const item = await repository.bloquearItem(
+        inventarioId,
+        itemInventarioId,
+      );
+      if (item === null) throw this.itemInventarioNaoEncontrado();
+      if (
+        item.situacao !== "DIVERGENCIA" ||
+        item.statusCorrecao !== "PENDENTE" ||
+        item.setorEncontradoId === null
+      ) {
+        throw this.conflitoEstado(
+          "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL",
+          "O item não possui uma divergência pendente compatível com a correção.",
+        );
+      }
+      if (item.patrimonioSetorAtualId !== item.setorEsperadoId) {
+        throw this.conflitoEstado(
+          "CONFLITO_CONCORRENTE_INVENTARIO",
+          "A localização cadastral do patrimônio mudou desde a verificação.",
+        );
+      }
+
+      const instante = new Date();
+      if (dados.tipoCorrecao === "RETORNO_AO_SETOR_CADASTRADO") {
+        await repository.corrigirRetorno(
+          item.id,
+          instante,
+          identidade.id,
+          dados.observacao,
+        );
+      } else {
+        await repository.corrigirComTransferencia({
+          itemInventarioId: item.id,
+          patrimonioId: item.patrimonioId,
+          setorAntigoId: item.setorEsperadoId,
+          setorAtualId: item.setorEncontradoId,
+          comissaoId: inventario.comissaoId,
+          usuarioId: identidade.id,
+          instante,
+          observacao: dados.observacao,
+        });
+      }
+      return this.exigirItem(repository, item.id);
+    });
+  }
+
+  async concluirSetor(
+    inventarioId: string,
+    setorInventarioId: string,
+    identidade: IdentidadeAutenticada,
+  ): Promise<
+    ComProgresso<SetorInventarioResumoPayload, ProgressoSetorPayload>
+  > {
+    return this.executarOperacao(async (repository) => {
+      const inventario = await repository.bloquearInventario(inventarioId);
+      if (inventario === null) throw this.inventarioNaoEncontrado();
+      if (inventario.status === "FINALIZADO") throw this.inventarioFinalizado();
+      const setor = await repository.bloquearSetorInventario(
+        inventarioId,
+        setorInventarioId,
+      );
+      if (setor === null) throw this.setorInventarioNaoEncontrado();
+      if (setor.status !== "EM_ANDAMENTO") {
+        throw this.conflitoEstado(
+          "SETOR_INVENTARIO_FORA_DE_ANDAMENTO",
+          "Somente um setor em andamento pode ser concluído.",
+        );
+      }
+      const instante = new Date();
+      if (
+        (await repository.contarAusenciasSemJustificativaVigente(
+          setorInventarioId,
+          instante,
+        )) > 0
+      ) {
+        throw this.conflitoEstado(
+          "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL",
+          "Existe patrimônio com estado operacional sem vínculo vigente compatível.",
+        );
+      }
+      await repository.concluirItensPendentes(
+        setorInventarioId,
+        instante,
+        identidade.id,
+      );
+      await repository.concluirSetor(
+        setorInventarioId,
+        instante,
+        identidade.id,
+      );
+      return this.carregarSetorComProgresso(repository, setorInventarioId);
+    });
+  }
+
+  async finalizar(
+    inventarioId: string,
+    dados: FinalizarInventarioBodyData,
+    identidade: IdentidadeAutenticada,
+  ): Promise<
+    ComProgresso<InventarioDetalhePayload, ProgressoInventarioPayload>
+  > {
+    return this.executarOperacao(async (repository) => {
+      const inventario = await repository.bloquearInventario(inventarioId);
+      if (inventario === null) throw this.inventarioNaoEncontrado();
+      if (inventario.status === "FINALIZADO") throw this.inventarioFinalizado();
+      if (inventario.status !== "EM_ANDAMENTO") {
+        throw this.conflitoEstado(
+          "SETOR_INVENTARIO_FORA_DE_ANDAMENTO",
+          "O inventário precisa estar em andamento para ser finalizado.",
+        );
+      }
+      if ((await repository.contarSetoresNaoConcluidos(inventarioId)) > 0) {
+        throw this.conflitoEstado(
+          "OUTRO_SETOR_INVENTARIO_EM_ANDAMENTO",
+          "Todos os setores precisam estar concluídos antes da finalização.",
+        );
+      }
+      const correcoesPendentes =
+        await repository.contarCorrecoesPendentes(inventarioId);
+      if (correcoesPendentes > 0 && !dados.confirmarCorrecoesPendentes) {
+        throw this.conflitoEstado(
+          "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL",
+          "Existem correções pendentes; confirme explicitamente a finalização nessas condições.",
+        );
+      }
+      const instante = new Date();
+      const finalizado = await repository.finalizarInventario(
+        inventarioId,
+        new Date(`${instante.toISOString().slice(0, 10)}T00:00:00.000Z`),
+        identidade.id,
+      );
+      const progressos = await repository.obterProgressosInventarios([
+        inventarioId,
+      ]);
+      return {
+        ...finalizado,
+        progresso: this.exigirProgresso(
+          progressos.get(inventarioId),
+          inventarioId,
+        ),
+      };
+    });
+  }
 
   async criar(
     dados: CriarInventarioBodyData,
@@ -109,7 +409,7 @@ export class InventariosService {
           };
         });
       } catch (erro: unknown) {
-        if (this.ehErroPrisma(erro, "P2034") && tentativa < 3) continue;
+        if (this.ehConflitoSerializacao(erro) && tentativa < 3) continue;
         this.traduzirErroPersistencia(erro);
       }
     }
@@ -218,6 +518,49 @@ export class InventariosService {
     }
   }
 
+  private async executarOperacao<T>(
+    operacao: (repository: InventariosRepository) => Promise<T>,
+  ): Promise<T> {
+    for (let tentativa = 1; tentativa <= 3; tentativa += 1) {
+      try {
+        return await this.inventarios.executarTransacao(operacao);
+      } catch (erro: unknown) {
+        if (this.ehConflitoSerializacao(erro) && tentativa < 3) continue;
+        this.traduzirErroPersistencia(erro);
+      }
+    }
+    throw this.conflitoConcorrente();
+  }
+
+  private async carregarSetorComProgresso(
+    repository: InventariosRepository,
+    setorInventarioId: string,
+  ): Promise<
+    ComProgresso<SetorInventarioResumoPayload, ProgressoSetorPayload>
+  > {
+    const setor = await repository.buscarSetorInventario(setorInventarioId);
+    if (setor === null) throw this.setorInventarioNaoEncontrado();
+    const progressos = await repository.obterProgressosSetores([
+      setorInventarioId,
+    ]);
+    return {
+      ...setor,
+      progresso: this.exigirProgresso(
+        progressos.get(setorInventarioId),
+        setorInventarioId,
+      ),
+    };
+  }
+
+  private async exigirItem(
+    repository: InventariosRepository,
+    itemInventarioId: string,
+  ): Promise<ItemInventarioPayload> {
+    const item = await repository.buscarItem(itemInventarioId);
+    if (item === null) throw this.itemInventarioNaoEncontrado();
+    return item;
+  }
+
   private paginar<T>(
     items: T[],
     total: number,
@@ -241,7 +584,19 @@ export class InventariosService {
 
   private traduzirErroPersistencia(erro: unknown): never {
     if (erro instanceof ConflictException) throw erro;
-    if (this.ehErroPrisma(erro, "P2034") || this.ehErroPrisma(erro, "P2002")) {
+    if (this.ehErroPrisma(erro, "P2002")) {
+      const alvo = JSON.stringify(
+        (erro as Prisma.PrismaClientKnownRequestError).meta ?? {},
+      );
+      if (alvo.includes("setores_inventario")) {
+        throw this.conflitoEstado(
+          "OUTRO_SETOR_INVENTARIO_EM_ANDAMENTO",
+          "Já existe uma conferência incompatível em andamento.",
+        );
+      }
+      throw this.conflitoConcorrente();
+    }
+    if (this.ehConflitoSerializacao(erro)) {
       throw this.conflitoConcorrente();
     }
     throw erro;
@@ -249,8 +604,24 @@ export class InventariosService {
 
   private ehErroPrisma(erro: unknown, codigo: string): boolean {
     return (
-      erro instanceof Prisma.PrismaClientKnownRequestError &&
+      typeof erro === "object" &&
+      erro !== null &&
+      "code" in erro &&
       erro.code === codigo
+    );
+  }
+
+  private ehConflitoSerializacao(erro: unknown): boolean {
+    if (this.ehErroPrisma(erro, "P2034")) return true;
+    if (!this.ehErroPrisma(erro, "P2010")) return false;
+    const erroPrisma = erro as {
+      meta?: { code?: unknown };
+      message?: unknown;
+    };
+    return (
+      erroPrisma.meta?.code === "40001" ||
+      (typeof erroPrisma.message === "string" &&
+        erroPrisma.message.includes("Code: `40001`"))
     );
   }
 
@@ -260,6 +631,33 @@ export class InventariosService {
       mensagem: "O inventário informado não foi encontrado.",
       erros: [],
     });
+  }
+
+  private setorInventarioNaoEncontrado(): NotFoundException {
+    return new NotFoundException({
+      codigo: "SETOR_INVENTARIO_NAO_ENCONTRADO",
+      mensagem: "O setor informado não pertence ao inventário.",
+      erros: [],
+    });
+  }
+
+  private itemInventarioNaoEncontrado(): NotFoundException {
+    return new NotFoundException({
+      codigo: "ITEM_INVENTARIO_NAO_ENCONTRADO",
+      mensagem: "O item informado não pertence ao inventário.",
+      erros: [],
+    });
+  }
+
+  private inventarioFinalizado(): ConflictException {
+    return this.conflitoEstado(
+      "INVENTARIO_FINALIZADO",
+      "O inventário finalizado é imutável.",
+    );
+  }
+
+  private conflitoEstado(codigo: string, mensagem: string): ConflictException {
+    return new ConflictException({ codigo, mensagem, erros: [] });
   }
 
   private conflitoConcorrente(): ConflictException {

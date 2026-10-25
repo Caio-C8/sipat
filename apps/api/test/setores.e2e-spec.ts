@@ -83,6 +83,7 @@ describe("gestão de setores", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    setorInventario: { count: jest.fn().mockResolvedValue(0) },
     sessaoUsuario: {
       findUnique: jest.fn(),
       updateMany: jest.fn(),

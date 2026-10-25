@@ -51,7 +51,8 @@ No estado atual:
   `/api/notas-fiscais/:notaFiscalId/anexo`, além das quatro operações de
   comissão em `/api/comissoes` e das três mutações de integrantes em
   `/api/comissoes/:comissaoId/membros`, além de criação, listagem, detalhe,
-  setores e itens paginados em `/api/inventarios`;
+  setores e itens paginados em `/api/inventarios` e das cinco mutações para
+  iniciar/concluir setor, verificar/corrigir item e finalizar inventário;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -79,9 +80,16 @@ No estado atual:
   e composição atomicamente, limita integrantes ativos, garante presidente
   único no PostgreSQL e congela ato, vigência e composição após o primeiro uso
   patrimonial;
-- `InventariosModule` restringe suas cinco rotas ao `DIRETOR_PATRIMONIO`,
-  valida comissão vigente, materializa setores ativos e patrimônios `ATIVO` em
-  transação serializável e consulta o progresso com agregados em lote;
+- `InventariosModule` restringe suas dez rotas ao `DIRETOR_PATRIMONIO`, valida
+  comissão vigente, materializa setores ativos e patrimônios `ATIVO`, consulta
+  progresso em lote e executa início, conferência idempotente, correção,
+  conclusão e finalização em transações serializáveis;
+- a conferência preserva o snapshot cadastral, diferencia ausência por
+  empréstimo ou manutenção vigente, cria transferência somente na correção
+  cadastral e mantém o fato histórico da divergência;
+- `InventariosPolicyService` bloqueia a inativação de setor participante até a
+  finalização; triggers de banco fecham a corrida desse bloqueio e impedem a
+  baixa de patrimônio incluído em inventário aberto;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;

@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import type { ResponsaveisService } from "../../responsaveis/responsaveis.service";
+import type { InventariosPolicyService } from "../../inventarios/inventarios-policy.service";
 import type { SetoresRepository } from "../setores.repository";
 import { SetoresService } from "../setores.service";
 import type { SetorDetalhePayload } from "../types";
@@ -48,13 +49,16 @@ function criarDependencias() {
     alterarSituacao: jest.fn(),
   };
   const responsaveis = { consultar: jest.fn() };
+  const inventariosPolicy = { exigirSetorPodeSerInativado: jest.fn() };
 
   return {
     repository,
     responsaveis,
+    inventariosPolicy,
     service: new SetoresService(
       repository as unknown as SetoresRepository,
       responsaveis as unknown as ResponsaveisService,
+      inventariosPolicy as unknown as InventariosPolicyService,
     ),
   };
 }
@@ -161,7 +165,8 @@ describe("SetoresService", () => {
   });
 
   it("altera sem revalidar vínculo existente e inativa idempotentemente", async () => {
-    const { repository, responsaveis, service } = criarDependencias();
+    const { repository, responsaveis, inventariosPolicy, service } =
+      criarDependencias();
     const atual = setor();
     const inativo = setor({ ativo: false });
     repository.buscarPorId.mockResolvedValueOnce(atual);
@@ -179,6 +184,9 @@ describe("SetoresService", () => {
     await expect(
       service.alterarSituacao(SETOR_ID, { ativo: false }),
     ).resolves.toEqual(inativo);
+    expect(inventariosPolicy.exigirSetorPodeSerInativado).toHaveBeenCalledWith(
+      SETOR_ID,
+    );
 
     repository.buscarPorId.mockResolvedValueOnce(inativo);
     await expect(

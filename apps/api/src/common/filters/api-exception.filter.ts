@@ -9,6 +9,7 @@ import {
 import { HttpAdapterHost } from "@nestjs/core";
 import {
   type ErroCampo,
+  ItemJaVerificadoOutroSetorResponseSchema,
   type RespostaErro,
   RespostaErroSchema,
 } from "@repo/contracts";
@@ -259,6 +260,23 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     if (typeof corpo !== "object" || corpo === null || Array.isArray(corpo)) {
       return null;
+    }
+
+    if (
+      status === HttpStatus.CONFLICT &&
+      Reflect.get(corpo, "codigo") === "ITEM_INVENTARIO_JA_VERIFICADO"
+    ) {
+      const conflitoInventario =
+        ItemJaVerificadoOutroSetorResponseSchema.safeParse({
+          status,
+          sucesso: false,
+          codigo: Reflect.get(corpo, "codigo"),
+          mensagem: Reflect.get(corpo, "mensagem"),
+          erros: Reflect.get(corpo, "erros") ?? [],
+          dados: Reflect.get(corpo, "dados"),
+          requisicaoId,
+        });
+      if (conflitoInventario.success) return conflitoInventario.data;
     }
 
     const resposta = RespostaErroSchema.safeParse({

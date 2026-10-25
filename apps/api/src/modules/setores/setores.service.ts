@@ -12,6 +12,7 @@ import type {
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { ResponsaveisService } from "../responsaveis/responsaveis.service";
+import { InventariosPolicyService } from "../inventarios/inventarios-policy.service";
 import { SetorPersistenceMapper } from "./mappers";
 import { SetoresRepository } from "./setores.repository";
 import type { ListarSetoresResultado, SetorDetalhePayload } from "./types";
@@ -21,6 +22,7 @@ export class SetoresService {
   constructor(
     private readonly setores: SetoresRepository,
     private readonly responsaveis: ResponsaveisService,
+    private readonly inventariosPolicy: InventariosPolicyService,
   ) {}
 
   async criar(
@@ -90,6 +92,9 @@ export class SetoresService {
     const setor = await this.setores.buscarPorId(setorId);
     if (setor === null) throw this.setorNaoEncontrado();
     if (setor.ativo === dados.ativo) return setor;
+    if (!dados.ativo) {
+      await this.inventariosPolicy.exigirSetorPodeSerInativado(setorId);
+    }
 
     try {
       return await this.setores.alterarSituacao(setorId, dados.ativo);
@@ -116,6 +121,20 @@ export class SetoresService {
   }
 
   private traduzirErroPersistencia(erro: unknown): never {
+    if (
+      typeof erro === "object" &&
+      erro !== null &&
+      "message" in erro &&
+      typeof erro.message === "string" &&
+      erro.message.includes("setores_inventario_aberto_check")
+    ) {
+      throw new ConflictException({
+        codigo: "SETOR_PARTICIPANTE_INVENTARIO_ABERTO",
+        mensagem:
+          "O setor não pode ser inativado enquanto participar de um inventário não finalizado.",
+        erros: [],
+      });
+    }
     if (this.ehErroPrisma(erro, "P2025")) throw this.setorNaoEncontrado();
     if (this.ehErroPrisma(erro, "P2003")) {
       throw new ConflictException({
