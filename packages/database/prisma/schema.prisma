@@ -121,6 +121,12 @@ model Usuario {
   comissoesCriadas                      Comissao[]
   emprestimosCriados                    EmprestimoPatrimonio[]
   inventariosCriados                    Inventario[]
+  inventariosIniciados                  Inventario[]                    @relation("InventarioIniciadoPor")
+  inventariosFinalizados                Inventario[]                    @relation("InventarioFinalizadoPor")
+  setoresInventarioIniciados            SetorInventario[]               @relation("SetorInventarioIniciadoPor")
+  setoresInventarioConcluidos           SetorInventario[]               @relation("SetorInventarioConcluidoPor")
+  itensInventarioVerificados            ItemInventario[]                @relation("ItemInventarioVerificadoPor")
+  itensInventarioCorrigidos             ItemInventario[]                @relation("ItemInventarioCorrigidoPor")
   baixasCriadas                         BaixaPatrimonio[]
   patrimoniosCriados                    Patrimonio[]
   substituicoesNumeroPatrimonialCriadas SubstituicaoNumeroPatrimonial[]
@@ -464,11 +470,13 @@ model EmprestimoPatrimonio {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   createdById String   @map("created_by_id") @db.Uuid
 
-  comissao   Comissao             @relation(fields: [comissaoId], references: [id])
-  patrimonio Patrimonio           @relation(fields: [patrimonioId], references: [id])
-  createdBy  Usuario              @relation(fields: [createdById], references: [id])
-  devolucao  DevolucaoPatrimonio?
+  comissao                    Comissao             @relation(fields: [comissaoId], references: [id])
+  patrimonio                  Patrimonio           @relation(fields: [patrimonioId], references: [id])
+  createdBy                   Usuario              @relation(fields: [createdById], references: [id])
+  devolucao                   DevolucaoPatrimonio?
+  itensInventarioJustificados ItemInventario[]
 
+  @@unique([id, patrimonioId], map: "emprestimos_patrimonio_id_patrimonio_id_key")
   @@index([comissaoId], map: "emprestimos_patrimoniais_comissao_id_idx")
   @@map("emprestimos_patrimoniais")
 }
@@ -536,69 +544,89 @@ model ItemManutencao {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
-  manutencao Manutencao @relation(fields: [manutencaoId], references: [id])
-  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id])
+  manutencao                  Manutencao       @relation(fields: [manutencaoId], references: [id])
+  patrimonio                  Patrimonio       @relation(fields: [patrimonioId], references: [id])
+  itensInventarioJustificados ItemInventario[]
 
+  @@unique([id, patrimonioId], map: "itens_manutencao_id_patrimonio_id_key")
   @@map("itens_manutencao")
 }
 
 model Inventario {
-  id         String           @id @default(uuid()) @db.Uuid
-  nome       String           @db.VarChar(150)
-  descricao  String?          @db.Text
-  dataInicio DateTime?        @map("data_inicio") @db.Date
-  dataFim    DateTime?        @map("data_fim") @db.Date
-  status     StatusInventario @default(PENDENTE)
-  observacao String?          @db.Text
-  comissaoId String           @map("comissao_id") @db.Uuid
+  id              String           @id @default(uuid()) @db.Uuid
+  nome            String           @db.VarChar(150)
+  descricao       String?          @db.Text
+  dataInicio      DateTime?        @map("data_inicio") @db.Date
+  dataFim         DateTime?        @map("data_fim") @db.Date
+  status          StatusInventario @default(PENDENTE)
+  observacao      String?          @db.Text
+  comissaoId      String           @map("comissao_id") @db.Uuid
+  iniciadoPorId   String?          @map("iniciado_por_id") @db.Uuid
+  finalizadoPorId String?          @map("finalizado_por_id") @db.Uuid
 
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
   createdById String    @map("created_by_id") @db.Uuid
 
-  comissao  Comissao          @relation(fields: [comissaoId], references: [id])
-  createdBy Usuario           @relation(fields: [createdById], references: [id])
-  setores   SetorInventario[]
-  itens     ItemInventario[]
+  comissao      Comissao          @relation(fields: [comissaoId], references: [id])
+  createdBy     Usuario           @relation(fields: [createdById], references: [id])
+  iniciadoPor   Usuario?          @relation("InventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
+  finalizadoPor Usuario?          @relation("InventarioFinalizadoPor", fields: [finalizadoPorId], references: [id])
+  setores       SetorInventario[]
+  itens         ItemInventario[]
 
   @@index([comissaoId], map: "inventarios_comissao_id_idx")
+  @@index([status, createdAt(sort: Desc), id(sort: Desc)], map: "inventarios_status_created_at_id_idx")
   @@map("inventarios")
 }
 
 model SetorInventario {
-  id           String                @id @default(uuid()) @db.Uuid
-  status       StatusSetorInventario @default(PENDENTE)
-  dataInicio   DateTime?             @map("data_inicio") @db.Timestamp(6)
-  dataFim      DateTime?             @map("data_fim") @db.Timestamp(6)
-  inventarioId String                @map("inventario_id") @db.Uuid
-  setorId      String                @map("setor_id") @db.Uuid
+  id             String                @id @default(uuid()) @db.Uuid
+  status         StatusSetorInventario @default(PENDENTE)
+  dataInicio     DateTime?             @map("data_inicio") @db.Timestamp(6)
+  dataFim        DateTime?             @map("data_fim") @db.Timestamp(6)
+  inventarioId   String                @map("inventario_id") @db.Uuid
+  setorId        String                @map("setor_id") @db.Uuid
+  iniciadoPorId  String?               @map("iniciado_por_id") @db.Uuid
+  concluidoPorId String?               @map("concluido_por_id") @db.Uuid
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
-  inventario Inventario       @relation(fields: [inventarioId], references: [id])
-  setor      Setor            @relation(fields: [setorId], references: [id])
-  itens      ItemInventario[]
+  inventario   Inventario       @relation(fields: [inventarioId], references: [id])
+  setor        Setor            @relation(fields: [setorId], references: [id])
+  iniciadoPor  Usuario?         @relation("SetorInventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
+  concluidoPor Usuario?         @relation("SetorInventarioConcluidoPor", fields: [concluidoPorId], references: [id])
+  itens        ItemInventario[]
 
   @@unique([inventarioId, setorId])
+  @@unique([id, inventarioId, setorId], map: "setores_inventario_vinculo_item_key")
+  @@unique([inventarioId], map: "setores_inventario_um_em_andamento_por_inventario_idx", where: { status: "EM_ANDAMENTO" })
+  @@unique([setorId], map: "setores_inventario_setor_fisico_em_andamento_idx", where: { status: "EM_ANDAMENTO" })
+  @@index([inventarioId, status, id], map: "setores_inventario_inventario_status_idx")
   @@map("setores_inventario")
 }
 
 model ItemInventario {
-  id                      String                          @id @default(uuid()) @db.Uuid
-  situacao                SituacaoItemInventario?
-  statusVerificacao       StatusVerificacaoItemInventario @default(PENDENTE) @map("status_verificacao")
-  dataVerificacao         DateTime?                       @map("data_verificacao") @db.Timestamp(6)
-  statusCorrecao          StatusCorrecaoItemInventario?   @map("status_correcao")
-  tipoCorrecao            TipoCorrecaoItemInventario?     @map("tipo_correcao")
-  dataCorrecao            DateTime?                       @map("data_correcao") @db.Timestamp(6)
-  observacao              String?                         @db.Text
-  setorEsperadoId         String                          @map("setor_esperado_id") @db.Uuid
-  setorEncontradoId       String?                         @map("setor_encontrado_id") @db.Uuid
-  patrimonioId            String                          @map("patrimonio_id") @db.Uuid
-  setorInventarioId       String                          @map("setor_inventario_id") @db.Uuid
-  inventarioId            String                          @map("inventario_id") @db.Uuid
-  transferenciaCorrecaoId String?                         @unique @map("transferencia_correcao_id") @db.Uuid
+  id                            String                          @id @default(uuid()) @db.Uuid
+  situacao                      SituacaoItemInventario?
+  statusVerificacao             StatusVerificacaoItemInventario @default(PENDENTE) @map("status_verificacao")
+  dataVerificacao               DateTime?                       @map("data_verificacao") @db.Timestamp(6)
+  statusCorrecao                StatusCorrecaoItemInventario?   @map("status_correcao")
+  tipoCorrecao                  TipoCorrecaoItemInventario?     @map("tipo_correcao")
+  dataCorrecao                  DateTime?                       @map("data_correcao") @db.Timestamp(6)
+  observacao                    String?                         @db.Text
+  setorEsperadoId               String                          @map("setor_esperado_id") @db.Uuid
+  setorEncontradoId             String?                         @map("setor_encontrado_id") @db.Uuid
+  patrimonioId                  String                          @map("patrimonio_id") @db.Uuid
+  setorInventarioId             String                          @map("setor_inventario_id") @db.Uuid
+  inventarioId                  String                          @map("inventario_id") @db.Uuid
+  transferenciaCorrecaoId       String?                         @unique @map("transferencia_correcao_id") @db.Uuid
+  verificadoPorId               String?                         @map("verificado_por_id") @db.Uuid
+  corrigidoPorId                String?                         @map("corrigido_por_id") @db.Uuid
+  statusPatrimonioNaVerificacao StatusPatrimonio?               @map("status_patrimonio_na_verificacao")
+  emprestimoPatrimonioId        String?                         @map("emprestimo_patrimonio_id") @db.Uuid
+  itemManutencaoId              String?                         @map("item_manutencao_id") @db.Uuid
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
@@ -606,11 +634,17 @@ model ItemInventario {
   setorEsperado         Setor                    @relation("ItemInventarioSetorEsperado", fields: [setorEsperadoId], references: [id])
   setorEncontrado       Setor?                   @relation("ItemInventarioSetorEncontrado", fields: [setorEncontradoId], references: [id])
   patrimonio            Patrimonio               @relation(fields: [patrimonioId], references: [id])
-  setorInventario       SetorInventario          @relation(fields: [setorInventarioId], references: [id])
+  setorInventario       SetorInventario          @relation(fields: [setorInventarioId, inventarioId, setorEsperadoId], references: [id, inventarioId, setorId])
   inventario            Inventario               @relation(fields: [inventarioId], references: [id])
   transferenciaCorrecao TransferenciaPatrimonio? @relation(fields: [transferenciaCorrecaoId], references: [id])
+  verificadoPor         Usuario?                 @relation("ItemInventarioVerificadoPor", fields: [verificadoPorId], references: [id])
+  corrigidoPor          Usuario?                 @relation("ItemInventarioCorrigidoPor", fields: [corrigidoPorId], references: [id])
+  emprestimoPatrimonio  EmprestimoPatrimonio?    @relation(fields: [emprestimoPatrimonioId, patrimonioId], references: [id, patrimonioId])
+  itemManutencao        ItemManutencao?          @relation(fields: [itemManutencaoId, patrimonioId], references: [id, patrimonioId])
 
   @@unique([inventarioId, patrimonioId])
+  @@index([inventarioId, statusVerificacao, situacao, statusCorrecao], map: "itens_inventario_pendencias_idx")
+  @@index([patrimonioId], map: "itens_inventario_patrimonio_id_idx")
   @@map("itens_inventario")
 }
 

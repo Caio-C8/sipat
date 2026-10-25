@@ -1,6 +1,6 @@
 # `INVENTARIOS-001` — Criar e consultar inventários
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -120,21 +120,29 @@ Todas as mutações usam a proteção CSRF global existente. Usuário anônimo r
 
 ## Critérios de aceite
 
-- [ ] migration aplica desde banco vazio e sobre o estado atual sem apagar
+- [x] migration aplica desde banco vazio e sobre o estado atual sem apagar
       histórico;
-- [ ] criação gera inventário, setores e itens na mesma transação e qualquer
+- [x] criação gera inventário, setores e itens na mesma transação e qualquer
       falha desfaz o conjunto inteiro;
-- [ ] somente setores ativos e patrimônios ATIVOS do instante da criação entram
+- [x] somente setores ativos e patrimônios ATIVOS do instante da criação entram
       no inventário;
-- [ ] todos os itens começam com o setor esperado correto e campos operacionais
+- [x] todos os itens começam com o setor esperado correto e campos operacionais
       pendentes ou nulos;
-- [ ] comissão inexistente, fora de vigência ou criação sem setor ativo falha
+- [x] comissão inexistente, fora de vigência ou criação sem setor ativo falha
       sem persistência parcial;
-- [ ] concorrência não cria setores ou itens duplicados nem snapshots parciais;
-- [ ] listagens são finitas, determinísticas, sem N+1 e não expõem models Prisma;
-- [ ] autorização, CSRF, auditoria, erros e limites possuem cobertura;
-- [ ] documentação de estado só é marcada como concluída após todas as
+- [x] concorrência não cria setores ou itens duplicados nem snapshots parciais;
+- [x] listagens são finitas, determinísticas, sem N+1 e não expõem models Prisma;
+- [x] autorização, CSRF, auditoria, erros e limites possuem cobertura;
+- [x] documentação de estado só é marcada como concluída após todas as
       verificações correspondentes.
+
+Concluída em 24 de outubro de 2026. A migration foi aplicada em PostgreSQL 17
+descartável desde banco vazio e sobre um schema anterior com registros. A API
+materializa o snapshot em transação serializável, usa agregados em lote nas
+consultas e possui cobertura unitária, E2E com Guards reais e integração para
+atomicidade, concorrência e constraints. Lint, typecheck, 321 testes da suíte
+principal, 6 testes PostgreSQL e build da API passaram; contratos passaram em
+88 testes, e os typechecks de Web e mobile confirmaram os exports consumíveis.
 
 ## Arquivos ou módulos potencialmente afetados
 
