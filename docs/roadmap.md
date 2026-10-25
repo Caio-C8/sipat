@@ -123,7 +123,7 @@ Objetivos patrimoniais futuros que exigirem comissão dependerão de
 | Ordem | Objetivo                                           | Status    | Dependências principais                                    |
 | ----- | -------------------------------------------------- | --------- | ---------------------------------------------------------- |
 | 23    | `CONTRACTS-008` — Contratos de inventários         | concluído | RF19, UC19, `CONTRACTS-004`, `CONTRACTS-007`               |
-| 24    | `INVENTARIOS-001` — Criar e consultar inventários  | planejado | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
+| 24    | `INVENTARIOS-001` — Criar e consultar inventários  | concluído | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
 | 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | planejado | `INVENTARIOS-001`, concorrência e política de movimentação |
 
 Esta sequência entrega somente contratos, persistência e API. Interfaces Web e
@@ -970,7 +970,7 @@ Especificação de execução:
 
 ## INVENTARIOS-001 — Criar e consultar inventários
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -996,14 +996,14 @@ snapshot e de seu progresso.
 
 ### Critérios de aceite
 
-- [ ] criação inclui somente setores ativos e patrimônios ATIVOS do instante da
+- [x] criação inclui somente setores ativos e patrimônios ATIVOS do instante da
       operação;
-- [ ] setores e itens começam pendentes, sem datas nem correções;
-- [ ] setor esperado e vínculo com o setor do inventário refletem a localização
+- [x] setores e itens começam pendentes, sem datas nem correções;
+- [x] setor esperado e vínculo com o setor do inventário refletem a localização
       cadastral inicial;
-- [ ] falha em qualquer parte desfaz toda a criação;
-- [ ] comissão e autorização são validadas e a auditoria deriva da sessão;
-- [ ] migration, PostgreSQL, API e consumidores dos contratos passam nas
+- [x] falha em qualquer parte desfaz toda a criação;
+- [x] comissão e autorização são validadas e a auditoria deriva da sessão;
+- [x] migration, PostgreSQL, API e consumidores dos contratos passam nas
       verificações aplicáveis.
 
 Especificação de execução:

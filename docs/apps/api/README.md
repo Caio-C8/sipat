@@ -50,7 +50,8 @@ No estado atual:
   substituição, remoção e streaming em
   `/api/notas-fiscais/:notaFiscalId/anexo`, além das quatro operações de
   comissão em `/api/comissoes` e das três mutações de integrantes em
-  `/api/comissoes/:comissaoId/membros`;
+  `/api/comissoes/:comissaoId/membros`, além de criação, listagem, detalhe,
+  setores e itens paginados em `/api/inventarios`;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -78,6 +79,9 @@ No estado atual:
   e composição atomicamente, limita integrantes ativos, garante presidente
   único no PostgreSQL e congela ato, vigência e composição após o primeiro uso
   patrimonial;
+- `InventariosModule` restringe suas cinco rotas ao `DIRETOR_PATRIMONIO`,
+  valida comissão vigente, materializa setores ativos e patrimônios `ATIVO` em
+  transação serializável e consulta o progresso com agregados em lote;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
@@ -126,7 +130,7 @@ No estado atual:
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
-  `FornecedoresModule`, `ComissoesModule`, `PatrimoniosModule`,
+  `FornecedoresModule`, `ComissoesModule`, `InventariosModule`, `PatrimoniosModule`,
   `ProcessosCompraModule` e `NotasFiscaisModule` importam `DatabaseModule`;
   `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
