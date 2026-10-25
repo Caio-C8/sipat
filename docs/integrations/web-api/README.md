@@ -102,6 +102,36 @@ defina query keys, invalidação, retry e consistência.
   CSRF são decisões conjuntas.
 - Métricas usam nomes normalizados e baixa cardinalidade.
 
+## Fluxo Web de autenticação planejado
+
+`WEB-AUTH-001` está aprovado e depende de `CONTRACTS-009` e `AUTH-004`. O fluxo
+será:
+
+```text
+anônimo
+  └─ POST /auth/login
+       ├─ trocaSenhaObrigatoria = true
+       │    └─ /redefinir-senha
+       │         └─ POST /auth/concluir-primeiro-acesso
+       │              └─ cookie rotacionado → /senha-atualizada → /dashboard
+       └─ trocaSenhaObrigatoria = false
+            └─ /dashboard
+```
+
+As operações de navegador usam `/api/backend`, enviam o sinal público de CSRF
+nas mutações e não leem o cookie `HttpOnly`. Server Components que consultarem
+`/auth/me` encaminham explicitamente o header `Cookie` recebido, usam o cliente
+server-only e desabilitam cache para não misturar identidades.
+
+Proxy do Next.js pode rejeitar cedo uma rota protegida quando o cookie não
+existe, mas não consulta o banco e não decide autorização. As páginas
+protegidas confirmam a sessão por `/auth/me`, enquanto a API continua aplicando
+autenticação, pendência de primeiro acesso e perfil em toda operação.
+
+Responses `401`, `403` por primeiro acesso e `403` por perfil são estados
+distintos. A Web redireciona apenas os dois primeiros casos aplicáveis ao
+fluxo; falta de perfil permanece negação de acesso, não expiração de sessão.
+
 ## Documentos
 
 | Assunto                             | Documento                                                      |
@@ -116,7 +146,7 @@ defina query keys, invalidação, retry e consistência.
 ## Decisões pendentes
 
 - biblioteca de estado remoto e regras de cache;
-- consumidor Web dos endpoints de autenticação e senha;
+- consumidor Web da recuperação de senha por e-mail e token;
 - retry por operação e idempotência;
 - propagação de correlation ID para dependências externas;
 - provedor de observabilidade, retenção, alertas e metas.

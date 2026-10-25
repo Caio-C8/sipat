@@ -62,6 +62,19 @@ formulário, operação ou hook Web, nem qualquer alteração no aplicativo mobi
 Os consumidores deverão ser planejados em objetivos próprios depois que a API
 estiver implementada e verificada.
 
+## Ordem da integração de primeiro acesso na Web
+
+| Ordem | Objetivo                                         | Status    | Dependências                    |
+| ----- | ------------------------------------------------ | --------- | ------------------------------- |
+| 1     | `CONTRACTS-009` — Contratos do primeiro acesso   | aprovado  | `CONTRACTS-001`, `CONTRACTS-003` |
+| 2     | `AUTH-004` — Troca obrigatória da senha inicial  | aprovado  | `CONTRACTS-009`, `AUTH-001`      |
+| 3     | `WEB-AUTH-001` — Integrar autenticação Web       | aprovado  | `AUTH-004`, infraestrutura Web   |
+
+A ordem impede que a Web invente o estado de primeiro acesso ou use sessão e
+`ultimoLoginAt` como aproximação. `AUTH-004` entrega primeiro a fonte de verdade
+persistente, a restrição da API e a rotação da sessão; somente então a Web liga
+os formulários e redirects.
+
 ## Ordem das entregas básicas de patrimônios
 
 | Ordem | Objetivo                                      | Status    | Dependências                         |
@@ -471,6 +484,46 @@ da conta por identificador fornecido na confirmação.
 
 Especificação de execução:
 [AUTH-003](./tasks/AUTH-003-recuperar-senha.md).
+
+## AUTH-004 — Obrigar a troca da senha inicial
+
+**Status:** aprovado
+
+### Resultado esperado
+
+Todo usuário criado, inclusive o primeiro administrador provisionado, entra
+com uma sessão restrita até substituir a senha inicial. A conclusão troca a
+senha, revoga as sessões anteriores e emite uma sessão nova sem interromper o
+fluxo Web.
+
+### Escopo
+
+- estado `trocaSenhaObrigatoria` persistido no usuário, com backfill das contas
+  existentes;
+- estado devolvido no login e em `/auth/me`;
+- `POST /api/auth/concluir-primeiro-acesso` para os dois perfis;
+- bloqueio das demais rotas protegidas enquanto a troca estiver pendente;
+- atualização do hash, limpeza da pendência, invalidação de redefinição,
+  revogação das sessões anteriores e criação da nova sessão de forma atômica;
+- testes de concorrência, cookie, CSRF, autorização e ausência de vazamento.
+
+### Fora do escopo
+
+- UI Web ou mobile;
+- recuperação por e-mail, MFA ou expiração periódica de senha;
+- limpeza física de sessões antigas.
+
+### Critérios de aceite
+
+- [ ] primeiro login informa a pendência e não libera rotas de domínio;
+- [ ] conclusão inválida não altera credencial nem sessão;
+- [ ] conclusão válida rotaciona a sessão e libera somente o que o perfil já
+      autoriza;
+- [ ] a limpeza de sessões não altera o estado de primeiro acesso;
+- [ ] contratos, banco, API e testes PostgreSQL passam.
+
+Especificação aprovada:
+[AUTH-004](./tasks/AUTH-004-primeiro-acesso-obrigatorio.md).
 
 ## CONTRACTS-004 — Contratos das operações básicas de patrimônios
 

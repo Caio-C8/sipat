@@ -22,6 +22,12 @@ A API permanece a autoridade: CORS, CSP e a futura ocultação de controles na
 interface não concedem permissão. A arquitetura Web deve transportar o cookie
 `HttpOnly` e o sinal público de CSRF quando essas operações forem implementadas.
 
+O fluxo aprovado em `WEB-AUTH-001` consulta `/auth/me` sem cache nas páginas
+protegidas, diferencia sessão inválida, primeiro acesso pendente e perfil
+insuficiente, e nunca usa redirects da Web como substitutos dos Guards da API.
+Proxy do Next.js, se adotado, fará apenas a prechecagem otimista da presença do
+cookie.
+
 ## Fronteira server e client
 
 - Segredos nunca entram em Client Components.

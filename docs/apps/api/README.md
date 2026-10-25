@@ -114,6 +114,9 @@ No estado atual:
   último administrador ativo;
 - login, logout e `/auth/me` usam contratos Zod, cookie `HttpOnly`, sessão opaca
   revogável e rate limit persistente;
+- `AUTH-004` está aprovado, mas ainda não implementado: ele acrescentará o
+  estado persistente de troca obrigatória da senha inicial, sessão restrita e
+  conclusão com rotação de cookie;
 - alteração da própria senha exige a senha atual, usa limite persistente por
   escopo, troca o hash e revoga todas as sessões atomicamente e expira o cookie;
 - recuperação usa response neutra, token aleatório armazenado somente por hash,

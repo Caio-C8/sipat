@@ -4,15 +4,16 @@ Este documento registra a arquitetura das primeiras entregas de segurança do
 SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
 do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
 O backend de alteração autenticada da própria senha do `AUTH-002` também está
-implementado; a recuperação de senha permanece planejada em `AUTH-003`. As
-interfaces Web e mobile continuam fora dessas entregas. O
-estado e a ordem de execução ficam no
-[roadmap inicial](./roadmap.md).
+implementado, assim como a recuperação de senha do `AUTH-003`. As interfaces
+Web e mobile continuam fora dessas entregas. `CONTRACTS-009` está concluído;
+`AUTH-004` e `WEB-AUTH-001` estão aprovados e ainda não implementados. O estado
+e a ordem de execução ficam no [roadmap inicial](./roadmap.md).
 
 ## Estado implementado
 
-- `GET /api/health`, `POST /api/auth/login` e `POST /api/auth/logout` são as
-  rotas públicas; os dois `POST` continuam submetidos a Origin e CSRF;
+- `GET /api/health`, `POST /api/auth/login`, `POST /api/auth/logout`,
+  `POST /api/auth/esqueceu-senha` e `POST /api/auth/redefinir-senha` são rotas
+  públicas; os métodos mutáveis continuam submetidos a Origin e CSRF;
 - autenticação, autorização e CSRF são Guards globais registrados nessa ordem;
 - rotas protegidas sem perfis declarados negam acesso por padrão;
 - o cookie é escolhido por ambiente e contém um token opaco de 32 bytes em
@@ -24,7 +25,9 @@ estado e a ordem de execução ficam no
 - `POST /api/auth/login` cria a sessão, `GET /api/auth/me` consulta a identidade
   atual e `POST /api/auth/logout` encerra a sessão de forma idempotente;
 - `POST /api/auth/alterar-senha` exige a senha atual, altera somente a
-  identidade da sessão, revoga todas as sessões e expira o cookie.
+  identidade da sessão, revoga todas as sessões e expira o cookie;
+- recuperação de senha usa response neutra, token de uso único e revoga todas
+  as sessões após sucesso.
 
 ## Requisitos atendidos
 
@@ -235,6 +238,50 @@ podem selecionar outro usuário na confirmação.
 - logout revoga somente a sessão identificada pelo cookie, quando existente, e
   sempre expira o cookie com os atributos do ambiente;
 - `GET /auth/me` retorna apenas a identidade segura.
+
+## Primeiro acesso e senha inicial
+
+`CONTRACTS-009` está concluído e `AUTH-004` está aprovado, mas ainda não
+implementado. Eles separam explicitamente senha inicial, sessão e histórico de
+login:
+
+- `Usuario.trocaSenhaObrigatoria` será a fonte de verdade persistente;
+- usuários criados administrativamente e o primeiro administrador provisionado
+  começam com a pendência ativa;
+- `ultimoLoginAt` continua registrando login bem-sucedido e não determina se a
+  senha inicial já foi substituída;
+- `SessaoUsuario` continua sendo credencial temporária e pode ser expirada,
+  revogada ou removida sem perder o estado de primeiro acesso;
+- login válido devolve a identidade com `trocaSenhaObrigatoria` e cria uma
+  sessão restrita quando o estado estiver ativo;
+- a sessão restrita pode consultar `/auth/me`, concluir o primeiro acesso e
+  fazer logout, mas recebe `403` com código público estável nas demais rotas
+  protegidas;
+- `POST /api/auth/concluir-primeiro-acesso` recebe somente nova senha e
+  confirmação; a senha inicial não é repetida porque foi validada para emitir
+  a sessão restrita;
+- o sucesso troca o hash, limpa a pendência, invalida eventual redefinição de
+  senha, revoga as sessões anteriores e cria uma sessão nova em transação
+  serializável;
+- o cookie é substituído somente após o commit, permitindo continuar para a
+  confirmação e o dashboard sem reutilizar o identificador anterior.
+
+A autorização da API continua derivada do perfil. A pendência de primeiro
+acesso restringe temporariamente a identidade, mas não cria um terceiro perfil
+nem concede permissão nova.
+
+### Limpeza periódica de sessões
+
+Uma rotina futura pode remover em lotes sessões expiradas ou revogadas depois
+de uma retenção operacional definida. Isso reduz crescimento da tabela e é
+compatível com o modelo, porque a sessão não é log administrativo nem fonte de
+verdade do primeiro acesso. A rotina deve:
+
+- nunca remover sessão ainda válida;
+- usar lotes e índice compatível para não produzir lock prolongado;
+- definir retenção suficiente para diagnóstico operacional e incidentes;
+- emitir somente métricas agregadas, sem token ou identificador sensível;
+- ser planejada como manutenção separada, sem bloquear `AUTH-004`.
 
 ## Alteração autenticada da própria senha
 

@@ -2,13 +2,31 @@
 
 ## Estado atual
 
-A aplicação Web do SIPAT expõe apenas:
+A aplicação Web do SIPAT expõe:
 
 - `/`: home estática e neutra com links para os health checks;
+- `/login`: interface visual sem integração;
+- `/redefinir-senha`: interface visual do primeiro acesso sem integração;
+- `/senha-atualizada`: interface visual de confirmação sem integração;
 - `/api/health`: health check da camada Web;
 - `/api/backend/*`: rewrite interno para a API, não uma página navegável.
 
-Ainda não existem rotas de domínio, dinâmicas, paralelas ou interceptadas.
+Ainda não existem rotas de domínio funcionais, dinâmicas, paralelas ou
+interceptadas. `/dashboard` ainda não existe.
+
+## Matriz aprovada para WEB-AUTH-001
+
+| Rota                | Acesso                            | Comportamento incompatível                       |
+| ------------------- | --------------------------------- | ------------------------------------------------ |
+| `/`                 | pública                           | permanece pública, inclusive autenticado         |
+| `/login`            | anônimo                           | pendente → troca; autenticado → dashboard        |
+| `/redefinir-senha`  | sessão com troca obrigatória      | anônimo → login; troca concluída → dashboard     |
+| `/senha-atualizada` | sessão válida e troca concluída   | anônimo → login; pendente → redefinir senha      |
+| `/dashboard`        | ambos os perfis, troca concluída   | anônimo → login; pendente → redefinir senha      |
+
+A home deverá listar todas as páginas realmente disponíveis e seus acessos. Os
+endpoints `/api/health` e `/api/backend/:path*` aparecem em uma seção técnica,
+deixando explícito que o rewrite herda a política da API e não é uma página.
 
 ## Convenções
 

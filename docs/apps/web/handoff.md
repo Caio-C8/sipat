@@ -2,14 +2,17 @@
 
 ## Estado operacional
 
-A Web do SIPAT possui somente a infraestrutura inicial: página inicial técnica,
-health check, proxy para a API, clientes HTTP, configuração pública, segurança,
-observabilidade, primitives visuais e testes de infraestrutura.
+A Web do SIPAT possui a infraestrutura inicial, três interfaces visuais de
+autenticação, health check, proxy para a API, clientes HTTP, configuração
+pública, segurança, observabilidade, primitives visuais e testes de
+infraestrutura.
 
-Ainda não existem páginas ou features de usuários nem rotas do domínio
+Ainda não existem páginas funcionais de usuários nem rotas do domínio
 patrimonial. Os contratos e endpoints administrativos de usuários estão prontos
-no backend, mas não possuem consumidor Web. Login, logout, `/auth/me` e criação
-produtiva de sessão também não existem.
+no backend, mas não possuem consumidor Web. Login, logout e `/auth/me` existem
+na API, porém os formulários Web ainda não os consomem. O fluxo aprovado está
+em [WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md) e depende
+de `CONTRACTS-009` e `AUTH-004`.
 
 ## Antes da primeira feature
 
