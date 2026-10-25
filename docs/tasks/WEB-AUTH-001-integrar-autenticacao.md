@@ -76,15 +76,15 @@ a home pública com um catálogo das rotas Web e suas permissões.
 
 ## Matriz de rotas esperada
 
-| Rota                 | Acesso                              | Redirect principal                         |
-| -------------------- | ----------------------------------- | ------------------------------------------ |
-| `/`                  | pública                             | nenhum                                     |
-| `/login`             | pública para anônimo                | sessão pendente → troca; comum → dashboard |
-| `/redefinir-senha`   | sessão com troca obrigatória        | anônimo → login; comum → dashboard         |
-| `/senha-atualizada`  | sessão válida com troca concluída   | anônimo → login; pendente → troca           |
-| `/dashboard`         | ambos os perfis, troca concluída     | anônimo → login; pendente → troca           |
-| `/api/health`        | pública, endpoint técnico           | não se aplica                              |
-| `/api/backend/:path` | transporte interno; segue a API     | não é página navegável                     |
+| Rota                 | Acesso                            | Redirect principal                         |
+| -------------------- | --------------------------------- | ------------------------------------------ |
+| `/`                  | pública                           | nenhum                                     |
+| `/login`             | pública para anônimo              | sessão pendente → troca; comum → dashboard |
+| `/redefinir-senha`   | sessão com troca obrigatória      | anônimo → login; comum → dashboard         |
+| `/senha-atualizada`  | sessão válida com troca concluída | anônimo → login; pendente → troca          |
+| `/dashboard`         | ambos os perfis, troca concluída  | anônimo → login; pendente → troca          |
+| `/api/health`        | pública, endpoint técnico         | não se aplica                              |
+| `/api/backend/:path` | transporte interno; segue a API   | não é página navegável                     |
 
 ## Critérios de aceite
 

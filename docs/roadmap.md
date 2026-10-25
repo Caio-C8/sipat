@@ -64,11 +64,11 @@ estiver implementada e verificada.
 
 ## Ordem da integração de primeiro acesso na Web
 
-| Ordem | Objetivo                                         | Status    | Dependências                    |
-| ----- | ------------------------------------------------ | --------- | ------------------------------- |
-| 1     | `CONTRACTS-009` — Contratos do primeiro acesso   | aprovado  | `CONTRACTS-001`, `CONTRACTS-003` |
-| 2     | `AUTH-004` — Troca obrigatória da senha inicial  | aprovado  | `CONTRACTS-009`, `AUTH-001`      |
-| 3     | `WEB-AUTH-001` — Integrar autenticação Web       | aprovado  | `AUTH-004`, infraestrutura Web   |
+| Ordem | Objetivo                                        | Status   | Dependências                     |
+| ----- | ----------------------------------------------- | -------- | -------------------------------- |
+| 1     | `CONTRACTS-009` — Contratos do primeiro acesso  | aprovado | `CONTRACTS-001`, `CONTRACTS-003` |
+| 2     | `AUTH-004` — Troca obrigatória da senha inicial | aprovado | `CONTRACTS-009`, `AUTH-001`      |
+| 3     | `WEB-AUTH-001` — Integrar autenticação Web      | aprovado | `AUTH-004`, infraestrutura Web   |
 
 A ordem impede que a Web invente o estado de primeiro acesso ou use sessão e
 `ultimoLoginAt` como aproximação. `AUTH-004` entrega primeiro a fonte de verdade

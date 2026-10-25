@@ -16,13 +16,13 @@ interceptadas. `/dashboard` ainda não existe.
 
 ## Matriz aprovada para WEB-AUTH-001
 
-| Rota                | Acesso                            | Comportamento incompatível                       |
-| ------------------- | --------------------------------- | ------------------------------------------------ |
-| `/`                 | pública                           | permanece pública, inclusive autenticado         |
-| `/login`            | anônimo                           | pendente → troca; autenticado → dashboard        |
-| `/redefinir-senha`  | sessão com troca obrigatória      | anônimo → login; troca concluída → dashboard     |
-| `/senha-atualizada` | sessão válida e troca concluída   | anônimo → login; pendente → redefinir senha      |
-| `/dashboard`        | ambos os perfis, troca concluída   | anônimo → login; pendente → redefinir senha      |
+| Rota                | Acesso                           | Comportamento incompatível                   |
+| ------------------- | -------------------------------- | -------------------------------------------- |
+| `/`                 | pública                          | permanece pública, inclusive autenticado     |
+| `/login`            | anônimo                          | pendente → troca; autenticado → dashboard    |
+| `/redefinir-senha`  | sessão com troca obrigatória     | anônimo → login; troca concluída → dashboard |
+| `/senha-atualizada` | sessão válida e troca concluída  | anônimo → login; pendente → redefinir senha  |
+| `/dashboard`        | ambos os perfis, troca concluída | anônimo → login; pendente → redefinir senha  |
 
 A home deverá listar todas as páginas realmente disponíveis e seus acessos. Os
 endpoints `/api/health` e `/api/backend/:path*` aparecem em uma seção técnica,
