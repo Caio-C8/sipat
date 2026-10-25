@@ -9,8 +9,9 @@ CSRF e respostas da API pertencem também à
 
 O SIPAT ainda não possui rotas Web de domínio. A API já aplica autenticação,
 autorização por perfil e CSRF às rotas administrativas de usuários, mas a Web
-não possui operações ou mutações que as consumam. Login, logout, `/auth/me`,
-emissão do cookie e criação produtiva de sessão continuam ausentes.
+não possui operações ou mutações que as consumam. As telas de login e criação
+de nova senha são apenas visuais; logout, consumo de `/auth/me`, emissão do cookie
+e criação produtiva de sessão continuam ausentes.
 
 `browserApiClient` usa apenas a origem relativa `/api/backend` e não acessa
 `API_INTERNAL_URL`. `serverApiClient` importa `server-only`. A interface valida
