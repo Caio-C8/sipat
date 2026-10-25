@@ -82,6 +82,7 @@ describe("UsuariosService", () => {
         email: "usuário@example.com",
         senha: "hash-seguro",
         ativo: true,
+        trocaSenhaObrigatoria: true,
         createdBy: { connect: { id: ADMIN_ID } },
       }),
     );

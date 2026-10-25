@@ -19,6 +19,16 @@ export function criarChaveRateLimitAlteracaoSenha(
     .digest("hex");
 }
 
+export function criarChaveRateLimitPrimeiroAcesso(
+  usuarioId: string,
+  segredoBase64url: string,
+): string {
+  return createHmac("sha256", Buffer.from(segredoBase64url, "base64url"))
+    .update("concluir-primeiro-acesso\0", "utf8")
+    .update(usuarioId, "utf8")
+    .digest("hex");
+}
+
 export function criarChaveRateLimitRecuperacaoSenha(
   emailNormalizado: string,
   segredoBase64url: string,

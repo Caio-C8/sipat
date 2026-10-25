@@ -17,6 +17,7 @@ const usuarioParaLoginSelect = {
   perfil: true,
   ativo: true,
   senha: true,
+  trocaSenhaObrigatoria: true,
 } satisfies Prisma.UsuarioSelect;
 
 interface CriarSessaoData {
@@ -294,6 +295,27 @@ export class AuthRepository {
     const resultado = await this.database.usuario.updateMany({
       where: { id: usuarioId, ativo: true, senha: senhaHashAtual },
       data: { senha: novaSenhaHash, updatedAt: agora },
+    });
+
+    return resultado.count === 1;
+  }
+
+  async concluirPrimeiroAcessoSePendente(
+    usuarioId: string,
+    novaSenhaHash: string,
+    agora: Date,
+  ): Promise<boolean> {
+    const resultado = await this.database.usuario.updateMany({
+      where: {
+        id: usuarioId,
+        ativo: true,
+        trocaSenhaObrigatoria: true,
+      },
+      data: {
+        senha: novaSenhaHash,
+        trocaSenhaObrigatoria: false,
+        updatedAt: agora,
+      },
     });
 
     return resultado.count === 1;

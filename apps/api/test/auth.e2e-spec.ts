@@ -19,6 +19,7 @@ type UsuarioMemoria = {
   perfil: "ADMINISTRADOR" | "DIRETOR_PATRIMONIO";
   ativo: boolean;
   senha: string;
+  trocaSenhaObrigatoria: boolean;
   ultimoLoginAt: Date | null;
 };
 
@@ -60,6 +61,7 @@ describe("autenticação E2E", () => {
     administrador: "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0",
     diretor: "38df5e9c-3e60-4a8e-a4d4-8ca70221f4f1",
     inativo: "48df5e9c-3e60-4a8e-a4d4-8ca70221f4f2",
+    pendente: "58df5e9c-3e60-4a8e-a4d4-8ca70221f4f3",
   } as const;
   const senha = "uma senha segura de teste";
 
@@ -97,6 +99,7 @@ describe("autenticação E2E", () => {
         perfil: "ADMINISTRADOR",
         ativo: true,
         senha: senhaHash,
+        trocaSenhaObrigatoria: false,
         ultimoLoginAt: null,
       },
       {
@@ -106,6 +109,7 @@ describe("autenticação E2E", () => {
         perfil: "DIRETOR_PATRIMONIO",
         ativo: true,
         senha: senhaHash,
+        trocaSenhaObrigatoria: false,
         ultimoLoginAt: null,
       },
       {
@@ -115,6 +119,17 @@ describe("autenticação E2E", () => {
         perfil: "ADMINISTRADOR",
         ativo: false,
         senha: senhaHash,
+        trocaSenhaObrigatoria: false,
+        ultimoLoginAt: null,
+      },
+      {
+        id: ids.pendente,
+        nome: "Primeiro acesso",
+        email: "pendente@example.com",
+        perfil: "ADMINISTRADOR",
+        ativo: true,
+        senha: senhaHash,
+        trocaSenhaObrigatoria: true,
         ultimoLoginAt: null,
       },
     ];
@@ -129,6 +144,7 @@ describe("autenticação E2E", () => {
     const database: Record<string, unknown> = {
       $connect: jest.fn(),
       $disconnect: jest.fn(),
+      notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
       $transaction: jest.fn(
         (operacao: (transaction: unknown) => Promise<unknown>) =>
           operacao(database),
@@ -177,18 +193,32 @@ describe("autenticação E2E", () => {
             where,
             data,
           }: {
-            where: { id: string; ativo: boolean; senha?: string };
-            data: { ultimoLoginAt?: Date; senha?: string };
+            where: {
+              id: string;
+              ativo: boolean;
+              senha?: string;
+              trocaSenhaObrigatoria?: boolean;
+            };
+            data: {
+              ultimoLoginAt?: Date;
+              senha?: string;
+              trocaSenhaObrigatoria?: boolean;
+            };
           }) => {
             const usuario = usuarios.find(
               (item) =>
                 item.id === where.id &&
                 item.ativo === where.ativo &&
-                (where.senha === undefined || item.senha === where.senha),
+                (where.senha === undefined || item.senha === where.senha) &&
+                (where.trocaSenhaObrigatoria === undefined ||
+                  item.trocaSenhaObrigatoria === where.trocaSenhaObrigatoria),
             );
             if (!usuario) return { count: 0 };
             if (data.ultimoLoginAt) usuario.ultimoLoginAt = data.ultimoLoginAt;
             if (data.senha) usuario.senha = data.senha;
+            if (data.trocaSenhaObrigatoria !== undefined) {
+              usuario.trocaSenhaObrigatoria = data.trocaSenhaObrigatoria;
+            }
             return { count: 1 };
           },
         ),
@@ -453,6 +483,18 @@ describe("autenticação E2E", () => {
       .send(body);
   }
 
+  function concluirPrimeiroAcesso(
+    cookie: string,
+    novaSenha = "uma nova senha segura de primeiro acesso",
+  ) {
+    return request(app.getHttpServer())
+      .post("/api/auth/concluir-primeiro-acesso")
+      .set("Origin", "http://localhost:3000")
+      .set(CABECALHO_CSRF, "1")
+      .set("Cookie", cookie)
+      .send({ novaSenha, confirmacaoNovaSenha: novaSenha });
+  }
+
   function solicitarRedefinicao(email: string) {
     return request(app.getHttpServer())
       .post("/api/auth/esqueceu-senha")
@@ -584,6 +626,41 @@ describe("autenticação E2E", () => {
     }
 
     await request(app.getHttpServer()).get("/api/auth/me").expect(401);
+  });
+
+  it("restringe a sessão pendente e conclui o primeiro acesso com rotação", async () => {
+    const respostaLogin = await login("pendente@example.com").expect(200);
+    const cookieAntigo = cookieDaResposta(respostaLogin);
+    expect(respostaLogin.body.dados.trocaSenhaObrigatoria).toBe(true);
+
+    await request(app.getHttpServer())
+      .get("/api/auth/me")
+      .set("Cookie", cookieAntigo)
+      .expect(200);
+
+    const bloqueada = await alterarSenha(cookieAntigo).expect(403);
+    expect(bloqueada.body.codigo).toBe("TROCA_SENHA_OBRIGATORIA");
+
+    const respostaConclusao =
+      await concluirPrimeiroAcesso(cookieAntigo).expect(204);
+    const cookieNovo = cookieDaResposta(respostaConclusao);
+    expect(cookieNovo).not.toBe(cookieAntigo);
+
+    await request(app.getHttpServer())
+      .get("/api/auth/me")
+      .set("Cookie", cookieAntigo)
+      .expect(401);
+    const respostaMe = await request(app.getHttpServer())
+      .get("/api/auth/me")
+      .set("Cookie", cookieNovo)
+      .expect(200);
+    expect(respostaMe.body.dados.trocaSenhaObrigatoria).toBe(false);
+    await expect(
+      senhaHasher.verificarHash(
+        usuarios.find(({ id }) => id === ids.pendente)!.senha,
+        "uma nova senha segura de primeiro acesso",
+      ),
+    ).resolves.toBe(true);
   });
 
   it.each(["admin@example.com", "diretor@example.com"])(

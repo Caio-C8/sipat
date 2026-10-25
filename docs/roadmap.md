@@ -64,11 +64,11 @@ estiver implementada e verificada.
 
 ## Ordem da integração de primeiro acesso na Web
 
-| Ordem | Objetivo                                        | Status   | Dependências                     |
-| ----- | ----------------------------------------------- | -------- | -------------------------------- |
-| 1     | `CONTRACTS-009` — Contratos do primeiro acesso  | aprovado | `CONTRACTS-001`, `CONTRACTS-003` |
-| 2     | `AUTH-004` — Troca obrigatória da senha inicial | aprovado | `CONTRACTS-009`, `AUTH-001`      |
-| 3     | `WEB-AUTH-001` — Integrar autenticação Web      | aprovado | `AUTH-004`, infraestrutura Web   |
+| Ordem | Objetivo                                        | Status    | Dependências                     |
+| ----- | ----------------------------------------------- | --------- | -------------------------------- |
+| 1     | `CONTRACTS-009` — Contratos do primeiro acesso  | concluído | `CONTRACTS-001`, `CONTRACTS-003` |
+| 2     | `AUTH-004` — Troca obrigatória da senha inicial | concluído | `CONTRACTS-009`, `AUTH-001`      |
+| 3     | `WEB-AUTH-001` — Integrar autenticação Web      | aprovado  | `AUTH-004`, infraestrutura Web   |
 
 A ordem impede que a Web invente o estado de primeiro acesso ou use sessão e
 `ultimoLoginAt` como aproximação. `AUTH-004` entrega primeiro a fonte de verdade
@@ -487,7 +487,7 @@ Especificação de execução:
 
 ## AUTH-004 — Obrigar a troca da senha inicial
 
-**Status:** aprovado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -515,14 +515,14 @@ fluxo Web.
 
 ### Critérios de aceite
 
-- [ ] primeiro login informa a pendência e não libera rotas de domínio;
-- [ ] conclusão inválida não altera credencial nem sessão;
-- [ ] conclusão válida rotaciona a sessão e libera somente o que o perfil já
+- [x] primeiro login informa a pendência e não libera rotas de domínio;
+- [x] conclusão inválida não altera credencial nem sessão;
+- [x] conclusão válida rotaciona a sessão e libera somente o que o perfil já
       autoriza;
-- [ ] a limpeza de sessões não altera o estado de primeiro acesso;
-- [ ] contratos, banco, API e testes PostgreSQL passam.
+- [x] a limpeza de sessões não altera o estado de primeiro acesso;
+- [x] contratos, banco, API e testes PostgreSQL passam.
 
-Especificação aprovada:
+Especificação de execução:
 [AUTH-004](./tasks/AUTH-004-primeiro-acesso-obrigatorio.md).
 
 ## CONTRACTS-004 — Contratos das operações básicas de patrimônios

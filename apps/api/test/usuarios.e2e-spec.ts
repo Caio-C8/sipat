@@ -57,6 +57,7 @@ describe("gestão de usuários", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     $transaction: jest.fn(),
     usuario: {
       create: jest.fn(),
@@ -93,6 +94,7 @@ describe("gestão de usuários", () => {
               email: "admin@example.com",
               perfil: "ADMINISTRADOR",
               ativo: true,
+              trocaSenhaObrigatoria: false,
             },
           };
         }
@@ -109,6 +111,7 @@ describe("gestão de usuários", () => {
               email: "diretor@example.com",
               perfil: "DIRETOR_PATRIMONIO",
               ativo: true,
+              trocaSenhaObrigatoria: false,
             },
           };
         }

@@ -83,6 +83,7 @@ describe("gestão de setores", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     setorInventario: { count: jest.fn().mockResolvedValue(0) },
     sessaoUsuario: {
       findUnique: jest.fn(),
@@ -124,6 +125,7 @@ describe("gestão de setores", () => {
             email: administrador ? "admin@example.com" : "diretor@example.com",
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },

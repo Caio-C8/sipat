@@ -50,6 +50,7 @@ describe("provisionamento do primeiro administrador", () => {
         senha: "hash-seguro",
         perfil: "ADMINISTRADOR",
         ativo: true,
+        trocaSenhaObrigatoria: true,
         createdById: null,
       },
     });

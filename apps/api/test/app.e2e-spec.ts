@@ -19,6 +19,7 @@ describe("health endpoint", () => {
       .useValue({
         $connect: jest.fn(),
         $disconnect: jest.fn(),
+        notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
         sessaoUsuario: { findUnique: jest.fn() },
       })
       .compile();

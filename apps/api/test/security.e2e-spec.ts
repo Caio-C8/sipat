@@ -53,6 +53,7 @@ describe("barreira global de segurança", () => {
     nome: "Maria da Silva",
     email: "maria@example.com",
     ativo: true,
+    trocaSenhaObrigatoria: false,
   } as const;
 
   const sessoes = new Map([
@@ -112,6 +113,7 @@ describe("barreira global de segurança", () => {
     const database = {
       $connect: jest.fn(),
       $disconnect: jest.fn(),
+      notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
       sessaoUsuario: {
         findUnique: jest.fn(
           ({ where }: { where: { tokenHash: string } }) =>

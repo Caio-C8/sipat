@@ -1,6 +1,7 @@
 import {
   criarChaveRateLimitAlteracaoSenha,
   criarChaveRateLimitLogin,
+  criarChaveRateLimitPrimeiroAcesso,
 } from "../rate-limit-login";
 
 describe("chaves de rate limit de autenticação", () => {
@@ -13,10 +14,18 @@ describe("chaves de rate limit de autenticação", () => {
       identidade,
       segredo,
     );
+    const chavePrimeiroAcesso = criarChaveRateLimitPrimeiroAcesso(
+      identidade,
+      segredo,
+    );
 
     expect(chaveLogin).toMatch(/^[a-f0-9]{64}$/);
     expect(chaveAlteracao).toMatch(/^[a-f0-9]{64}$/);
     expect(chaveAlteracao).not.toBe(chaveLogin);
+    expect(chavePrimeiroAcesso).toMatch(/^[a-f0-9]{64}$/);
+    expect(chavePrimeiroAcesso).not.toBe(chaveLogin);
+    expect(chavePrimeiroAcesso).not.toBe(chaveAlteracao);
     expect(chaveAlteracao).not.toContain(identidade);
+    expect(chavePrimeiroAcesso).not.toContain(identidade);
   });
 });

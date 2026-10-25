@@ -73,6 +73,7 @@ describe("inventários", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     sessaoUsuario: { findUnique: jest.fn(), updateMany: jest.fn() },
   };
   const service = {
@@ -112,6 +113,7 @@ describe("inventários", () => {
             email: diretor ? "diretor@example.com" : "admin@example.com",
             perfil,
             ativo: true,
+            trocaSenhaObrigatoria: false,
           },
         };
       },
