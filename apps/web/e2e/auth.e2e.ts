@@ -95,6 +95,17 @@ test.describe("Autenticação Web", () => {
     await expect(
       page.getByRole("heading", { name: "Bem-vindo, Maria da Silva!" }),
     ).toBeVisible();
+    const resumo = page.getByRole("region", { name: "Resumo dos bens" });
+    await expect(resumo.getByText("32")).toBeVisible();
+    await expect(resumo.getByText("28")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Cadastrar bem.*Em breve/ }),
+    ).toBeDisabled();
+    await expect(
+      page.getByText(
+        "Dados ainda não disponíveis — integração não implementada",
+      ),
+    ).toHaveCount(3);
 
     await page.getByRole("button", { name: /Menu do usuário/ }).click();
     const logout = page.getByRole("menuitem");
@@ -200,6 +211,66 @@ test.describe("Autenticação Web", () => {
       dashboard.violations,
       JSON.stringify(dashboard.violations, null, 2),
     ).toEqual([]);
+  });
+
+  test("distingue zero, loading e indisponibilidade no dashboard", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "active",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+      {
+        name: "sipat_dashboard_scenario",
+        value: "zero",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/dashboard");
+    await expect(page.getByText("Nenhum patrimônio cadastrado.")).toBeVisible();
+    await expect(
+      page.getByText("Não foi possível carregar os dados patrimoniais."),
+    ).toHaveCount(0);
+
+    await page.context().addCookies([
+      {
+        name: "sipat_dashboard_scenario",
+        value: "slow",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    const slowNavigation = page.goto("/dashboard");
+    await expect(
+      page.getByRole("main", { name: "Carregando visão geral" }),
+    ).toBeVisible();
+    await slowNavigation;
+
+    await page.context().addCookies([
+      {
+        name: "sipat_dashboard_scenario",
+        value: "error",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/dashboard");
+    await expect(
+      page.getByRole("alert").filter({
+        hasText: "Não foi possível carregar os dados patrimoniais.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Resumo dos bens" }).getByText("—"),
+    ).toHaveCount(4);
   });
 
   test("mantém a falha de logout perceptível dentro do menu do usuário", async ({

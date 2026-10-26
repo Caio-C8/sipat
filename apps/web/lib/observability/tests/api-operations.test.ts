@@ -78,6 +78,31 @@ describe("instrumentarApiClient", () => {
     expect(JSON.stringify(metricas[0])).not.toContain("recurso-123");
   });
 
+  it("normaliza a listagem patrimonial sem incluir filtros", async () => {
+    const metricas: MetricaOperacaoApi[] = [];
+    const apiClient = instrumentarApiClient(
+      criarApiClient(async () => ({ status: 200 })),
+      {
+        origem: "servidor",
+        observar: (metrica) => metricas.push(metrica),
+        agora: criarRelogio(10, 15),
+      },
+    );
+
+    await apiClient.request({
+      path: "/patrimonios",
+      method: "GET",
+      query: { pagina: 1, limite: 1, status: "ATIVO" },
+    });
+
+    expect(metricas[0]).toMatchObject({
+      nome: "patrimonios.listar",
+      origem: "servidor",
+      metodo: "GET",
+    });
+    expect(JSON.stringify(metricas[0])).not.toContain("ATIVO");
+  });
+
   it("registra status e categoria de uma falha conhecida", async () => {
     const metricas: MetricaOperacaoApi[] = [];
 

@@ -26,6 +26,13 @@ const identities = {
   },
 };
 
+const patrimonioTotals = {
+  ATIVO: 28,
+  BAIXADO: 2,
+  EMPRESTADO: 1,
+  EM_MANUTENCAO: 1,
+};
+
 function json(response, status, body) {
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -41,13 +48,24 @@ function sessionFromCookie(cookie = "") {
   return match?.[1];
 }
 
+function dashboardScenarioFromCookie(cookie = "") {
+  const match =
+    /(?:^|;\s*)sipat_dashboard_scenario=(zero|error|slow)(?:;|$)/.exec(cookie);
+  return match?.[1];
+}
+
 const server = createServer((request, response) => {
-  if (request.method === "GET" && request.url === "/api/health") {
+  const requestUrl = new URL(
+    request.url ?? "/",
+    `http://${request.headers.host}`,
+  );
+
+  if (request.method === "GET" && requestUrl.pathname === "/api/health") {
     json(response, 200, { status: "ok" });
     return;
   }
 
-  if (request.method === "GET" && request.url === "/api/auth/me") {
+  if (request.method === "GET" && requestUrl.pathname === "/api/auth/me") {
     const session = sessionFromCookie(request.headers.cookie);
     const identity = session ? identities[session] : undefined;
 
@@ -69,6 +87,74 @@ const server = createServer((request, response) => {
       mensagem: "Identidade autenticada consultada com sucesso.",
       dados: identity,
     });
+    return;
+  }
+
+  if (request.method === "GET" && requestUrl.pathname === "/api/patrimonios") {
+    const session = sessionFromCookie(request.headers.cookie);
+
+    if (!session || session === "pending") {
+      json(response, 401, {
+        status: 401,
+        sucesso: false,
+        codigo: "NAO_AUTENTICADO",
+        mensagem: "Autenticação necessária.",
+        erros: [],
+        requisicaoId: "e2e-api-request",
+      });
+      return;
+    }
+
+    const scenario = dashboardScenarioFromCookie(request.headers.cookie);
+
+    if (scenario === "error") {
+      json(response, 503, {
+        status: 503,
+        sucesso: false,
+        codigo: "SERVICO_INDISPONIVEL",
+        mensagem: "Serviço temporariamente indisponível.",
+        erros: [],
+        requisicaoId: "e2e-api-request",
+      });
+      return;
+    }
+
+    const status = requestUrl.searchParams.get("status");
+    const total =
+      scenario === "zero" ? 0 : status ? patrimonioTotals[status] : 32;
+
+    if (total === undefined) {
+      json(response, 400, {
+        status: 400,
+        sucesso: false,
+        codigo: "STATUS_INVALIDO",
+        mensagem: "Status patrimonial inválido.",
+        erros: [],
+        requisicaoId: "e2e-api-request",
+      });
+      return;
+    }
+
+    const sendResponse = () =>
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Patrimônios listados com sucesso.",
+        dados: [],
+        meta: {
+          total,
+          pagina: 1,
+          ultimaPagina: Math.max(1, total),
+          limite: 1,
+        },
+      });
+
+    if (scenario === "slow") {
+      setTimeout(sendResponse, 1_000);
+      return;
+    }
+
+    sendResponse();
     return;
   }
 

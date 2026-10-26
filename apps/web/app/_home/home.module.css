@@ -140,6 +140,20 @@
   color: #62748e;
   font-size: 9px;
 }
+.integrationError {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid #f1c7c7;
+  border-radius: 7px;
+  color: #8b2c2c;
+  background: #fff7f7;
+  font-size: 10px;
+}
+.integrationError p {
+  margin: 0;
+}
 .upperGrid,
 .lowerGrid {
   display: grid;
@@ -313,6 +327,24 @@
   color: var(--home-muted);
   font-size: 9px;
 }
+.unavailableState,
+.dataErrorState {
+  display: flex;
+  min-height: 92px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 16px;
+  border: 1px dashed #cbd7e6;
+  border-radius: 7px;
+  color: #526984;
+  background: #f8fafc;
+  text-align: center;
+  font-size: 10px;
+}
+.unavailableState p {
+  margin: 0;
+}
 .sectionAside {
   display: flex;
   align-items: center;
@@ -413,17 +445,28 @@
   border: 1px solid var(--home-border);
   border-radius: 5px;
   color: #24466e;
+  background: #f8fafc;
+  font-family: inherit;
   font-size: 9px;
   font-weight: 700;
+  text-align: left;
   white-space: nowrap;
 }
 .quickAction svg {
   flex: none;
 }
-.quickPrimary {
-  border-color: #223e65;
-  color: #fff;
-  background: #223e65;
+.quickAction:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+.quickAction small {
+  margin-left: auto;
+  padding: 2px 5px;
+  border-radius: 999px;
+  color: #526984;
+  background: #e7edf5;
+  font-size: 8px;
+  font-weight: 700;
 }
 .pageFooter {
   display: flex;
@@ -431,6 +474,47 @@
   gap: 12px;
   color: #60728a;
   font-size: 9px;
+}
+.loadingIntro,
+.loadingCard,
+.loadingPanel {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #edf2f7 25%, #f7f9fc 50%, #edf2f7 75%);
+  background-size: 200% 100%;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+.loadingIntro {
+  width: min(100%, 360px);
+  height: 48px;
+}
+.loadingCard {
+  min-height: 70px;
+}
+.loadingPanel {
+  min-height: 250px;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@keyframes loadingPulse {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loadingIntro,
+  .loadingCard,
+  .loadingPanel {
+    animation: none;
+  }
 }
 @media (min-width: 1500px) {
   .main {
@@ -532,6 +616,9 @@
   .donut span,
   .legend li,
   .panelFoot,
+  .integrationError,
+  .unavailableState,
+  .dataErrorState,
   .sectionAside {
     font-size: 11px;
   }

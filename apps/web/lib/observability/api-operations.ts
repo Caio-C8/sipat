@@ -63,6 +63,12 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
       POST: "auth.logout",
     },
   },
+  {
+    pattern: /^\/patrimonios$/,
+    operacoes: {
+      GET: "patrimonios.listar",
+    },
+  },
 ];
 
 function identificarOperacao(method: MetodoHttp, path: string): string {
