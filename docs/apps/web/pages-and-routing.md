@@ -8,15 +8,17 @@ A aplicação Web do SIPAT expõe:
 - `/login`: autenticação integrada à API para usuários anônimos;
 - `/redefinir-senha`: conclusão protegida do primeiro acesso;
 - `/senha-atualizada`: confirmação protegida após a troca;
-- `/dashboard`: visão geral ilustrativa protegida para os dois perfis;
+- `/dashboard`: visão geral protegida com totais patrimoniais para os dois
+  perfis;
 - `/api/health`: health check da camada Web;
 - `/api/backend/*`: rewrite interno para a API, não uma página navegável.
 
 As páginas de autenticação e o layout do grupo `(sistema)` validam a identidade
 pelo endpoint `/auth/me` nas fronteiras Server. O grupo não altera a URL e
 compartilha o shell das páginas autenticadas; formulários, menus e logout ficam
-em pequenas fronteiras Client. Ainda não existem rotas operacionais de domínio,
-dinâmicas, paralelas ou interceptadas além desse fluxo.
+em pequenas fronteiras Client. O dashboard faz leituras paralelas no servidor;
+ainda não existem outras rotas operacionais de domínio, dinâmicas ou
+interceptadas.
 
 ## Matriz aprovada para WEB-AUTH-001
 
@@ -39,6 +41,10 @@ deixando explícito que o rewrite herda a política da API e não é uma página
 os redirects de sessão em `app/(sistema)/layout.tsx`. O catálogo de navegação é
 a fonte do item ativo e do breadcrumb; somente caminhos Web implementados
 recebem link.
+
+`WEB-DASHBOARD-001` adicionou `loading.tsx` ao segmento e integrou os totais
+geral e por status por uma operação Server. Erro de integração e zero registros
+são estados distintos da página.
 
 ## Convenções
 

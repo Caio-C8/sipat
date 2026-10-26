@@ -2,11 +2,12 @@
 
 ## Estado operacional
 
-A Web do SIPAT possui um catálogo público em `/`, a visão geral ilustrativa e
-protegida em `/dashboard`, shell autenticado compartilhado e filtrado por
-perfil, fluxo funcional de login e primeiro acesso, health check, proxy para a
-API, clientes HTTP, configuração pública, segurança, observabilidade,
-primitives visuais e testes de infraestrutura e autenticação.
+A Web do SIPAT possui um catálogo público em `/`, a visão geral protegida e
+integrada aos totais patrimoniais em `/dashboard`, shell autenticado
+compartilhado e filtrado por perfil, fluxo funcional de login e primeiro
+acesso, health check, proxy para a API, clientes HTTP, configuração pública,
+segurança, observabilidade, primitives visuais e testes de infraestrutura,
+autenticação e dashboard.
 
 Ainda não existem páginas funcionais de gestão de usuários nem rotas
 operacionais do domínio patrimonial. Os contratos e endpoints administrativos
@@ -20,6 +21,12 @@ permanecem pendentes.
 `WEB-SHELL-001` está implementado no grupo `(sistema)`. As opções futuras da
 sidebar permanecem visíveis somente para os perfis permitidos, mas não recebem
 `href`; busca e feed de notificações continuam explicitamente não implementados.
+
+`WEB-DASHBOARD-001` está implementado como Server Component. Cinco consultas
+finitas e paralelas a `GET /patrimonios`, sempre com `pagina=1` e `limite=1`,
+alimentam o total geral e os quatro status. Pendências, setores e atividades
+permanecem explicitamente sem integração; ações rápidas continuam
+desabilitadas.
 
 ## Antes da primeira feature
 

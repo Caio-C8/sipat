@@ -1,6 +1,6 @@
 # `WEB-DASHBOARD-001` — Integrar a visão geral com capacidades existentes
 
-**Status:** `aprovada`
+**Status:** `concluída em 26 de outubro de 2026`
 
 ## Objetivo
 
@@ -26,10 +26,10 @@ permanecem sem funcionalidade nesta etapa.
 - Referência visual: frame `Home` (`298:80`) do
   [arquivo do Figma](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=298-80).
 
-Hoje somente a identidade é real. Totais, pendências, setores, atividades e
-datas de exemplo estão fixos em `home-dashboard.tsx`. A Web ainda não possui
-operações de domínio. A API já expõe a listagem paginada de patrimônios para os
-dois perfis e sua metadata contém o total filtrado.
+Antes desta entrega, somente a identidade era real. Totais, pendências, setores,
+atividades e datas de exemplo estavam fixos em `home-dashboard.tsx`. A API já
+expunha a listagem paginada de patrimônios para os dois perfis e sua metadata
+continha o total filtrado.
 
 ## Escopo
 
@@ -106,24 +106,24 @@ contrato público consumível pela Web.
 
 ## Critérios de aceite
 
-- [ ] Os cinco totais patrimoniais exibidos são derivados exclusivamente da
+- [x] Os cinco totais patrimoniais exibidos são derivados exclusivamente da
       metadata validada das listagens da API.
-- [ ] Administrador e Diretor de Patrimônio conseguem carregar os totais, pois
+- [x] Administrador e Diretor de Patrimônio conseguem carregar os totais, pois
       `GET /patrimonios` permite os dois perfis.
-- [ ] Requisições independentes são paralelas, finitas e não criam waterfall ou
+- [x] Requisições independentes são paralelas, finitas e não criam waterfall ou
       paginação exaustiva.
-- [ ] Resposta fora do contrato, `401`, `403`, timeout e falha de rede produzem
+- [x] Resposta fora do contrato, `401`, `403`, timeout e falha de rede produzem
       estado seguro e compreensível, sem reapresentar números ilustrativos.
-- [ ] Zero patrimônios é representado como estado válido, não como erro.
-- [ ] Pendências, setores e atividades comunicam que a integração ainda não
+- [x] Zero patrimônios é representado como estado válido, não como erro.
+- [x] Pendências, setores e atividades comunicam que a integração ainda não
       existe e não exibem registros de exemplo.
-- [ ] Todos os botões de ação rápida estão desabilitados, marcados `Em breve` e
+- [x] Todos os botões de ação rápida estão desabilitados, marcados `Em breve` e
       não navegam nem disparam operação.
-- [ ] Nenhum card aparenta ser link enquanto a rota de destino não existir.
-- [ ] A data usa `pt-BR`, sem texto fixo de 2026 e sem mismatch de hidratação.
-- [ ] O dashboard preserva a hierarquia visual do Figma, reflow responsivo,
+- [x] Nenhum card aparenta ser link enquanto a rota de destino não existir.
+- [x] A data usa `pt-BR`, sem texto fixo de 2026 e sem mismatch de hidratação.
+- [x] O dashboard preserva a hierarquia visual do Figma, reflow responsivo,
       headings, nomes acessíveis e contraste dos estados vazios/erro/loading.
-- [ ] Testes cobrem contrato da operação, montagem das queries, sucesso, zero,
+- [x] Testes cobrem contrato da operação, montagem das queries, sucesso, zero,
       falha e a ausência de interatividade das ações rápidas.
 
 ## Arquivos ou módulos potencialmente afetados
@@ -160,3 +160,14 @@ contrato público consumível pela Web.
 - Nenhuma para a integração parcial descrita. Agregados por setor, feed de
   pendências, últimas operações e destinos das ações rápidas exigem contratos e
   objetivos futuros próprios.
+
+## Resultado verificado
+
+- lint, tipos e 40 testes unitários passaram;
+- build de produção passou com Next.js 16.4.3;
+- 15 cenários Playwright passaram no Chromium, incluindo sucesso, zero,
+  loading, indisponibilidade, sessão e acessibilidade automatizável;
+- o reflow foi inspecionado em 390, 1024 e 1600 px, incluindo o comportamento
+  equivalente ao zoom de 200% pela redução da viewport CSS;
+- a integração com uma stack real provisionada continua fora desta entrega; o
+  E2E usa o backend estrito e validado por contratos já adotado pela Web.

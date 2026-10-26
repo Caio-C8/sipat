@@ -12,7 +12,8 @@
 - [x] Primitives visuais genéricas disponíveis.
 - [x] Playwright configurado para o build de produção.
 - [x] Testes de home, acessibilidade automatizável e headers de segurança.
-- [x] Interface visual da home com dados ilustrativos, sem integração Web–API.
+- [x] Dashboard autenticado com totais patrimoniais reais e estados explícitos
+      para capacidades ainda não integradas.
 
 ## Próximos objetivos
 
@@ -30,8 +31,8 @@ tipadas e aplicam a matriz de sessão. A entrega implementou:
    `trocaSenhaObrigatoria`;
 3. a troca com rotação da sessão e continuação por
    `/senha-atualizada` até `/dashboard`;
-4. `/dashboard` protegida para os dois perfis, usando a visão geral ilustrativa
-   que antes ocupava `/`;
+4. `/dashboard` protegida para os dois perfis, usando a visão geral que antes
+   ocupava `/`;
 5. `/` pública como catálogo das rotas Web disponíveis e
    suas permissões;
 6. testes unitários e Playwright do fluxo, redirects, acessibilidade e
@@ -67,11 +68,15 @@ Especificação aprovada:
 
 ### WEB-DASHBOARD-001 — Integrar a visão geral
 
-**Status:** aprovado; depende de `WEB-SHELL-001`.
+**Status:** implementado em 26 de outubro de 2026.
 
 Consumir a listagem patrimonial existente para os totais gerais e por status,
 remover dados ilustrativos e deixar explícitos os blocos que ainda não possuem
 endpoint ou rota Web. As ações rápidas permanecem desabilitadas nesta etapa.
+
+A entrega usa cinco consultas Server paralelas e limitadas, valida query e
+response com `@repo/contracts`, encaminha o cookie no escopo da requisição e
+instrumenta `patrimonios.listar` sem filtros de alta cardinalidade.
 
 Especificação aprovada:
 [WEB-DASHBOARD-001](../../tasks/WEB-DASHBOARD-001-integrar-visao-geral.md).
