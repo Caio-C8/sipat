@@ -7,11 +7,12 @@ CSRF e respostas da API pertencem também à
 
 ## Estado atual
 
-O SIPAT ainda não possui rotas Web operacionais de domínio além do fluxo de
-autenticação. A home pública não consulta identidade nem dados patrimoniais; a
-visão geral ilustrativa está em `/dashboard` e confirma a sessão por `/auth/me`.
-Login, primeiro acesso e logout usam operações tipadas e enviam o sinal público
-de CSRF nas mutações. A API emite, rotaciona e expira o cookie `HttpOnly`.
+O SIPAT possui uma leitura Web do domínio patrimonial no dashboard, além do
+fluxo de autenticação. A home pública não consulta identidade nem dados
+patrimoniais; `/dashboard` confirma a sessão por `/auth/me` e encaminha o cookie
+explicitamente nas consultas Server a `/patrimonios`. Login, primeiro acesso e
+logout usam operações tipadas e enviam o sinal público de CSRF nas mutações. A
+API emite, rotaciona e expira o cookie `HttpOnly`.
 
 `browserApiClient` usa apenas a origem relativa `/api/backend` e não acessa
 `API_INTERNAL_URL`. `serverApiClient` importa `server-only`. A interface valida
@@ -153,8 +154,8 @@ ele aumenta segurança e não exponha senha em logs ou estado persistente.
 ## Checklist
 
 Os itens abaixo continuam sendo o checklist. Autorização e CSRF das rotas da API
-de usuários estão implementados; o consumidor Web, a criação do cookie e os
-fluxos de identidade permanecem planejados.
+de usuários, criação do cookie e fluxos Web de identidade estão implementados;
+a gestão Web de usuários permanece planejada.
 
 - nenhum segredo no bundle;
 - dados passados ao cliente minimizados;

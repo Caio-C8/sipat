@@ -33,8 +33,8 @@ No estado atual:
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- existem operações tipadas de autenticação; ainda não há hooks ou política de
-  cache remoto de domínio;
+- existem operações tipadas de autenticação e listagem patrimonial; ainda não
+  há hooks ou política de cache remoto de domínio;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
 - login, logout, `/auth/me` e conclusão do primeiro acesso possuem consumidor
@@ -46,6 +46,12 @@ No estado atual:
 
 A integração básica pode ser verificada por `GET /api/backend/health`. As
 operações e os hooks Web de usuários ainda não existem.
+
+O dashboard usa o cliente Server para cinco consultas paralelas e finitas a
+`GET /patrimonios`: uma geral e quatro filtradas por status, todas com
+`pagina=1`, `limite=1`, cache desabilitado e cookie encaminhado explicitamente.
+Somente `meta.total` alimenta a interface; a Web não percorre páginas para
+calcular agregados ausentes.
 
 ## Transporte HTTP
 

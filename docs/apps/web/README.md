@@ -11,8 +11,9 @@ fronteiras entre UI, contratos e integração HTTP.
 ## Estado atual
 
 - `/` apresenta o catálogo público de páginas, acessos e endpoints técnicos;
-- `/dashboard` apresenta a visão geral visual ilustrativa dentro do shell
-  autenticado compartilhado, que confirma a sessão por `/auth/me`;
+- `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
+  reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
+  blocos ainda sem integração;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;
@@ -24,9 +25,10 @@ fronteiras entre UI, contratos e integração HTTP.
 - Core Web Vitals e operações HTTP podem emitir métricas com rotas e nomes
   normalizados;
 - `components/ui` contém primitives visuais genéricas já instaladas;
-- Vitest cobre infraestrutura HTTP, configuração e observabilidade;
-- Playwright cobre o catálogo, o fluxo de autenticação, redirects,
-  acessibilidade automatizável e headers de segurança;
+- Vitest cobre infraestrutura HTTP, configuração, observabilidade, a operação
+  patrimonial e os estados do dashboard;
+- Playwright cobre o catálogo, o fluxo de autenticação, redirects, estados do
+  dashboard, acessibilidade automatizável e headers de segurança;
 - as rotas `/login`, `/redefinir-senha` e `/senha-atualizada` estão integradas
   à API por operações tipadas;
 - o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb, notificações e
@@ -39,6 +41,8 @@ fronteiras entre UI, contratos e integração HTTP.
 geral ilustrativa para `/dashboard`, protegida para os dois perfis.
 `WEB-SHELL-001` moveu a proteção e a composição visual das páginas autenticadas
 para o layout do grupo `(sistema)` sem alterar a URL pública.
+`WEB-DASHBOARD-001` substituiu os dados ilustrativos pelos totais reais geral e
+por status, mantendo indisponíveis os blocos que ainda não possuem contrato.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
 ainda não possuem consumidor Web. Login, logout, primeiro acesso e consumo de
