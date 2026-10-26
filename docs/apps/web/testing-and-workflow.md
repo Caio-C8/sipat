@@ -154,9 +154,12 @@ pública, cliente HTTP, normalização de rotas e operações, Web Vitals e
 observabilidade. Novas features devem adicionar testes proporcionais aos seus
 contratos e estados.
 
-A suíte Playwright cobre a home, metadata, links de health, acessibilidade
+A suíte Playwright cobre o catálogo público, metadata, links de health, login,
+primeiro acesso, rotação simulada do cookie, logout, redirects, acessibilidade
 automatizável, headers de segurança e execução da home sem violações CSP no
-build de produção.
+build de produção. O fluxo usa um backend mockado estrito para permitir que
+Server Components validem `/auth/me`; ele não substitui a verificação adicional
+contra API e banco reais.
 
 O mock de rede registra expectations por método e path, aceita contagem exata,
 valida query e payload dentro do responder e falha no teardown quando recebe

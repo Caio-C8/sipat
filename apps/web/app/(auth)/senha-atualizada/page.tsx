@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { obterIdentidadeAtual } from "@/lib/auth/server-session";
 import styles from "../auth.module.css";
 
 export const metadata: Metadata = {
@@ -8,7 +11,17 @@ export const metadata: Metadata = {
   description: "Confirmação de atualização de senha do SIPAT.",
 };
 
-export default function SenhaAtualizadaPage() {
+export default async function SenhaAtualizadaPage() {
+  const identidade = await obterIdentidadeAtual();
+
+  if (!identidade) {
+    redirect("/login");
+  }
+
+  if (identidade.trocaSenhaObrigatoria) {
+    redirect("/redefinir-senha");
+  }
+
   return (
     <div className={`${styles.card} ${styles.cardSuccess}`}>
       <span className={styles.successIcon}>
@@ -27,12 +40,11 @@ export default function SenhaAtualizadaPage() {
           <span>A interface escolhida no login será mantida.</span>
         </div>
       </div>
-      <Button
-        className={`${styles.submit} ${styles.successButton}`}
-        type="button"
-      >
-        <ArrowRight size={17} aria-hidden="true" />
-        Continuar para o SIPAT
+      <Button asChild className={`${styles.submit} ${styles.successButton}`}>
+        <Link href="/dashboard">
+          <ArrowRight size={17} aria-hidden="true" />
+          Continuar para o SIPAT
+        </Link>
       </Button>
     </div>
   );

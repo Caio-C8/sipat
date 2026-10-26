@@ -1,6 +1,7 @@
 # `WEB-AUTH-001` — Integrar login, primeiro acesso e sessão Web
 
-**Status:** `aprovada`
+**Status:** `implementada`; comparação direta com o Figma e E2E contra uma API
+real provisionada permanecem pendentes.
 
 ## Objetivo
 
@@ -88,24 +89,25 @@ a home pública com um catálogo das rotas Web e suas permissões.
 
 ## Critérios de aceite
 
-- [ ] credenciais válidas criam cookie e navegam conforme a pendência;
-- [ ] credenciais inválidas, `429` e indisponibilidade possuem feedback
+- [x] credenciais válidas criam cookie e navegam conforme a pendência;
+- [x] credenciais inválidas, `429` e indisponibilidade possuem feedback
       acessível sem revelar existência da conta;
-- [ ] nova senha válida conclui o primeiro acesso e recebe a sessão rotacionada;
-- [ ] confirmação abre somente com sessão válida e o botão continua para o
+- [x] nova senha válida conclui o primeiro acesso e recebe a sessão rotacionada;
+- [x] confirmação abre somente com sessão válida e o botão continua para o
       dashboard;
-- [ ] refresh e acesso direto a cada rota obedecem à matriz sem loop;
-- [ ] sessão expirada durante formulário ou navegação retorna ao login de forma
+- [x] refresh e acesso direto a cada rota obedecem à matriz sem loop;
+- [x] sessão expirada durante formulário ou navegação retorna ao login de forma
       previsível;
-- [ ] logout revoga a sessão e volta ao login;
-- [ ] home pública lista todas as páginas existentes e suas permissões sem
+- [x] logout revoga a sessão e volta ao login;
+- [x] home pública lista todas as páginas existentes e suas permissões sem
       consultar dados protegidos;
-- [ ] dashboard deixa claro que é a futura home autenticada;
-- [ ] nenhuma senha, cookie ou resposta bruta aparece em Client props, URL,
+- [x] dashboard deixa claro que é a futura home autenticada;
+- [x] nenhuma senha, cookie ou resposta bruta aparece em Client props, URL,
       storage, log ou métrica;
-- [ ] brasão e ícone possuem arquivo não vazio, formato coerente e geometria
+- [x] brasão e ícone possuem arquivo não vazio, formato coerente e geometria
       compatível com desktop e mobile;
-- [ ] lint, typecheck, testes, build, Playwright e inspeção visual passam.
+- [ ] lint, typecheck, testes, build e Playwright passam; a inspeção visual
+      contra o Figma permanece pendente por falta de permissão no arquivo.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -132,5 +134,10 @@ a home pública com um catálogo das rotas Web e suas permissões.
 
 ## Pendências ou decisões bloqueantes
 
-- Nenhuma para este objetivo. A recuperação de senha Web permanece em objetivo
-  separado e não pode ser habilitada parcialmente.
+- A recuperação de senha Web permanece em objetivo separado e não foi
+  habilitada parcialmente.
+- O conector Figma exige permissão de edição no arquivo de referência; a conta
+  conectada não conseguiu ler os frames para a comparação visual final.
+- A suíte Playwright cobre o boundary Web–API com um servidor mockado estrito.
+  A validação adicional contra API, PostgreSQL e usuário provisionado reais não
+  foi executada neste ambiente.

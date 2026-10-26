@@ -2,19 +2,19 @@
 
 ## Estado operacional
 
-A Web do SIPAT possui uma home visual com dados ilustrativos em `/`, três
-interfaces visuais de autenticação, health check, proxy para a API, clientes
-HTTP, configuração pública, segurança, observabilidade, primitives visuais e
-testes de infraestrutura.
+A Web do SIPAT possui um catálogo público em `/`, a visão geral ilustrativa e
+protegida em `/dashboard`, fluxo funcional de login e primeiro acesso, health
+check, proxy para a API, clientes HTTP, configuração pública, segurança,
+observabilidade, primitives visuais e testes de infraestrutura e autenticação.
 
 Ainda não existem páginas funcionais de gestão de usuários nem rotas
 operacionais do domínio patrimonial. Os contratos e endpoints administrativos
 de usuários estão prontos no backend, mas não possuem consumidor Web. Login,
-logout e `/auth/me` existem na API, porém os formulários Web ainda não os
-consomem e não há sessão produtiva na Web. O fluxo aprovado está em
-[WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md), depende de
-`CONTRACTS-009` e `AUTH-004` e prevê um catálogo público em `/` e um dashboard
-protegido em `/dashboard`. Essa mudança de rotas ainda não foi implementada.
+logout, `/auth/me` e conclusão do primeiro acesso são consumidos pela Web com
+cookie `HttpOnly`, CSRF e redirects conforme a matriz de
+[WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md). A comparação
+visual direta com o Figma e o E2E adicional contra uma stack real provisionada
+permanecem pendentes.
 
 ## Antes da primeira feature
 

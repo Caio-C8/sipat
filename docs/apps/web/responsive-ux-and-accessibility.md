@@ -2,9 +2,11 @@
 
 ## Estado atual
 
-A home apresenta uma visão geral ilustrativa e responsiva. Seus números,
-pendências, atividades e nome de usuário são exemplos fixos do desenho, sem
-integração com a API; os demais módulos da navegação são apenas apresentação.
+A rota `/dashboard` apresenta uma visão geral ilustrativa e responsiva. Seus
+números, pendências e atividades são exemplos fixos do desenho, sem integração
+patrimonial com a API; o nome e o perfil vêm da identidade
+autenticada e os demais módulos da navegação são apenas apresentação. A home
+`/` apresenta o catálogo público de páginas e endpoints técnicos.
 Em larguras menores, a navegação é apresentada por um menu expansível e os
 cartões passam de quatro para duas ou uma coluna conforme o espaço disponível.
 Em monitores amplos, a área principal ocupa a largura útil e amplia tipografia,

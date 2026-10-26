@@ -4,16 +4,18 @@
 
 A aplicação Web do SIPAT expõe:
 
-- `/`: visão geral estática com dados ilustrativos, sem sessão ou integração;
-- `/login`: interface visual sem integração;
-- `/redefinir-senha`: interface visual do primeiro acesso sem integração;
-- `/senha-atualizada`: interface visual de confirmação sem integração;
+- `/`: catálogo público das páginas, acessos e endpoints técnicos;
+- `/login`: autenticação integrada à API para usuários anônimos;
+- `/redefinir-senha`: conclusão protegida do primeiro acesso;
+- `/senha-atualizada`: confirmação protegida após a troca;
+- `/dashboard`: visão geral ilustrativa protegida para os dois perfis;
 - `/api/health`: health check da camada Web;
 - `/api/backend/*`: rewrite interno para a API, não uma página navegável.
 
-As páginas de acesso têm somente interface visual. Ainda não existem rotas
-operacionais de domínio, dinâmicas, paralelas ou interceptadas. `/dashboard`
-ainda não existe.
+As páginas de autenticação validam a identidade pelo endpoint `/auth/me` nas
+fronteiras Server e mantêm formulários e logout em pequenas fronteiras Client.
+Ainda não existem rotas operacionais de domínio, dinâmicas, paralelas ou
+interceptadas além desse fluxo.
 
 ## Matriz aprovada para WEB-AUTH-001
 
@@ -25,10 +27,10 @@ ainda não existe.
 | `/senha-atualizada` | sessão válida e troca concluída  | anônimo → login; pendente → redefinir senha  |
 | `/dashboard`        | ambos os perfis, troca concluída | anônimo → login; pendente → redefinir senha  |
 
-A implementação de `WEB-AUTH-001` deverá substituir a visão geral ilustrativa
-atual em `/` pelo catálogo público e criar `/dashboard` protegido, conforme a
+A implementação de `WEB-AUTH-001` substituiu a visão geral ilustrativa em `/`
+pelo catálogo público e criou `/dashboard` protegido, conforme a
 [tarefa aprovada](../../tasks/WEB-AUTH-001-integrar-autenticacao.md). O catálogo
-deverá listar todas as páginas realmente disponíveis e seus acessos. Os
+lista todas as páginas realmente disponíveis e seus acessos. Os
 endpoints `/api/health` e `/api/backend/:path*` aparecem em uma seção técnica,
 deixando explícito que o rewrite herda a política da API e não é uma página.
 

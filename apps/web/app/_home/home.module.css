@@ -232,6 +232,30 @@
 .profileText small {
   font-size: 9px;
 }
+.logoutButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--home-border);
+  border-radius: 6px;
+  padding: 7px 9px;
+  color: #385576;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.logoutButton:hover {
+  background: #f3f7fb;
+}
+.logoutButton:focus-visible {
+  outline: 3px solid #8dbbf0;
+  outline-offset: 2px;
+}
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 
 .main {
   display: grid;
@@ -983,6 +1007,12 @@
   .topIcon,
   .profileText,
   .profile > svg {
+    display: none;
+  }
+  .logoutButton {
+    padding: 7px;
+  }
+  .logoutButton svg + * {
     display: none;
   }
   .profile {

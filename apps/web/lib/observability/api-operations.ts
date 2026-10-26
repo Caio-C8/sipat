@@ -39,6 +39,30 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
       GET: "sistema.health",
     },
   },
+  {
+    pattern: /^\/auth\/login$/,
+    operacoes: {
+      POST: "auth.login",
+    },
+  },
+  {
+    pattern: /^\/auth\/me$/,
+    operacoes: {
+      GET: "auth.identidade",
+    },
+  },
+  {
+    pattern: /^\/auth\/concluir-primeiro-acesso$/,
+    operacoes: {
+      POST: "auth.primeiro_acesso",
+    },
+  },
+  {
+    pattern: /^\/auth\/logout$/,
+    operacoes: {
+      POST: "auth.logout",
+    },
+  },
 ];
 
 function identificarOperacao(method: MetodoHttp, path: string): string {

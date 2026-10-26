@@ -50,7 +50,7 @@ export function HomeSidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHead}>
         <div className={styles.sidebarBrand}>
-          <Link href="/" className={styles.brandLink}>
+          <Link href="/dashboard" className={styles.brandLink}>
             <span className={styles.brandMark}>
               <Package size={17} aria-hidden="true" />
             </span>
@@ -81,7 +81,11 @@ export function HomeSidebar() {
       >
         <div className={styles.navGroup}>
           <p className={styles.groupLabel}>Principal</p>
-          <Link href="/" aria-current="page" className={styles.activeNavItem}>
+          <Link
+            href="/dashboard"
+            aria-current="page"
+            className={styles.activeNavItem}
+          >
             <LayoutDashboard size={15} aria-hidden="true" />
             <span>Início</span>
           </Link>

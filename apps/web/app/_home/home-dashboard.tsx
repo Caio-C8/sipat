@@ -19,6 +19,8 @@ import {
   Search,
   Wrench,
 } from "lucide-react";
+import type { IdentidadeAutenticada } from "@repo/contracts";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { HomeSidebar } from "./home-sidebar";
 import styles from "./home.module.css";
 
@@ -94,7 +96,25 @@ const quickActions = [
   { label: "Relatórios", icon: ChartNoAxesColumn },
 ] as const;
 
-export function HomeDashboard() {
+const nomesPerfis = {
+  ADMINISTRADOR: "Administrador",
+  DIRETOR_PATRIMONIO: "Diretor de Patrimônio",
+} as const;
+
+function obterIniciais(nome: string): string {
+  return nome
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parte) => parte[0]?.toLocaleUpperCase("pt-BR") ?? "")
+    .join("");
+}
+
+export function HomeDashboard({
+  identidade,
+}: Readonly<{ identidade: IdentidadeAutenticada }>) {
+  const perfil = nomesPerfis[identidade.perfil];
+
   return (
     <div className={styles.shell}>
       <HomeSidebar />
@@ -130,20 +150,23 @@ export function HomeDashboard() {
               <Bell size={17} aria-hidden="true" />
             </span>
             <span className={styles.profile}>
-              <span className={styles.avatar}>PC</span>
+              <span className={styles.avatar}>
+                {obterIniciais(identidade.nome)}
+              </span>
               <span className={styles.profileText}>
-                <strong>Paulo Caixeta</strong>
-                <small>Administrador</small>
+                <strong>{identidade.nome}</strong>
+                <small>{perfil}</small>
               </span>
               <ChevronDown size={14} aria-hidden="true" />
             </span>
+            <LogoutButton className={styles.logoutButton} />
           </div>
         </header>
 
         <main className={styles.main}>
           <div className={styles.intro}>
             <div>
-              <h1>Bem-vindo, Paulo!</h1>
+              <h1>Bem-vindo, {identidade.nome}!</h1>
               <p>
                 Acompanhe o patrimônio da Câmara e veja o que precisa da sua
                 atenção.
@@ -335,7 +358,9 @@ export function HomeDashboard() {
 
           <footer className={styles.pageFooter}>
             <span>SIPAT · Visão geral · dados ilustrativos</span>
-            <span>Paulo Caixeta · Administrador</span>
+            <span>
+              {identidade.nome} · {perfil}
+            </span>
           </footer>
         </main>
       </div>

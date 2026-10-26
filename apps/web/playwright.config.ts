@@ -30,14 +30,29 @@ export default defineConfig({
 
   webServer: externalBaseUrl
     ? undefined
-    : {
-        command: `pnpm build && pnpm exec next start --port ${port}`,
-        url: baseURL,
-        reuseExistingServer: false,
-        timeout: 180_000,
-        stdout: "pipe",
-        stderr: "pipe",
-      },
+    : [
+        {
+          command: "node e2e/support/auth-api-server.mjs",
+          url: "http://127.0.0.1:3201/api/health",
+          reuseExistingServer: false,
+          timeout: 30_000,
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+        {
+          command: `pnpm build && pnpm exec next start --port ${port}`,
+          url: baseURL,
+          reuseExistingServer: false,
+          timeout: 180_000,
+          stdout: "pipe",
+          stderr: "pipe",
+          env: {
+            ...process.env,
+            API_INTERNAL_URL: "http://127.0.0.1:3201",
+            PLAYWRIGHT_TEST: "1",
+          },
+        },
+      ],
 
   projects: [
     {

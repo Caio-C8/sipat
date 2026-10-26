@@ -10,11 +10,15 @@ export function PasswordInput({
   name,
   autoComplete,
   placeholder,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
 }: {
   id: string;
   name: string;
   autoComplete: string;
   placeholder?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -29,10 +33,13 @@ export function PasswordInput({
         required
         maxLength={128}
         className={styles.input}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
       />
       <button
         className={styles.visibilityButton}
         type="button"
+        aria-controls={id}
         aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
         aria-pressed={visible}
         onClick={() => setVisible(!visible)}

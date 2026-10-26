@@ -158,7 +158,7 @@
 }
 .pageSignature {
   margin: 2rem 0 0;
-  color: #7c8da7;
+  color: #596b84;
   font-size: 0.74rem;
   text-align: center;
 }
@@ -172,7 +172,7 @@
 }
 .description {
   margin: 0.45rem 0 0;
-  color: #70819d;
+  color: #52647f;
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -196,6 +196,22 @@
 .field {
   display: grid;
   gap: 0.55rem;
+}
+.formError {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #efb7b7;
+  border-radius: 0.5rem;
+  color: #8f2525;
+  background: #fff4f4;
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+.fieldError {
+  margin: -0.25rem 0 0;
+  color: #9b2727;
+  font-size: 0.72rem;
+  line-height: 1.4;
 }
 .label {
   color: #244163;
@@ -263,7 +279,7 @@
 }
 .smallNote {
   margin: 0.2rem 0 0;
-  color: #8294ad;
+  color: #596b84;
   font-size: 0.74rem;
   line-height: 1.6;
 }
@@ -292,7 +308,7 @@
 }
 .formFoot {
   margin: 1.3rem 0 0;
-  color: #8294ad;
+  color: #596b84;
   font-size: 0.72rem;
   text-align: center;
 }
@@ -330,19 +346,26 @@
 }
 .notice span {
   margin-top: 0.35rem;
-  color: #6f83a0;
+  color: #526781;
 }
 .helpText {
   margin: 0.1rem 0 0;
-  color: #70819d;
+  color: #52647f;
   font-size: 0.77rem;
   line-height: 1.8;
 }
 .backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  padding: 0.25rem;
+  background: none;
   color: #286bc2;
   font-size: 0.76rem;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
 }
 .centerLink {
   margin: 1.15rem 0 0;

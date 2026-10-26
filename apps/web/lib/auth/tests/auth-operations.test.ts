@@ -1,0 +1,90 @@
+import { describe, expect, it, vi } from "vitest";
+import {
+  AuthMeResponseSchema,
+  CABECALHO_CSRF,
+  LoginResponseSchema,
+  VALOR_CABECALHO_CSRF,
+} from "@repo/contracts";
+import type { ApiClient } from "@/lib/api/core/types";
+import { criarOperacoesAuth } from "../auth-operations";
+
+const identidade = {
+  id: "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0",
+  nome: "Maria da Silva",
+  email: "maria@example.com",
+  perfil: "ADMINISTRADOR" as const,
+  trocaSenhaObrigatoria: false,
+};
+
+function clienteComResposta(response: unknown) {
+  const request = vi.fn().mockResolvedValue(response);
+  const apiClient = { request } as unknown as ApiClient;
+
+  return { request, auth: criarOperacoesAuth(apiClient) };
+}
+
+describe("operações de autenticação", () => {
+  it("envia login com CSRF e valida a response tipada", async () => {
+    const response = {
+      status: 200,
+      sucesso: true,
+      mensagem: "Autenticação realizada com sucesso.",
+      dados: identidade,
+    };
+    const { auth, request } = clienteComResposta(response);
+
+    await expect(
+      auth.login({ email: "maria@example.com", senha: "senha inicial" }),
+    ).resolves.toEqual(identidade);
+    expect(request).toHaveBeenCalledWith({
+      path: "/auth/login",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      body: { email: "maria@example.com", senha: "senha inicial" },
+      responseSchema: LoginResponseSchema,
+    });
+  });
+
+  it("encaminha cookie explicitamente e desabilita cache em /auth/me", async () => {
+    const { auth, request } = clienteComResposta({
+      status: 200,
+      sucesso: true,
+      mensagem: "Identidade consultada.",
+      dados: identidade,
+    });
+
+    await expect(
+      auth.consultarIdentidade("sipat_session=segredo"),
+    ).resolves.toEqual(identidade);
+    expect(request).toHaveBeenCalledWith({
+      path: "/auth/me",
+      method: "GET",
+      cache: "no-store",
+      headers: { Cookie: "sipat_session=segredo" },
+      responseSchema: AuthMeResponseSchema,
+    });
+  });
+
+  it("envia conclusão e logout como mutações sem contrato de body na resposta", async () => {
+    const { auth, request } = clienteComResposta(undefined);
+    const novaSenha = "uma nova senha segura";
+
+    await auth.concluirPrimeiroAcesso({
+      novaSenha,
+      confirmacaoNovaSenha: novaSenha,
+    });
+    await auth.logout();
+
+    expect(request).toHaveBeenNthCalledWith(1, {
+      path: "/auth/concluir-primeiro-acesso",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      body: { novaSenha, confirmacaoNovaSenha: novaSenha },
+    });
+    expect(request).toHaveBeenNthCalledWith(2, {
+      path: "/auth/logout",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+    });
+  });
+});

@@ -7,27 +7,25 @@ CSRF e respostas da API pertencem também à
 
 ## Estado atual
 
-O SIPAT ainda não possui rotas Web operacionais de domínio. A home exibe somente
-dados ilustrativos e não consulta identidade ou dados patrimoniais. A API já
-aplica autenticação, autorização por perfil e CSRF às rotas administrativas de usuários, mas a Web
-não possui operações ou mutações que as consumam. As telas de login e criação
-de nova senha são apenas visuais; logout, consumo de `/auth/me`, emissão do cookie
-e criação produtiva de sessão continuam ausentes.
+O SIPAT ainda não possui rotas Web operacionais de domínio além do fluxo de
+autenticação. A home pública não consulta identidade nem dados patrimoniais; a
+visão geral ilustrativa está em `/dashboard` e confirma a sessão por `/auth/me`.
+Login, primeiro acesso e logout usam operações tipadas e enviam o sinal público
+de CSRF nas mutações. A API emite, rotaciona e expira o cookie `HttpOnly`.
 
 `browserApiClient` usa apenas a origem relativa `/api/backend` e não acessa
 `API_INTERNAL_URL`. `serverApiClient` importa `server-only`. A interface valida
 responses e apresenta mensagens públicas, sem expor o corpo bruto ou o `cause`
 interno dos erros.
 
-A API permanece a autoridade: CORS, CSP e a futura ocultação de controles na
+A API permanece a autoridade: CORS, CSP e a ocultação de controles na
 interface não concedem permissão. A arquitetura Web deve transportar o cookie
-`HttpOnly` e o sinal público de CSRF quando essas operações forem implementadas.
+`HttpOnly` e o sinal público de CSRF.
 
-O fluxo aprovado em `WEB-AUTH-001` consulta `/auth/me` sem cache nas páginas
+O fluxo implementado em `WEB-AUTH-001` consulta `/auth/me` sem cache nas páginas
 protegidas, diferencia sessão inválida, primeiro acesso pendente e perfil
 insuficiente, e nunca usa redirects da Web como substitutos dos Guards da API.
-Proxy do Next.js, se adotado, fará apenas a prechecagem otimista da presença do
-cookie.
+Não foi adotado Proxy do Next.js.
 
 ## Fronteira server e client
 
