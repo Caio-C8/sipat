@@ -2,12 +2,14 @@
 
 ## Estado atual
 
-A rota `/dashboard` apresenta uma visão geral ilustrativa e responsiva. Seus
+A rota `/dashboard` apresenta uma visão geral ilustrativa e responsiva dentro
+do shell autenticado compartilhado. Seus
 números, pendências e atividades são exemplos fixos do desenho, sem integração
 patrimonial com a API; o nome e o perfil vêm da identidade
 autenticada e os demais módulos da navegação são apenas apresentação. A home
 `/` apresenta o catálogo público de páginas e endpoints técnicos.
-Em larguras menores, a navegação é apresentada por um menu expansível e os
+Em larguras menores, a navegação filtrada por perfil é apresentada por um menu
+expansível com `aria-expanded`, fechamento por `Escape` e devolução de foco. Os
 cartões passam de quatro para duas ou uma coluna conforme o espaço disponível.
 Em monitores amplos, a área principal ocupa a largura útil e amplia tipografia,
 espaçamento e cartões para evitar conteúdo comprimido no topo.

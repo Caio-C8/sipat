@@ -40,6 +40,11 @@ estrutura de página, cabeçalho reutilizável ou feedback padronizado.
 Um componente usado por duas telas do mesmo domínio pode permanecer na feature.
 Compartilhamento técnico não significa compartilhamento semântico.
 
+O shell autenticado implementado em `components/shared` reúne as composições de
+sidebar e topbar. O layout e a topbar permanecem Server Components; sidebar
+móvel, breadcrumb dependente do pathname, notificações e menu do usuário são as
+fronteiras Client que possuem comportamento interativo.
+
 ### Componentes de feature
 
 `features/<dominio>/components` contém componentes que conhecem o vocabulário

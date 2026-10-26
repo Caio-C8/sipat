@@ -12,10 +12,11 @@ A aplicação Web do SIPAT expõe:
 - `/api/health`: health check da camada Web;
 - `/api/backend/*`: rewrite interno para a API, não uma página navegável.
 
-As páginas de autenticação validam a identidade pelo endpoint `/auth/me` nas
-fronteiras Server e mantêm formulários e logout em pequenas fronteiras Client.
-Ainda não existem rotas operacionais de domínio, dinâmicas, paralelas ou
-interceptadas além desse fluxo.
+As páginas de autenticação e o layout do grupo `(sistema)` validam a identidade
+pelo endpoint `/auth/me` nas fronteiras Server. O grupo não altera a URL e
+compartilha o shell das páginas autenticadas; formulários, menus e logout ficam
+em pequenas fronteiras Client. Ainda não existem rotas operacionais de domínio,
+dinâmicas, paralelas ou interceptadas além desse fluxo.
 
 ## Matriz aprovada para WEB-AUTH-001
 
@@ -33,6 +34,11 @@ pelo catálogo público e criou `/dashboard` protegido, conforme a
 lista todas as páginas realmente disponíveis e seus acessos. Os
 endpoints `/api/health` e `/api/backend/:path*` aparecem em uma seção técnica,
 deixando explícito que o rewrite herda a política da API e não é uma página.
+
+`WEB-SHELL-001` moveu `/dashboard` para `app/(sistema)/dashboard` e centralizou
+os redirects de sessão em `app/(sistema)/layout.tsx`. O catálogo de navegação é
+a fonte do item ativo e do breadcrumb; somente caminhos Web implementados
+recebem link.
 
 ## Convenções
 
