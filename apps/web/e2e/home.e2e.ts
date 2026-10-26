@@ -2,26 +2,32 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./support/test";
 
 test.describe("Página inicial", () => {
-  test("apresenta a visão geral ilustrativa", async ({ page }) => {
+  test("apresenta o catálogo público de páginas e health checks", async ({
+    page,
+  }) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle(/^Visão geral \| .+/);
+    await expect(page).toHaveTitle(/^Início \| .+/);
 
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Bem-vindo, Paulo!",
+        name: "SIPAT",
       }),
     ).toBeVisible();
 
+    await expect(page.getByRole("link", { name: /Login/ })).toHaveAttribute(
+      "href",
+      "/login",
+    );
     await expect(
-      page.getByRole("link", {
-        name: "Início",
-      }),
-    ).toHaveAttribute("href", "/");
-
+      page.getByRole("link", { name: /Visão geral/ }),
+    ).toHaveAttribute("href", "/dashboard");
     await expect(
-      page.getByText("SIPAT · Visão geral · dados ilustrativos"),
+      page.getByRole("link", { name: /Aplicação Web/ }),
+    ).toHaveAttribute("href", "/api/health");
+    await expect(
+      page.getByText("/api/backend/:path*", { exact: true }),
     ).toBeVisible();
   });
 

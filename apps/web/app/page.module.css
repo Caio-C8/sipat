@@ -1,0 +1,258 @@
+.page {
+  min-height: 100svh;
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in oklch, var(--primary) 14%, transparent) 0,
+      transparent 32rem
+    ),
+    var(--background);
+}
+
+.container {
+  width: min(calc(100% - 2rem), 72rem);
+  margin-inline: auto;
+  padding-block: clamp(3rem, 8vw, 7rem);
+}
+
+.hero {
+  max-width: 48rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  margin: 0 0 1rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--primary);
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(2.75rem, 8vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 42rem;
+  margin: 1.75rem 0 0;
+  color: var(--muted-foreground);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.section {
+  margin-top: 4rem;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.sectionHeading > svg {
+  flex: none;
+  margin-top: 0.1rem;
+  color: var(--primary);
+}
+
+.sectionHeading h2,
+.sectionHeading p {
+  margin: 0;
+}
+
+.sectionHeading h2 {
+  font-size: 1.05rem;
+}
+
+.sectionHeading p {
+  margin-top: 0.3rem;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+
+.grid,
+.checksGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.card,
+.checkCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  color: var(--card-foreground);
+  background: color-mix(in oklch, var(--card) 94%, transparent);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.card {
+  padding: 1.35rem;
+}
+
+.card:hover,
+.checkCard:hover {
+  border-color: var(--ring);
+  box-shadow: 0 0.75rem 2rem
+    color-mix(in oklch, var(--foreground) 8%, transparent);
+  transform: translateY(-2px);
+}
+
+.card:focus-visible,
+.checkCard:focus-visible {
+  border-color: var(--ring);
+  outline: 3px solid color-mix(in oklch, var(--ring) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.path,
+.checkCard code,
+.transportNote code {
+  color: var(--primary);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.card > strong {
+  font-size: 1.05rem;
+}
+
+.card > p {
+  min-height: 2.7rem;
+  margin: 0.45rem 0 1rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.card dl,
+.card dl div {
+  margin: 0;
+}
+
+.card dl {
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.card dl div {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 0.7rem;
+  font-size: 0.78rem;
+}
+
+.card dt {
+  color: var(--muted-foreground);
+}
+
+.card dd {
+  margin: 0;
+}
+
+.checkCard {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.2rem;
+}
+
+.checkCard span {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.checkCard p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.transportNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--muted-foreground);
+  background: color-mix(in oklch, var(--muted) 65%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.transportNote svg {
+  flex: none;
+  margin-top: 0.15rem;
+}
+
+@media (max-width: 44rem) {
+  .container {
+    width: min(calc(100% - 1.5rem), 72rem);
+    padding-block: 3rem;
+  }
+
+  .title {
+    font-size: clamp(2.5rem, 15vw, 4rem);
+  }
+
+  .section {
+    margin-top: 3rem;
+  }
+
+  .grid,
+  .checksGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .card > p {
+    min-height: auto;
+  }
+
+  .checkCard span {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .checkCard {
+    transition: none;
+  }
+
+  .card:hover,
+  .checkCard:hover {
+    transform: none;
+  }
+}

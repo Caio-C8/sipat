@@ -18,21 +18,24 @@
 
 ### WEB-AUTH-001 — Integrar login, primeiro acesso e sessão
 
-**Status:** aprovado; depende de `CONTRACTS-009` e `AUTH-004`.
+**Status:** implementado; comparação visual no Figma e E2E com stack real
+permanecem pendentes.
 
-As telas `/login`, `/redefinir-senha` e `/senha-atualizada` já possuem
-interface visual baseada no Figma, mas ainda não chamam a API. A entrega deve:
+As telas `/login`, `/redefinir-senha` e `/senha-atualizada` usam operações
+tipadas e aplicam a matriz de sessão. A entrega implementou:
 
-1. criar operações tipadas de login, `/auth/me`, conclusão do primeiro acesso
+1. operações tipadas de login, `/auth/me`, conclusão do primeiro acesso
    e logout;
-2. aplicar a matriz de redirects a partir da sessão validada e de
+2. a matriz de redirects a partir da sessão validada e de
    `trocaSenhaObrigatoria`;
-3. concluir a troca com rotação da sessão e continuar por
+3. a troca com rotação da sessão e continuação por
    `/senha-atualizada` até `/dashboard`;
-4. criar `/dashboard` mínima e protegida para os dois perfis;
-5. manter `/` pública e transformá-la no catálogo das rotas Web disponíveis e
+4. `/dashboard` protegida para os dois perfis, usando a visão geral ilustrativa
+   que antes ocupava `/`;
+5. `/` pública como catálogo das rotas Web disponíveis e
    suas permissões;
-6. verificar o protótipo desktop e mobile, acessibilidade, segurança e E2E.
+6. testes unitários e Playwright do fluxo, redirects, acessibilidade e
+   segurança.
 
 Especificação aprovada:
 [WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md).

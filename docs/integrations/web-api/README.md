@@ -33,11 +33,13 @@ No estado atual:
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- ainda não existem operações, hooks ou política de cache de domínio;
+- existem operações tipadas de autenticação; ainda não há hooks ou política de
+  cache remoto de domínio;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
-- a barreira da API, o CSRF, login, logout, `/auth/me` e emissão do cookie estão
-  implementados no backend, mas ainda não possuem consumidor Web;
+- login, logout, `/auth/me` e conclusão do primeiro acesso possuem consumidor
+  Web; mutações enviam o sinal de CSRF e o cookie permanece `HttpOnly` sob
+  controle da API;
 - alteração e recuperação de senha estão planejadas somente para contratos,
   banco e API em `CONTRACTS-003`, `AUTH-002` e `AUTH-003`; páginas, operações e
   hooks Web permanecem fora dessas entregas.
@@ -102,10 +104,9 @@ defina query keys, invalidação, retry e consistência.
   CSRF são decisões conjuntas.
 - Métricas usam nomes normalizados e baixa cardinalidade.
 
-## Fluxo Web de autenticação planejado
+## Fluxo Web de autenticação implementado
 
-`WEB-AUTH-001` está aprovado e depende de `CONTRACTS-009` e `AUTH-004`. O fluxo
-será:
+`WEB-AUTH-001`, `CONTRACTS-009` e `AUTH-004` implementam o fluxo:
 
 ```text
 anônimo
@@ -123,10 +124,9 @@ nas mutações e não leem o cookie `HttpOnly`. Server Components que consultare
 `/auth/me` encaminham explicitamente o header `Cookie` recebido, usam o cliente
 server-only e desabilitam cache para não misturar identidades.
 
-Proxy do Next.js pode rejeitar cedo uma rota protegida quando o cookie não
-existe, mas não consulta o banco e não decide autorização. As páginas
-protegidas confirmam a sessão por `/auth/me`, enquanto a API continua aplicando
-autenticação, pendência de primeiro acesso e perfil em toda operação.
+As páginas protegidas confirmam a sessão por `/auth/me`; não foi necessário
+adicionar Proxy do Next.js. A API continua aplicando autenticação, pendência de
+primeiro acesso e perfil em toda operação.
 
 Responses `401`, `403` por primeiro acesso e `403` por perfil são estados
 distintos. A Web redireciona apenas os dois primeiros casos aplicáveis ao

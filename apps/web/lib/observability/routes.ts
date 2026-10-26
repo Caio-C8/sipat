@@ -8,6 +8,22 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
     pattern: /^\/$/,
     nome: "inicio",
   },
+  {
+    pattern: /^\/login$/,
+    nome: "auth.login",
+  },
+  {
+    pattern: /^\/redefinir-senha$/,
+    nome: "auth.primeiro_acesso",
+  },
+  {
+    pattern: /^\/senha-atualizada$/,
+    nome: "auth.senha_atualizada",
+  },
+  {
+    pattern: /^\/dashboard$/,
+    nome: "dashboard",
+  },
 ];
 
 function removerBarrasFinais(pathname: string): string {
