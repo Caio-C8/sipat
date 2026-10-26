@@ -11,8 +11,8 @@ fronteiras entre UI, contratos e integração HTTP.
 ## Estado atual
 
 - `/` apresenta o catálogo público de páginas, acessos e endpoints técnicos;
-- `/dashboard` apresenta a visão geral visual ilustrativa e confirma a sessão
-  por `/auth/me`;
+- `/dashboard` apresenta a visão geral visual ilustrativa dentro do shell
+  autenticado compartilhado, que confirma a sessão por `/auth/me`;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;
@@ -29,12 +29,16 @@ fronteiras entre UI, contratos e integração HTTP.
   acessibilidade automatizável e headers de segurança;
 - as rotas `/login`, `/redefinir-senha` e `/senha-atualizada` estão integradas
   à API por operações tipadas;
+- o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb, notificações e
+  menu do usuário, com navegação filtrada por perfil;
 - não existem biblioteca de cache remoto nem estado global na Web;
 - `WEB-AUTH-001` está implementado com backend mockado estrito no E2E; a
   validação adicional contra uma stack real permanece pendente.
 
 `WEB-AUTH-001` transformou `/` no catálogo público de rotas e moveu a visão
 geral ilustrativa para `/dashboard`, protegida para os dois perfis.
+`WEB-SHELL-001` moveu a proteção e a composição visual das páginas autenticadas
+para o layout do grupo `(sistema)` sem alterar a URL pública.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
 ainda não possuem consumidor Web. Login, logout, primeiro acesso e consumo de
@@ -86,7 +90,6 @@ esse template.
 
 - identidade visual, temas e tokens definitivos;
 - biblioteca de formulários e estado remoto;
-- implementação da autenticação Web já especificada em `WEB-AUTH-001`;
 - duração e política operacional das sessões e do cookie;
 - serviço de observabilidade e analytics;
 - internacionalização;

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { headers } from "next/headers";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import { isApiError } from "@/lib/api/core/api-error";
@@ -8,20 +9,22 @@ import { criarOperacoesAuth } from "./auth-operations";
 
 const serverAuth = criarOperacoesAuth(serverApiClient);
 
-export async function obterIdentidadeAtual(): Promise<IdentidadeAutenticada | null> {
-  const cookie = (await headers()).get("cookie");
+export const obterIdentidadeAtual = cache(
+  async function obterIdentidadeAtual(): Promise<IdentidadeAutenticada | null> {
+    const cookie = (await headers()).get("cookie");
 
-  if (!cookie) {
-    return null;
-  }
-
-  try {
-    return await serverAuth.consultarIdentidade(cookie);
-  } catch (error: unknown) {
-    if (isApiError(error) && error.status === 401) {
+    if (!cookie) {
       return null;
     }
 
-    throw error;
-  }
-}
+    try {
+      return await serverAuth.consultarIdentidade(cookie);
+    } catch (error: unknown) {
+      if (isApiError(error) && error.status === 401) {
+        return null;
+      }
+
+      throw error;
+    }
+  },
+);

@@ -3,9 +3,10 @@
 ## Estado operacional
 
 A Web do SIPAT possui um catálogo público em `/`, a visão geral ilustrativa e
-protegida em `/dashboard`, fluxo funcional de login e primeiro acesso, health
-check, proxy para a API, clientes HTTP, configuração pública, segurança,
-observabilidade, primitives visuais e testes de infraestrutura e autenticação.
+protegida em `/dashboard`, shell autenticado compartilhado e filtrado por
+perfil, fluxo funcional de login e primeiro acesso, health check, proxy para a
+API, clientes HTTP, configuração pública, segurança, observabilidade,
+primitives visuais e testes de infraestrutura e autenticação.
 
 Ainda não existem páginas funcionais de gestão de usuários nem rotas
 operacionais do domínio patrimonial. Os contratos e endpoints administrativos
@@ -15,6 +16,10 @@ cookie `HttpOnly`, CSRF e redirects conforme a matriz de
 [WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md). A comparação
 visual direta com o Figma e o E2E adicional contra uma stack real provisionada
 permanecem pendentes.
+
+`WEB-SHELL-001` está implementado no grupo `(sistema)`. As opções futuras da
+sidebar permanecem visíveis somente para os perfis permitidos, mas não recebem
+`href`; busca e feed de notificações continuam explicitamente não implementados.
 
 ## Antes da primeira feature
 

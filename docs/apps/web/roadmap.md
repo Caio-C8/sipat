@@ -52,5 +52,29 @@ A Web não substitui a autorização da API. Antes de `WEB-AUTH-001`, a gestão 
 usuários poderá ser validada com mocks estritos e testes controlados, mas não
 deve ser apresentada como fluxo operacional concluído.
 
+### WEB-SHELL-001 — Padronizar o shell autenticado por perfil
+
+**Status:** implementado em 26 de outubro de 2026.
+
+O grupo `(sistema)` valida a sessão no layout e compartilha sidebar, topbar,
+breadcrumb, notificações e menu do usuário. O catálogo tipado filtra a
+navegação pelos dois perfis, expõe somente `/dashboard` como link e identifica
+as demais opções como não implementadas. Busca, notificações e logout seguem os
+estados aprovados sem antecipar endpoints ou páginas.
+
+Especificação aprovada:
+[WEB-SHELL-001](../../tasks/WEB-SHELL-001-padronizar-shell-autenticado.md).
+
+### WEB-DASHBOARD-001 — Integrar a visão geral
+
+**Status:** aprovado; depende de `WEB-SHELL-001`.
+
+Consumir a listagem patrimonial existente para os totais gerais e por status,
+remover dados ilustrativos e deixar explícitos os blocos que ainda não possuem
+endpoint ou rota Web. As ações rápidas permanecem desabilitadas nesta etapa.
+
+Especificação aprovada:
+[WEB-DASHBOARD-001](../../tasks/WEB-DASHBOARD-001-integrar-visao-geral.md).
+
 Cada objetivo registra contexto, escopo, estados da interface, contratos e
 endpoints afetados, critérios de acessibilidade, segurança, performance e testes.

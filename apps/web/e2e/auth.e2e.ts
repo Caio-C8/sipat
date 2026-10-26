@@ -74,8 +74,9 @@ test.describe("Autenticação Web", () => {
       },
       body: loginResponse(activeIdentity),
     }));
-    apiMock.expectPost("/auth/logout", ({ headers }) => {
+    apiMock.expectPost("/auth/logout", async ({ headers }) => {
       expect(headers["x-sipat-csrf"]).toBe("1");
+      await new Promise((resolve) => setTimeout(resolve, 150));
       return {
         status: 204,
         headers: {
@@ -95,8 +96,146 @@ test.describe("Autenticação Web", () => {
       page.getByRole("heading", { name: "Bem-vindo, Maria da Silva!" }),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: "Sair", exact: true }).click();
+    await page.getByRole("button", { name: /Menu do usuário/ }).click();
+    const logout = page.getByRole("menuitem");
+    await logout.click();
+    await expect(logout).toBeDisabled();
+    await expect(logout).toHaveText("Saindo...");
     await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test("filtra a navegação por perfil e não cria links para rotas futuras", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "active",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/dashboard");
+
+    const navigation = page.getByRole("navigation", {
+      name: "Navegação principal",
+    });
+    await expect(
+      navigation.getByText("Usuários", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      navigation.getByText("Cadastrar patrimônio", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      navigation.getByText("Manutenção", { exact: true }),
+    ).toBeVisible();
+    await expect(navigation.getByRole("link")).toHaveCount(1);
+    await expect(
+      navigation.getByRole("link", { name: "Início" }),
+    ).toHaveAttribute("aria-current", "page");
+
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "director",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.reload();
+
+    await expect(
+      navigation.getByText("Cadastrar patrimônio", { exact: true }),
+    ).toBeVisible();
+    await expect(navigation.getByText("Usuários", { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(
+      navigation.getByText("Manutenção", { exact: true }),
+    ).toBeVisible();
+  });
+
+  test("expõe os estados deliberadamente vazios do shell e restaura o foco", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "active",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/dashboard");
+
+    await expect(
+      page.getByRole("navigation", { name: "Localização atual" }),
+    ).toContainText("Visão geral");
+    await expect(
+      page.getByLabel("Pesquisa ainda não implementada"),
+    ).toBeDisabled();
+    await expect(page.getByRole("button", { name: /ajuda/i })).toHaveCount(0);
+
+    const notifications = page.getByRole("button", { name: "Notificações" });
+    await notifications.click();
+    const panel = page.getByRole("region", { name: "Notificações" });
+    await expect(
+      panel.getByRole("heading", { name: "Pendências recentes" }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole("heading", { name: "Últimas operações" }),
+    ).toBeVisible();
+    await expect(panel.getByText("Não implementado")).toHaveCount(2);
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(notifications).toBeFocused();
+
+    const dashboard = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      dashboard.violations,
+      JSON.stringify(dashboard.violations, null, 2),
+    ).toEqual([]);
+  });
+
+  test("mantém a falha de logout perceptível dentro do menu do usuário", async ({
+    page,
+    apiMock,
+  }) => {
+    apiMock.expectPost("/auth/logout", () => ({
+      status: 500,
+      body: {
+        status: 500,
+        sucesso: false,
+        codigo: "ERRO_INTERNO",
+        mensagem: "Falha controlada no teste.",
+        erros: [],
+        requisicaoId: "e2e-request",
+      },
+    }));
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "active",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/dashboard");
+    await page.getByRole("button", { name: /Menu do usuário/ }).click();
+    await page.getByRole("menuitem", { name: "Sair", exact: true }).click();
+
+    await expect(
+      page
+        .getByRole("alert")
+        .getByText("Não foi possível encerrar a sessão. Tente novamente."),
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   test("conclui o primeiro acesso com rotação da sessão", async ({
@@ -229,11 +368,17 @@ test.describe("Autenticação Web", () => {
     await page.goto("/dashboard");
 
     await expect(page).toHaveTitle(/^Visão geral \| .+/);
-    await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
-    await page.getByRole("button", { name: "Menu" }).click();
+    await expect(
+      page.getByRole("button", { name: "Menu", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Menu", exact: true }).click();
     await expect(
       page.getByRole("navigation", { name: "Navegação principal" }),
     ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("button", { name: "Menu", exact: true }),
+    ).toBeFocused();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
