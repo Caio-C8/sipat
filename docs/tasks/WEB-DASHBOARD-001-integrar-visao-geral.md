@@ -56,21 +56,21 @@ dois perfis e sua metadata contém o total filtrado.
   botão desabilitado com indicação visível `Em breve`, sem `href`, handler,
   mutação ou chamada HTTP;
 - remover do rodapé e dos nomes acessíveis qualquer indicação de `dados
-  ilustrativos` depois que os totais reais estiverem integrados;
+ilustrativos` depois que os totais reais estiverem integrados;
 - atualizar a documentação de estado somente após a implementação e as
   verificações correspondentes.
 
 ### Matriz de dados desta entrega
 
-| Bloco | Fonte atual | Resultado nesta entrega |
-| --- | --- | --- |
-| Total de bens | `GET /patrimonios` | integrado por `meta.total` |
-| Totais por situação | `GET /patrimonios?status=...` | integrado por `meta.total` |
-| Gráfico por situação | mesmas consultas por status | integrado |
-| Pendências de atenção | sem endpoint agregado comum aos perfis | estado não implementado |
-| Bens por setor | sem endpoint de agregação por setor | estado não implementado |
-| Últimas atividades/operações | sem endpoint de histórico geral/feed | estado não implementado |
-| Ações rápidas | sem rotas Web de destino | desabilitadas, `Em breve` |
+| Bloco                        | Fonte atual                            | Resultado nesta entrega    |
+| ---------------------------- | -------------------------------------- | -------------------------- |
+| Total de bens                | `GET /patrimonios`                     | integrado por `meta.total` |
+| Totais por situação          | `GET /patrimonios?status=...`          | integrado por `meta.total` |
+| Gráfico por situação         | mesmas consultas por status            | integrado                  |
+| Pendências de atenção        | sem endpoint agregado comum aos perfis | estado não implementado    |
+| Bens por setor               | sem endpoint de agregação por setor    | estado não implementado    |
+| Últimas atividades/operações | sem endpoint de histórico geral/feed   | estado não implementado    |
+| Ações rápidas                | sem rotas Web de destino               | desabilitadas, `Em breve`  |
 
 `GET /inventarios` não deve ser usado para simular uma central geral de
 pendências: ele é exclusivo do Diretor de Patrimônio e não cobre manutenção nem
