@@ -10,6 +10,13 @@ const identities = {
     perfil: "ADMINISTRADOR",
     trocaSenhaObrigatoria: false,
   },
+  director: {
+    id: "dcebc286-aa55-4a36-9f2e-f8f885d2126c",
+    nome: "João Diretor",
+    email: "joao@example.com",
+    perfil: "DIRETOR_PATRIMONIO",
+    trocaSenhaObrigatoria: false,
+  },
   pending: {
     id: "dcebc286-aa55-4a36-9f2e-f8f885d2126c",
     nome: "João Diretor",
@@ -28,7 +35,9 @@ function json(response, status, body) {
 }
 
 function sessionFromCookie(cookie = "") {
-  const match = /(?:^|;\s*)sipat_session=(active|pending)(?:;|$)/.exec(cookie);
+  const match = /(?:^|;\s*)sipat_session=(active|director|pending)(?:;|$)/.exec(
+    cookie,
+  );
   return match?.[1];
 }
 

@@ -8,11 +8,17 @@ import { browserAuth } from "@/lib/auth/browser-auth";
 type LogoutButtonProps = Readonly<{
   className?: string;
   children?: string;
+  wrapperClassName?: string;
+  errorClassName?: string;
+  menuItem?: boolean;
 }>;
 
 export function LogoutButton({
   className,
   children = "Sair",
+  wrapperClassName,
+  errorClassName,
+  menuItem = false,
 }: LogoutButtonProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -33,17 +39,22 @@ export function LogoutButton({
   }
 
   return (
-    <span>
+    <span className={wrapperClassName}>
       <button
         className={className}
         type="button"
         onClick={logout}
         disabled={pending}
+        role={menuItem ? "menuitem" : undefined}
       >
         <LogOut size={15} aria-hidden="true" />
         {pending ? "Saindo..." : children}
       </button>
-      {erro ? <span role="alert">{erro}</span> : null}
+      {erro ? (
+        <span className={errorClassName} role="alert">
+          {erro}
+        </span>
+      ) : null}
     </span>
   );
 }
