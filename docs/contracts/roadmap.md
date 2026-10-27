@@ -445,6 +445,64 @@ indevido como histórico baixado. `OUTRO` continua exigindo motivo textual.
 Especificação aprovada:
 [CONTRACTS-010](../tasks/CONTRACTS-010-contratos-baixas-patrimoniais.md).
 
+### CONTRACTS-011 — Operações de depreciação patrimonial
+
+**Status:** concluído
+
+**Contexto**
+
+`DEPRECIACOES-001` precisa compartilhar os boundaries da conferência prévia e
+das execuções individual e em massa sem expor models Prisma nem permitir que o
+cliente controle cálculos, auditoria ou situação contábil.
+
+**Escopo**
+
+- primitive de competência mensal canônica `AAAA-MM`, distinta de `DateOnly` e
+  sem coerção para `Date` no boundary compartilhado;
+- query paginada de pendentes com competência, página e limite finito;
+- item de prévia com identidade patrimonial, status, valores contábeis,
+  residual, vida útil restante, quota prevista e indicação de que atingirá o
+  residual;
+- resumo agregado da conferência, inclusive quantidade já no residual;
+- body da execução em massa com `competencia`, `comissaoId` e confirmação
+  para ignorar itens no residual, sem IDs ou quantidades de patrimônio;
+- params UUID e body equivalente da execução individual, sem permitir que o
+  mesmo body receba arrays;
+- resposta discriminada da execução individual, com a depreciação criada ou o
+  motivo de inelegibilidade, e resposta agregada da execução em massa, com
+  quantidades processadas, inelegíveis por motivo e bens que atingiram o
+  residual, sem coleção proporcional ao lote;
+- valores monetários decimais serializados por string com até sete casas,
+  `dataCompetencia` civil e `dataDepreciacao` como instante UTC;
+- códigos públicos para competência não corrente, comissão inválida,
+  confirmação do residual necessária e conflito concorrente.
+
+As regras que comparam a competência ao relógio, consultam comissão,
+classificam patrimônios ou calculam quotas pertencem a `DEPRECIACOES-001`, não
+a refinements do contrato compartilhado.
+
+**Consumidores afetados**
+
+- novo módulo `depreciacoes` da API;
+- Web e mobile somente em objetivos futuros, sem implementação nesta entrega.
+
+**Critérios de aceite**
+
+- [x] schemas são estritos e os tipos derivam de Zod 4;
+- [x] cliente não informa valores calculados, status, auditoria, parâmetro ou
+      nova situação contábil;
+- [x] nenhuma operação aceita array ou quantidade arbitrária de patrimônios;
+- [x] paginação e responses permanecem finitas e usam allowlists;
+- [x] competência malformada, propriedades extras, confirmação inválida e
+      decimais fora do contrato são rejeitados;
+- [x] API pública, lint, typecheck, testes e consumidores afetados passam.
+
+Concluído em 27 de outubro de 2026. O package passou em lint, typecheck e 115
+testes; API, Web e mobile passaram no typecheck como consumidores dos exports.
+
+Especificação aprovada:
+[CONTRACTS-011](../tasks/CONTRACTS-011-contratos-depreciacoes-patrimoniais.md).
+
 ## Histórico do baseline
 
 ### CONTRACTS-BASELINE-001 — Consolidar contratos genéricos antes do domínio SIPAT

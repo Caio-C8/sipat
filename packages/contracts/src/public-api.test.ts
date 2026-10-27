@@ -148,6 +148,18 @@ import {
   CodigoErroBaixaPatrimonioSchema,
   ConsultarBaixaPatrimonioResponseSchema,
   TipoBaixaPatrimonioSchema,
+  CodigoErroDepreciacaoPatrimonioSchema,
+  CompetenciaMensalSchema,
+  ExecutarDepreciacaoPatrimonioBodySchema,
+  ExecutarDepreciacaoPatrimonioResponseSchema,
+  ExecutarDepreciacoesEmMassaBodySchema,
+  ExecutarDepreciacoesEmMassaResponseSchema,
+  ItemDepreciacaoPendenteSchema,
+  ListarDepreciacoesPendentesQuerySchema,
+  ListarDepreciacoesPendentesResponseSchema,
+  MotivoInelegibilidadeDepreciacaoSchema,
+  ResultadoDepreciacaoIndividualSchema,
+  ResultadoDepreciacoesEmMassaSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -366,6 +378,25 @@ describe("@repo/contracts — API pública", () => {
       BaixaPatrimonioDetalheSchema,
       BaixarPatrimonioResponseSchema,
       ConsultarBaixaPatrimonioResponseSchema,
+    ]) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
+
+  it("exporta os contratos públicos das depreciações patrimoniais", () => {
+    for (const schema of [
+      CompetenciaMensalSchema,
+      MotivoInelegibilidadeDepreciacaoSchema,
+      CodigoErroDepreciacaoPatrimonioSchema,
+      ListarDepreciacoesPendentesQuerySchema,
+      ExecutarDepreciacaoPatrimonioBodySchema,
+      ExecutarDepreciacoesEmMassaBodySchema,
+      ItemDepreciacaoPendenteSchema,
+      ResultadoDepreciacaoIndividualSchema,
+      ResultadoDepreciacoesEmMassaSchema,
+      ListarDepreciacoesPendentesResponseSchema,
+      ExecutarDepreciacaoPatrimonioResponseSchema,
+      ExecutarDepreciacoesEmMassaResponseSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }

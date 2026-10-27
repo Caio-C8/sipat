@@ -215,16 +215,26 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve executar automaticamente a depreciação dos patrimônios que possuam parâmetros de depreciação vigentes.
 
-**Informações:** Patrimônio, valor bruto atual, depreciação acumulada, valor residual, vida útil, quantidade de depreciações realizadas, valor da depreciação e data de processamento.
+**Informações:** Competência mensal, comissão, patrimônio, valor bruto atual, depreciação acumulada, valor residual, vida útil, quantidade de depreciações realizadas, valor da depreciação, situação contábil anterior e nova e data de processamento.
 
 **Regras:**
 
 - A depreciação deve utilizar o método linear definido pela instituição.
 - A documentação registra como referência o cálculo do valor periódico a partir do valor ainda depreciável, do valor residual e da vida útil restante.
-- Patrimônios baixados não podem ser depreciados.
+- Cada execução deve tratar somente a competência civil mensal corrente do servidor; competências passadas ou futuras não podem ser processadas.
+- O mesmo patrimônio não pode possuir duas depreciações para o mesmo parâmetro na mesma competência.
+- A instituição adota a depreciação mensal integral a partir da competência seguinte à `dataInicio` do parâmetro, sem cálculo proporcional por dias no primeiro mês.
+- Um patrimônio cadastrado depois de uma execução pode integrar nova execução da competência corrente somente se seu parâmetro tiver `dataInicio` anterior ao primeiro dia dessa competência; não devem ser criadas depreciações retroativas para compensar competências encerradas.
+- Patrimônios `ATIVO`, `EMPRESTADO` ou `EM_MANUTENCAO` podem ser depreciados; patrimônios `BAIXADO` devem ser ignorados como inelegíveis.
+- O Diretor de Patrimônio deve poder consultar, com paginação finita, os patrimônios elegíveis ainda não depreciados na competência corrente antes de executar a operação em massa.
+- A execução deve abranger exatamente um patrimônio ou todos os patrimônios elegíveis; não deve aceitar uma lista ou quantidade arbitrária de bens.
+- Toda execução deve informar uma única comissão, existente e vigente na data civil do processamento.
 - O valor de depreciação calculado deve ser somado ao acumulado de depreciação da situação patrimonial.
 - O sistema deve preservar o valor residual como limite mínimo e registrar o histórico de cada processamento.
-- O sistema não deve depreciar um patrimônio que tem seu valor líquido atual igual ao valor residual.
+- O sistema não deve depreciar um patrimônio cujo valor líquido atual seja igual ao valor residual; a existência desses itens deve ser informada e exigir confirmação antes de continuar com os demais.
+- Um patrimônio que atingir o valor residual na execução corrente deve receber a última depreciação, limitada exatamente ao residual, e ser contabilizado separadamente no resultado.
+- A consulta de pendentes é informativa; no momento da mutação, o sistema deve reavaliar elegibilidade e valores dentro da mesma transação.
+- A execução deve ser atômica: erro ou conflito inesperado em qualquer item desfaz todas as depreciações da solicitação. Itens classificados pelas regras como inelegíveis não constituem erro e devem ser discriminados no resultado agregado.
 
 ### RF16: Empréstimo e Devolução de Patrimônios
 
@@ -507,6 +517,7 @@ houver e usuário responsável.
 - Os valores monetários devem ser armazenados com precisão decimal.
 - A depreciação deve utilizar o método linear definido pelo sistema.
 - Os cálculos devem considerar o valor bruto, a depreciação acumulada, o valor residual e a vida útil do patrimônio.
+- O valor periódico deve ser calculado com precisão de até sete casas decimais a partir do valor ainda depreciável dividido pela vida útil restante; a última quota deve absorver eventual diferença sem ultrapassar o valor residual.
 - Cada depreciação deve possuir registro da competência e do valor depreciado.
 - Não deve ser possível registrar duas depreciações para o mesmo patrimônio, utilizando o mesmo parâmetro e sendo na mesma competência.
 - Uma reavaliação deve invalidar o parâmetro de depreciação anterior e criar um novo parâmetro.
@@ -965,21 +976,26 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 
 **Ator(es):** Diretor de Patrimônio
 
-**Pré-condição:** O Diretor deve estar autenticado; deve existir patrimônios com parâmetros de depreciação vigentes.
+**Pré-condição:** O Diretor deve estar autenticado; deve informar uma comissão vigente na data civil do processamento; deve existir ao menos um patrimônio com parâmetro de depreciação vigente e iniciado antes da competência corrente.
 
 **Fluxo principal:**
 
-1. O Diretor inicia o processo de depreciação automática.
-2. O sistema identifica os patrimônios elegíveis.
-3. O sistema calcula, para cada patrimônio, o valor depreciável do período de acordo com o método.
-4. O sistema soma o valor calculado ao acumulado de depreciação.
-5. O sistema registra o histórico do processamento.
+1. O Diretor consulta os patrimônios ainda não depreciados na competência corrente.
+2. O sistema apresenta de forma paginada os itens elegíveis e os totais relevantes para a decisão.
+3. O Diretor inicia a depreciação de um patrimônio ou de todos os elegíveis, informando a competência corrente e a comissão.
+4. O sistema revalida a competência, a comissão e a elegibilidade no estado transacional atual.
+5. Se houver item que já esteja no valor residual, o sistema informa a quantidade ou o item e solicita confirmação para ignorá-lo e continuar.
+6. Confirmada a continuidade quando necessário, o sistema calcula individualmente a quota linear de cada item elegível.
+7. Para cada item, o sistema atualiza a situação contábil e cria o registro histórico da depreciação na mesma transação.
+8. O sistema retorna os totais processados, os que atingiram o residual e os inelegíveis por motivo, sem retornar uma coleção ilimitada.
 
 **Fluxos alternativos / exceções:**
 
-- Patrimônio baixado: o item é ignorado.
-- Patrimônio sem parâmetros válidos: o item não é depreciado.
-- Valor residual alcançado: o sistema não reduz o valor além do limite e informa ao usuário que há bens que chegaram ao valor residual.
+- Competência passada ou futura: o sistema rejeita a solicitação sem alterar dados.
+- Patrimônio baixado, sem parâmetro vigente, ainda no mês de início ou já depreciado na competência: o item é classificado como inelegível e não constitui falha da execução em massa.
+- Valor residual já alcançado sem confirmação: o sistema não altera nenhum item e solicita confirmação.
+- Valor residual atingido pela quota corrente: o sistema limita a quota ao saldo depreciável e informa o item no resultado.
+- Erro ou conflito concorrente inesperado: o sistema desfaz integralmente a solicitação.
 
 **Pós-condição:** A situação patrimonial é atualizada e o processamento fica registrado no histórico.
 
