@@ -15,6 +15,10 @@ import {
   ListarUsuariosResponseSchema,
   LoginBodySchema,
   LoginResponseSchema,
+  MobileConcluirPrimeiroAcessoResponseSchema,
+  MobileLoginResponseSchema,
+  MobileMeResponseSchema,
+  MobileRefreshResponseSchema,
   ListarPatrimoniosQuerySchema,
   ListarPatrimoniosResponseSchema,
   RedefinirSenhaBodySchema,
@@ -198,6 +202,10 @@ describe("@repo/contracts — API pública", () => {
       RedefinirSenhaBodySchema,
       SolicitarRedefinicaoSenhaResponseSchema,
       TokenRedefinicaoSenhaSchema,
+      MobileLoginResponseSchema,
+      MobileRefreshResponseSchema,
+      MobileMeResponseSchema,
+      MobileConcluirPrimeiroAcessoResponseSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }
