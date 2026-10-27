@@ -2,25 +2,26 @@
 
 ## Estado operacional
 
-O mobile possui somente infraestrutura inicial: rota técnica, safe area,
-configuração pública, health check, export Android/iOS/Web e perfis EAS. A tela
-funciona no navegador, possui imagem estática para os stacks Docker de staging
-e produção, e os builds remotos possuem runtime alinhado ao monorepo.
+O mobile possui a infraestrutura inicial e a fundação visual: grupos `(auth)` e
+`(app)`, shells das cinco rotas aprovadas, safe area global, topbar SIPAT com
+brasão local, faixa exclusiva de development, tokens semânticos e `/check` com
+o health check existente. Ainda não há sessão, formulários ou guard de acesso.
 
 O baseline usa Expo SDK 58, React Native 0.88 e React 19.3. A migração passou
 nas verificações locais, nos três exports, no Expo Doctor e no smoke test do
 container `mobile-web`; o novo binário ainda precisa ser gerado no EAS e
 validado em dispositivo real.
 
-Vitest cobre configuração pública e cliente do health check. O CI também
+Vitest cobre configuração pública, cliente do health check, rotas e renderização
+dos componentes compartilhados. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
 raiz serve HTML. Ainda não existem autenticação, navegação de domínio, dados
-persistidos, operações patrimoniais, cache/offline, testes de componentes ou
-E2E em dispositivos.
+persistidos, operações patrimoniais, cache/offline ou E2E em dispositivos.
 
-O bloqueio global em retrato foi removido com `orientation: "default"`. A home
-usa a largura atual da janela e apresenta os cards em duas colunas a partir de
-900 pontos lógicos. A verificação em tablet Android e iPad reais continua
+O bloqueio global em retrato foi removido com `orientation: "default"`. A tela
+`/check` usa a largura atual da janela e apresenta os cards em duas colunas a
+partir de 900 pontos lógicos; topbar, faixa e shells permitem reflow de texto.
+A verificação em tablet Android, iPad, TalkBack e VoiceOver reais continua
 pendente e exige um novo binário; APKs anteriores preservam a configuração
 nativa antiga.
 

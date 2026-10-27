@@ -17,10 +17,21 @@
 ```text
 apps/mobile/
 ├── assets/
+│   └── brasao.png
 ├── src/
 │   ├── app/
+│   │   ├── (app)/
+│   │   │   ├── _layout.tsx
+│   │   │   └── index.tsx
+│   │   ├── (auth)/
+│   │   │   ├── _layout.tsx
+│   │   │   ├── login.tsx
+│   │   │   ├── redefinir-senha.tsx
+│   │   │   └── senha-atualizada.tsx
 │   │   ├── _layout.tsx
-│   │   └── index.tsx
+│   │   └── check.tsx
+│   ├── components/shared/
+│   ├── theme/
 │   ├── config/
 │   │   └── public-app-config.ts
 │   └── lib/
@@ -32,9 +43,10 @@ apps/mobile/
 └── tsconfig.json
 ```
 
-O layout raiz instala `SafeAreaProvider` e um `Stack` sem header. A única tela
-faz a verificação técnica do runtime e da API. Não existe feature patrimonial
-nem camada genérica de HTTP no baseline.
+O layout raiz instala safe area, topbar, faixa exclusiva de desenvolvimento e
+um `Stack` sem header. A rota `/check` faz a verificação técnica do runtime e da
+API em development. As demais rotas são shells sem sessão, formulário ou regra
+de domínio. Não existe feature patrimonial nem camada genérica de HTTP.
 
 ## Responsabilidades
 

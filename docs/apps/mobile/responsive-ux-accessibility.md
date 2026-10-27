@@ -2,12 +2,14 @@
 
 ## Estado atual
 
-A home usa `SafeAreaView`, `ScrollView`, layout flexível e propriedades de
-acessibilidade para status e ações. Ela deve ser verificada nas três
-plataformas, mas ainda não comprova acessibilidade dos futuros fluxos do SIPAT.
+O layout raiz usa safe area e mantém a topbar e a faixa de desenvolvimento fora
+da rolagem. `/check` usa `ScrollView`, layout flexível e propriedades de
+acessibilidade para status e ações. Os shells e componentes compartilhados
+permitem reflow de texto, mas ainda não comprovam acessibilidade dos futuros
+fluxos do SIPAT.
 
 O baseline declara `orientation: "default"` e `ios.supportsTablet: true`. A tela
-técnica observa a largura atual da janela e, a partir de 900 pontos lógicos,
+`/check` observa a largura atual da janela e, a partir de 900 pontos lógicos,
 organiza os cards em duas colunas. A medição é atualizada após rotação e não
 depende de identificar um modelo específico de tablet.
 

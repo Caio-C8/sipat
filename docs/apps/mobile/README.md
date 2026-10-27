@@ -14,7 +14,13 @@ código interno da API.
 
 ## Estado atual
 
-- `/` apresenta o runtime do aplicativo e o health check da API;
+- `/` possui o shell neutro da futura home e `/check` concentra o runtime e o
+  health check da API;
+- `/login`, `/redefinir-senha` e `/senha-atualizada` existem como shells sob o
+  grupo `(auth)`, ainda sem formulários ou sessão;
+- o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
+  em `development`;
+- tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior
   e nova tentativa manual;
@@ -33,8 +39,9 @@ código interno da API.
 - `orientation: "default"` permite retrato e paisagem, e a tela técnica adapta
   os cards em duas colunas quando a janela possui largura suficiente;
 - ainda não existem autenticação, armazenamento persistente, operação de
-  domínio, formulário, cache remoto, modo offline, testes de componentes ou E2E
-  em dispositivos.
+  domínio, formulário, cache remoto, modo offline ou E2E em dispositivos;
+- testes de renderização cobrem a topbar, a faixa de desenvolvimento e suas
+  propriedades de acessibilidade essenciais.
 
 O estado “Aplicativo móvel operacional” confirma apenas que o bundle React
 Native inicializou. Ele não substitui o health check da API.
