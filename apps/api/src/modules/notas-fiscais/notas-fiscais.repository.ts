@@ -117,14 +117,4 @@ export class NotasFiscaisRepository {
     });
     return resultado.count === 1;
   }
-
-  async listarChavesAnexos(): Promise<string[]> {
-    const notas = await this.database.notaFiscal.findMany({
-      where: { caminhoAnexoNotaFiscal: { not: null } },
-      select: { caminhoAnexoNotaFiscal: true },
-    });
-    return notas.flatMap((nota) =>
-      nota.caminhoAnexoNotaFiscal === null ? [] : [nota.caminhoAnexoNotaFiscal],
-    );
-  }
 }

@@ -1,9 +1,9 @@
 # Armazenamento local de documentos
 
 Este documento é a fonte de verdade para o armazenamento de documentos do
-SIPAT no filesystem da máquina que executa o sistema. A primeira consumidora
-será a nota fiscal, mas as regras também orientam os campos de anexos de baixa e
-manutenção já previstos no schema.
+SIPAT no filesystem da máquina que executa o sistema. Notas fiscais e baixas
+patrimoniais já consomem essa infraestrutura; as mesmas regras orientam os
+campos de anexos de manutenção previstos no schema.
 
 ## Escopo e ambientes
 
@@ -163,12 +163,11 @@ da transação; qualquer falha invalida toda a operação lógica e dispara a
 limpeza dos arquivos já recebidos. Nenhuma response de sucesso pode apontar
 para um arquivo inexistente.
 
-Na baixa, o PDF opcional também é preparado antes da transação que cria o
+Na baixa, o PDF opcional é preparado antes da transação que cria o
 histórico e altera o status do patrimônio. Falha na transação remove o arquivo
 novo; como a baixa é imutável, esta entrega não prevê substituição ou remoção
-posterior do documento. A reconciliação deve considerar também as chaves
-referenciadas por `baixas_patrimoniais` antes de classificar um arquivo como
-órfão.
+posterior do documento. A reconciliação reúne as chaves de notas fiscais e de
+`baixas_patrimoniais` antes de classificar um arquivo como órfão.
 
 ## Operação e limites
 

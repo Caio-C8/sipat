@@ -25,6 +25,7 @@ import { FornecedoresModule } from "./modules/fornecedores/fornecedores.module";
 import { NotasFiscaisModule } from "./modules/notas-fiscais/notas-fiscais.module";
 import { ComissoesModule } from "./modules/comissoes/comissoes.module";
 import { InventariosModule } from "./modules/inventarios/inventarios.module";
+import { BaixasModule } from "./modules/baixas/baixas.module";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { InventariosModule } from "./modules/inventarios/inventarios.module";
     }),
     ArmazenamentoDocumentosModule,
     AuthModule,
+    BaixasModule,
     ComissoesModule,
     EspeciesModule,
     FornecedoresModule,

@@ -495,6 +495,15 @@ export class InventariosRepository {
     });
   }
 
+  existePatrimonioEmInventarioAberto(patrimonioId: string): Promise<number> {
+    return this.database.itemInventario.count({
+      where: {
+        patrimonioId,
+        inventario: { status: { not: "FINALIZADO" } },
+      },
+    });
+  }
+
   listarSetores(
     inventarioId: string,
     { where, skip, take }: Pagina<Prisma.SetorInventarioWhereInput>,

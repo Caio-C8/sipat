@@ -30,7 +30,7 @@ import {
 import { ErroArmazenamentoDocumentos } from "./erro-armazenamento-documentos";
 
 const PREFIXO_LOGICO = "uploads";
-const DIRETORIOS_PERMITIDOS = new Set(["notas-fiscais"]);
+const DIRETORIOS_PERMITIDOS = new Set(["notas-fiscais", "baixas"]);
 const DIRETORIO_TEMPORARIO = ".staging";
 
 function ehErroComCodigo(error: unknown, codigo: string): boolean {

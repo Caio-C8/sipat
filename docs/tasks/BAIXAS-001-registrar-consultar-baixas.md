@@ -1,6 +1,6 @@
 # `BAIXAS-001` — Registrar e consultar baixas patrimoniais
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -137,23 +137,30 @@ A mutation usa a proteção CSRF global. Usuário anônimo recebe `401` e
 
 ## Critérios de aceite
 
-- [ ] migration aplica desde banco vazio e sobre o estado anterior sem
+- [x] migration aplica desde banco vazio e sobre o estado anterior sem
       reescrever migrations ou converter dados legados ambiguamente;
-- [ ] a criação só aceita patrimônio `ATIVO`, comissão vigente na data e data
+- [x] a criação só aceita patrimônio `ATIVO`, comissão vigente na data e data
       não futura;
-- [ ] baixa e alteração de status são atômicas e derivam auditoria da sessão;
-- [ ] duas requisições concorrentes produzem uma baixa, um status final
+- [x] baixa e alteração de status são atômicas e derivam auditoria da sessão;
+- [x] duas requisições concorrentes produzem uma baixa, um status final
       `BAIXADO` e um conflito estável para a perdedora;
-- [ ] patrimônio em inventário aberto é bloqueado pela policy e pela proteção
+- [x] patrimônio em inventário aberto é bloqueado pela policy e pela proteção
       do PostgreSQL, inclusive sob corrida;
-- [ ] falha de validação ou banco não deixa baixa parcial nem arquivo órfão;
-- [ ] consulta e download usam allowlist, streaming e headers seguros sem expor
+- [x] falha de validação ou banco não deixa baixa parcial nem arquivo órfão;
+- [x] consulta e download usam allowlist, streaming e headers seguros sem expor
       chave ou path;
-- [ ] não existem rotas de PATCH, DELETE, estorno ou alteração de anexo;
-- [ ] autorização, CSRF, limites multipart, erros públicos e auditoria possuem
+- [x] não existem rotas de PATCH, DELETE, estorno ou alteração de anexo;
+- [x] autorização, CSRF, limites multipart, erros públicos e auditoria possuem
       cobertura;
-- [ ] documentação só muda o status para concluído após as verificações
+- [x] documentação só muda o status para concluído após as verificações
       correspondentes.
+
+Concluída em 27 de outubro de 2026. A migration interrompe tipos legados ou
+horários ambíguos, a API usa locks e unicidade para serializar a baixa e o
+armazenamento inclui `uploads/baixas/` na compensação e reconciliação. Foram
+executados lint, typecheck, testes e build da API, validações do banco e dos
+contratos, typecheck de Web/mobile e testes PostgreSQL reais desde banco vazio e
+sobre o schema anterior.
 
 ## Arquivos ou módulos potencialmente afetados
 

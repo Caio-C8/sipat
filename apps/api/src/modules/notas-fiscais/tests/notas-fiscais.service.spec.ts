@@ -57,7 +57,6 @@ describe("NotasFiscaisService", () => {
       buscarPorId: jest.fn().mockResolvedValue(detalhe()),
       alterar: jest.fn(),
       alterarAnexoSeAtual: jest.fn().mockResolvedValue(true),
-      listarChavesAnexos: jest.fn().mockResolvedValue([CHAVE_ANTIGA]),
     } as unknown as jest.Mocked<NotasFiscaisRepository>;
     repository.executarTransacao.mockImplementation(async (operacao) =>
       operacao(repository),
@@ -199,19 +198,10 @@ describe("NotasFiscaisService", () => {
     expect(repository.alterar).not.toHaveBeenCalled();
   });
 
-  it("abre somente a chave referenciada e reconcilia órfãos com carência", async () => {
+  it("abre somente a chave referenciada", async () => {
     await expect(service.abrirAnexo(NOTA_ID)).resolves.toMatchObject({
       tamanho: 8,
     });
     expect(armazenamento.abrir).toHaveBeenCalledWith(CHAVE_ANTIGA);
-
-    await service.onApplicationBootstrap();
-    expect(armazenamento.reconciliar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chavesReferenciadas: new Set([CHAVE_ANTIGA]),
-        temporariosModificadosAntesDe: expect.any(Date),
-        orfaosModificadosAntesDe: expect.any(Date),
-      }),
-    );
   });
 });
