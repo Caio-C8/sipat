@@ -26,6 +26,7 @@ import { NotasFiscaisModule } from "./modules/notas-fiscais/notas-fiscais.module
 import { ComissoesModule } from "./modules/comissoes/comissoes.module";
 import { InventariosModule } from "./modules/inventarios/inventarios.module";
 import { BaixasModule } from "./modules/baixas/baixas.module";
+import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { BaixasModule } from "./modules/baixas/baixas.module";
     AuthModule,
     BaixasModule,
     ComissoesModule,
+    DepreciacoesModule,
     EspeciesModule,
     FornecedoresModule,
     InventariosModule,

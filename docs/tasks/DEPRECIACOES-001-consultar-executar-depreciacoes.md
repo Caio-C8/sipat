@@ -1,6 +1,6 @@
 # `DEPRECIACOES-001` — Consultar e executar depreciações
 
-**Status:** aprovada
+**Status:** concluída
 
 ## Objetivo
 
@@ -165,25 +165,36 @@ competência corrente e executada atomicamente.
 
 ## Critérios de aceite
 
-- [ ] anônimo recebe `401`, administrador recebe `403` e Diretor pode consultar
+- [x] anônimo recebe `401`, administrador recebe `403` e Diretor pode consultar
       e executar;
-- [ ] competência passada, futura, malformada ou que deixe de ser corrente
+- [x] competência passada, futura, malformada ou que deixe de ser corrente
       durante a request não produz escrita;
-- [ ] pendentes incluem bens ativos, emprestados e em manutenção e excluem os
+- [x] pendentes incluem bens ativos, emprestados e em manutenção e excluem os
       inelegíveis conforme motivo documentado;
-- [ ] bem iniciado no mês corrente começa no mês seguinte; cadastro tardio não
+- [x] bem iniciado no mês corrente começa no mês seguinte; cadastro tardio não
       gera competência passada;
-- [ ] comissão ausente, inexistente ou fora da vigência cancela a operação;
-- [ ] execução sem confirmação diante de residual não altera nenhum item;
-- [ ] cada sucesso cria um histórico e atualiza uma situação contábil na mesma
+- [x] comissão ausente, inexistente ou fora da vigência cancela a operação;
+- [x] execução sem confirmação diante de residual não altera nenhum item;
+- [x] cada sucesso cria um histórico e atualiza uma situação contábil na mesma
       transação, preservando exatamente o limite residual;
-- [ ] dois processamentos concorrentes não duplicam patrimônio, parâmetro e
+- [x] dois processamentos concorrentes não duplicam patrimônio, parâmetro e
       competência nem deixam atualização perdida;
-- [ ] erro induzido no meio de um lote deixa zero novos históricos e zero
+- [x] erro induzido no meio de um lote deixa zero novos históricos e zero
       situações parcialmente atualizadas;
-- [ ] listagem e mutação em massa não produzem N+1 nem response proporcional ao
+- [x] listagem e mutação em massa não produzem N+1 nem response proporcional ao
       acervo, e possuem evidência com volume representativo;
-- [ ] reavaliação, Web e mobile permanecem inalterados.
+- [x] reavaliação, Web e mobile permanecem inalterados.
+
+Concluída em 27 de outubro de 2026. A implementação adicionou o índice parcial
+que impede dois parâmetros vigentes, consulta paginada em lote, cálculo decimal
+linear, locks determinísticos e persistência agregada em transação serializável.
+A auditoria local encontrou zero parâmetros vigentes duplicados, situações
+básicas inconsistentes ou competências duplicadas. As migrations passaram em
+banco vazio e sobre o banco de desenvolvimento previamente existente. Os testes
+PostgreSQL cobriram concorrência individual e individual versus massa, rollback
+induzido, unicidade, residual e `EXPLAIN` com 300 bens. Contratos, database, API,
+build e typechecks de Web e mobile passaram; a suíte da API registrou 359 testes
+aprovados e os 7 testes PostgreSQL específicos também passaram.
 
 ## Arquivos ou módulos potencialmente afetados
 

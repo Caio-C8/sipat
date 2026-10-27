@@ -1306,7 +1306,7 @@ Especificação de execução:
 
 ## DEPRECIACOES-001 — Consultar e executar depreciações na API
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -1344,18 +1344,25 @@ um patrimônio ou para todos os elegíveis.
 
 ### Critérios de aceite
 
-- [ ] somente `DIRETOR_PATRIMONIO` consulta pendentes e executa depreciação;
-- [ ] competência diferente do mês civil corrente é rejeitada sem escrita;
-- [ ] cada patrimônio recebe no máximo uma depreciação por parâmetro e
+- [x] somente `DIRETOR_PATRIMONIO` consulta pendentes e executa depreciação;
+- [x] competência diferente do mês civil corrente é rejeitada sem escrita;
+- [x] cada patrimônio recebe no máximo uma depreciação por parâmetro e
       competência, inclusive sob concorrência;
-- [ ] situação contábil e histórico permanecem consistentes e nenhuma quota
+- [x] situação contábil e histórico permanecem consistentes e nenhuma quota
       reduz o valor líquido abaixo do residual;
-- [ ] a operação em massa desfaz todas as escritas diante de erro inesperado e
+- [x] a operação em massa desfaz todas as escritas diante de erro inesperado e
       retorna apenas agregados finitos;
-- [ ] cadastro tardio, empréstimo, manutenção, baixa, início no mês corrente,
+- [x] cadastro tardio, empréstimo, manutenção, baixa, início no mês corrente,
       duplicidade e residual possuem cobertura explícita;
-- [ ] migration, PostgreSQL, API, contratos e consumidores passam nas
+- [x] migration, PostgreSQL, API, contratos e consumidores passam nas
       verificações aplicáveis.
+
+Concluído em 27 de outubro de 2026. A API consulta pendências em lote e executa
+um patrimônio ou todo o acervo em transação serializável, com revalidação da
+competência e comissão, locks ordenados, cálculo decimal e gravação agregada. A
+migration impede mais de um parâmetro vigente por patrimônio; testes unitários,
+E2E e PostgreSQL confirmaram autorização, concorrência, rollback, residual e o
+plano da consulta com volume representativo.
 
 Especificação de execução:
 [DEPRECIACOES-001](./tasks/DEPRECIACOES-001-consultar-executar-depreciacoes.md).
