@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import { SystemSidebar } from "./system-sidebar";
 import { SystemTopbar } from "./system-topbar";
-import styles from "./system-shell.module.css";
 
 export function AuthenticatedShell({
   children,
@@ -12,9 +11,9 @@ export function AuthenticatedShell({
   identidade: IdentidadeAutenticada;
 }>) {
   return (
-    <div className={styles.shell}>
+    <div className="min-h-svh bg-[#f7f9fc] text-xs text-[#17253d] min-[1101px]:grid min-[1101px]:grid-cols-[clamp(184px,14vw,232px)_minmax(0,1fr)]">
       <SystemSidebar perfil={identidade.perfil} />
-      <div className={styles.workspace}>
+      <div className="min-w-0">
         <SystemTopbar identidade={identidade} />
         {children}
       </div>

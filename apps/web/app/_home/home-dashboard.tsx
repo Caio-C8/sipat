@@ -16,7 +16,6 @@ import {
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import type { ResumoPatrimonialDashboard } from "@/features/patrimonios/api/patrimonio-operations";
 import { nomesPerfis } from "@/lib/navigation/system-navigation";
-import styles from "./home.module.css";
 
 type EstadoResumoPatrimonial =
   | Readonly<{ status: "sucesso"; dados: ResumoPatrimonialDashboard }>
@@ -33,6 +32,20 @@ const quickActions = [
 
 const MENSAGEM_NAO_IMPLEMENTADO =
   "Dados ainda não disponíveis — integração não implementada";
+
+const summaryToneClasses = {
+  blue: "bg-[#eff5ff] text-[#2864f0]",
+  green: "bg-[#e9fbf4] text-[#008e71]",
+  orange: "bg-[#fff7ed] text-[#b2571d]",
+  purple: "bg-[#f6efff] text-[#8546ec]",
+} as const;
+
+const legendToneClasses = {
+  blue: "text-[#2864f0]",
+  orange: "text-[#b2571d]",
+  purple: "text-[#8546ec]",
+  muted: "text-[#cbd6e5]",
+} as const;
 
 function pluralizarItens(quantidade: number): string {
   return quantidade === 1 ? "item" : "itens";
@@ -72,9 +85,9 @@ function criarGradienteSituacoes(
 
 function EstadoNaoImplementado() {
   return (
-    <div className={styles.unavailableState}>
+    <div className="flex min-h-24 items-center justify-center gap-2 rounded-lg border border-dashed border-[#cbd7e6] bg-[#f8fafc] p-4 text-center text-[10px] text-[#526984] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
       <Info size={18} aria-hidden="true" />
-      <p>{MENSAGEM_NAO_IMPLEMENTADO}</p>
+      <p className="m-0">{MENSAGEM_NAO_IMPLEMENTADO}</p>
     </div>
   );
 }
@@ -162,70 +175,107 @@ export function HomeDashboard({
     : undefined;
 
   return (
-    <main className={styles.main}>
-      <div className={styles.intro}>
+    <main className="mx-auto grid w-full max-w-[1900px] gap-3 px-4 py-4 text-[#17253d] min-[651px]:px-5 min-[651px]:pt-[15px] min-[651px]:pb-[17px] min-[1500px]:gap-[17px] min-[1500px]:px-[30px] min-[1500px]:pt-[22px] min-[1500px]:pb-[26px]">
+      <div className="flex flex-col items-start justify-between gap-4 min-[651px]:flex-row min-[651px]:items-center">
         <div>
-          <h1>Bem-vindo, {identidade.nome}!</h1>
-          <p>
+          <h1 className="text-xl leading-tight font-bold text-[#111d34] min-[1500px]:text-[27px]">
+            Bem-vindo, {identidade.nome}!
+          </h1>
+          <p className="mt-0.5 text-[10px] leading-tight text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[13px]">
             Acompanhe o patrimônio da Câmara e veja o que precisa da sua
             atenção.
           </p>
         </div>
-        <span className={styles.dateBadge}>
+        <span className="flex min-w-0 items-center gap-2.5 self-stretch rounded-md border border-[#dfe7f1] bg-white px-2.5 py-2 text-[10px] whitespace-nowrap text-[#3f587b] min-[361px]:min-w-[196px] min-[651px]:self-auto max-[1100px]:text-[11px] min-[1500px]:min-w-60 min-[1500px]:px-[13px] min-[1500px]:py-2.5 min-[1500px]:text-xs">
           <CalendarDays size={16} aria-hidden="true" />
           <time dateTime={data.iso}>{data.texto}</time>
         </span>
       </div>
 
       {resumoPatrimonial.status === "erro" ? (
-        <div className={styles.integrationError} role="alert">
+        <div
+          className="flex items-center gap-2 rounded-lg border border-[#f1c7c7] bg-[#fff7f7] px-3 py-2 text-[10px] text-[#8b2c2c] min-[1500px]:text-[11px]"
+          role="alert"
+        >
           <Info size={18} aria-hidden="true" />
-          <p>
+          <p className="m-0">
             Não foi possível carregar os dados patrimoniais. Tente novamente
             mais tarde.
           </p>
         </div>
       ) : null}
 
-      <section className={styles.summaryGrid} aria-label="Resumo dos bens">
+      <section
+        className="grid grid-cols-1 gap-2 min-[361px]:grid-cols-2 min-[421px]:gap-3.5 min-[801px]:grid-cols-4 min-[1500px]:gap-[18px]"
+        aria-label="Resumo dos bens"
+      >
         {summary.map(({ title, value, detail, icon: Icon, tone }) => (
-          <article className={styles.summaryCard} key={title}>
-            <div className={styles.summaryTop}>
-              <span className={`${styles.summaryIcon} ${styles[tone]}`}>
+          <article
+            className="grid min-h-[70px] min-w-0 content-between rounded-lg border border-[#dfe7f1] bg-white px-3 py-2 max-[420px]:p-2.5 min-[1500px]:min-h-[93px] min-[1500px]:px-4 min-[1500px]:pt-[13px] min-[1500px]:pb-2.5"
+            key={title}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={`grid size-8 shrink-0 place-items-center rounded-lg min-[1500px]:size-10 [&_svg]:min-[1500px]:size-[23px] ${summaryToneClasses[tone]}`}
+              >
                 <Icon size={19} aria-hidden="true" />
               </span>
               <div>
-                <p>{title}</p>
-                <strong>{value ?? "—"}</strong>
+                <p className="text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-xs">
+                  {title}
+                </p>
+                <strong className="mt-0.5 block text-xl leading-none text-[#1d3b66] min-[1500px]:text-[27px]">
+                  {value ?? "—"}
+                </strong>
               </div>
             </div>
-            <p className={styles.cardHint}>{detail}</p>
+            <p className="mt-1 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
+              {detail}
+            </p>
           </article>
         ))}
       </section>
 
-      <div className={styles.upperGrid}>
-        <section className={styles.panel} aria-labelledby="attention-title">
-          <div className={styles.sectionHeading}>
-            <span className={styles.headingIcon}>
+      <div className="grid gap-3.5 min-[801px]:grid-cols-[1.55fr_1fr] min-[1500px]:gap-[18px]">
+        <section
+          className="min-w-0 rounded-lg border border-[#dfe7f1] bg-white px-3.5 py-2.5 min-[1500px]:px-[19px] min-[1500px]:py-4"
+          aria-labelledby="attention-title"
+        >
+          <div className="mb-2.5 flex items-start gap-2 min-[1500px]:mb-3.5 min-[1500px]:gap-3">
+            <span className="grid size-[22px] shrink-0 place-items-center rounded-lg bg-[#eff5ff] text-[#2860eb] min-[1500px]:size-[29px]">
               <Info size={15} aria-hidden="true" />
             </span>
             <div>
-              <h2 id="attention-title">Pendências de atenção</h2>
-              <p>Acompanhamento de registros que precisam de análise.</p>
+              <h2
+                id="attention-title"
+                className="text-xs leading-tight font-bold text-[#17243c] max-[1100px]:text-[13px] min-[1500px]:text-base"
+              >
+                Pendências de atenção
+              </h2>
+              <p className="mt-0.5 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
+                Acompanhamento de registros que precisam de análise.
+              </p>
             </div>
           </div>
           <EstadoNaoImplementado />
         </section>
 
-        <section className={styles.panel} aria-labelledby="situation-title">
-          <div className={styles.sectionHeading}>
-            <span className={styles.headingIcon}>
+        <section
+          className="min-w-0 rounded-lg border border-[#dfe7f1] bg-white px-3.5 py-2.5 min-[1500px]:px-[19px] min-[1500px]:py-4"
+          aria-labelledby="situation-title"
+        >
+          <div className="mb-2.5 flex items-start gap-2 min-[1500px]:mb-3.5 min-[1500px]:gap-3">
+            <span className="grid size-[22px] shrink-0 place-items-center rounded-lg bg-[#eff5ff] text-[#2860eb] min-[1500px]:size-[29px]">
               <ChartNoAxesColumn size={15} aria-hidden="true" />
             </span>
             <div>
-              <h2 id="situation-title">Bens por situação</h2>
-              <p>
+              <h2
+                id="situation-title"
+                className="text-xs leading-tight font-bold text-[#17243c] max-[1100px]:text-[13px] min-[1500px]:text-base"
+              >
+                Bens por situação
+              </h2>
+              <p className="mt-0.5 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
                 {dados
                   ? `Distribuição atual · ${dados.total} ${pluralizarItens(dados.total)} cadastrados.`
                   : "Distribuição atual dos cadastros."}
@@ -234,64 +284,95 @@ export function HomeDashboard({
           </div>
           {dados && situations ? (
             <>
-              <div className={styles.chartBody}>
+              <div className="flex min-h-[120px] flex-wrap items-center gap-3 px-0 min-[421px]:flex-nowrap min-[1101px]:gap-6 min-[1101px]:px-3 min-[1500px]:min-h-40 min-[1500px]:gap-[30px] min-[1500px]:px-[18px]">
                 <div
-                  className={styles.donut}
+                  className="grid size-[102px] shrink-0 place-items-center rounded-full min-[1500px]:size-[132px]"
                   role="img"
                   aria-label={`${situations[0].amount} ativos, ${situations[1].amount} em manutenção, ${situations[2].amount} em empréstimo e ${situations[3].amount} baixados; ${dados.total} bens no total`}
                   style={{ background: criarGradienteSituacoes(situations) }}
                 >
-                  <div>
-                    <strong>{dados.total}</strong>
-                    <span>bens</span>
+                  <div className="grid size-[73px] content-center justify-items-center rounded-full bg-white min-[1500px]:size-[94px]">
+                    <strong className="text-[19px] leading-tight text-[#1c3a66] min-[1500px]:text-[25px]">
+                      {dados.total}
+                    </strong>
+                    <span className="text-[9px] text-[#62748e] min-[1500px]:text-[11px]">
+                      bens
+                    </span>
                   </div>
                 </div>
-                <ul className={styles.legend}>
+                <ul className="grid min-w-[130px] max-w-[280px] flex-1 list-none gap-2.5 p-0 min-[1500px]:gap-3">
                   {situations.map(({ label, amount, tone }) => (
-                    <li key={label}>
-                      <span className={`${styles.legendDot} ${styles[tone]}`} />{" "}
+                    <li
+                      className="flex items-center gap-2 text-[9px] text-[#637792] max-[1100px]:text-[11px] min-[1500px]:text-[11px]"
+                      key={label}
+                    >
+                      <span
+                        className={`size-[7px] shrink-0 rounded-full bg-current ${legendToneClasses[tone]}`}
+                      />{" "}
                       <span>{label}</span>
-                      <strong>{amount}</strong>
+                      <strong className="ml-auto text-[10px] text-[#244061] min-[1500px]:text-xs">
+                        {amount}
+                      </strong>
                     </li>
                   ))}
                 </ul>
               </div>
-              <p className={styles.panelFoot}>
+              <p className="mt-2 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
                 {dados.total === 0
                   ? "Nenhum patrimônio cadastrado."
                   : "Bens baixados continuam disponíveis no histórico."}
               </p>
             </>
           ) : (
-            <div className={styles.dataErrorState}>
+            <div className="flex min-h-24 items-center justify-center gap-2 rounded-lg border border-dashed border-[#cbd7e6] bg-[#f8fafc] p-4 text-center text-[10px] text-[#526984] min-[1500px]:text-[11px]">
               Dados patrimoniais indisponíveis no momento.
             </div>
           )}
         </section>
       </div>
 
-      <div className={styles.lowerGrid}>
-        <section className={styles.panel} aria-labelledby="sector-title">
-          <div className={styles.sectionHeading}>
-            <span className={styles.headingIcon}>
+      <div className="grid gap-3.5 min-[801px]:grid-cols-[0.94fr_1.06fr] min-[1500px]:gap-[18px]">
+        <section
+          className="min-w-0 rounded-lg border border-[#dfe7f1] bg-white px-3.5 py-2.5 min-[1500px]:px-[19px] min-[1500px]:py-4"
+          aria-labelledby="sector-title"
+        >
+          <div className="mb-2.5 flex items-start gap-2 min-[1500px]:mb-3.5 min-[1500px]:gap-3">
+            <span className="grid size-[22px] shrink-0 place-items-center rounded-lg bg-[#eff5ff] text-[#2860eb] min-[1500px]:size-[29px]">
               <MapPin size={15} aria-hidden="true" />
             </span>
             <div>
-              <h2 id="sector-title">Bens por setor</h2>
-              <p>Distribuição dos bens entre os setores.</p>
+              <h2
+                id="sector-title"
+                className="text-xs leading-tight font-bold text-[#17243c] max-[1100px]:text-[13px] min-[1500px]:text-base"
+              >
+                Bens por setor
+              </h2>
+              <p className="mt-0.5 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
+                Distribuição dos bens entre os setores.
+              </p>
             </div>
           </div>
           <EstadoNaoImplementado />
         </section>
 
-        <section className={styles.panel} aria-labelledby="activities-title">
-          <div className={styles.sectionHeading}>
-            <span className={styles.headingIcon}>
+        <section
+          className="min-w-0 rounded-lg border border-[#dfe7f1] bg-white px-3.5 py-2.5 min-[1500px]:px-[19px] min-[1500px]:py-4"
+          aria-labelledby="activities-title"
+        >
+          <div className="mb-2.5 flex items-start gap-2 min-[1500px]:mb-3.5 min-[1500px]:gap-3">
+            <span className="grid size-[22px] shrink-0 place-items-center rounded-lg bg-[#eff5ff] text-[#2860eb] min-[1500px]:size-[29px]">
               <Clock3 size={15} aria-hidden="true" />
             </span>
             <div>
-              <h2 id="activities-title">Últimas atividades</h2>
-              <p>Registros recentes do patrimônio.</p>
+              <h2
+                id="activities-title"
+                className="text-xs leading-tight font-bold text-[#17243c] max-[1100px]:text-[13px] min-[1500px]:text-base"
+              >
+                Últimas atividades
+              </h2>
+              <p className="mt-0.5 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
+                Registros recentes do patrimônio.
+              </p>
             </div>
           </div>
           <EstadoNaoImplementado />
@@ -299,27 +380,34 @@ export function HomeDashboard({
       </div>
 
       <section
-        className={`${styles.panel} ${styles.quickPanel}`}
+        className="min-w-0 rounded-lg border border-[#dfe7f1] bg-white px-3.5 py-2.5 min-[1500px]:px-[19px] min-[1500px]:py-4"
         aria-labelledby="quick-title"
       >
-        <h2 id="quick-title">Ações rápidas</h2>
-        <div className={styles.quickGrid}>
+        <h2
+          id="quick-title"
+          className="text-xs leading-tight font-bold text-[#1c3962] max-[1100px]:text-[13px] min-[1500px]:text-base"
+        >
+          Ações rápidas
+        </h2>
+        <div className="mt-2 grid grid-cols-1 gap-2.5 min-[421px]:grid-cols-2 min-[651px]:grid-cols-3 min-[1101px]:grid-cols-6 min-[1500px]:mt-3.5 min-[1500px]:gap-3.5">
           {quickActions.map(({ label, icon: Icon }) => (
             <button
-              className={styles.quickAction}
+              className="flex min-h-[29px] min-w-0 cursor-not-allowed items-center gap-2 rounded-md border border-[#dfe7f1] bg-[#f8fafc] px-2.5 py-1 text-left text-[9px] font-bold whitespace-nowrap text-[#24466e] opacity-100 max-[1100px]:text-[11px] min-[1500px]:min-h-10 min-[1500px]:px-[13px] min-[1500px]:py-2 min-[1500px]:text-[11px]"
               key={label}
               type="button"
               disabled
             >
-              <Icon size={17} aria-hidden="true" />
+              <Icon className="shrink-0" size={17} aria-hidden="true" />
               <span>{label}</span>
-              <small>Em breve</small>
+              <small className="ml-auto rounded-full bg-[#e7edf5] px-1.5 py-0.5 text-[8px] font-bold text-[#526984]">
+                Em breve
+              </small>
             </button>
           ))}
         </div>
       </section>
 
-      <footer className={styles.pageFooter}>
+      <footer className="flex flex-col justify-between gap-3 text-[9px] text-[#60728a] min-[421px]:flex-row max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
         <span>SIPAT · Visão geral</span>
         <span>
           {identidade.nome} · {perfil}

@@ -117,6 +117,16 @@ ou composições menores.
 
 ## Variantes e tokens
 
+### Regra para novas páginas
+
+- Toda nova página ou componente visual deve usar utilitários Tailwind
+  diretamente em `className`. Não crie arquivos `.module.css` para estilizar
+  composições locais.
+- Priorize sempre classes canônicas do Tailwind. Use valores arbitrários somente
+  quando não houver utilitário equivalente e a medida ou cor específica for
+  necessária para preservar a identidade visual.
+- CSS global permanece restrito ao carregamento do Tailwind, tokens do tema e
+  estilos-base realmente compartilhados.
 - Use tokens para cor, tipografia, espaçamento, raio, sombra e estados.
 - Não espalhe cores literais para representar o mesmo significado.
 - Nomeie tokens por função quando a semântica for estável.
