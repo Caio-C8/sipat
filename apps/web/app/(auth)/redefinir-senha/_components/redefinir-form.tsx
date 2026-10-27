@@ -13,7 +13,6 @@ import {
   type ErrosFormulario,
 } from "@/lib/auth/form-errors";
 import { PasswordInput } from "../../_components/password-input";
-import styles from "../../auth.module.css";
 
 export function RedefinirForm() {
   const router = useRouter();
@@ -63,14 +62,24 @@ export function RedefinirForm() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+    <form
+      className="mt-1 grid gap-[clamp(0.65rem,0.95vw,1.2rem)]"
+      onSubmit={handleSubmit}
+      noValidate
+    >
       {erroGeral ? (
-        <p className={styles.formError} role="alert">
+        <p
+          className="rounded-lg border border-[#efb7b7] bg-[#fff4f4] px-3 py-2.5 text-xs leading-5 text-[#8f2525]"
+          role="alert"
+        >
           {erroGeral}
         </p>
       ) : null}
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="nova-senha">
+      <div className="grid gap-2">
+        <label
+          className="text-xs font-bold text-[#244163]"
+          htmlFor="nova-senha"
+        >
           Nova senha *
         </label>
         <PasswordInput
@@ -82,13 +91,19 @@ export function RedefinirForm() {
           aria-describedby={erros.novaSenha ? "nova-senha-error" : undefined}
         />
         {erros.novaSenha ? (
-          <p className={styles.fieldError} id="nova-senha-error">
+          <p
+            className="-mt-1 text-xs leading-5 text-[#9b2727]"
+            id="nova-senha-error"
+          >
             {erros.novaSenha}
           </p>
         ) : null}
       </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="confirmacao-senha">
+      <div className="grid gap-2">
+        <label
+          className="text-xs font-bold text-[#244163]"
+          htmlFor="confirmacao-senha"
+        >
           Confirmar nova senha *
         </label>
         <PasswordInput
@@ -102,16 +117,23 @@ export function RedefinirForm() {
           }
         />
         {erros.confirmacaoNovaSenha ? (
-          <p className={styles.fieldError} id="confirmacao-senha-error">
+          <p
+            className="-mt-1 text-xs leading-5 text-[#9b2727]"
+            id="confirmacao-senha-error"
+          >
             {erros.confirmacaoNovaSenha}
           </p>
         ) : null}
       </div>
-      <p className={styles.helpText}>
+      <p className="mt-0.5 text-xs leading-7 text-[#52647f]">
         Use uma senha diferente da senha inicial.
         <br />A confirmação deve ser igual à nova senha.
       </p>
-      <Button className={styles.submit} type="submit" disabled={pending}>
+      <Button
+        className="h-[clamp(2rem,2.25vw,2.75rem)] w-full justify-start gap-3 rounded-md bg-[#223d64] px-5 text-xs font-bold text-white hover:bg-[#2b507e] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#8dbbf0]"
+        type="submit"
+        disabled={pending}
+      >
         <ArrowRight size={17} aria-hidden="true" />
         {pending ? "Salvando..." : "Salvar nova senha e continuar"}
       </Button>

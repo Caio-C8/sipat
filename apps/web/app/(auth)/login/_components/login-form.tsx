@@ -14,7 +14,6 @@ import {
   type ErrosFormulario,
 } from "@/lib/auth/form-errors";
 import { PasswordInput } from "../../_components/password-input";
-import styles from "../../auth.module.css";
 
 export function LoginForm() {
   const router = useRouter();
@@ -57,18 +56,32 @@ export function LoginForm() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+    <form
+      className="mt-[clamp(0.7rem,1vw,1.25rem)] grid gap-[clamp(0.65rem,0.95vw,1.2rem)]"
+      onSubmit={handleSubmit}
+      noValidate
+    >
       {erroGeral ? (
-        <p className={styles.formError} role="alert">
+        <p
+          className="rounded-lg border border-[#efb7b7] bg-[#fff4f4] px-3 py-2.5 text-xs leading-5 text-[#8f2525]"
+          role="alert"
+        >
           {erroGeral}
         </p>
       ) : null}
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="login-email">
+      <div className="grid gap-2">
+        <label
+          className="text-xs font-bold text-[#244163]"
+          htmlFor="login-email"
+        >
           E-mail institucional
         </label>
-        <div className={styles.inputWrap}>
-          <Mail className={styles.fieldIcon} size={17} aria-hidden="true" />
+        <div className="relative">
+          <Mail
+            className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[#6b809c]"
+            size={17}
+            aria-hidden="true"
+          />
           <Input
             id="login-email"
             name="email"
@@ -77,19 +90,25 @@ export function LoginForm() {
             placeholder="paulo.caixeta@exemplo.invalid"
             required
             maxLength={150}
-            className={styles.input}
+            className="h-[clamp(2.4rem,2.9vw,3.5rem)] rounded-lg border-[#cbd8e8] bg-white pr-4 pl-11 text-sm text-[#294665] placeholder:text-[#8a9bb2]"
             aria-invalid={Boolean(erros.email)}
             aria-describedby={erros.email ? "login-email-error" : undefined}
           />
         </div>
         {erros.email ? (
-          <p className={styles.fieldError} id="login-email-error">
+          <p
+            className="-mt-1 text-xs leading-5 text-[#9b2727]"
+            id="login-email-error"
+          >
             {erros.email}
           </p>
         ) : null}
       </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="login-senha">
+      <div className="grid gap-2">
+        <label
+          className="text-xs font-bold text-[#244163]"
+          htmlFor="login-senha"
+        >
           Senha
         </label>
         <PasswordInput
@@ -101,15 +120,22 @@ export function LoginForm() {
           aria-describedby={erros.senha ? "login-senha-error" : undefined}
         />
         {erros.senha ? (
-          <p className={styles.fieldError} id="login-senha-error">
+          <p
+            className="-mt-1 text-xs leading-5 text-[#9b2727]"
+            id="login-senha-error"
+          >
             {erros.senha}
           </p>
         ) : null}
       </div>
-      <p className={styles.smallNote}>
+      <p className="mt-1 text-xs leading-6 text-[#596b84]">
         A mesma conta e os mesmos dados do SIPAT.
       </p>
-      <Button className={styles.submit} type="submit" disabled={pending}>
+      <Button
+        className="h-[clamp(2rem,2.25vw,2.75rem)] w-full justify-start gap-3 rounded-md bg-[#223d64] px-5 text-xs font-bold text-white hover:bg-[#2b507e] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#8dbbf0]"
+        type="submit"
+        disabled={pending}
+      >
         <ArrowRight size={17} aria-hidden="true" />
         {pending ? "Entrando..." : "Entrar"}
       </Button>
