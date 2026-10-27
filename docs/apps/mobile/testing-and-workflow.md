@@ -23,10 +23,12 @@ desbloquear uma tela.
 
 ## Estado da automação
 
-O package usa Vitest para testes unitários em ambiente Node. A suíte atual cobre
-a resolução da configuração pública, a descoberta da API local, respostas HTTP
-sem sucesso e a validação runtime do payload de `GET /api/health`. Como o script
-`test` participa do grafo do Turborepo, `pnpm check` executa essa suíte no CI.
+O package usa Vitest em ambiente Node e renderização React Native Web para os
+componentes compartilhados. A suíte atual cobre a resolução da configuração
+pública, a descoberta da API local, respostas HTTP sem sucesso, a validação
+runtime do payload de `GET /api/health`, as rotas públicas e a semântica
+essencial da topbar e da faixa de desenvolvimento. Como o script `test`
+participa do grafo do Turborepo, `pnpm check` executa essa suíte no CI.
 
 O workflow também constrói a imagem de produção do `mobile-web`, inicia o
 container e executa `healthcheck:web`. A verificação aguarda no máximo 30
@@ -34,9 +36,9 @@ segundos, exige `200` com corpo `ok` em `/health` e confirma que `/` serve HTML.
 Isso valida o export Web, a imagem e o Nginx; não substitui teste de componente,
 execução nativa ou comunicação real do aparelho com a API.
 
-Ainda não há runner de componentes nem E2E em dispositivo. Essa limitação deve
-permanecer explícita até uma feature justificar e validar as ferramentas
-correspondentes.
+Ainda não há E2E em dispositivo. Os testes de componentes atuais verificam a
+saída estática e propriedades acessíveis; interação, foco real e tecnologias
+assistivas continuam dependentes da matriz manual.
 
 Ao introduzir testes, separe:
 

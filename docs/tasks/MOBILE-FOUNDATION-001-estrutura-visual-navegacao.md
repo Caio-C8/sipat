@@ -1,6 +1,6 @@
 # `MOBILE-FOUNDATION-001` — Estruturar navegação e base visual mobile
 
-**Status:** `aprovada`
+**Status:** `em validação`
 
 ## Objetivo
 

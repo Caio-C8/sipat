@@ -2,10 +2,15 @@
 
 ## Estado atual
 
-O Expo Router lê arquivos em `src/app`. O aplicativo possui somente:
+O Expo Router lê arquivos em `src/app`. O aplicativo possui grupos `(auth)` e
+`(app)`, que preservam os paths públicos `/`, `/login`, `/redefinir-senha` e
+`/senha-atualizada`, além de `/check`. O layout raiz concentra safe area,
+topbar e faixa de desenvolvimento; os layouts de grupo ainda não aplicam
+guards porque a sessão não foi implementada.
 
-- `src/app/_layout.tsx`: layout raiz com `SafeAreaProvider` e `Stack`;
-- `src/app/index.tsx`: rota `/` com a tela de infraestrutura.
+`/check` preserva a tela de infraestrutura em development. Fora desse ambiente,
+ela não dispara o health check e apresenta somente o estado indisponível até a
+decisão de sessão poder aplicar o redirect aprovado.
 
 `experiments.typedRoutes` está habilitado em `app.json`. Os tipos são gerados
 pelo Expo CLI em arquivos ignorados pelo Git quando o servidor inicia.

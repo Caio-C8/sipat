@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,13 +10,13 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import type { HealthResponse } from "@repo/contracts";
+import { FoundationScreen } from "../components/shared/foundation-screen";
 import { publicAppConfig } from "../config/public-app-config";
 import { getApiHealth } from "../lib/api-health";
+import { layout } from "../theme/tokens";
 
 const API_TIMEOUT_MS = 8_000;
-const WIDE_LAYOUT_MIN_WIDTH = 900;
 
 type ApiCheckState =
   | { status: "loading" }
@@ -47,15 +46,18 @@ function StatusIndicator({ available }: Readonly<{ available: boolean }>) {
   );
 }
 
-export default function HomeScreen() {
+export default function CheckScreen() {
   const { width } = useWindowDimensions();
+  const isDevelopment = environment === "development";
   const activeRequest = useRef<AbortController | null>(null);
   const [apiCheck, setApiCheck] = useState<ApiCheckState>(
-    apiHealthUrl ? { status: "loading" } : { status: "not-configured" },
+    isDevelopment && apiHealthUrl
+      ? { status: "loading" }
+      : { status: "not-configured" },
   );
 
   const checkApi = useCallback(async () => {
-    if (!apiHealthUrl) {
+    if (!isDevelopment || !apiHealthUrl) {
       setApiCheck({ status: "not-configured" });
       return;
     }
@@ -113,198 +115,200 @@ export default function HomeScreen() {
         activeRequest.current = null;
       }
     }
-  }, []);
+  }, [isDevelopment]);
 
   useEffect(() => {
+    if (!isDevelopment) {
+      return;
+    }
+
     const initialCheck = setTimeout(() => void checkApi(), 0);
 
     return () => {
       clearTimeout(initialCheck);
       activeRequest.current?.abort();
     };
-  }, [checkApi]);
+  }, [checkApi, isDevelopment]);
+
+  if (!isDevelopment) {
+    return (
+      <FoundationScreen
+        description="As verificações técnicas ficam disponíveis somente no ambiente de desenvolvimento."
+        title="Verificação indisponível"
+      />
+    );
+  }
 
   const apiAvailable = apiCheck.status === "success";
   const apiLoading = apiCheck.status === "loading";
-  const usesWideLayout = width >= WIDE_LAYOUT_MIN_WIDTH;
+  const usesWideLayout = width >= layout.wideMinWidth;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <StatusBar style="light" />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={apiLoading}
-            onRefresh={() => void checkApi()}
-            tintColor="#ffffff"
-          />
-        }
-      >
-        <View style={styles.hero}>
-          <View style={styles.environmentBadge}>
-            <Text style={styles.environmentText}>{environment}</Text>
-          </View>
-
-          <Text style={styles.eyebrow}>GESTÃO PATRIMONIAL</Text>
-          <Text style={styles.title}>{appName}</Text>
-          <Text style={styles.lead}>
-            O aplicativo móvel está pronto para receber os fluxos patrimoniais.
-            Use as verificações abaixo para confirmar o runtime e a conexão com
-            a API.
-          </Text>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl
+          refreshing={apiLoading}
+          onRefresh={() => void checkApi()}
+          tintColor="#ffffff"
+        />
+      }
+    >
+      <View style={styles.hero}>
+        <View style={styles.environmentBadge}>
+          <Text style={styles.environmentText}>{environment}</Text>
         </View>
 
-        <View style={[styles.content, usesWideLayout && styles.contentWide]}>
-          <Text style={styles.sectionTitle}>
-            Verificações da infraestrutura
-          </Text>
+        <Text style={styles.eyebrow}>GESTÃO PATRIMONIAL</Text>
+        <Text style={styles.title}>{appName}</Text>
+        <Text style={styles.lead}>
+          O aplicativo móvel está pronto para receber os fluxos patrimoniais.
+          Use as verificações abaixo para confirmar o runtime e a conexão com a
+          API.
+        </Text>
+      </View>
+
+      <View style={[styles.content, usesWideLayout && styles.contentWide]}>
+        <Text style={styles.sectionTitle}>Verificações da infraestrutura</Text>
+
+        <View
+          style={[styles.cardsGrid, usesWideLayout && styles.cardsGridWide]}
+        >
+          <View
+            accessibilityLabel={`Aplicativo móvel operacional, versão ${appVersion}`}
+            style={[styles.card, usesWideLayout && styles.cardWide]}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeading}>
+                <StatusIndicator available />
+                <Text style={styles.cardTitle}>Aplicativo móvel</Text>
+              </View>
+              <Text style={[styles.statusBadge, styles.statusBadgeSuccess]}>
+                Operacional
+              </Text>
+            </View>
+
+            <Text style={styles.cardDescription}>
+              Runtime React Native inicializado neste dispositivo.
+            </Text>
+
+            <View style={styles.metadataGrid}>
+              <View style={styles.metadataItem}>
+                <Text style={styles.metadataLabel}>Plataforma</Text>
+                <Text style={styles.metadataValue}>{Platform.OS}</Text>
+              </View>
+              <View style={styles.metadataItem}>
+                <Text style={styles.metadataLabel}>Versão</Text>
+                <Text style={styles.metadataValue}>{appVersion}</Text>
+              </View>
+            </View>
+          </View>
 
           <View
-            style={[styles.cardsGrid, usesWideLayout && styles.cardsGridWide]}
+            accessibilityLiveRegion="polite"
+            accessibilityLabel={
+              apiAvailable
+                ? "API backend disponível"
+                : "API backend indisponível ou aguardando verificação"
+            }
+            style={[styles.card, usesWideLayout && styles.cardWide]}
           >
-            <View
-              accessibilityLabel={`Aplicativo móvel operacional, versão ${appVersion}`}
-              style={[styles.card, usesWideLayout && styles.cardWide]}
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardHeading}>
-                  <StatusIndicator available />
-                  <Text style={styles.cardTitle}>Aplicativo móvel</Text>
-                </View>
-                <Text style={[styles.statusBadge, styles.statusBadgeSuccess]}>
-                  Operacional
-                </Text>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeading}>
+                <StatusIndicator available={apiAvailable} />
+                <Text style={styles.cardTitle}>API backend</Text>
               </View>
 
+              {apiLoading ? (
+                <ActivityIndicator color="#1f6848" size="small" />
+              ) : (
+                <Text
+                  style={[
+                    styles.statusBadge,
+                    apiAvailable
+                      ? styles.statusBadgeSuccess
+                      : styles.statusBadgeError,
+                  ]}
+                >
+                  {apiAvailable ? "Disponível" : "Indisponível"}
+                </Text>
+              )}
+            </View>
+
+            {apiCheck.status === "loading" && (
               <Text style={styles.cardDescription}>
-                Runtime React Native inicializado neste dispositivo.
+                Consultando o health check da API…
               </Text>
+            )}
 
-              <View style={styles.metadataGrid}>
-                <View style={styles.metadataItem}>
-                  <Text style={styles.metadataLabel}>Plataforma</Text>
-                  <Text style={styles.metadataValue}>{Platform.OS}</Text>
-                </View>
-                <View style={styles.metadataItem}>
-                  <Text style={styles.metadataLabel}>Versão</Text>
-                  <Text style={styles.metadataValue}>{appVersion}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View
-              accessibilityLiveRegion="polite"
-              accessibilityLabel={
-                apiAvailable
-                  ? "API backend disponível"
-                  : "API backend indisponível ou aguardando verificação"
-              }
-              style={[styles.card, usesWideLayout && styles.cardWide]}
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardHeading}>
-                  <StatusIndicator available={apiAvailable} />
-                  <Text style={styles.cardTitle}>API backend</Text>
-                </View>
-
-                {apiLoading ? (
-                  <ActivityIndicator color="#1f6848" size="small" />
-                ) : (
-                  <Text
-                    style={[
-                      styles.statusBadge,
-                      apiAvailable
-                        ? styles.statusBadgeSuccess
-                        : styles.statusBadgeError,
-                    ]}
-                  >
-                    {apiAvailable ? "Disponível" : "Indisponível"}
-                  </Text>
-                )}
-              </View>
-
-              {apiCheck.status === "loading" && (
+            {apiCheck.status === "success" && (
+              <>
                 <Text style={styles.cardDescription}>
-                  Consultando o health check da API…
+                  A integração com o backend respondeu corretamente.
                 </Text>
-              )}
 
-              {apiCheck.status === "success" && (
-                <>
-                  <Text style={styles.cardDescription}>
-                    A integração com o backend respondeu corretamente.
-                  </Text>
-
-                  <View style={styles.metadataGrid}>
-                    <View style={styles.metadataItem}>
-                      <Text style={styles.metadataLabel}>Serviço</Text>
-                      <Text style={styles.metadataValue}>
-                        {apiCheck.health.service}
-                      </Text>
-                    </View>
-                    <View style={styles.metadataItem}>
-                      <Text style={styles.metadataLabel}>Versão</Text>
-                      <Text style={styles.metadataValue}>
-                        {apiCheck.health.version}
-                      </Text>
-                    </View>
+                <View style={styles.metadataGrid}>
+                  <View style={styles.metadataItem}>
+                    <Text style={styles.metadataLabel}>Serviço</Text>
+                    <Text style={styles.metadataValue}>
+                      {apiCheck.health.service}
+                    </Text>
                   </View>
+                  <View style={styles.metadataItem}>
+                    <Text style={styles.metadataLabel}>Versão</Text>
+                    <Text style={styles.metadataValue}>
+                      {apiCheck.health.version}
+                    </Text>
+                  </View>
+                </View>
 
-                  <Text style={styles.lastCheck}>
-                    Atualizado em {formatTimestamp(apiCheck.health.timestamp)}
-                  </Text>
-                </>
-              )}
-
-              {apiCheck.status === "error" && (
-                <Text style={styles.errorMessage}>{apiCheck.message}</Text>
-              )}
-
-              {apiCheck.status === "not-configured" && (
-                <Text style={styles.errorMessage}>
-                  Configure EXPO_PUBLIC_API_URL para verificar a API neste
-                  build.
+                <Text style={styles.lastCheck}>
+                  Atualizado em {formatTimestamp(apiCheck.health.timestamp)}
                 </Text>
-              )}
+              </>
+            )}
 
-              <Text numberOfLines={2} selectable style={styles.endpoint}>
-                {apiHealthUrl ?? "Endpoint não configurado"}
+            {apiCheck.status === "error" && (
+              <Text style={styles.errorMessage}>{apiCheck.message}</Text>
+            )}
+
+            {apiCheck.status === "not-configured" && (
+              <Text style={styles.errorMessage}>
+                Configure EXPO_PUBLIC_API_URL para verificar a API neste build.
               </Text>
+            )}
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Verificar novamente a API"
-                disabled={apiLoading || !apiHealthUrl}
-                onPress={() => void checkApi()}
-                style={({ pressed }) => [
-                  styles.button,
-                  (apiLoading || !apiHealthUrl) && styles.buttonDisabled,
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <Text style={styles.buttonText}>
-                  {apiLoading ? "Verificando…" : "Verificar novamente"}
-                </Text>
-              </Pressable>
-            </View>
+            <Text numberOfLines={2} selectable style={styles.endpoint}>
+              {apiHealthUrl ?? "Endpoint não configurado"}
+            </Text>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Verificar novamente a API"
+              disabled={apiLoading || !apiHealthUrl}
+              onPress={() => void checkApi()}
+              style={({ pressed }) => [
+                styles.button,
+                (apiLoading || !apiHealthUrl) && styles.buttonDisabled,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.buttonText}>
+                {apiLoading ? "Verificando…" : "Verificar novamente"}
+              </Text>
+            </Pressable>
           </View>
-
-          <Text style={styles.footer}>
-            Deslize para baixo para atualizar as verificações.
-          </Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <Text style={styles.footer}>
+          Deslize para baixo para atualizar as verificações.
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#123f32",
-  },
   scrollContent: {
     flexGrow: 1,
     backgroundColor: "#f1f5f2",

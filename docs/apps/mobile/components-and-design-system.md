@@ -2,10 +2,11 @@
 
 ## Estado atual
 
-A tela técnica usa primitives do React Native e `StyleSheet`. As cores e
-medidas atuais pertencem ao baseline visual da tela, não constituem ainda um
-design system definitivo do SIPAT. Não existe biblioteca externa de
-componentes mobile instalada.
+A base usa primitives do React Native e `StyleSheet`. Tokens semânticos mínimos,
+`AppTopbar` e `DevelopmentCheckBanner` já estão implementados sem biblioteca
+visual externa. Botão, campo, senha, card e feedback continuam sem primitive
+compartilhada até os formulários demonstrarem reutilização real. Esse conjunto
+não constitui um design system definitivo do SIPAT.
 
 ## Quando criar um componente
 
