@@ -735,6 +735,7 @@ model ParametroDepreciacao {
   patrimonio   Patrimonio              @relation(fields: [patrimonioId], references: [id])
   depreciacoes DepreciacaoPatrimonio[]
 
+  @@unique([patrimonioId], map: "parametros_depreciacao_patrimonio_vigente_uidx", where: { dataFim: null })
   @@map("parametros_depreciacao")
 }
 
