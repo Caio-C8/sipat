@@ -88,6 +88,9 @@ No estado atual:
 - `BaixasModule` restringe criação, consulta e download ao
   `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com locks
   de patrimônio e comissão e mantém policy e trigger contra inventário aberto;
+- `DepreciacoesModule` restringe consulta e execução ao
+  `DIRETOR_PATRIMONIO`, revalida competência e comissão, serializa execuções
+  individuais e em massa e atualiza situação e histórico em lote;
 - a conferência preserva o snapshot cadastral, diferencia ausência por
   empréstimo ou manutenção vigente, cria transferência somente na correção
   cadastral e mantém o fato histórico da divergência;
@@ -146,14 +149,14 @@ No estado atual:
   porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
   `FornecedoresModule`, `ComissoesModule`, `InventariosModule`, `BaixasModule`,
-  `PatrimoniosModule`, `ProcessosCompraModule` e `NotasFiscaisModule` importam
-  `DatabaseModule`;
+  `DepreciacoesModule`, `PatrimoniosModule`, `ProcessosCompraModule` e
+  `NotasFiscaisModule` importam `DatabaseModule`;
   `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
 - testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de
-  usuários, responsáveis, autenticação, cadastro patrimonial, inventários e
-  baixas, incluindo `401`, `403`, `429`, CSRF, conflitos, regras administrativas
+  usuários, responsáveis, autenticação, cadastro patrimonial, inventários,
+  baixas e depreciações, incluindo `401`, `403`, `429`, CSRF, conflitos, regras administrativas
   e corridas reais no PostgreSQL.
 
 Os exemplos desta documentação representam o padrão desejado, não código já

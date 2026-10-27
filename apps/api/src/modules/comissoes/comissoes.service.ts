@@ -90,6 +90,33 @@ export class ComissoesService {
     });
   }
 
+  validarVigenciaBloqueada(
+    comissao: {
+      dataVigenciaInicio: Date;
+      dataVigenciaFim: Date;
+    } | null,
+    dataReferencia: Date,
+    codigo = "COMISSAO_FORA_DA_VIGENCIA",
+  ): void {
+    if (comissao === null) {
+      throw new NotFoundException({
+        codigo: "COMISSAO_NAO_ENCONTRADA",
+        mensagem: "A comissão informada não foi encontrada.",
+        erros: [],
+      });
+    }
+    if (
+      comissao.dataVigenciaInicio > dataReferencia ||
+      comissao.dataVigenciaFim < dataReferencia
+    ) {
+      throw new ConflictException({
+        codigo,
+        mensagem: "A comissão não está vigente na data do processamento.",
+        erros: [],
+      });
+    }
+  }
+
   async alterar(
     comissaoId: string,
     dados: AlterarComissaoBodyData,
