@@ -140,6 +140,8 @@ describe("notas fiscais", () => {
         if (perfil === null) return null;
         return {
           id: perfil === "ADMINISTRADOR" ? ADMIN_ID : DIRETOR_ID,
+          tipo: "WEB",
+          accessExpiraAt: null,
           expiraAt: new Date("2999-01-01T00:00:00.000Z"),
           ultimaAtividadeAt: new Date(),
           revogadoAt: null,

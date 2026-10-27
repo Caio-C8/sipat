@@ -84,6 +84,8 @@ describe("gestão de naturezas", () => {
           id: administrador
             ? "00000000-0000-4000-8000-000000000001"
             : "00000000-0000-4000-8000-000000000002",
+          tipo: "WEB",
+          accessExpiraAt: null,
           expiraAt: new Date("2999-01-01T00:00:00.000Z"),
           ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
           revogadoAt: null,
