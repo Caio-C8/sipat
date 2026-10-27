@@ -444,7 +444,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
       database.baixaPatrimonio.create({
         data: {
           dataBaixa: new Date(),
-          tipo: "PERDA_FISICA",
+          tipo: "INUTILIZACAO",
           motivo: "Teste de bloqueio durante inventário",
           patrimonioId: patrimonio.id,
           comissaoId,
@@ -472,7 +472,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
       database.baixaPatrimonio.create({
         data: {
           dataBaixa: new Date(),
-          tipo: "PERDA_FISICA",
+          tipo: "INUTILIZACAO",
           motivo: "Teste permitido após finalização",
           patrimonioId: patrimonio.id,
           comissaoId,

@@ -85,6 +85,9 @@ No estado atual:
   comissão vigente, materializa setores ativos e patrimônios `ATIVO`, consulta
   progresso em lote e executa início, conferência idempotente, correção,
   conclusão e finalização em transações serializáveis;
+- `BaixasModule` restringe criação, consulta e download ao
+  `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com locks
+  de patrimônio e comissão e mantém policy e trigger contra inventário aberto;
 - a conferência preserva o snapshot cadastral, diferencia ausência por
   empréstimo ou manutenção vigente, cria transferência somente na correção
   cadastral e mantém o fato histórico da divergência;
@@ -142,15 +145,16 @@ No estado atual:
 - `ArmazenamentoDocumentosModule` valida a raiz na inicialização e exporta uma
   porta de filesystem local com staging, compensação e reconciliação;
 - `AuthModule`, `UsuariosModule`, `ResponsaveisModule`, `SetoresModule`,
-  `FornecedoresModule`, `ComissoesModule`, `InventariosModule`, `PatrimoniosModule`,
-  `ProcessosCompraModule` e `NotasFiscaisModule` importam `DatabaseModule`;
+  `FornecedoresModule`, `ComissoesModule`, `InventariosModule`, `BaixasModule`,
+  `PatrimoniosModule`, `ProcessosCompraModule` e `NotasFiscaisModule` importam
+  `DatabaseModule`;
   `AppModule` não acessa o client diretamente;
 - `SessaoUsuario.lastActivityAt` sustenta inatividade e `TentativaLogin`
   persiste o rate limit com expiração e limpeza em lotes;
 - testes unitários e E2E cobrem infraestrutura, Guards reais e as operações de
-  usuários, responsáveis, autenticação e cadastro patrimonial, incluindo `401`,
-  `403`, `429`, CSRF, conflitos, regras administrativas e corridas reais no
-  PostgreSQL.
+  usuários, responsáveis, autenticação, cadastro patrimonial, inventários e
+  baixas, incluindo `401`, `403`, `429`, CSRF, conflitos, regras administrativas
+  e corridas reais no PostgreSQL.
 
 Os exemplos desta documentação representam o padrão desejado, não código já
 implementado no SIPAT.

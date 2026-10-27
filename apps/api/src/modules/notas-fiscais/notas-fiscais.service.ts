@@ -2,9 +2,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
-  type OnApplicationBootstrap,
 } from "@nestjs/common";
 import type {
   AlterarNotaFiscalBodyData,
@@ -38,12 +36,8 @@ import type {
   NotaFiscalDetalhePayload,
 } from "./types";
 
-const CARENCIA_RECONCILIACAO_MS = 24 * 60 * 60 * 1000;
-
 @Injectable()
-export class NotasFiscaisService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(NotasFiscaisService.name);
-
+export class NotasFiscaisService {
   constructor(
     private readonly notas: NotasFiscaisRepository,
     private readonly fornecedores: FornecedoresService,
@@ -51,24 +45,6 @@ export class NotasFiscaisService implements OnApplicationBootstrap {
     @Inject(ARMAZENAMENTO_DOCUMENTOS)
     private readonly armazenamento: ArmazenamentoDocumentosPorta,
   ) {}
-
-  async onApplicationBootstrap(): Promise<void> {
-    try {
-      const chavesReferenciadas = new Set(
-        await this.notas.listarChavesAnexos(),
-      );
-      const limite = new Date(Date.now() - CARENCIA_RECONCILIACAO_MS);
-      await this.armazenamento.reconciliar({
-        chavesReferenciadas,
-        temporariosModificadosAntesDe: limite,
-        orfaosModificadosAntesDe: limite,
-      });
-    } catch {
-      this.logger.error(
-        "Falha ao reconciliar documentos na inicialização; nenhuma chave ou caminho foi registrado.",
-      );
-    }
-  }
 
   async criar(
     body: Record<string, unknown>,

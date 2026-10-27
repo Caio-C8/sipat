@@ -43,9 +43,15 @@ enum TipoNumeroPatrimonial {
 
 enum TipoBaixa {
   ALIENACAO
-  INVERSIBILIDADE
-  PERDA_FISICA
-  AJUSTE_CONTABIL
+  INUTILIZACAO
+  SINISTRO
+  FURTO
+  EXTRAVIO
+  TRANSFERENCIA
+  RECLASSIFICACAO
+  ABANDONO
+  ERRO_REGISTRO
+  OUTRO
 }
 
 enum TipoManutencao {
@@ -655,12 +661,12 @@ model ItemInventario {
 
 model BaixaPatrimonio {
   id                    String    @id @default(uuid()) @db.Uuid
-  dataBaixa             DateTime  @map("data_baixa") @db.Timestamp(6)
+  dataBaixa             DateTime  @map("data_baixa") @db.Date
   tipo                  TipoBaixa
   motivo                String    @db.Text
   observacao            String?   @db.Text
   caminhoAnexoDocumento String?   @map("caminho_anexo_documento") @db.VarChar(500)
-  patrimonioId          String    @map("patrimonio_id") @db.Uuid
+  patrimonioId          String    @unique(map: "baixas_patrimoniais_patrimonio_id_key") @map("patrimonio_id") @db.Uuid
   comissaoId            String    @map("comissao_id") @db.Uuid
 
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)

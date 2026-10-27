@@ -35,8 +35,8 @@ marcada como concluída.
 
 Os contratos de `CONTRACTS-001` a `CONTRACTS-010` estão implementados e
 validados. A integração do estado de primeiro acesso pela API e pela Web
-permanece, respectivamente, em `AUTH-004` e `WEB-AUTH-001`; a implementação de
-banco e API para baixas patrimoniais permanece em `BAIXAS-001`.
+permanece, respectivamente, em `AUTH-004` e `WEB-AUTH-001`; banco e API de
+baixas patrimoniais foram concluídos em `BAIXAS-001`.
 
 Cada objetivo deve registrar:
 

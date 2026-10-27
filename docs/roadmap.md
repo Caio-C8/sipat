@@ -160,7 +160,7 @@ até a finalização.
 | Ordem | Objetivo                                           | Status    | Dependências principais                                            |
 | ----- | -------------------------------------------------- | --------- | ------------------------------------------------------------------ |
 | 26    | `CONTRACTS-010` — Contratos de baixas patrimoniais | concluído | RF17, UC17, `CONTRACTS-004`, `CONTRACTS-007`                       |
-| 27    | `BAIXAS-001` — Registrar e consultar baixa na API  | planejado | `CONTRACTS-010`, `STORAGE-001`, `COMISSOES-001`, `INVENTARIOS-002` |
+| 27    | `BAIXAS-001` — Registrar e consultar baixa na API  | concluído | `CONTRACTS-010`, `STORAGE-001`, `COMISSOES-001`, `INVENTARIOS-002` |
 
 Esta sequência entrega somente contratos, ajustes necessários no banco e API.
 Web, mobile e a consulta agregada do histórico patrimonial permanecem fora do
@@ -1193,7 +1193,7 @@ Especificação de execução:
 
 ## BAIXAS-001 — Registrar e consultar baixa na API
 
-**Status:** planejado
+**Status:** concluído
 
 ### Resultado esperado
 
@@ -1226,18 +1226,24 @@ baixa e transmite seu PDF opcional sem expor o armazenamento.
 
 ### Critérios de aceite
 
-- [ ] somente `DIRETOR_PATRIMONIO` cria, consulta ou faz download do documento;
-- [ ] patrimônio inexistente, não ativo, já baixado ou participante de
+- [x] somente `DIRETOR_PATRIMONIO` cria, consulta ou faz download do documento;
+- [x] patrimônio inexistente, não ativo, já baixado ou participante de
       inventário aberto falha sem arquivo ou persistência parcial;
-- [ ] comissão inexistente ou fora da vigência da data informada e data futura
+- [x] comissão inexistente ou fora da vigência da data informada e data futura
       são rejeitadas;
-- [ ] criação concorrente produz uma única baixa e um estado final consistente;
-- [ ] baixa, status e auditoria são persistidos atomicamente e não existe rota
+- [x] criação concorrente produz uma única baixa e um estado final consistente;
+- [x] baixa, status e auditoria são persistidos atomicamente e não existe rota
       de estorno;
-- [ ] PDF inválido ou acima do limite é rejeitado; falhas são compensadas e o
+- [x] PDF inválido ou acima do limite é rejeitado; falhas são compensadas e o
       download não revela a chave persistida;
-- [ ] migration, PostgreSQL, API, contratos e consumidores passam nas
+- [x] migration, PostgreSQL, API, contratos e consumidores passam nas
       verificações aplicáveis.
+
+Concluído em 27 de outubro de 2026. A API registra uma única baixa em transação
+com locks de patrimônio e comissão, preserva a proteção de inventário na policy
+e no PostgreSQL e transmite o PDF privado por streaming. A migration foi
+validada desde banco vazio e sobre o schema anterior; lint, tipos, testes,
+build da API e consumidores Web/mobile passaram.
 
 Especificação de execução:
 [BAIXAS-001](./tasks/BAIXAS-001-registrar-consultar-baixas.md).

@@ -58,6 +58,19 @@ describe("SistemaArquivosLocalAdapter", () => {
     ).rejects.toMatchObject({ code: "ENOENT" });
   });
 
+  it("isola documentos de baixa no diretório lógico permitido", async () => {
+    const chave = "uploads/baixas/documento.pdf";
+
+    await adapter.gravar(chave, Readable.from("%PDF-baixa"));
+
+    await expect(ler((await adapter.abrir(chave)).conteudo)).resolves.toBe(
+      "%PDF-baixa",
+    );
+    await expect(
+      lstat(path.join(raiz, "baixas", "documento.pdf")),
+    ).resolves.toMatchObject({});
+  });
+
   it.each([
     "../fora.pdf",
     "/tmp/fora.pdf",

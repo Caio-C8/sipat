@@ -15,4 +15,19 @@ export class InventariosPolicyService {
       });
     }
   }
+
+  async exigirPatrimonioPodeSerBaixado(patrimonioId: string): Promise<void> {
+    if (
+      (await this.inventarios.existePatrimonioEmInventarioAberto(
+        patrimonioId,
+      )) > 0
+    ) {
+      throw new ConflictException({
+        codigo: "PATRIMONIO_EM_INVENTARIO_ABERTO",
+        mensagem:
+          "O patrimônio não pode ser baixado enquanto participar de um inventário não finalizado.",
+        erros: [],
+      });
+    }
+  }
 }
