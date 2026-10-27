@@ -141,6 +141,13 @@ import {
   VerificarItemInventarioBodySchema,
   VerificarItemInventarioResponseSchema,
   ConcluirPrimeiroAcessoBodySchema,
+  BaixaPatrimonioDetalheSchema,
+  BaixarPatrimonioDadosSchema,
+  BaixarPatrimonioMultipartSchema,
+  BaixarPatrimonioResponseSchema,
+  CodigoErroBaixaPatrimonioSchema,
+  ConsultarBaixaPatrimonioResponseSchema,
+  TipoBaixaPatrimonioSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -345,6 +352,20 @@ describe("@repo/contracts — API pública", () => {
       ConcluirSetorInventarioResponseSchema,
       FinalizarInventarioResponseSchema,
       ItemJaVerificadoOutroSetorResponseSchema,
+    ]) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
+
+  it("exporta os contratos públicos das baixas patrimoniais", () => {
+    for (const schema of [
+      TipoBaixaPatrimonioSchema,
+      CodigoErroBaixaPatrimonioSchema,
+      BaixarPatrimonioDadosSchema,
+      BaixarPatrimonioMultipartSchema,
+      BaixaPatrimonioDetalheSchema,
+      BaixarPatrimonioResponseSchema,
+      ConsultarBaixaPatrimonioResponseSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }

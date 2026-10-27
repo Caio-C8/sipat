@@ -243,13 +243,33 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve permitir que o Diretor de Patrimônio registre a baixa de um bem patrimonial.
 
-**Informações:** Patrimônio, data da baixa, motivo, observação, documento anexado, comissão quando aplicável e usuário responsável.
+**Informações:** Patrimônio, data da baixa, tipo, motivo, observação, documento
+anexado, comissão e usuário responsável.
 
 **Regras:**
 
 - Somente patrimônios ATIVOS podem ser baixados.
 - A baixa deve alterar o status do patrimônio para BAIXADO.
-- A operação deve gerar registro histórico e permitir anexar documento comprobatório.
+- Toda baixa deve estar associada a uma comissão vigente na data da baixa.
+- A data da baixa é uma data civil e não pode estar no futuro.
+- O tipo da baixa deve ser um dos seguintes:
+  - `ALIENACAO`: saída do acervo por alienação;
+  - `INUTILIZACAO`: desfazimento de bem sem possibilidade ou conveniência de
+    reaproveitamento ou alienação;
+  - `SINISTRO`: perda decorrente de evento danoso;
+  - `FURTO`: subtração do bem;
+  - `EXTRAVIO`: desaparecimento ou não localização do bem;
+  - `TRANSFERENCIA`: transferência permanente para fora do acervo gerenciado
+    pelo SIPAT; não representa transferência interna entre setores;
+  - `RECLASSIFICACAO`: desincorporação causada por mudança de classificação
+    contábil; não representa alteração da espécie do patrimônio;
+  - `ABANDONO`: desfazimento por abandono formalmente autorizado;
+  - `ERRO_REGISTRO`: baixa de registro criado indevidamente, preservando-o para
+    auditoria em vez de excluí-lo;
+  - `OUTRO`: hipótese não abrangida pelos demais tipos, detalhada no motivo.
+- O motivo é obrigatório e a observação é opcional.
+- A operação deve gerar registro histórico e pode receber um único documento
+  comprobatório PDF de até 10 MiB.
 - O sistema não deve permitir estornar um patrimônio BAIXADO para que ele volte a ficar ATIVO.
 
 ### RF18: Gestão de Manutenções
@@ -999,8 +1019,9 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 **Fluxo principal:**
 
 1. O Diretor localiza o patrimônio e inicia a baixa.
-2. O Diretor informa motivo, data, observação e anexa documento quando existente.
-3. O Diretor seleciona a comissão quando a operação exigir.
+2. O Diretor informa tipo, motivo, data, observação opcional e anexa um PDF
+   comprobatório quando existente.
+3. O Diretor seleciona a comissão responsável pela baixa.
 4. O sistema valida a situação do bem.
 5. O Diretor confirma a baixa.
 6. O sistema altera o status para BAIXADO e grava o histórico.
@@ -1008,6 +1029,10 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 **Fluxos alternativos / exceções:**
 
 - Patrimônio não ativo: o sistema impede a baixa.
+- Patrimônio incluído em inventário não finalizado: o sistema impede a baixa.
+- Comissão inexistente ou sem vigência na data da baixa: o sistema rejeita a
+  operação.
+- Data futura: o sistema solicita correção.
 - Documento inválido ou dados obrigatórios ausentes: o sistema solicita correção.
 
 **Pós-condição:** O patrimônio permanece registrado no sistema, porém com status BAIXADO e histórico preservado.

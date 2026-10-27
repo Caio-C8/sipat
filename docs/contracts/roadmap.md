@@ -33,9 +33,10 @@ marcada como concluída.
 
 ## Objetivos específicos do projeto
 
-Os contratos de `CONTRACTS-001` a `CONTRACTS-009` estão implementados e
+Os contratos de `CONTRACTS-001` a `CONTRACTS-010` estão implementados e
 validados. A integração do estado de primeiro acesso pela API e pela Web
-permanece, respectivamente, em `AUTH-004` e `WEB-AUTH-001`.
+permanece, respectivamente, em `AUTH-004` e `WEB-AUTH-001`; a implementação de
+banco e API para baixas patrimoniais permanece em `BAIXAS-001`.
 
 Cada objetivo deve registrar:
 
@@ -393,6 +394,56 @@ por um PATCH genérico de status.
 
 Especificação aprovada:
 [CONTRACTS-008](../tasks/CONTRACTS-008-contratos-inventarios.md).
+
+### CONTRACTS-010 — Operações de baixas patrimoniais
+
+**Status:** concluído
+
+**Contexto**
+
+`BAIXAS-001` precisa compartilhar o boundary multipart da baixa, a consulta do
+registro histórico e a referência HTTP do comprovante sem expor Prisma, paths
+ou decisões de filesystem. A operação é única por patrimônio e não possui
+PATCH, DELETE ou estorno.
+
+**Escopo**
+
+- enum dos dez tipos de baixa aprovados em RF17;
+- params UUID pelo patrimônio e dados de criação estritos;
+- `dataBaixa` como `DateOnly`, `comissaoId` e `motivo` obrigatórios e
+  `observacao` opcional, com textos normalizados e limitados a 2.000 caracteres;
+- schema multipart com campo JSON `dados`, campo de arquivo opcional
+  `documento`, um arquivo, um campo textual, duas partes e limite de 10 MiB;
+- detalhe da baixa com patrimônio, comissão, tipo, data, motivo, observação,
+  auditoria e `anexoUrl` anulável derivada do recurso;
+- envelopes de criação e consulta e códigos públicos para baixa já existente,
+  patrimônio não ativo, inventário aberto, comissão inválida e data futura;
+- exports da feature e testes isolados e da API pública.
+
+`TRANSFERENCIA` representa somente saída permanente do acervo e não conflita
+com a movimentação interna entre setores. `RECLASSIFICACAO` representa
+desincorporação contábil, enquanto `ERRO_REGISTRO` preserva o lançamento
+indevido como histórico baixado. `OUTRO` continua exigindo motivo textual.
+
+**Consumidores afetados**
+
+- módulo `baixas` da API em `BAIXAS-001`;
+- Web e mobile somente em objetivos futuros, sem implementação nesta entrega.
+
+**Critérios de aceite**
+
+- [x] schema é a fonte de verdade e os tipos são derivados de Zod 4;
+- [x] input não aceita status, auditoria, chave de documento ou URL;
+- [x] data inválida, enum inválido, texto vazio, excesso de tamanho e
+      propriedades extras são rejeitados;
+- [x] constantes multipart permitem limitar o parser antes de carregar o
+      arquivo e a response nunca expõe paths;
+- [x] API pública, limites, payload mínimo/completo e os dez tipos possuem
+      testes;
+- [x] lint, typecheck, testes e consumidores afetados passam.
+
+Especificação aprovada:
+[CONTRACTS-010](../tasks/CONTRACTS-010-contratos-baixas-patrimoniais.md).
 
 ## Histórico do baseline
 
