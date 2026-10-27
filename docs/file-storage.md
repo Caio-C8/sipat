@@ -44,6 +44,12 @@ como:
 uploads/notas-fiscais/123_20261018_550e8400-e29b-41d4-a716-446655440000.pdf
 ```
 
+Uma baixa usa o mesmo princípio sob diretório próprio:
+
+```text
+uploads/baixas/<patrimonio-id>_<data-UTC-YYYYMMDD>_<uuid>.pdf
+```
+
 Não persista `C:/SIPAT`, `/data/uploads`, URLs, origem da Web nem qualquer outro
 prefixo dependente do ambiente. O resolver exige o prefixo lógico `uploads/`,
 remove somente esse prefixo e resolve o restante sob `UPLOADS_ROOT_PATH`; assim,
@@ -62,6 +68,10 @@ O número participa somente da identificação humana e é reduzido a caracteres
 seguros para nome de arquivo. O UUID garante unicidade e o nome original enviado
 pelo cliente nunca é usado como caminho.
 
+Para baixas, o servidor usa o `id` do patrimônio, a data UTC de geração e um
+UUID. O identificador participa apenas da organização do arquivo; o download
+continua sendo autorizado pelo recurso de baixa, nunca pela chave persistida.
+
 ## Entrada e validação
 
 Cada nota fiscal aceita zero ou um arquivo. Quando presente, o arquivo deve:
@@ -73,6 +83,12 @@ Cada nota fiscal aceita zero ou um arquivo. Quando presente, o arquivo deve:
   PDF; extensão e MIME informados pelo cliente não bastam isoladamente;
 - receber nome gerado pelo servidor e nunca ser executado ou interpretado pelo
   servidor.
+
+Cada baixa aceita igualmente zero ou um PDF de até 10 MiB. O multipart contém
+um campo textual `dados`, com o JSON da operação, e no máximo um campo de
+arquivo `documento`; portanto, o parser limita `files` a 1, `fields` a 1 e
+`parts` a 2. As mesmas validações de extensão, MIME, assinatura e gravação em
+disco aplicadas às notas fiscais valem para o documento da baixa.
 
 A criação conjunta de processo aceita no máximo 20 notas e 20 arquivos. O
 parser multipart limita `files` a 20, `fields` a um campo `dados` e `parts` a
@@ -96,12 +112,22 @@ como conteúdo estático. A leitura da primeira consumidora ocorre por:
 GET /api/notas-fiscais/:notaFiscalId/anexo
 ```
 
+A leitura do documento de uma baixa será feita por:
+
+```text
+GET /api/patrimonios/:patrimonioId/baixa/anexo
+```
+
 A rota passa pelos Guards globais, exige sessão válida e aceita os perfis
 `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`. O service carrega a nota, confirma que a
 referência persiste no banco, resolve o caminho sob a raiz autorizada e então
 entrega o PDF como stream, com `Content-Type: application/pdf`, tamanho quando
 conhecido, `Content-Disposition` seguro e política de cache privado adequada.
 Arquivo ou registro ausente produz resposta pública sem revelar caminho físico.
+
+Na rota de baixa, os mesmos controles se aplicam, mas somente o perfil
+`DIRETOR_PATRIMONIO` pode consultar o recurso nesta entrega. O service carrega a
+baixa pelo patrimônio e nunca aceita uma chave lógica enviada pelo cliente.
 
 O NestJS recomenda `StreamableFile` para manter o fluxo do framework e dos
 interceptors ao transmitir arquivos; consulte a mesma
@@ -136,6 +162,13 @@ Na criação conjunta de processo e notas, arquivos novos são preparados antes
 da transação; qualquer falha invalida toda a operação lógica e dispara a
 limpeza dos arquivos já recebidos. Nenhuma response de sucesso pode apontar
 para um arquivo inexistente.
+
+Na baixa, o PDF opcional também é preparado antes da transação que cria o
+histórico e altera o status do patrimônio. Falha na transação remove o arquivo
+novo; como a baixa é imutável, esta entrega não prevê substituição ou remoção
+posterior do documento. A reconciliação deve considerar também as chaves
+referenciadas por `baixas_patrimoniais` antes de classificar um arquivo como
+órfão.
 
 ## Operação e limites
 

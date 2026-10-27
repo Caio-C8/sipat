@@ -155,6 +155,27 @@ NAO_LOCALIZADO quanto o estado e a operação que justificavam a ausência. Baix
 de patrimônios incluídos e inativações de setores do inventário ficam bloqueadas
 até a finalização.
 
+## Ordem das entregas de baixas patrimoniais
+
+| Ordem | Objetivo                                           | Status    | Dependências principais                                            |
+| ----- | -------------------------------------------------- | --------- | ------------------------------------------------------------------ |
+| 26    | `CONTRACTS-010` — Contratos de baixas patrimoniais | concluído | RF17, UC17, `CONTRACTS-004`, `CONTRACTS-007`                       |
+| 27    | `BAIXAS-001` — Registrar e consultar baixa na API  | planejado | `CONTRACTS-010`, `STORAGE-001`, `COMISSOES-001`, `INVENTARIOS-002` |
+
+Esta sequência entrega somente contratos, ajustes necessários no banco e API.
+Web, mobile e a consulta agregada do histórico patrimonial permanecem fora do
+escopo. `CONTRACTS-010` fecha primeiro o boundary multipart e as respostas;
+`BAIXAS-001` implementa a transição irreversível, a consulta e o streaming
+privado do comprovante.
+
+Toda baixa exige patrimônio `ATIVO`, comissão vigente na data civil informada,
+motivo obrigatório e, opcionalmente, observação e um único PDF de até 10 MiB.
+A baixa de patrimônio incluído em inventário não finalizado permanece
+bloqueada. `TRANSFERENCIA` significa saída permanente do acervo, não
+movimentação entre setores; `RECLASSIFICACAO` significa desincorporação
+contábil, não alteração da espécie; `ERRO_REGISTRO` preserva o registro baixado
+para auditoria.
+
 ### Decisões comuns da numeração patrimonial
 
 - O cadastro recebe somente a escolha entre numeração oficial e ausência de
@@ -1117,6 +1138,109 @@ usar a política de inventários e declarar `INVENTARIOS-002` como dependência.
 
 Especificação de execução:
 [INVENTARIOS-002](./tasks/INVENTARIOS-002-conferir-corrigir-finalizar.md).
+
+## CONTRACTS-010 — Contratos de baixas patrimoniais
+
+**Status:** concluído
+
+### Resultado esperado
+
+Definir o contrato compartilhado para registrar e consultar a baixa única e
+irreversível de um patrimônio, incluindo o boundary multipart opcional e a URL
+privada do documento, antes de alterar banco ou API.
+
+### Escopo
+
+- enum público com `ALIENACAO`, `INUTILIZACAO`, `SINISTRO`, `FURTO`,
+  `EXTRAVIO`, `TRANSFERENCIA`, `RECLASSIFICACAO`, `ABANDONO`, `ERRO_REGISTRO`
+  e `OUTRO`;
+- params do patrimônio, dados estritos da baixa e parsing do campo multipart
+  `dados`;
+- `dataBaixa` como `DateOnly`, `comissaoId` e `motivo` obrigatórios e
+  `observacao` opcional;
+- no máximo um campo de arquivo `documento`, PDF de até 10 MiB;
+- resposta detalhada da baixa com auditoria, comissão e `anexoUrl` derivada,
+  sem expor a chave do filesystem;
+- respostas de criação e consulta e códigos públicos dos conflitos de domínio.
+
+### Fora do escopo
+
+- Prisma, migration, NestJS ou filesystem;
+- alteração, exclusão, substituição de documento ou estorno da baixa;
+- listagem geral de baixas e histórico patrimonial agregado;
+- Web e mobile.
+
+### Critérios de aceite
+
+- [x] contratos não aceitam status, auditoria, chave de arquivo ou URL enviados
+      pelo cliente;
+- [x] propriedades inesperadas, enum inválido, textos vazios ou acima dos
+      limites e data inválida são rejeitados;
+- [x] multipart possui limites explícitos de arquivo, campos e partes;
+- [x] response usa allowlist e representa a ausência do documento sem vazar
+      caminhos internos;
+- [x] testes cobrem payload mínimo e completo, todos os tipos e API pública;
+- [x] lint, typecheck, testes e consumidores dos exports passam.
+
+Concluído em 27 de outubro de 2026. O package agora publica o boundary estrito
+dos dados e do multipart, os dez tipos de baixa, os códigos públicos de domínio
+e a resposta detalhada com URL derivada sem expor a chave do documento. Lint,
+typecheck e 104 testes de contratos passaram, assim como o typecheck de API,
+Web e mobile. Banco, API e filesystem continuam reservados para `BAIXAS-001`.
+
+Especificação de execução:
+[CONTRACTS-010](./tasks/CONTRACTS-010-contratos-baixas-patrimoniais.md).
+
+## BAIXAS-001 — Registrar e consultar baixa na API
+
+**Status:** planejado
+
+### Resultado esperado
+
+Entregar ao Diretor de Patrimônio a API que registra uma única baixa, altera o
+status do bem para `BAIXADO` na mesma operação lógica, consulta o histórico da
+baixa e transmite seu PDF opcional sem expor o armazenamento.
+
+### Escopo
+
+- migration nova para substituir o enum legado, representar `dataBaixa` como
+  data civil e garantir no banco uma única baixa por patrimônio;
+- criação multipart, consulta da baixa e streaming autenticado do documento;
+- comissão obrigatória e vigente na `dataBaixa`, derivação de auditoria pela
+  sessão e rejeição de data futura;
+- lock do patrimônio e transação curta para validar `ATIVO`, criar a baixa e
+  alterar o status atomicamente;
+- integração com a política e a proteção de banco de `INVENTARIOS-002`;
+- PDF privado opcional de até 10 MiB, compensação de falhas e reconciliação de
+  órfãos;
+- conflitos públicos estáveis e testes reais no PostgreSQL para as corridas de
+  baixa.
+
+### Fora do escopo
+
+- edição, exclusão, estorno, substituição ou remoção do comprovante;
+- baixa em lote;
+- transferências internas entre setores, reclassificação cadastral da espécie
+  ou apuração administrativa de furto e extravio;
+- consulta agregada do histórico patrimonial, relatórios, Web e mobile.
+
+### Critérios de aceite
+
+- [ ] somente `DIRETOR_PATRIMONIO` cria, consulta ou faz download do documento;
+- [ ] patrimônio inexistente, não ativo, já baixado ou participante de
+      inventário aberto falha sem arquivo ou persistência parcial;
+- [ ] comissão inexistente ou fora da vigência da data informada e data futura
+      são rejeitadas;
+- [ ] criação concorrente produz uma única baixa e um estado final consistente;
+- [ ] baixa, status e auditoria são persistidos atomicamente e não existe rota
+      de estorno;
+- [ ] PDF inválido ou acima do limite é rejeitado; falhas são compensadas e o
+      download não revela a chave persistida;
+- [ ] migration, PostgreSQL, API, contratos e consumidores passam nas
+      verificações aplicáveis.
+
+Especificação de execução:
+[BAIXAS-001](./tasks/BAIXAS-001-registrar-consultar-baixas.md).
 
 ## Decisões necessárias antes dos objetivos seguintes
 
