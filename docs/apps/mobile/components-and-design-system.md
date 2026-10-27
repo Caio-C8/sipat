@@ -39,6 +39,28 @@ toque quando o produto definir tokens. Nomeie por função estável, não pelo t
 momentâneo. Tema escuro só é suportado depois de todas as superfícies, status
 bar, assets e contrastes serem verificados em Android, iOS e Web.
 
+## Primeiros elementos compartilhados aprovados
+
+A primeira entrega deve extrair somente os tokens e componentes usados pelas
+telas aprovadas:
+
+- `AppTopbar`, com brasão, `SIPAT` e identificação da Câmara conforme o Figma,
+  presente em login, troca obrigatória, confirmação, home e `/check`;
+- `DevelopmentCheckBanner`, global e exclusivo de `development`;
+- primitives de botão, campo, campo de senha, card e feedback somente quando a
+  reutilização entre as três telas estiver comprovada;
+- tokens semânticos mínimos para superfícies, texto, borda, foco, ação primária,
+  sucesso, informação e erro.
+
+O asset do brasão deve ser local, versionado e próprio para a densidade das
+plataformas. Não referencie `apps/web/public` em runtime. Se a mesma imagem for
+copiada para o mobile, preserve a origem e verifique nitidez, transparência e
+dimensões do arquivo final.
+
+O protótipo é a referência visual, não uma licença para fixar a interface na
+largura do frame. Topbar, cards, campos e espaçamentos devem responder ao espaço
+disponível, safe areas, teclado, texto longo e fonte ampliada.
+
 ## Acessibilidade
 
 Todo componente interativo deve ter função e nome acessíveis, área de toque

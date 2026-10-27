@@ -44,7 +44,32 @@ build nativo — Expo Go não representa essa integração integralmente.
 
 ## Navegação autenticada
 
-Autenticação ainda não existe. Quando for implementada:
+Autenticação ainda não existe. A primeira entrega autenticada foi aprovada nas
+tarefas `MOBILE-AUTH-001`, `MOBILE-AUTH-002` e `MOBILE-HOME-001` com esta
+matriz:
+
+| Rota                | Acesso esperado                   | Destino quando o estado não permite acesso           |
+| ------------------- | --------------------------------- | ---------------------------------------------------- |
+| `/login`            | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`   |
+| `/redefinir-senha`  | sessão com troca obrigatória      | anônimo → `/login`; sessão comum → `/`               |
+| `/senha-atualizada` | sessão válida com troca concluída | anônimo → `/login`; pendência → `/redefinir-senha`   |
+| `/`                 | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`   |
+| `/check`            | pública somente em `development`  | fora de development → mesma decisão protegida de `/` |
+
+O botão da confirmação segue para `/`. A restauração da sessão acontece antes
+da decisão de rota e usa um estado neutro de inicialização para impedir flash de
+conteúdo protegido. O destino seguro originalmente solicitado pode ser
+preservado, mas login nunca restaura `/check` fora de development nem uma rota
+incompatível com o perfil.
+
+Em development, o layout raiz exibe em todas as telas uma faixa horizontal fixa
+logo abaixo da safe area. Ela identifica o ambiente e abre `/check`; na própria
+rota, informa que aquela é a tela de verificação. A faixa não é renderizada em
+staging ou produção, não deve cobrir a topbar ou o conteúdo e precisa permanecer
+acessível com fonte ampliada. A rota não consulta health nem revela catálogo
+fora de development.
+
+Ao implementar:
 
 - aguarde a restauração segura da sessão antes de decidir a rota inicial;
 - evite piscar conteúdo protegido;

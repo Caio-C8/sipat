@@ -188,6 +188,96 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     ).toBe(1);
   });
 
+  it("contabiliza famílias Web e mobile no mesmo limite global", async () => {
+    const senhaHasher = new SenhaHasher();
+    const senha = "uma senha segura de integração";
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Administradora híbrida",
+        email: "admin-hibrida@example.com",
+        senha: await senhaHasher.criarHash(senha),
+        perfil: "ADMINISTRADOR",
+        ativo: true,
+        trocaSenhaObrigatoria: false,
+      },
+    });
+    const service = criarAuthService(database, "development", senhaHasher);
+
+    for (let indice = 0; indice < 4; indice += 1) {
+      await service.login({ email: usuario.email, senha });
+    }
+    await service.loginMobile({ email: usuario.email, senha });
+    await service.loginMobile({ email: usuario.email, senha });
+
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, revogadoAt: null },
+      }),
+    ).toBe(5);
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, revogadoAt: { not: null } },
+      }),
+    ).toBe(1);
+    expect(
+      await database.sessaoUsuario.count({
+        where: { usuarioId: usuario.id, tipo: "MOBILE" },
+      }),
+    ).toBe(2);
+  });
+
+  it("permite um único refresh concorrente e revoga a família no replay", async () => {
+    const senhaHasher = new SenhaHasher();
+    const senha = "uma senha segura de integração";
+    const usuario = await database.usuario.create({
+      data: {
+        nome: "Diretor mobile",
+        email: "diretor-mobile@example.com",
+        senha: await senhaHasher.criarHash(senha),
+        perfil: "DIRETOR_PATRIMONIO",
+        ativo: true,
+        trocaSenhaObrigatoria: false,
+      },
+    });
+    const service = criarAuthService(database, "development", senhaHasher);
+    const login = await service.loginMobile({ email: usuario.email, senha });
+
+    const sessao = await database.sessaoUsuario.findFirstOrThrow({
+      where: { usuarioId: usuario.id, tipo: "MOBILE" },
+      include: { refreshTokens: true },
+    });
+    expect(sessao.tokenHash).not.toBe(login.credenciais.accessToken);
+    expect(sessao.refreshTokens[0]?.tokenHash).not.toBe(
+      login.credenciais.refreshToken,
+    );
+
+    const resultados = await Promise.allSettled([
+      service.refreshMobile(login.credenciais.refreshToken),
+      service.refreshMobile(login.credenciais.refreshToken),
+    ]);
+    expect(
+      resultados.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      resultados.filter(
+        (resultado): resultado is PromiseRejectedResult =>
+          resultado.status === "rejected" &&
+          resultado.reason instanceof UnauthorizedException,
+      ),
+    ).toHaveLength(1);
+    expect(
+      await database.sessaoUsuario.findUniqueOrThrow({
+        where: { id: sessao.id },
+        select: { revogadoAt: true },
+      }),
+    ).toEqual({ revogadoAt: expect.any(Date) });
+    expect(
+      await database.sessaoMobileRefresh.count({
+        where: { sessaoId: sessao.id },
+      }),
+    ).toBe(2);
+  });
+
   it("incrementa e bloqueia atomicamente tentativas concorrentes", async () => {
     const senhaHasher = {
       verificarHash: jest.fn().mockResolvedValue(false),

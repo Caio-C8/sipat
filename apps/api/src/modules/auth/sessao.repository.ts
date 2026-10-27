@@ -8,6 +8,8 @@ const sessaoParaAutenticacaoSelect = {
   expiraAt: true,
   ultimaAtividadeAt: true,
   revogadoAt: true,
+  tipo: true,
+  accessExpiraAt: true,
   usuario: {
     select: {
       id: true,

@@ -1,4 +1,5 @@
 import type {
+  CredenciaisMobile,
   IdentidadeAutenticada,
   IdentidadeAutenticadaInput,
 } from "@repo/contracts";
@@ -9,6 +10,7 @@ export interface RequisicaoAutenticada {
   cookies?: unknown;
   headers: Readonly<Record<string, string | readonly string[] | undefined>>;
   identidadeAutenticada?: IdentidadeAutenticada;
+  transporteAutenticacao?: "cookie" | "bearer";
   method: string;
 }
 
@@ -17,6 +19,8 @@ export interface SessaoParaAutenticacao {
   expiraAt: Date;
   ultimaAtividadeAt: Date;
   revogadoAt: Date | null;
+  tipo: "WEB" | "MOBILE";
+  accessExpiraAt: Date | null;
   usuario: IdentidadePersistidaAtual & {
     ativo: boolean;
   };
@@ -57,4 +61,17 @@ export interface RedefinicaoSenhaParaConsumo {
 export interface LoginRealizado {
   identidade: IdentidadeAutenticada;
   token: string;
+}
+
+export interface LoginMobileRealizado {
+  identidade: IdentidadeAutenticada;
+  credenciais: CredenciaisMobile;
+}
+
+export interface RefreshMobileParaUso {
+  id: string;
+  tokenHash: string;
+  expiraAt: Date;
+  usadoAt: Date | null;
+  sessao: SessaoParaAutenticacao;
 }

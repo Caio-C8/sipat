@@ -9,6 +9,16 @@ export function criarChaveRateLimitLogin(
     .digest("hex");
 }
 
+export function criarChaveRateLimitLoginMobile(
+  emailNormalizado: string,
+  segredoBase64url: string,
+): string {
+  return createHmac("sha256", Buffer.from(segredoBase64url, "base64url"))
+    .update("mobile-login\0", "utf8")
+    .update(emailNormalizado, "utf8")
+    .digest("hex");
+}
+
 export function criarChaveRateLimitAlteracaoSenha(
   usuarioId: string,
   segredoBase64url: string,

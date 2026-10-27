@@ -2,7 +2,9 @@ import { Inject, Injectable } from "@nestjs/common";
 import type { DatabaseClient, Prisma } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import type {
+  RefreshMobileParaUso,
   RedefinicaoSenhaParaConsumo,
+  SessaoParaAutenticacao,
   UsuarioParaAlteracaoSenha,
   UsuarioParaLogin,
   UsuarioParaRecuperacaoSenha,
@@ -25,7 +27,28 @@ interface CriarSessaoData {
   tokenHash: string;
   expiraAt: Date;
   ultimaAtividadeAt: Date;
+  tipo?: "WEB" | "MOBILE";
+  accessExpiraAt?: Date;
 }
+
+const sessaoMobileParaAutenticacaoSelect = {
+  id: true,
+  expiraAt: true,
+  accessExpiraAt: true,
+  ultimaAtividadeAt: true,
+  revogadoAt: true,
+  tipo: true,
+  usuario: {
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      perfil: true,
+      ativo: true,
+      trocaSenhaObrigatoria: true,
+    },
+  },
+} satisfies Prisma.SessaoUsuarioSelect;
 
 @Injectable()
 export class AuthRepository {
@@ -37,6 +60,13 @@ export class AuthRepository {
   buscarUsuarioParaLogin(email: string): Promise<UsuarioParaLogin | null> {
     return this.database.usuario.findUnique({
       where: { email },
+      select: usuarioParaLoginSelect,
+    });
+  }
+
+  buscarUsuarioAtivoPorId(usuarioId: string): Promise<UsuarioParaLogin | null> {
+    return this.database.usuario.findFirst({
+      where: { id: usuarioId, ativo: true },
       select: usuarioParaLoginSelect,
     });
   }
@@ -355,7 +385,114 @@ export class AuthRepository {
   }
 
   async criarSessao(data: CriarSessaoData): Promise<void> {
-    await this.database.sessaoUsuario.create({ data });
+    await this.database.sessaoUsuario.create({
+      data: { ...data, tipo: "WEB", accessExpiraAt: null },
+    });
+  }
+
+  async criarSessaoMobile(
+    data: Required<CriarSessaoData>,
+    refreshTokenHash: string,
+  ): Promise<void> {
+    await this.database.sessaoUsuario.create({
+      data: {
+        ...data,
+        refreshTokens: {
+          create: { tokenHash: refreshTokenHash, expiraAt: data.expiraAt },
+        },
+      },
+    });
+  }
+
+  buscarSessaoMobilePorAccessHash(
+    tokenHash: string,
+  ): Promise<SessaoParaAutenticacao | null> {
+    return this.database.sessaoUsuario.findFirst({
+      where: { tokenHash, tipo: "MOBILE" },
+      select: sessaoMobileParaAutenticacaoSelect,
+    });
+  }
+
+  buscarRefreshMobilePorHash(
+    tokenHash: string,
+  ): Promise<RefreshMobileParaUso | null> {
+    return this.database.sessaoMobileRefresh.findUnique({
+      where: { tokenHash },
+      select: {
+        id: true,
+        tokenHash: true,
+        expiraAt: true,
+        usadoAt: true,
+        sessao: { select: sessaoMobileParaAutenticacaoSelect },
+      },
+    });
+  }
+
+  async consumirRefreshMobile(id: string, agora: Date): Promise<boolean> {
+    const resultado = await this.database.sessaoMobileRefresh.updateMany({
+      where: { id, usadoAt: null, expiraAt: { gt: agora } },
+      data: { usadoAt: agora },
+    });
+    return resultado.count === 1;
+  }
+
+  async rotacionarCredenciaisMobile(
+    sessaoId: string,
+    accessTokenHash: string,
+    accessExpiraAt: Date,
+    refreshTokenHash: string,
+    sessaoExpiraAt: Date,
+    agora: Date,
+  ): Promise<boolean> {
+    const atualizada = await this.database.sessaoUsuario.updateMany({
+      where: {
+        id: sessaoId,
+        tipo: "MOBILE",
+        revogadoAt: null,
+        expiraAt: { gt: agora },
+      },
+      data: {
+        tokenHash: accessTokenHash,
+        accessExpiraAt,
+        ultimaAtividadeAt: agora,
+      },
+    });
+    if (atualizada.count !== 1) return false;
+
+    await this.database.sessaoMobileRefresh.create({
+      data: {
+        sessaoId,
+        tokenHash: refreshTokenHash,
+        expiraAt: sessaoExpiraAt,
+      },
+    });
+    return true;
+  }
+
+  async atualizarAtividadeMobileSeNecessario(
+    sessaoId: string,
+    atividadeAnterior: Date,
+    limiteAtualizacao: Date,
+    agora: Date,
+  ): Promise<void> {
+    await this.database.sessaoUsuario.updateMany({
+      where: {
+        id: sessaoId,
+        tipo: "MOBILE",
+        ultimaAtividadeAt: atividadeAnterior,
+        revogadoAt: null,
+        expiraAt: { gt: agora },
+        AND: { ultimaAtividadeAt: { lte: limiteAtualizacao } },
+      },
+      data: { ultimaAtividadeAt: agora },
+    });
+  }
+
+  async revogarSessaoPorId(sessaoId: string, agora: Date): Promise<void> {
+    await this.database.sessaoUsuario.updateMany({
+      where: { id: sessaoId, revogadoAt: null },
+      data: { revogadoAt: agora },
+    });
   }
 
   executarTransacaoSerializavel<T>(

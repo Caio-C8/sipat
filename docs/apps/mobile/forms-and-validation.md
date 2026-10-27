@@ -62,3 +62,24 @@ não torna um arquivo seguro; a API repete validação e autorização.
 Cubra defaults, transformação, campos condicionais, teclado, foco, texto grande,
 submissão duplicada, erro de rede, retomada após background e diferenças entre
 plataformas relevantes.
+
+## Formulários da primeira entrega
+
+Login e conclusão do primeiro acesso reutilizam diretamente os contratos
+compartilhados quando a representação do campo for idêntica. O formulário:
+
+- mantém e-mail após erro recuperável, mas nunca preserva ou registra senha;
+- usa `textContentType`/`autoComplete`, capitalização, teclado e ação de retorno
+  adequados a e-mail e senha em cada plataforma;
+- oferece mostrar/ocultar senha com nome, estado e alvo de toque acessíveis;
+- impede submissão duplicada e mantém o botão com estado pending compreensível;
+- diferencia validação local, credencial inválida, `429`, sessão expirada e
+  indisponibilidade, sem revelar se a conta existe;
+- na confirmação da nova senha, associa o erro ao campo correspondente e mantém
+  as regras de 15 a 128 pontos de código Unicode já definidas pelo contrato;
+- limpa valores sensíveis ao concluir, sair do fluxo ou receber invalidação
+  definitiva da sessão.
+
+Não introduza uma biblioteca de formulários somente por esses dois formulários.
+A tarefa pode adotá-la se medir necessidade real de foco, performance e
+composição e registrar a compatibilidade com o SDK.

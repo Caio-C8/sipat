@@ -22,6 +22,7 @@ export type {
   Setor,
   SetorInventario,
   SessaoUsuario,
+  SessaoMobileRefresh,
   TentativaLogin,
   TentativaOperacaoSenha,
   SituacaoContabilPatrimonio,

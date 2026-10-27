@@ -101,6 +101,11 @@ enum MetodoDepreciacao {
   LINEAR
 }
 
+enum TipoSessaoUsuario {
+  WEB
+  MOBILE
+}
+
 model Usuario {
   id                    String        @id @default(uuid()) @db.Uuid
   nome                  String        @db.VarChar(100)
@@ -147,19 +152,36 @@ model Usuario {
 }
 
 model SessaoUsuario {
-  id                String    @id @default(uuid()) @db.Uuid
-  tokenHash         String    @unique @map("token_hash") @db.Char(64)
-  expiraAt          DateTime  @map("expira_at") @db.Timestamp(6)
-  ultimaAtividadeAt DateTime  @default(now()) @map("ultima_atividade_at") @db.Timestamp(6)
-  revogadoAt        DateTime? @map("revogado_at") @db.Timestamp(6)
-  usuarioId         String    @map("usuario_id") @db.Uuid
+  id                String            @id @default(uuid()) @db.Uuid
+  tokenHash         String            @unique @map("token_hash") @db.Char(64)
+  expiraAt          DateTime          @map("expira_at") @db.Timestamp(6)
+  accessExpiraAt    DateTime?         @map("access_expira_at") @db.Timestamp(6)
+  ultimaAtividadeAt DateTime          @default(now()) @map("ultima_atividade_at") @db.Timestamp(6)
+  revogadoAt        DateTime?         @map("revogado_at") @db.Timestamp(6)
+  tipo              TipoSessaoUsuario @default(WEB)
+  usuarioId         String            @map("usuario_id") @db.Uuid
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  usuario       Usuario               @relation(fields: [usuarioId], references: [id])
+  refreshTokens SessaoMobileRefresh[]
 
   @@index([usuarioId, revogadoAt], map: "sessoes_usuarios_usuario_id_revogado_at_idx")
   @@map("sessoes_usuarios")
+}
+
+model SessaoMobileRefresh {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiraAt  DateTime  @map("expira_at") @db.Timestamp(6)
+  usadoAt   DateTime? @map("usado_at") @db.Timestamp(6)
+  sessaoId  String    @map("sessao_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  sessao SessaoUsuario @relation(fields: [sessaoId], references: [id])
+
+  @@index([sessaoId, usadoAt], map: "sessoes_mobile_refresh_sessao_id_usado_at_idx")
+  @@map("sessoes_mobile_refresh")
 }
 
 model TentativaLogin {

@@ -24,11 +24,37 @@
       atualização e validações locais concluídas; aguarda build EAS e teste em
       dispositivo real;
 
+## Primeira entrega autenticada
+
+As decisões de sessão nativa, estrutura visual e rotas foram aprovadas em 27 de
+outubro de 2026. O backend de sessão está em validação e a execução segue esta ordem:
+
+| Ordem | Objetivo                                                                                                                  | Status       | Dependências                                |
+| ----- | ------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------- |
+| 1     | [`MOBILE-AUTH-001`](../../tasks/MOBILE-AUTH-001-sessao-nativa.md) — sessão nativa revogável                               | em validação | `AUTH-001`, `AUTH-004` e `CONTRACTS-009`    |
+| 2     | [`MOBILE-FOUNDATION-001`](../../tasks/MOBILE-FOUNDATION-001-estrutura-visual-navegacao.md) — estrutura visual e navegação | aprovada     | baseline mobile e referência visual         |
+| 3     | [`MOBILE-AUTH-002`](../../tasks/MOBILE-AUTH-002-telas-autenticacao.md) — login e primeiro acesso                          | aprovada     | `MOBILE-AUTH-001` e `MOBILE-FOUNDATION-001` |
+| 4     | [`MOBILE-HOME-001`](../../tasks/MOBILE-HOME-001-home-check.md) — home protegida e `/check`                                | aprovada     | `MOBILE-AUTH-002`                           |
+
+`MOBILE-AUTH-001` e `MOBILE-FOUNDATION-001` podem avançar em paralelo enquanto
+não alterarem o mesmo boundary. As telas e redirects só são integrados depois
+que o transporte de sessão estiver verificado. O resultado esperado é:
+
+- `/login`, `/redefinir-senha` e `/senha-atualizada` conforme os frames mobile
+  do Figma;
+- `/` como home autenticada dos dois perfis, inicialmente sem conteúdo de
+  domínio além do shell compartilhado;
+- `/check` com as verificações hoje exibidas em `/` e o catálogo das rotas
+  mobile, acessível somente em `development`;
+- faixa fixa de desenvolvimento em todas as telas, abaixo da safe area, com
+  acesso explícito a `/check`; ela não existe em staging ou produção;
+- topbar SIPAT com brasão e identificação da Câmara em todas as telas.
+
 Nenhuma feature patrimonial do SIPAT está implementada no mobile. Antes de uma
 nova entrega, registre contexto, requisitos relacionados, plataformas, rotas,
 estados, contratos, endpoints, permissões, comportamento offline, segurança,
 performance, acessibilidade e testes.
 
-Capacidades como autenticação, armazenamento seguro, cliente HTTP geral, cache,
-formulários, observabilidade, development build e E2E só entram no roadmap
-quando uma entrega concreta definir seus critérios de aceite.
+Cache de domínio, operação offline, biometria, attestation, pinning de
+certificado, observabilidade externa e E2E nativo continuam fora desta primeira
+entrega até que um objetivo próprio defina seus critérios.

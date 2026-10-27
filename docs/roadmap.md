@@ -27,8 +27,9 @@ O Diretor de Patrimônio também pode cadastrar bens com identificador oficial o
 auditoria da sessão. Administrador e Diretor de Patrimônio podem consultar a
 lista paginada e os detalhes dos bens com busca, filtros e relações atuais.
 Fora do ambiente de desenvolvimento, a recuperação permanece desabilitada até
-a configuração do consumidor HTTPS e SMTP institucional. As interfaces Web de
-usuários e autenticação não estão implementadas.
+a configuração do consumidor HTTPS e SMTP institucional. A autenticação Web e
+o shell autenticado estão implementados; a gestão Web de usuários e a primeira
+entrega autenticada do mobile permanecem pendentes.
 
 ## Ordem das primeiras entregas
 
@@ -43,8 +44,8 @@ cria a barreira e valida uma sessão que já exista; `USERS-001` consome essa
 barreira e pode ser validado com sessões controladas nos testes; somente
 `AUTH-001` cria sessões por login e as encerra por logout. As interfaces
 administrativas e de autenticação pertencem, respectivamente, aos objetivos
-separados `WEB-USERS-001` e `WEB-AUTH-001`, que permanecem planejados no roadmap
-da Web.
+separados `WEB-USERS-001` e `WEB-AUTH-001`; o segundo já foi concluído e o
+primeiro permanece planejado no roadmap da Web.
 
 Não enfraqueça temporariamente os Guards nem aceite perfil enviado pelo cliente
 para contornar essa dependência.
@@ -68,12 +69,32 @@ estiver implementada e verificada.
 | ----- | ----------------------------------------------- | --------- | -------------------------------- |
 | 1     | `CONTRACTS-009` — Contratos do primeiro acesso  | concluído | `CONTRACTS-001`, `CONTRACTS-003` |
 | 2     | `AUTH-004` — Troca obrigatória da senha inicial | concluído | `CONTRACTS-009`, `AUTH-001`      |
-| 3     | `WEB-AUTH-001` — Integrar autenticação Web      | aprovado  | `AUTH-004`, infraestrutura Web   |
+| 3     | `WEB-AUTH-001` — Integrar autenticação Web      | concluído | `AUTH-004`, infraestrutura Web   |
 
 A ordem impede que a Web invente o estado de primeiro acesso ou use sessão e
 `ultimoLoginAt` como aproximação. `AUTH-004` entrega primeiro a fonte de verdade
 persistente, a restrição da API e a rotação da sessão; somente então a Web liga
 os formulários e redirects.
+
+## Ordem da primeira entrega autenticada no mobile
+
+| Ordem | Objetivo                                               | Status       | Dependências                            |
+| ----- | ------------------------------------------------------ | ------------ | --------------------------------------- |
+| 1     | `MOBILE-AUTH-001` — Sessão nativa revogável            | em validação | `AUTH-001`, `AUTH-004`, `CONTRACTS-009` |
+| 2     | `MOBILE-FOUNDATION-001` — Estrutura visual e navegação | aprovado     | baseline mobile e Figma                 |
+| 3     | `MOBILE-AUTH-002` — Telas e integração de autenticação | aprovado     | dois objetivos anteriores               |
+| 4     | `MOBILE-HOME-001` — Home protegida e `/check`          | aprovado     | `MOBILE-AUTH-002`                       |
+
+Sessão nativa usa access opaco de dez minutos em memória e refresh opaco
+rotativo no Keychain/Keystore, preservando oito horas absolutas, trinta minutos
+de inatividade, revogação e limite de cinco sessões. Cookie e Bearer continuam
+transportes distintos; o fluxo Web não é alterado para acomodar o mobile.
+
+As especificações são
+[MOBILE-AUTH-001](./tasks/MOBILE-AUTH-001-sessao-nativa.md),
+[MOBILE-FOUNDATION-001](./tasks/MOBILE-FOUNDATION-001-estrutura-visual-navegacao.md),
+[MOBILE-AUTH-002](./tasks/MOBILE-AUTH-002-telas-autenticacao.md) e
+[MOBILE-HOME-001](./tasks/MOBILE-HOME-001-home-check.md).
 
 ## Ordem das entregas básicas de patrimônios
 

@@ -100,8 +100,6 @@ A comunicação HTTP está em
 
 - identidade visual, tema e tokens definitivos;
 - validação do novo binário responsivo em tablets Android e iPad reais;
-- navegação autenticada e fluxo de sessão;
-- armazenamento seguro da credencial;
 - biblioteca de formulários e estado remoto;
 - política de cache, persistência e operação offline;
 - observabilidade, crash reporting e analytics;
@@ -113,3 +111,8 @@ A comunicação HTTP está em
 
 Esses itens não são capacidades já implementadas. Registre a decisão junto da
 primeira feature que realmente a exigir.
+
+A navegação autenticada, o transporte access/refresh e o armazenamento no
+`expo-secure-store` já possuem decisão aprovada no
+[roadmap](./roadmap.md#primeira-entrega-autenticada), mas continuam sem
+implementação.
