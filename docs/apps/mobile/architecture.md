@@ -82,6 +82,52 @@ ou regra que também precisa existir em outro fluxo.
 O health check atual usa `useState`, `useEffect` e `AbortController` porque é
 uma única operação sem cache. Isso não define a estratégia das futuras features.
 
+## Estrutura aprovada para a primeira entrega autenticada
+
+A estrutura abaixo é alvo das tarefas aprovadas e não representa código já
+entregue:
+
+```text
+apps/mobile/src/
+├── app/
+│   ├── (auth)/
+│   │   ├── _layout.tsx
+│   │   ├── login.tsx
+│   │   ├── redefinir-senha.tsx
+│   │   └── senha-atualizada.tsx
+│   ├── (app)/
+│   │   ├── _layout.tsx
+│   │   └── index.tsx
+│   ├── _layout.tsx
+│   └── check.tsx
+├── components/
+│   ├── shared/
+│   │   ├── app-topbar.tsx
+│   │   └── development-check-banner.tsx
+│   └── ui/
+├── features/
+│   └── auth/
+│       ├── api/
+│       ├── components/
+│       ├── forms/
+│       ├── session/
+│       └── storage/
+├── lib/
+│   └── api/
+│       ├── core/
+│       └── mobile-api-client.ts
+└── config/
+```
+
+Os nomes finais devem ser confirmados contra as convenções do Expo Router
+instalado. Grupos organizam políticas sem alterar as URLs. O layout raiz reúne
+somente safe area, restauração da sessão e elementos realmente globais. O grupo
+autenticado aplica a barreira de sessão; formulários, operações e armazenamento
+continuam dentro da feature de autenticação.
+
+Não crie todos os arquivos antecipadamente: cada tarefa adiciona somente os
+módulos que possuirão comportamento e testes reais.
+
 ## Código por plataforma
 
 Use `Platform` ou arquivos `.ios`, `.android`, `.native` e `.web` somente para

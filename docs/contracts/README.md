@@ -26,7 +26,7 @@ O package se chama `@repo/contracts`, é consumido por `apps/web`, `apps/api` e
 `apps/mobile` e usa Zod 4 para contratos runtime. Ele possui testes próprios
 executados por `tsx` e entrega o baseline genérico de respostas, erros,
 paginação e health check, além dos contratos já concluídos de identidade,
-usuários, autenticação, senha, patrimônios, seus cadastros relacionados,
+usuários, autenticação Web e mobile, senha, patrimônios, seus cadastros relacionados,
 processos de compra, notas fiscais, comissões, inventários e primeiro acesso.
 Novos contratos do SIPAT devem ser adicionados por entrega, depois de confirmar
 sua semântica nos [requisitos](../requisitos-SIPAT.md) e registrar o objetivo

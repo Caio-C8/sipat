@@ -5,9 +5,10 @@ SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
 do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
 O backend de alteração autenticada da própria senha do `AUTH-002` também está
 implementado, assim como a recuperação de senha do `AUTH-003`. As interfaces
-Web e mobile continuam fora dessas entregas. `CONTRACTS-009` está concluído e
-o backend do `AUTH-004` está implementado; `WEB-AUTH-001` continua aprovado e
-ainda não implementado. O estado e a ordem de execução ficam no
+As interfaces Web e mobile continuam fora dessas entregas de backend. `CONTRACTS-009` e o
+backend do `AUTH-004` estão implementados; `WEB-AUTH-001` também foi entregue.
+A primeira integração de backend mobile foi entregue por `MOBILE-AUTH-001`. O estado e
+a ordem de execução ficam no
 [roadmap inicial](./roadmap.md).
 
 ## Estado implementado
@@ -32,6 +33,12 @@ ainda não implementado. O estado e a ordem de execução ficam no
   essa rota, `/auth/me` e logout ficam acessíveis entre as rotas protegidas;
 - recuperação de senha usa response neutra, token de uso único e revoga todas
   as sessões após sucesso.
+- `/api/auth/mobile` expõe login, refresh, identidade, conclusão do primeiro
+  acesso e logout com Bearer opaco, sem criar ou alterar cookie Web;
+- access mobile dura até dez minutos, refresh rotaciona a cada uso e replay
+  revoga a família; os hashes são os únicos verificadores persistidos;
+- Cookie e Bearer simultâneos são recusados, e somente o transporte Bearer e as
+  rotas mobile declaradas ficam isentos de CSRF.
 
 ## Requisitos atendidos
 
@@ -121,6 +128,33 @@ requisição para a API sem expor `API_INTERNAL_URL`. Server Components, Route
 Handlers e Server Actions não herdam cookies automaticamente: quando precisarem
 agir em nome do usuário, encaminham somente o cookie necessário no escopo da
 requisição, nunca em headers globais mutáveis.
+
+## Sessão do aplicativo mobile implementada
+
+A implementação nativa é separada do cookie da Web. Ela preserva sessão
+opaca, revogação, usuário ativo, perfil atual, troca obrigatória, máximo de cinco
+sessões, trinta minutos nominais de inatividade e oito horas absolutas, mas usa:
+
+- access token opaco de dez minutos somente em memória;
+- refresh token opaco no Keychain/Keystore por `expo-secure-store`;
+- rotação do refresh em todo uso, com revogação da família diante de
+  reutilização;
+- `Authorization: Bearer` nos endpoints nativos e nas rotas de domínio;
+- hashes no banco, sem JWT autossuficiente nem segredo incorporado ao app.
+
+Cookie e Bearer são transportes distintos da mesma política de identidade. O
+Guard recusa requests que apresentem os dois. CSRF e Origin continuam
+obrigatórios para cookie; rotas nativas explicitamente declaradas não dependem
+de CSRF, mas mantêm TLS, rate limit e todos os Guards de identidade e perfil.
+Login, refresh, logout e primeiro acesso nativos possuem contratos próprios e não
+alteram silenciosamente as responses Web existentes.
+
+A especificação está em
+[MOBILE-AUTH-001](./tasks/MOBILE-AUTH-001-sessao-nativa.md) e a política de
+armazenamento em
+[integração mobile–API](./integrations/mobile-api/auth-storage.md). A decisão
+está implementada no backend; telas e armazenamento no aplicativo permanecem
+em `MOBILE-AUTH-002`.
 
 ## Proteção CSRF
 
@@ -462,8 +496,9 @@ reais e prova a ordem dos controles globais.
 
 As políticas implementadas são as descritas nas seções de mecanismo de sessão,
 login/logout e provisionamento deste documento. `AUTH-001` cobre somente o
-backend. Não existe página de login, formulário, hook, redirect ou integração
-Web; `WEB-AUTH-001` continua planejado no roadmap próprio da Web.
+backend; a página, os formulários, redirects e logout Web foram entregues
+posteriormente por `WEB-AUTH-001`. O consumidor mobile permanece nas tarefas
+`MOBILE-AUTH-001` e `MOBILE-AUTH-002`.
 
 ## Decisões confirmadas para AUTH-002 e AUTH-003
 

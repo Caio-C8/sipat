@@ -2,8 +2,50 @@
 
 ## Estado atual
 
-Não existe autenticação no mobile. Este documento define restrições para a
-decisão futura, não uma capacidade entregue.
+O backend de autenticação mobile está implementado em `/api/auth/mobile`. O
+cliente e o armazenamento seguro permanecem para `MOBILE-AUTH-002`.
+
+## Arquitetura aprovada
+
+A implementação nativa usa uma sessão revogável com duas
+credenciais opacas, sem introduzir JWT:
+
+- access token aleatório, com duração de dez minutos, mantido somente em
+  memória e enviado em `Authorization: Bearer`;
+- refresh token aleatório, armazenado somente pelo `expo-secure-store`, com
+  rotação obrigatória a cada uso e detecção de reutilização;
+- sessão lógica com os mesmos limites da Web: oito horas absolutas e trinta
+  minutos nominais de inatividade, sem estender o limite absoluto ao renovar;
+- token persistido no servidor somente como hash; responses, logs e métricas
+  nunca recebem o hash ou a credencial reutilizável;
+- limite atual de cinco sessões ativas por usuário contado em conjunto entre
+  Web e mobile;
+- logout, inativação, alteração de senha, redefinição e conclusão do primeiro
+  acesso revogam as credenciais correspondentes conforme a política existente.
+
+O access token curto é uma credencial dentro da sessão lógica, não uma sessão
+independente de dez minutos. Requests autenticadas e refresh válido atualizam a
+atividade conforme a mesma política limitada já usada na Web. O refresh nunca
+ultrapassa as oito horas contadas do login original.
+
+O backend deve distinguir explicitamente o transporte por cookie do transporte
+Bearer. Cookie mantém `HttpOnly`, `SameSite`, Origin e CSRF. Bearer nativo não
+usa CSRF porque não é enviado automaticamente pelo navegador, mas continua
+submetido a TLS, rate limit, validação, autenticação, autorização e revogação.
+Uma request com cookie e Bearer simultâneos é recusada para evitar precedência
+ambígua.
+
+O React Native Web não persiste Bearer em armazenamento JavaScript. Ele usa uma
+implementação de transporte por cookie compatível com a política Web, atrás da
+mesma interface pública de sessão, ou permanece limitado à inspeção visual até
+essa implementação estar disponível.
+
+Referências da decisão:
+
+- [Expo SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/);
+- [autenticação no Expo](https://docs.expo.dev/guides/authentication/);
+- [OAuth 2.0 Security Best Current Practice — RFC 9700](https://datatracker.ietf.org/doc/html/rfc9700);
+- [OWASP Mobile — autenticação e sessão](https://mas.owasp.org/MASTG/0x04e-Testing-Authentication-and-Session-Management/).
 
 ## Responsabilidades
 
@@ -33,6 +75,12 @@ em AsyncStorage, estado persistido genérico, log ou analytics.
 - invalide sessão e cache privado quando revogação for confirmada;
 - preserve somente o destino de navegação que seja seguro restaurar.
 
+Na inicialização aprovada, o app lê o refresh token, solicita um novo par,
+valida a identidade e somente então decide a rota. Ausência, expiração,
+revogação ou reutilização confirmada remove o material local e leva ao login.
+Falha temporária de rede apresenta indisponibilidade e não apaga
+automaticamente uma credencial potencialmente válida.
+
 ## Biometria
 
 Biometria pode condicionar o acesso local ao segredo, mas possui diferenças por
@@ -54,3 +102,8 @@ Logout remove credencial, estado em memória, caches privados, filas vinculadas
 à identidade e arquivos temporários conforme política. Troca de usuário não
 pode reaproveitar dados do usuário anterior. Falha ao revogar remotamente deve
 ser tratada sem manter uma credencial local ativa indefinidamente.
+
+Se o aparelho estiver offline, o logout ainda remove imediatamente credencial,
+identidade, cache privado e conteúdo da tela. A revogação remota não pode ser
+afirmada como concluída sem resposta do servidor; a sessão remanescente continua
+limitada por inatividade e duração absoluta.

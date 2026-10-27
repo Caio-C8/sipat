@@ -121,6 +121,11 @@ No estado atual:
   último administrador ativo;
 - login, logout e `/auth/me` usam contratos Zod, cookie `HttpOnly`, sessão opaca
   revogável e rate limit persistente;
+- `/auth/mobile` implementa login, refresh rotativo, identidade, primeiro
+  acesso e logout com access e refresh opacos; somente hashes são persistidos,
+  replay revoga a família e responses com tokens usam `no-store`;
+- sessões Web e mobile compartilham duração absoluta, inatividade, perfil atual,
+  revogação e o limite global de cinco famílias por usuário;
 - `AUTH-004` persiste a troca obrigatória da senha inicial, restringe sessões
   pendentes a `/auth/me`, conclusão e logout e conclui o fluxo com atualização
   atômica da senha e rotação do cookie;

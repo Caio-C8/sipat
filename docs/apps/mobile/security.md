@@ -7,10 +7,9 @@ responsável por autenticação, autorização, validação e auditoria.
 
 ## Estado atual
 
-O aplicativo acessa apenas o health check público. Não existem login, token,
-refresh, dados patrimoniais persistidos, biometria, permissões sensíveis ou
-operação protegida. Portanto, o estado atual não atende por si só os requisitos
-de autenticação e autorização do SIPAT.
+O aplicativo ainda acessa apenas o health check público. O backend já expõe os
+contratos e endpoints de sessão nativa; telas, armazenamento local, biometria,
+permissões sensíveis e consumo de operações protegidas continuam pendentes.
 
 ## Configuração e segredos
 
@@ -36,7 +35,13 @@ incluído no bundle cliente.
 
 ## Sessão e armazenamento
 
-A política de autenticação ainda precisa ser definida. Quando existir:
+A política e o backend da primeira sessão nativa estão implementados. O cliente
+deve manter o access token opaco de dez minutos em memória e o refresh token
+opaco rotativo no `expo-secure-store`, dentro dos limites lógicos de oito horas
+absolutas e trinta minutos de inatividade. A fonte completa da decisão é
+[Autenticação e armazenamento](../../integrations/mobile-api/auth-storage.md).
+
+Ao implementar:
 
 - mantenha access token em memória quando o fluxo permitir;
 - armazene material de renovação somente em mecanismo seguro de Keychain/
@@ -48,6 +53,13 @@ A política de autenticação ainda precisa ser definida. Quando existir:
 - considere que o comportamento de persistência após desinstalação difere entre
   Android e iOS;
 - não use armazenamento local como fonte única de um dado irrecuperável.
+
+`SecureStore` reduz a exposição em repouso, mas não torna um token inacessível
+ao próprio processo. Aparelho comprometido, instrumentação do runtime ou código
+malicioso no app ainda podem capturar uma credencial durante o uso. Access
+curto, rotação, detecção de replay, revogação e expiração limitam o impacto;
+biometria, DPoP, attestation, detecção de root/jailbreak e pinning permanecem
+evoluções separadas orientadas por threat model.
 
 Biometria protege o acesso local a uma credencial; ela não autentica sozinha o
 usuário perante a API nem substitui autorização.

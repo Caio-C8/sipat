@@ -67,13 +67,15 @@ política diferente para credenciais persistidas.
 
 ## Decisões pendentes
 
-- mecanismo de autenticação e formato da sessão;
-- access/refresh token, expiração, rotação e revogação;
 - biblioteca de estado remoto e query keys;
 - persistência, criptografia e operação offline;
 - retry e idempotência por operação;
 - correlation ID e provedor de observabilidade;
 - limites de request/response e metas de latência;
 - comportamento no background e retomada.
+
+O mecanismo de sessão nativa, as durações, a rotação e o SecureStore foram
+aprovados em [Autenticação e armazenamento](./auth-storage.md), mas ainda não
+estão implementados.
 
 Não escolha essas políticas silenciosamente apenas para completar estrutura.
