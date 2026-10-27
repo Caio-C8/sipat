@@ -12,6 +12,7 @@ import type { CapacidadeArgon2 } from "../capacidade-argon2";
 import type { DespachanteEmailAuth } from "../despachante-email";
 import type { SessaoRepository } from "../sessao.repository";
 import { calcularHashTokenRedefinicaoSenha } from "../token-redefinicao";
+import { calcularHashTokenMobile } from "../token-mobile";
 
 describe("AuthService", () => {
   const agora = new Date("2026-10-18T12:00:00.000Z");
@@ -40,6 +41,11 @@ describe("AuthService", () => {
     revogarSessoes: jest.fn(),
     revogarTodasSessoes: jest.fn(),
     criarSessao: jest.fn(),
+    criarSessaoMobile: jest.fn(),
+    buscarRefreshMobilePorHash: jest.fn(),
+    consumirRefreshMobile: jest.fn(),
+    rotacionarCredenciaisMobile: jest.fn(),
+    revogarSessaoPorId: jest.fn(),
     limparTentativasLogin: jest.fn(),
     limparTentativasOperacaoSenha: jest.fn(),
     invalidarRedefinicaoSenha: jest.fn(),
@@ -55,6 +61,11 @@ describe("AuthService", () => {
     buscarUsuarioAtivoParaRecuperacao: jest.fn(),
     buscarRedefinicaoParaConsumo: jest.fn(),
     substituirRedefinicaoSenha: jest.fn(),
+    buscarSessaoMobilePorAccessHash: jest.fn(),
+    atualizarAtividadeMobileSeNecessario: jest.fn(),
+    buscarRefreshMobilePorHash: jest.fn(),
+    revogarSessaoPorId: jest.fn(),
+    buscarUsuarioAtivoPorId: jest.fn(),
     executarTransacaoSerializavel: jest.fn(
       (operacao: (repository: AuthRepository) => Promise<unknown>) =>
         operacao(repositoryTransacao),
@@ -95,6 +106,8 @@ describe("AuthService", () => {
   ): SessaoParaAutenticacao {
     return {
       id: "5826835a-bb5b-432a-b8b8-2c7622bbfabc",
+      tipo: "WEB",
+      accessExpiraAt: null,
       expiraAt: new Date("2026-10-18T20:00:00.000Z"),
       ultimaAtividadeAt: new Date("2026-10-18T11:56:00.000Z"),
       revogadoAt: null,
@@ -146,6 +159,15 @@ describe("AuthService", () => {
       undefined,
     );
     (repositoryTransacao.criarSessao as jest.Mock).mockResolvedValue(undefined);
+    (repositoryTransacao.criarSessaoMobile as jest.Mock).mockResolvedValue(
+      undefined,
+    );
+    (repositoryTransacao.consumirRefreshMobile as jest.Mock).mockResolvedValue(
+      true,
+    );
+    (
+      repositoryTransacao.rotacionarCredenciaisMobile as jest.Mock
+    ).mockResolvedValue(true);
     (repositoryTransacao.limparTentativasLogin as jest.Mock).mockResolvedValue(
       undefined,
     );
@@ -181,6 +203,123 @@ describe("AuthService", () => {
       );
     },
   );
+
+  it("cria login mobile sem cookie, com tokens distintos e expirações contratadas", async () => {
+    (authRepository.buscarUsuarioParaLogin as jest.Mock).mockResolvedValue({
+      ...identidadeBase,
+      perfil: "ADMINISTRADOR",
+      ativo: true,
+      senha: "hash",
+    });
+    (senhaHasher.verificarHash as jest.Mock).mockResolvedValue(true);
+
+    const resultado = await service.loginMobile({
+      email: identidadeBase.email,
+      senha: "senha",
+    });
+
+    expect(resultado.identidade).toEqual({
+      ...identidadeBase,
+      perfil: "ADMINISTRADOR",
+    });
+    expect(resultado.credenciais.accessToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(resultado.credenciais.refreshToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(resultado.credenciais.accessToken).not.toBe(
+      resultado.credenciais.refreshToken,
+    );
+    expect(resultado.credenciais.accessTokenExpiraEm).toBe(
+      "2026-10-18T12:10:00.000Z",
+    );
+    expect(resultado.credenciais.sessaoExpiraEm).toBe(
+      "2026-10-18T20:00:00.000Z",
+    );
+    expect(repositoryTransacao.criarSessaoMobile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        usuarioId: identidadeBase.id,
+        tipo: "MOBILE",
+        tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+      }),
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+    );
+  });
+
+  it("autentica access mobile válido consultando estado atual", async () => {
+    const sessao = {
+      ...sessaoValida(),
+      tipo: "MOBILE" as const,
+      accessExpiraAt: new Date("2026-10-18T12:10:00.000Z"),
+    };
+    (
+      authRepository.buscarSessaoMobilePorAccessHash as jest.Mock
+    ).mockResolvedValue(sessao);
+
+    await expect(service.autenticarAccessMobile(token)).resolves.toEqual({
+      ...identidadeBase,
+      perfil: "ADMINISTRADOR",
+    });
+    expect(authRepository.buscarSessaoMobilePorAccessHash).toHaveBeenCalledWith(
+      calcularHashTokenMobile(token),
+    );
+  });
+
+  it("rotaciona refresh exatamente uma vez e persiste apenas hashes", async () => {
+    const sessao = {
+      ...sessaoValida(),
+      tipo: "MOBILE" as const,
+      accessExpiraAt: new Date("2026-10-18T12:10:00.000Z"),
+    };
+    (
+      repositoryTransacao.buscarRefreshMobilePorHash as jest.Mock
+    ).mockResolvedValue({
+      id: "6826835a-bb5b-432a-b8b8-2c7622bbfabc",
+      tokenHash: calcularHashTokenMobile(token),
+      expiraAt: sessao.expiraAt,
+      usadoAt: null,
+      sessao,
+    });
+
+    const credenciais = await service.refreshMobile(token);
+
+    expect(repositoryTransacao.consumirRefreshMobile).toHaveBeenCalledTimes(1);
+    expect(
+      repositoryTransacao.rotacionarCredenciaisMobile,
+    ).toHaveBeenCalledWith(
+      sessao.id,
+      calcularHashTokenMobile(credenciais.accessToken),
+      new Date(credenciais.accessTokenExpiraEm),
+      calcularHashTokenMobile(credenciais.refreshToken),
+      sessao.expiraAt,
+      agora,
+    );
+  });
+
+  it("revoga a família ao detectar replay de refresh", async () => {
+    const sessao = {
+      ...sessaoValida(),
+      tipo: "MOBILE" as const,
+      accessExpiraAt: new Date("2026-10-18T12:10:00.000Z"),
+    };
+    (
+      repositoryTransacao.buscarRefreshMobilePorHash as jest.Mock
+    ).mockResolvedValue({
+      id: "6826835a-bb5b-432a-b8b8-2c7622bbfabc",
+      tokenHash: calcularHashTokenMobile(token),
+      expiraAt: sessao.expiraAt,
+      usadoAt: new Date("2026-10-18T11:59:00.000Z"),
+      sessao,
+    });
+
+    await expect(service.refreshMobile(token)).rejects.toMatchObject({
+      response: { codigo: "CREDENCIAL_MOBILE_INVALIDA" },
+    });
+    expect(repositoryTransacao.revogarSessaoPorId).toHaveBeenCalledWith(
+      sessao.id,
+      agora,
+    );
+    expect(
+      repositoryTransacao.rotacionarCredenciaisMobile,
+    ).not.toHaveBeenCalled();
+  });
 
   it("atualiza atividade somente após o agrupamento de cinco minutos", async () => {
     buscarPorTokenHash.mockResolvedValue({

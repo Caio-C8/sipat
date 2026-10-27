@@ -61,6 +61,8 @@ describe("barreira global de segurança", () => {
       calcularHashTokenSessao(tokens.administrador),
       {
         id: "00000000-0000-4000-8000-000000000001",
+        tipo: "WEB",
+        accessExpiraAt: null,
         expiraAt: new Date("2999-01-01T00:00:00.000Z"),
         ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
         revogadoAt: null,
@@ -71,6 +73,8 @@ describe("barreira global de segurança", () => {
       calcularHashTokenSessao(tokens.diretor),
       {
         id: "00000000-0000-4000-8000-000000000002",
+        tipo: "WEB",
+        accessExpiraAt: null,
         expiraAt: new Date("2999-01-01T00:00:00.000Z"),
         ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
         revogadoAt: null,
@@ -81,6 +85,8 @@ describe("barreira global de segurança", () => {
       calcularHashTokenSessao(tokens.expirada),
       {
         id: "00000000-0000-4000-8000-000000000003",
+        tipo: "WEB",
+        accessExpiraAt: null,
         expiraAt: new Date("2000-01-01T00:00:00.000Z"),
         ultimaAtividadeAt: new Date("1999-01-01T00:00:00.000Z"),
         revogadoAt: null,
@@ -91,6 +97,8 @@ describe("barreira global de segurança", () => {
       calcularHashTokenSessao(tokens.revogada),
       {
         id: "00000000-0000-4000-8000-000000000004",
+        tipo: "WEB",
+        accessExpiraAt: null,
         expiraAt: new Date("2999-01-01T00:00:00.000Z"),
         ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
         revogadoAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -101,6 +109,8 @@ describe("barreira global de segurança", () => {
       calcularHashTokenSessao(tokens.inativo),
       {
         id: "00000000-0000-4000-8000-000000000005",
+        tipo: "WEB",
+        accessExpiraAt: null,
         expiraAt: new Date("2999-01-01T00:00:00.000Z"),
         ultimaAtividadeAt: new Date("2998-01-01T00:00:00.000Z"),
         revogadoAt: null,

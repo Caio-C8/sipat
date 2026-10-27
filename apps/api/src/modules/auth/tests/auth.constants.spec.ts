@@ -1,5 +1,6 @@
 import {
   DURACAO_ABSOLUTA_SESSAO_MS,
+  DURACAO_ACCESS_TOKEN_MOBILE_MS,
   INATIVIDADE_NOMINAL_SESSAO_MS,
   INTERVALO_ATUALIZACAO_ATIVIDADE_MS,
   MAXIMO_SESSOES_ATIVAS,
@@ -9,6 +10,7 @@ import {
 describe("políticas de autenticação do SIPAT", () => {
   it("fixa os limites temporais e de sessões confirmados", () => {
     expect(DURACAO_ABSOLUTA_SESSAO_MS).toBe(8 * 60 * 60 * 1_000);
+    expect(DURACAO_ACCESS_TOKEN_MOBILE_MS).toBe(10 * 60 * 1_000);
     expect(INATIVIDADE_NOMINAL_SESSAO_MS).toBe(30 * 60 * 1_000);
     expect(INTERVALO_ATUALIZACAO_ATIVIDADE_MS).toBe(5 * 60 * 1_000);
     expect(MAXIMO_SESSOES_ATIVAS).toBe(5);

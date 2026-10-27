@@ -67,7 +67,36 @@ describe("AutenticacaoGuard", () => {
     expect(request).toEqual({
       cookies: { sipat_session: "A".repeat(43) },
       identidadeAutenticada: identidade,
+      transporteAutenticacao: "cookie",
     });
+  });
+
+  it("aceita access Bearer e recusa a combinação com cookie", async () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(undefined),
+    } as unknown as Reflector;
+    const authService = {
+      autenticar: jest.fn(),
+      autenticarAccessMobile: jest.fn().mockResolvedValue(identidade),
+    } as unknown as AuthService;
+    const guard = new AutenticacaoGuard(reflector, authService, criarConfig());
+    const bearer = `Bearer ${"A".repeat(43)}`;
+    const request = { headers: { authorization: bearer } };
+
+    await expect(guard.canActivate(criarContexto(request))).resolves.toBe(true);
+    expect(request).toEqual({
+      headers: { authorization: bearer },
+      identidadeAutenticada: identidade,
+      transporteAutenticacao: "bearer",
+    });
+    await expect(
+      guard.canActivate(
+        criarContexto({
+          headers: { authorization: bearer },
+          cookies: { sipat_session: "B".repeat(43) },
+        }),
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("retorna 401 quando a sessão não autentica", async () => {
@@ -192,7 +221,10 @@ describe("AutorizacaoGuard", () => {
 });
 
 describe("CsrfGuard", () => {
-  const guard = new CsrfGuard(criarConfig());
+  const reflector = {
+    getAllAndOverride: jest.fn().mockReturnValue(undefined),
+  } as unknown as Reflector;
+  const guard = new CsrfGuard(criarConfig(), reflector);
 
   it.each(["GET", "HEAD", "OPTIONS"])(
     "não aplica CSRF ao método seguro %s",
@@ -202,6 +234,18 @@ describe("CsrfGuard", () => {
       );
     },
   );
+
+  it("isenta transporte Bearer sem afrouxar o cookie Web", () => {
+    expect(
+      guard.canActivate(
+        criarContexto({
+          method: "POST",
+          headers: {},
+          transporteAutenticacao: "bearer",
+        }),
+      ),
+    ).toBe(true);
+  });
 
   it.each(["POST", "PUT", "PATCH", "DELETE"])(
     "aceita %s com Origin e header exatos",

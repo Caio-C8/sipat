@@ -4,6 +4,11 @@ import {
   ConcluirPrimeiroAcessoBodySchema,
   LoginBodySchema,
   LoginResponseSchema,
+  MobileConcluirPrimeiroAcessoResponseSchema,
+  MobileLoginBodySchema,
+  MobileLoginResponseSchema,
+  MobileMeResponseSchema,
+  MobileRefreshResponseSchema,
   RedefinirSenhaBodySchema,
   SolicitarRedefinicaoSenhaBodySchema,
   SolicitarRedefinicaoSenhaResponseSchema,
@@ -25,4 +30,15 @@ export class SolicitarRedefinicaoSenhaResponseDto extends createZodDto(
 ) {}
 export class RedefinirSenhaBodyDto extends createZodDto(
   RedefinirSenhaBodySchema,
+) {}
+export class MobileLoginBodyDto extends createZodDto(MobileLoginBodySchema) {}
+export class MobileLoginResponseDto extends createZodDto(
+  MobileLoginResponseSchema,
+) {}
+export class MobileRefreshResponseDto extends createZodDto(
+  MobileRefreshResponseSchema,
+) {}
+export class MobileMeResponseDto extends createZodDto(MobileMeResponseSchema) {}
+export class MobileConcluirPrimeiroAcessoResponseDto extends createZodDto(
+  MobileConcluirPrimeiroAcessoResponseSchema,
 ) {}

@@ -2,8 +2,10 @@ import {
   CHAVE_PERFIS_PERMITIDOS,
   CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA,
   CHAVE_ROTA_PUBLICA,
+  CHAVE_TRANSPORTE_AUTH_MOBILE,
 } from "../auth.constants";
 import { AuthController } from "../auth.controller";
+import { MobileAuthController } from "../mobile-auth.controller";
 import { PerfisPermitidos } from "../decorators/perfis-permitidos.decorator";
 import { Publica } from "../decorators/publica.decorator";
 
@@ -46,5 +48,38 @@ describe("decorators de segurança", () => {
         AuthController.prototype.alterarSenha,
       ),
     ).toBeUndefined();
+    expect(
+      Reflect.getMetadata(
+        CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA,
+        MobileAuthController.prototype.me,
+      ),
+    ).toBe(true);
+    expect(
+      Reflect.getMetadata(
+        CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA,
+        MobileAuthController.prototype.concluirPrimeiroAcesso,
+      ),
+    ).toBe(true);
+  });
+
+  it("declara explicitamente o transporte de cada rota mobile", () => {
+    expect(
+      Reflect.getMetadata(
+        CHAVE_TRANSPORTE_AUTH_MOBILE,
+        MobileAuthController.prototype.login,
+      ),
+    ).toBe("public");
+    expect(
+      Reflect.getMetadata(
+        CHAVE_TRANSPORTE_AUTH_MOBILE,
+        MobileAuthController.prototype.refresh,
+      ),
+    ).toBe("refresh");
+    expect(
+      Reflect.getMetadata(
+        CHAVE_TRANSPORTE_AUTH_MOBILE,
+        MobileAuthController.prototype.me,
+      ),
+    ).toBe("access");
   });
 });
