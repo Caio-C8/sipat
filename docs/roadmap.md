@@ -1248,6 +1248,118 @@ build da API e consumidores Web/mobile passaram.
 Especificação de execução:
 [BAIXAS-001](./tasks/BAIXAS-001-registrar-consultar-baixas.md).
 
+## CONTRACTS-011 — Contratos de depreciação patrimonial
+
+**Status:** concluído
+
+### Resultado esperado
+
+Definir em `@repo/contracts` os boundaries da consulta de pendentes e das
+execuções mensal, individual e em massa antes que banco ou API implementem o
+processamento contábil.
+
+### Escopo
+
+- competência mensal explícita em `AAAA-MM`, validada estruturalmente no
+  contrato e limitada à competência corrente pela API;
+- consulta paginada dos patrimônios elegíveis ainda não depreciados, com quota
+  prevista e resumo agregado dos itens no valor residual;
+- bodies estritos e distintos para depreciar um patrimônio ou todos os
+  elegíveis, sem aceitar arrays ou quantidades arbitrárias;
+- comissão obrigatória e confirmação explícita para ignorar itens que já
+  estejam no valor residual;
+- resposta discriminada da execução individual, contendo a depreciação criada
+  ou o motivo de inelegibilidade, e resposta agregada e finita da execução em
+  massa;
+- valores decimais serializados com até sete casas, datas civis e instantes sem
+  interpretação dependente do fuso;
+- códigos públicos para competência inválida, confirmação necessária e
+  conflitos do domínio.
+
+### Fora do escopo
+
+- Prisma, migration, NestJS ou cálculo com acesso ao banco;
+- reavaliação, estorno, edição ou exclusão de depreciação;
+- histórico patrimonial agregado, relatórios, Web e mobile.
+
+### Critérios de aceite
+
+- [x] contratos não aceitam auditoria, valores calculados, situação contábil
+      ou identificadores de parâmetro controlados pelo servidor;
+- [x] execução individual e em massa não permitem selecionar subconjuntos de
+      patrimônios;
+- [x] consulta possui paginação finita, ordenação determinística e response
+      suficiente para a conferência prévia;
+- [x] responses usam allowlists e a resposta em massa permanece limitada
+      independentemente da quantidade processada;
+- [x] testes cobrem competência, confirmação, propriedades extras, precisão e
+      API pública;
+- [x] lint, typecheck, testes e consumidores afetados passam.
+
+Concluído em 27 de outubro de 2026. A consulta ficou limitada a 50 itens por
+página e sem ordenação controlada pelo cliente; os bodies não aceitam
+subconjuntos e a resposta em massa contém somente agregados. Lint, typecheck e
+115 testes do package passaram, assim como o typecheck de API, Web e mobile.
+
+Especificação de execução:
+[CONTRACTS-011](./tasks/CONTRACTS-011-contratos-depreciacoes-patrimoniais.md).
+
+## DEPRECIACOES-001 — Consultar e executar depreciações na API
+
+**Status:** planejado
+
+### Resultado esperado
+
+Permitir que somente o Diretor de Patrimônio confira os bens pendentes e
+execute, de forma atômica, a depreciação linear da competência corrente para
+um patrimônio ou para todos os elegíveis.
+
+### Escopo
+
+- consulta paginada dos itens ainda não depreciados na competência corrente,
+  incluindo `ATIVO`, `EMPRESTADO` e `EM_MANUTENCAO`;
+- execução individual e em massa com uma comissão vigente na data civil do
+  processamento;
+- início da depreciação no mês seguinte à `dataInicio`, sem fração do
+  primeiro mês nem recomposição retroativa;
+- quota linear calculada pelo saldo ainda depreciável e pela vida útil
+  restante, com precisão decimal de até sete casas e ajuste final ao residual;
+- atualização da situação contábil e criação do histórico individual na
+  mesma transação;
+- confirmação antes de ignorar itens que já estejam no residual e resumo dos
+  que atingirem o residual nesta execução;
+- rollback integral diante de erro inesperado e classificação explícita dos
+  itens inelegíveis sem tratá-los como falha;
+- locks, revalidação transacional, unicidade por patrimônio, parâmetro e
+  competência, queries em lote e índices justificados pelo plano real;
+- testes unitários, E2E e PostgreSQL para cálculo, atomicidade e concorrência.
+
+### Fora do escopo
+
+- reavaliação, estorno, edição ou exclusão de registros;
+- depreciação proporcional por dias, processamento de competência passada ou
+  futura e seleção de subconjunto em lote;
+- scheduler, fila, processamento automático sem ação do usuário;
+- histórico agregado, relatórios, Web e mobile.
+
+### Critérios de aceite
+
+- [ ] somente `DIRETOR_PATRIMONIO` consulta pendentes e executa depreciação;
+- [ ] competência diferente do mês civil corrente é rejeitada sem escrita;
+- [ ] cada patrimônio recebe no máximo uma depreciação por parâmetro e
+      competência, inclusive sob concorrência;
+- [ ] situação contábil e histórico permanecem consistentes e nenhuma quota
+      reduz o valor líquido abaixo do residual;
+- [ ] a operação em massa desfaz todas as escritas diante de erro inesperado e
+      retorna apenas agregados finitos;
+- [ ] cadastro tardio, empréstimo, manutenção, baixa, início no mês corrente,
+      duplicidade e residual possuem cobertura explícita;
+- [ ] migration, PostgreSQL, API, contratos e consumidores passam nas
+      verificações aplicáveis.
+
+Especificação de execução:
+[DEPRECIACOES-001](./tasks/DEPRECIACOES-001-consultar-executar-depreciacoes.md).
+
 ## Decisões necessárias antes dos objetivos seguintes
 
 Estas decisões afetam segurança ou comportamento externo e não podem ser

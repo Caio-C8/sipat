@@ -12,6 +12,7 @@ export * from "./nota-fiscal";
 export * from "./comissao";
 export * from "./inventario";
 export * from "./baixa-patrimonio";
+export * from "./depreciacao-patrimonio";
 
 export type AppEnvironment = "development" | "staging" | "production" | "test";
 
