@@ -15,7 +15,7 @@ Controllers, services e repositories ficam em [API](../../apps/api/README.md).
 
 ```text
 apps/mobile
-    ↓ health público ou operações /api/auth/mobile
+    ↓ health público, /api/auth/mobile ou leituras de domínio autenticadas
 apps/api
     ↓ response validada por schema compartilhado
 sessão em memória + refresh no storage nativo
@@ -27,8 +27,9 @@ sessão em memória + refresh no storage nativo
 - a response do health check é validada em runtime;
 - a consulta possui timeout de oito segundos e cancelamento;
 - a request anterior é abortada antes de outra verificação;
-- existe cliente HTTP comum para as operações de autenticação; operação de
-  domínio, cache e offline ainda não existem;
+- o cliente HTTP comum atende autenticação e as leituras da Home em
+  `/api/setores`, `/api/patrimonios` e `/api/inventarios`;
+- cache e offline ainda não existem;
 - o health check público não envia credencial.
 
 ## Diferença entre Web e nativo

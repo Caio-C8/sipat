@@ -65,6 +65,30 @@ export const mobileShell = {
   navigationSurface: "#ffffff",
 } as const;
 
+export const mobileHome = {
+  surface: "#ffffff",
+  surfaceMuted: "#f4f7fb",
+  text: "#14243b",
+  textMuted: "#69778a",
+  textSubtle: "#8390a1",
+  border: "#dfe7f1",
+  avatar: "#eef3fa",
+  action: "#2860eb",
+  actionSurface: "#eff5ff",
+  heroText: "#ffffff",
+  heroTextMuted: "#dfe9ff",
+  heroIconSurface: "#4c79ed",
+  heroDecoration: "#3569e8",
+  progressTrack: "#e5ebf3",
+  warning: "#9b6508",
+  warningSurface: "#fff8e8",
+  success: "#178765",
+  successSurface: "#eafaf4",
+  error: "#9a4035",
+  errorBorder: "#e8b9b1",
+  errorSurface: "#fff2ef",
+} as const;
+
 export const mobileAuth = {
   canvas: "#f8fafc",
   card: "#ffffff",

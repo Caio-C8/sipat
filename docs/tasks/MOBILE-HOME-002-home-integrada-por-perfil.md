@@ -1,6 +1,7 @@
 # `MOBILE-HOME-002` — Integrar a Home mobile por perfil
 
-**Status:** `aprovada`
+**Status:** `implementada`; validação integrada com API/PostgreSQL reais,
+dispositivos físicos e tecnologias assistivas permanece pendente.
 
 ## Objetivo
 
@@ -78,18 +79,18 @@ autenticado.
 
 - [ ] Home dos dois perfis corresponde ao Figma em 390×844 e se adapta às
       demais dimensões;
-- [ ] Administrador vê totais reais de setores e patrimônios e acompanha os
+- [x] Administrador vê totais reais de setores e patrimônios e acompanha os
       três estados de inventário sem receber ação mutável;
-- [ ] Diretor vê dados reais de patrimônios e inventários, com foco em progresso
+- [x] Diretor vê dados reais de patrimônios e inventários, com foco em progresso
       e conferência, sem depender da rota administrativa de setores;
-- [ ] todas as responses são validadas com `@repo/contracts` antes de alterar a
+- [x] todas as responses são validadas com `@repo/contracts` antes de alterar a
       UI;
-- [ ] nenhum estado de erro ou falta de permissão é apresentado como zero;
-- [ ] ações futuras permanecem visíveis, disabled e sem rota placeholder;
-- [ ] bottom bar vem do shell `(app)` e indica `Início` como destino atual;
-- [ ] testes cobrem os dois perfis, dados, vazio, erro parcial, `401`, `403`,
+- [x] nenhum estado de erro ou falta de permissão é apresentado como zero;
+- [x] ações futuras permanecem visíveis, disabled e sem rota placeholder;
+- [x] bottom bar vem do shell `(app)` e indica `Início` como destino atual;
+- [x] testes cobrem os dois perfis, dados, vazio, erro parcial, `401`, `403`,
       timeout, cancelamento e refresh;
-- [ ] nenhuma nova rota de API específica para mobile é criada.
+- [x] nenhuma nova rota de API específica para mobile é criada.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -120,3 +121,27 @@ autenticado.
 
 - A página e a operação de relatórios ainda não existem; permanecem visíveis e
   disabled, sem simulação de geração.
+
+## Resultado da execução
+
+- o frame `Home` da página `Telas Mobile` foi inspecionado no editor Web do
+  Figma em modo somente leitura, porque o conector oficial exigiu permissão de
+  edição até para leitura; a implementação preserva saudação/avatar, destaque
+  azul, cards de indicadores, última conferência e bottom bar;
+- a Home consulta as três listagens existentes com Bearer em memória, paginação,
+  filtros públicos e validação integral das responses; a última conferência
+  percorre sequencialmente os finalizados e compara `dataFim`, sem presumir que
+  a ordenação por criação represente a conclusão mais recente;
+- o Administrador recebe setores, bens e os três estados de inventário; o
+  Diretor recebe bens, progresso do inventário atual, ocorrências e a última
+  conferência finalizada, sem chamar `/setores`;
+- requests por bloco são canceladas ao substituir a consulta ou desmontar a
+  tela; refresh e nova tentativa preservam blocos válidos, e `401`, `403`,
+  timeout, rede/offline e contrato inválido não viram zero;
+- ações futuras e geração de relatório permanecem disabled, sem handler e sem
+  rota placeholder; a API não recebeu endpoint novo;
+- passaram typecheck, 54 testes em 17 arquivos, lint, exports Android/iOS/Web,
+  formatação e `git diff --check`;
+- a comparação visual da implementação executada em 390×844, integração com
+  API/PostgreSQL reais, aparelho, tablet, rotação, fonte ampliada, TalkBack e
+  VoiceOver não foram executadas e continuam pendentes.

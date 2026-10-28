@@ -23,8 +23,8 @@ operação deve impedir que uma resposta antiga substitua o estado de uma busca
 mais nova. Ao ir para background ou sair da tela, cancele quando isso preservar
 recursos e semântica; não presuma que toda request precise ser abortada.
 
-O health check atual possui timeout de oito segundos. Novas operações definem
-limites próprios com base no fluxo e medição.
+O health check e as leituras atuais da Home possuem timeout de oito segundos.
+Novas operações devem definir limites próprios com base no fluxo e medição.
 
 ## Retry
 
