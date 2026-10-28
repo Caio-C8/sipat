@@ -154,7 +154,8 @@ gerenciem a própria senha com segurança.
 
 ### RF11: Consulta, Listagem e Filtros de Patrimônios
 
-**Descrição:** O sistema deve permitir que o Diretor de Patrimônio consulte, liste e filtre patrimônios cadastrados.
+**Descrição:** O sistema deve permitir que o Administrador e o Diretor de
+Patrimônio consultem, listem e filtrem patrimônios cadastrados.
 
 **Informações:** Número patrimonial, descrição, marca, modelo, número de série, status, setor, responsável, espécie, natureza e demais campos de identificação.
 
@@ -301,7 +302,9 @@ anexado, comissão e usuário responsável.
 
 **Descrição:** O sistema deve permitir que o Diretor de Patrimônio cadastre um
 inventário dos setores ativos e realize, um setor por vez, a conferência dos
-patrimônios ativos incluídos, identificando bens e registrando divergências.
+patrimônios ativos incluídos, identificando bens e registrando divergências. O
+Administrador deve poder consultar inventários e seu progresso, sem criar,
+iniciar, conferir, corrigir, concluir ou finalizar inventários.
 
 **Informações:** Inventário, setores incluídos, comissão, datas de início e
 encerramento, patrimônio identificado, setor esperado, setor encontrado,
@@ -316,6 +319,9 @@ houver e usuário responsável.
   um `ItemInventario` pendente para cada patrimônio incluído, preservando como
   setor esperado o setor atual do patrimônio.
 - O inventário e seus setores devem iniciar pendentes e sem data de início.
+- Administrador e Diretor de Patrimônio podem consultar a lista, o detalhe, os
+  setores e os itens de inventários; somente o Diretor de Patrimônio executa as
+  mutações do ciclo operacional.
 - Somente um setor do inventário pode permanecer EM_ANDAMENTO por vez. O início
   do primeiro setor marca o inventário como EM_ANDAMENTO e define sua data de
   início.
@@ -452,6 +458,9 @@ houver e usuário responsável.
 - O sistema deve possuir os perfis ADMINISTRADOR e DIRETOR_PATRIMONIO.
 - O administrador poderá gerenciar as entidades administrativas do sistema, com exceção dos patrimônios.
 - O diretor de patrimônio poderá gerenciar os patrimônios.
+- O Administrador poderá consultar os dados funcionais expostos pelo sistema,
+  inclusive patrimônios, inventários e históricos, sem que a permissão de
+  leitura conceda autorização para executar operações patrimoniais.
 - Os dois perfis poderão buscar dados dos patrimônios, gerar relatórios e enviar patrimônios para manutenção.
 - Operações patrimoniais que exigem autorização devem ser executadas somente pelo perfil autorizado.
 - As operações relacionadas aos patrimônios que exigem comissão devem possuir uma comissão vigente associada.
@@ -1080,7 +1089,7 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 
 ### UC19 - Realizar inventário patrimonial
 
-**Ator(es):** Diretor de Patrimônio
+**Ator(es):** Diretor de Patrimônio; Administrador como observador
 
 **Pré-condição:** O Diretor deve estar autenticado; os setores e patrimônios a
 incluir devem estar ativos e a comissão deve estar vigente.
@@ -1103,6 +1112,8 @@ incluir devem estar ativos e a comissão deve estar vigente.
 
 **Fluxos alternativos / exceções:**
 
+- Consulta administrativa: o Administrador lista inventários, abre detalhes e
+  acompanha setores, itens, estados e progresso, sem receber ações mutáveis.
 - Etiqueta ilegível: o usuário utiliza busca manual.
 - Patrimônio localizado em outro setor: o sistema registra divergência.
 - Correção imediata: o sistema cria a transferência e vincula a correção ao item de inventário.
@@ -1197,9 +1208,9 @@ conferidos, itens não localizados, divergências e correções rastreáveis.
 
 **Atributos:** E-mail, senha, nome, perfil e situação do usuário.
 
-**Eventos:** Administrar os cadastros administrativos do sistema, incluindo usuários, responsáveis, setores, comissões, naturezas de bens, espécies de bens e fornecedores. Também poderá participar do registro e alteração de processos de compra e do gerenciamento de manutenções.
+**Eventos:** Administrar os cadastros administrativos do sistema, incluindo usuários, responsáveis, setores, comissões, naturezas de bens, espécies de bens e fornecedores. Também poderá participar do registro e alteração de processos de compra e do gerenciamento de manutenções, consultar todos os dados patrimoniais e acompanhar inventários sem executar operações sobre os patrimônios.
 
-**Serviços:** Autenticação e controle de acesso (RF01); Gestão de Usuários (RF02); Gestão de Responsáveis (RF03); Gestão de Setores (RF04); Gestão de Comissões (RF05); Gestão de Naturezas de Bens (RF06); Gestão de Espécies de Bens (RF07); Gestão de Fornecedores (RF08); Gestão de Processos de Compra e Documentos Fiscais (RF09); Gestão de Manutenções (RF18); Consulta de Patrimônios (RF11); Consulta do Histórico Patrimonial (RF20); Relatórios Patrimoniais (RF21).
+**Serviços:** Autenticação e controle de acesso (RF01); Gestão de Usuários (RF02); Gestão de Responsáveis (RF03); Gestão de Setores (RF04); Gestão de Comissões (RF05); Gestão de Naturezas de Bens (RF06); Gestão de Espécies de Bens (RF07); Gestão de Fornecedores (RF08); Gestão de Processos de Compra e Documentos Fiscais (RF09); Gestão de Manutenções (RF18); Consulta de Patrimônios (RF11); consulta de inventários (RF19); Consulta do Histórico Patrimonial (RF20); Relatórios Patrimoniais (RF21).
 
 **Subpontos de vista:** Diretor de Patrimônio, Usuário do Sistema.
 

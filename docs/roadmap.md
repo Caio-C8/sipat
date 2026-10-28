@@ -96,6 +96,25 @@ As especificações são
 [MOBILE-AUTH-002](./tasks/MOBILE-AUTH-002-telas-autenticacao.md) e
 [MOBILE-HOME-001](./tasks/MOBILE-HOME-001-home-check.md).
 
+### Correção visual e primeira integração de domínio mobile
+
+As telas atuais funcionam, mas não reproduzem o protótipo aprovado. A execução
+seguinte usa obrigatoriamente a página `Telas Mobile` do Figma em modo de
+consulta e não altera o arquivo de design:
+
+| Ordem | Objetivo                                                       | Status   | Dependências                          |
+| ----- | -------------------------------------------------------------- | -------- | ------------------------------------- |
+| 1     | `MOBILE-UI-001` — shell conforme o Figma                       | aprovado | fundação mobile                       |
+| 2     | `MOBILE-AUTH-003` — paridade visual da autenticação            | aprovado | `MOBILE-UI-001`                       |
+| 3     | `INVENTARIOS-003` — consulta de inventários pelo Administrador | aprovado | `INVENTARIOS-001` e `INVENTARIOS-002` |
+| 4     | `MOBILE-HOME-002` — Home real por perfil                       | aprovado | `MOBILE-UI-001` e `INVENTARIOS-003`   |
+
+Especificações:
+[MOBILE-UI-001](./tasks/MOBILE-UI-001-paridade-figma-shell.md),
+[MOBILE-AUTH-003](./tasks/MOBILE-AUTH-003-paridade-visual-figma.md),
+[INVENTARIOS-003](./tasks/INVENTARIOS-003-consulta-administrador.md) e
+[MOBILE-HOME-002](./tasks/MOBILE-HOME-002-home-integrada-por-perfil.md).
+
 ## Ordem das entregas básicas de patrimônios
 
 | Ordem | Objetivo                                      | Status    | Dependências                         |
@@ -159,11 +178,14 @@ Objetivos patrimoniais futuros que exigirem comissão dependerão de
 | 23    | `CONTRACTS-008` — Contratos de inventários         | concluído | RF19, UC19, `CONTRACTS-004`, `CONTRACTS-007`               |
 | 24    | `INVENTARIOS-001` — Criar e consultar inventários  | concluído | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
 | 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | concluído | `INVENTARIOS-001`, concorrência e política de movimentação |
+| 26    | `INVENTARIOS-003` — Consulta pelo Administrador    | aprovado  | `INVENTARIOS-001`, `INVENTARIOS-002` e RNF05               |
 
-Esta sequência entrega somente contratos, persistência e API. Interfaces Web e
-mobile, câmera, scanner, fila offline e armazenamento de credencial permanecem
-fora dos três objetivos. Os consumidores de interface deverão ser planejados
-depois que a API estiver implementada e verificada.
+Os três primeiros objetivos entregaram contratos, persistência e API sem
+interfaces. `INVENTARIOS-003` altera somente a autorização das consultas
+existentes para permitir acompanhamento administrativo; as operações do
+inventário continuam exclusivas do Diretor de Patrimônio. A primeira integração
+mobile é especificada separadamente em `MOBILE-HOME-002`; câmera, scanner e fila
+offline continuam fora desta sequência.
 
 A população do inventário é formada na criação por todos os setores ativos e
 patrimônios ATIVOS daquele instante. Somente um setor do inventário pode ficar
