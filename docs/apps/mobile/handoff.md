@@ -26,10 +26,11 @@ Ainda não existem navegação de domínio, cache/offline ou E2E em dispositivos
 topbar azul-marinho com brasão e identificação municipal, safe area coerente e
 bottom bar somente em `(app)`. `Início` é o único destino ativo; Bens,
 Inventário, Cadastro e Relatórios permanecem disabled, sem rotas placeholder.
-O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003`,
+O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003` recompôs login,
+troca obrigatória e confirmação conforme os três frames do Figma, preservando
+contratos, sessão e redirects; a recuperação aparece disabled, sem rota.
 `INVENTARIOS-003` e `MOBILE-HOME-002` continuam aprovados e não implementados;
-eles cobrem a paridade completa das telas, as consultas necessárias e a Home de
-domínio.
+eles cobrem as consultas necessárias e a Home de domínio.
 
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial com logout e sem dados
 de domínio. `/check` preserva o diagnóstico de runtime/API, acrescenta o

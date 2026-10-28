@@ -71,13 +71,12 @@ alterado.
 | Ordem | Objetivo                                                                                                            | Status       | Dependências                            |
 | ----- | ------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------- |
 | 1     | [`MOBILE-UI-001`](../../tasks/MOBILE-UI-001-paridade-figma-shell.md) — topbar, tokens e bottom bar conforme o Figma | implementada | fundação atual e acesso visual ao Figma |
-| 2     | [`MOBILE-AUTH-003`](../../tasks/MOBILE-AUTH-003-paridade-visual-figma.md) — paridade das três telas de autenticação | aprovada     | `MOBILE-UI-001`                         |
+| 2     | [`MOBILE-AUTH-003`](../../tasks/MOBILE-AUTH-003-paridade-visual-figma.md) — paridade das três telas de autenticação | implementada | `MOBILE-UI-001`                         |
 | 3     | [`INVENTARIOS-003`](../../tasks/INVENTARIOS-003-consulta-administrador.md) — leitura administrativa de inventários  | aprovada     | `INVENTARIOS-001` e `INVENTARIOS-002`   |
 | 4     | [`MOBILE-HOME-002`](../../tasks/MOBILE-HOME-002-home-integrada-por-perfil.md) — Home fiel e integrada por perfil    | aprovada     | `MOBILE-UI-001` e `INVENTARIOS-003`     |
 
-`MOBILE-AUTH-003` e `INVENTARIOS-003` podem avançar em paralelo depois do shell.
-`MOBILE-HOME-002` fecha a sequência porque depende da autorização real da API e
-do shell autenticado. A bottom bar e os controles que apontam para páginas ainda
-inexistentes devem aparecer como no protótipo, porém disabled, sem rotas
-placeholder. A faixa técnica de development não faz parte da reformulação e não
-deve ser alterada.
+`INVENTARIOS-003` pode avançar depois do shell. `MOBILE-HOME-002` fecha a
+sequência porque depende da autorização real da API e do shell autenticado. A
+bottom bar e os controles que apontam para páginas ainda inexistentes devem
+aparecer como no protótipo, porém disabled, sem rotas placeholder. A faixa
+técnica de development não faz parte da reformulação e não deve ser alterada.

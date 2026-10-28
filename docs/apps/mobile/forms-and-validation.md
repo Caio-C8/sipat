@@ -73,6 +73,8 @@ compartilhados quando a representação do campo for idêntica. O formulário:
 - usa `textContentType`/`autoComplete`, capitalização, teclado e ação de retorno
   adequados a e-mail e senha em cada plataforma;
 - oferece mostrar/ocultar senha com nome, estado e alvo de toque acessíveis;
+- mantém a recuperação de senha visível conforme o protótipo, mas disabled e
+  sem rota enquanto o fluxo não for aprovado;
 - impede submissão duplicada e mantém o botão com estado pending compreensível;
 - diferencia validação local, credencial inválida, `429`, sessão expirada e
   indisponibilidade, sem revelar se a conta existe;

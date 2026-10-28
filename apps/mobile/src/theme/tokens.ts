@@ -65,6 +65,23 @@ export const mobileShell = {
   navigationSurface: "#ffffff",
 } as const;
 
+export const mobileAuth = {
+  canvas: "#f8fafc",
+  card: "#ffffff",
+  text: "#14243b",
+  textMuted: "#69778a",
+  textSubtle: "#8390a1",
+  border: "#dce3eb",
+  inputIcon: "#77879a",
+  action: "#1c4170",
+  actionPressed: "#153457",
+  link: "#1d5fbb",
+  information: "#2f6fcb",
+  informationSurface: "#eef5ff",
+  success: "#178765",
+  successSurface: "#eafaf4",
+} as const;
+
 export const platformFont = Platform.select({
   ios: "Menlo",
   android: "monospace",

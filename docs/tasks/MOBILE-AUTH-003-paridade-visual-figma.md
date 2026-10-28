@@ -1,6 +1,7 @@
 # `MOBILE-AUTH-003` — Igualar autenticação mobile ao Figma
 
-**Status:** `aprovada`
+**Status:** `implementada`; comparação em navegador estreito, dispositivos
+reais, fonte ampliada, TalkBack e VoiceOver continua pendente.
 
 ## Objetivo
 
@@ -60,13 +61,13 @@ Mobile`, preservando o fluxo, contratos, sessão e redirects já implementados.
 
 - [ ] as três telas correspondem aos frames do Figma em 390×844, sem diferença
       visual não documentada;
-- [ ] fluxo comum e primeiro acesso continuam obedecendo à matriz atual;
-- [ ] pending, erro de campo, erro geral, API indisponível e sessão inválida
+- [x] fluxo comum e primeiro acesso continuam obedecendo à matriz atual;
+- [x] pending, erro de campo, erro geral, API indisponível e sessão inválida
       preservam função e encaixam na composição aprovada;
-- [ ] ação futura de recuperação é visível e disabled, sem navegação;
-- [ ] nenhum exemplo de pessoa, e-mail ou patrimônio do Figma fica hardcoded;
+- [x] ação futura de recuperação é visível e disabled, sem navegação;
+- [x] nenhum exemplo de pessoa, e-mail ou patrimônio do Figma fica hardcoded;
 - [ ] teclado, fonte ampliada e leitor de tela não escondem campos ou ações;
-- [ ] testes existentes de auth e sessão continuam passando.
+- [x] testes existentes de auth e sessão continuam passando.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -96,3 +97,21 @@ regressão e só devem mudar diante de uma falha funcional comprovada.
 
 - Nenhuma decisão de produto pendente. Se o frame mudar, o implementador deve
   registrar a divergência e confirmar a nova referência antes de adaptar código.
+
+## Resultado da execução
+
+- Os frames `Login` (`334:43423`), `Crie sua nova senha` (`315:43371`) e
+  `Senha atualizada` (`315:43202`) foram inspecionados no Figma Web autenticado,
+  em modo somente leitura; nenhum nó, comentário ou permissão foi alterado.
+- As três telas passaram a usar a hierarquia, paleta azul-marinho, cards,
+  campos com ícones, aviso de primeiro acesso, confirmação de sucesso e rodapé
+  institucional do protótipo. O nome continua vindo da identidade real.
+- `Esqueci minha senha` está visível com semântica disabled e sem handler ou
+  rota. Schemas, operações, sessão, storage e redirects não foram alterados.
+- O preview Web confirmou a composição completa de login e o reflow dos erros.
+  A ferramenta disponível não ofereceu override de viewport; por isso a
+  comparação visual da implementação exatamente em 390×844, assim como teclado
+  e acessibilidade em dispositivos reais, permanece pendente e não é declarada
+  como executada.
+- Foram aprovados lint, typecheck, 41 testes em 16 arquivos e exports Android,
+  iOS e Web. O export não substitui build EAS nem validação em hardware.

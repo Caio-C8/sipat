@@ -4,11 +4,11 @@
 
 A base usa primitives do React Native e `StyleSheet`. Tokens semânticos mínimos,
 `AppTopbar`, `AppBottomBar` e `DevelopmentCheckBanner` estão implementados. A
-bottom bar usa os ícones Lucide com carregamento de fonte pelo Expo; não foi
-introduzida biblioteca de componentes. Botão, campo, senha, card e feedback
-continuam sem primitive compartilhada até os formulários demonstrarem
-reutilização real. Esse conjunto não constitui um design system definitivo do
-SIPAT.
+bottom bar e os formulários de autenticação usam os ícones Lucide com
+carregamento de fonte pelo Expo; não foi introduzida biblioteca de componentes.
+As três telas de autenticação compartilham card, botão, campo, senha, ação de
+texto e feedback locais à feature. Esse conjunto não constitui um design system
+definitivo do SIPAT nem deve ser promovido sem consumidor fora da autenticação.
 
 ## Quando criar um componente
 

@@ -21,7 +21,8 @@ código interno da API.
 - `/check` concentra runtime, health check da API e o catálogo tipado das rotas
   reais, acessível sem sessão somente em `development`;
 - `/login`, `/redefinir-senha` e `/senha-atualizada` implementam login, troca
-  obrigatória e confirmação sob o grupo `(auth)`;
+  obrigatória e confirmação sob o grupo `(auth)`, com a composição visual dos
+  frames correspondentes do Figma;
 - a sessão restaura antes da navegação, mantém access token em memória, rotaciona
   refresh token no `expo-secure-store` e aplica a matriz de acesso nos layouts;
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
@@ -114,7 +115,7 @@ A comunicação HTTP está em
 
 ## Decisões pendentes do SIPAT
 
-- expansão dos tokens do shell para as telas completas de autenticação e Home;
+- expansão dos tokens do shell para a Home completa;
 - validação do novo binário responsivo em tablets Android e iPad reais;
 - biblioteca de estado remoto para dados de domínio;
 - política de cache, persistência e operação offline;

@@ -102,12 +102,12 @@ As telas atuais funcionam, mas não reproduzem o protótipo aprovado. A execuç�
 seguinte usa obrigatoriamente a página `Telas Mobile` do Figma em modo de
 consulta e não altera o arquivo de design:
 
-| Ordem | Objetivo                                                       | Status   | Dependências                          |
-| ----- | -------------------------------------------------------------- | -------- | ------------------------------------- |
-| 1     | `MOBILE-UI-001` — shell conforme o Figma                       | aprovado | fundação mobile                       |
-| 2     | `MOBILE-AUTH-003` — paridade visual da autenticação            | aprovado | `MOBILE-UI-001`                       |
-| 3     | `INVENTARIOS-003` — consulta de inventários pelo Administrador | aprovado | `INVENTARIOS-001` e `INVENTARIOS-002` |
-| 4     | `MOBILE-HOME-002` — Home real por perfil                       | aprovado | `MOBILE-UI-001` e `INVENTARIOS-003`   |
+| Ordem | Objetivo                                                       | Status    | Dependências                          |
+| ----- | -------------------------------------------------------------- | --------- | ------------------------------------- |
+| 1     | `MOBILE-UI-001` — shell conforme o Figma                       | concluído | fundação mobile                       |
+| 2     | `MOBILE-AUTH-003` — paridade visual da autenticação            | concluído | `MOBILE-UI-001`                       |
+| 3     | `INVENTARIOS-003` — consulta de inventários pelo Administrador | aprovado  | `INVENTARIOS-001` e `INVENTARIOS-002` |
+| 4     | `MOBILE-HOME-002` — Home real por perfil                       | aprovado  | `MOBILE-UI-001` e `INVENTARIOS-003`   |
 
 Especificações:
 [MOBILE-UI-001](./tasks/MOBILE-UI-001-paridade-figma-shell.md),
