@@ -1,6 +1,7 @@
 # `MOBILE-AUTH-002` — Implementar login e primeiro acesso mobile
 
-**Status:** `aprovada`
+**Status:** `implementada`; paridade visual fina com o Figma, build EAS e
+validação em Android/iOS reais permanecem pendentes.
 
 ## Objetivo
 
@@ -94,23 +95,23 @@ atualizada` na página `Telas Mobile`, além da imagem anexada ao planejamento.
 
 - [ ] reiniciar o app restaura a sessão sem novo login quando refresh, oito
       horas e trinta minutos continuam válidos;
-- [ ] sessão ausente, expirada, revogada ou inativa abre login sem mostrar home;
-- [ ] access token não é persistido e refresh token não aparece fora do adapter
+- [x] sessão ausente, expirada, revogada ou inativa abre login sem mostrar home;
+- [x] access token não é persistido e refresh token não aparece fora do adapter
       SecureStore;
-- [ ] login e primeiro acesso usam schemas compartilhados e validam toda
+- [x] login e primeiro acesso usam schemas compartilhados e validam toda
       response antes de alterar estado ou navegar;
-- [ ] redirects e acesso direto seguem integralmente a matriz documentada sem
+- [x] redirects e acesso direto seguem integralmente a matriz documentada sem
       loops ou flash de conteúdo protegido;
-- [ ] primeiro acesso troca a família e a tela de sucesso continua autenticada;
-- [ ] logout online revoga remotamente e sempre limpa o estado local; logout
+- [x] primeiro acesso troca a família e a tela de sucesso continua autenticada;
+- [x] logout online revoga remotamente e sempre limpa o estado local; logout
       offline não afirma revogação remota concluída;
-- [ ] falha temporária de rede na restauração não apaga silenciosamente a sessão;
+- [x] falha temporária de rede na restauração não apaga silenciosamente a sessão;
 - [ ] senha nunca aparece em log, storage, URL, analytics, exception ou snapshot;
 - [ ] interface segue a imagem disponível, topbar e faixa de desenvolvimento,
       com diferenças intencionais documentadas;
 - [ ] formulários permanecem utilizáveis com teclado, fonte ampliada, TalkBack,
       VoiceOver, retrato, paisagem e tablet;
-- [ ] testes cobrem sessão, storage, concorrência de refresh, operações,
+- [x] testes cobrem sessão, storage, concorrência de refresh, operações,
       formulários, redirects e falhas.
 
 ## Arquivos ou módulos potencialmente afetados

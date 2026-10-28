@@ -13,7 +13,7 @@ const expoCliRequire = createRequire(
 );
 const expoCliManifest = expoCliRequire("./package.json");
 
-assert.equal(expoCliManifest.version, "58.1.15");
+assert.equal(expoCliManifest.version, "58.1.16");
 
 const { z: zodV3 } = expoCliRequire("zod");
 let parsedArrayElements = 0;

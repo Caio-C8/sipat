@@ -16,8 +16,10 @@ código interno da API.
 
 - `/` possui o shell neutro da futura home e `/check` concentra o runtime e o
   health check da API;
-- `/login`, `/redefinir-senha` e `/senha-atualizada` existem como shells sob o
-  grupo `(auth)`, ainda sem formulários ou sessão;
+- `/login`, `/redefinir-senha` e `/senha-atualizada` implementam login, troca
+  obrigatória e confirmação sob o grupo `(auth)`;
+- a sessão restaura antes da navegação, mantém access token em memória, rotaciona
+  refresh token no `expo-secure-store` e aplica a matriz de acesso nos layouts;
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
   em `development`;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
@@ -38,10 +40,10 @@ código interno da API.
   vivo o endpoint `/health` e o documento HTML servido na raiz;
 - `orientation: "default"` permite retrato e paisagem, e a tela técnica adapta
   os cards em duas colunas quando a janela possui largura suficiente;
-- ainda não existem autenticação, armazenamento persistente, operação de
-  domínio, formulário, cache remoto, modo offline ou E2E em dispositivos;
-- testes de renderização cobrem a topbar, a faixa de desenvolvimento e suas
-  propriedades de acessibilidade essenciais.
+- ainda não existem operação de domínio, cache remoto, modo offline ou E2E em
+  dispositivos;
+- testes cobrem configuração, HTTP, formulários, storage, sessão, concorrência,
+  redirects, topbar e faixa de desenvolvimento.
 
 O estado “Aplicativo móvel operacional” confirma apenas que o bundle React
 Native inicializou. Ele não substitui o health check da API.
@@ -107,7 +109,7 @@ A comunicação HTTP está em
 
 - identidade visual, tema e tokens definitivos;
 - validação do novo binário responsivo em tablets Android e iPad reais;
-- biblioteca de formulários e estado remoto;
+- biblioteca de estado remoto para dados de domínio;
 - política de cache, persistência e operação offline;
 - observabilidade, crash reporting e analytics;
 - ampliar a suíte unitária e adicionar testes de componentes e E2E em
@@ -120,6 +122,6 @@ Esses itens não são capacidades já implementadas. Registre a decisão junto d
 primeira feature que realmente a exigir.
 
 A navegação autenticada, o transporte access/refresh e o armazenamento no
-`expo-secure-store` já possuem decisão aprovada no
-[roadmap](./roadmap.md#primeira-entrega-autenticada), mas continuam sem
-implementação.
+`expo-secure-store` foram implementados em `MOBILE-AUTH-002`. Build EAS,
+inspeção visual fina e validação de acessibilidade em aparelhos reais continuam
+pendentes.

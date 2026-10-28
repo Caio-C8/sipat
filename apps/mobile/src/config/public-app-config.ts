@@ -16,6 +16,7 @@ export type PublicAppConfig = Readonly<{
   appName: string;
   appVersion: string;
   environment: AppEnvironment;
+  apiBaseUrl?: string;
   apiHealthUrl?: string;
 }>;
 
@@ -75,6 +76,7 @@ export function getPublicAppConfig(
     appName: appName?.trim() || DEFAULT_APP_NAME,
     appVersion: Constants.expoConfig?.version ?? "0.1.0",
     environment: normalizedEnvironment,
+    apiBaseUrl: resolvedApiBaseUrl,
     apiHealthUrl: resolvedApiBaseUrl
       ? `${resolvedApiBaseUrl}/api/health`
       : undefined,

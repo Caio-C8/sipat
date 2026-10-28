@@ -24,10 +24,10 @@ desbloquear uma tela.
 ## Estado da automação
 
 O package usa Vitest em ambiente Node e renderização React Native Web para os
-componentes compartilhados. A suíte atual cobre a resolução da configuração
-pública, a descoberta da API local, respostas HTTP sem sucesso, a validação
-runtime do payload de `GET /api/health`, as rotas públicas e a semântica
-essencial da topbar e da faixa de desenvolvimento. Como o script `test`
+componentes compartilhados. A suíte atual cobre configuração pública, health,
+cliente e operações de autenticação, formulários, adapter de refresh, sessão,
+concorrência de renovação, matriz de redirects, topbar e faixa de
+desenvolvimento. Como o script `test`
 participa do grafo do Turborepo, `pnpm check` executa essa suíte no CI.
 
 O workflow também constrói a imagem de produção do `mobile-web`, inicia o

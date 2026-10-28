@@ -1,4 +1,4 @@
-import { usePathname, useRouter } from "expo-router";
+import { usePathname, useRouter, type Href } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { AppEnvironment } from "@repo/contracts";
@@ -41,7 +41,7 @@ export function DevelopmentCheckBanner() {
         onFocus={() => setFocused(true)}
         onPress={() => {
           if (!isCheckRoute) {
-            router.push(appRoutes.check);
+            router.push(appRoutes.check as Href);
           }
         }}
         style={({ pressed }) => [

@@ -1,10 +1,5 @@
-import { FoundationScreen } from "../../components/shared/foundation-screen";
+import { FirstAccessForm } from "../../features/auth/forms/first-access-form";
 
 export default function ResetPasswordScreen() {
-  return (
-    <FoundationScreen
-      description="A troca obrigatória de senha será implementada junto ao fluxo de primeiro acesso."
-      title="Crie sua nova senha"
-    />
-  );
+  return <FirstAccessForm />;
 }

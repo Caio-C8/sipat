@@ -1,10 +1,5 @@
-import { FoundationScreen } from "../../components/shared/foundation-screen";
+import { LoginForm } from "../../features/auth/forms/login-form";
 
 export default function LoginScreen() {
-  return (
-    <FoundationScreen
-      description="O formulário de acesso será conectado à sessão nativa na entrega de autenticação."
-      title="Acesso ao SIPAT"
-    />
-  );
+  return <LoginForm />;
 }
