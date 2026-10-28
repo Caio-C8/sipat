@@ -58,3 +58,26 @@ performance, acessibilidade e testes.
 Cache de domínio, operação offline, biometria, attestation, pinning de
 certificado, observabilidade externa e E2E nativo continuam fora desta primeira
 entrega até que um objetivo próprio defina seus critérios.
+
+## Paridade com o protótipo e primeira Home de domínio
+
+As telas implementadas não correspondem ao protótipo aprovado. A correção não
+é um refinamento opcional: o implementador deve abrir o arquivo Figma
+`YGy7F6OGLf6FhXrVomleGk`, selecionar a página `Telas Mobile` e usar os frames
+`Login`, `Crie sua nova senha`, `Senha atualizada` e `Home` como fonte visual
+vinculante. O arquivo é somente leitura para esta execução e não deve ser
+alterado.
+
+| Ordem | Objetivo                                                                                                            | Status       | Dependências                            |
+| ----- | ------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------- |
+| 1     | [`MOBILE-UI-001`](../../tasks/MOBILE-UI-001-paridade-figma-shell.md) — topbar, tokens e bottom bar conforme o Figma | implementada | fundação atual e acesso visual ao Figma |
+| 2     | [`MOBILE-AUTH-003`](../../tasks/MOBILE-AUTH-003-paridade-visual-figma.md) — paridade das três telas de autenticação | aprovada     | `MOBILE-UI-001`                         |
+| 3     | [`INVENTARIOS-003`](../../tasks/INVENTARIOS-003-consulta-administrador.md) — leitura administrativa de inventários  | aprovada     | `INVENTARIOS-001` e `INVENTARIOS-002`   |
+| 4     | [`MOBILE-HOME-002`](../../tasks/MOBILE-HOME-002-home-integrada-por-perfil.md) — Home fiel e integrada por perfil    | aprovada     | `MOBILE-UI-001` e `INVENTARIOS-003`     |
+
+`MOBILE-AUTH-003` e `INVENTARIOS-003` podem avançar em paralelo depois do shell.
+`MOBILE-HOME-002` fecha a sequência porque depende da autorização real da API e
+do shell autenticado. A bottom bar e os controles que apontam para páginas ainda
+inexistentes devem aparecer como no protótipo, porém disabled, sem rotas
+placeholder. A faixa técnica de development não faz parte da reformulação e não
+deve ser alterada.

@@ -213,6 +213,31 @@ navegador automaticamente.
 Uma rota pública não recebe autorização implícita para mutar estado sem CSRF,
 validação, limite e tratamento de abuso.
 
+### Consulta administrativa de inventários aprovada
+
+`INVENTARIOS-003` amplia somente os quatro métodos `GET` de inventários para
+`ADMINISTRADOR`, preservando `DIRETOR_PATRIMONIO` em todas as mutações:
+
+| Rota                                            | Administrador | Diretor de Patrimônio |
+| ----------------------------------------------- | ------------- | --------------------- |
+| `GET /api/inventarios`                          | sim           | sim                   |
+| `GET /api/inventarios/:inventarioId`            | sim           | sim                   |
+| `GET /api/inventarios/:inventarioId/setores`    | sim           | sim                   |
+| `GET /api/inventarios/:inventarioId/itens`      | sim           | sim                   |
+| `POST /api/inventarios` e mutações descendentes | não           | sim                   |
+
+Essa decisão permite consulta e acompanhamento administrativo sem autorizar
+criação, conferência, correção, conclusão ou finalização. O status permanece
+planejado até os Guards reais e os testes E2E confirmarem a implementação.
+
+A regra de produto aprovada permite ao Administrador consultar dados funcionais
+do sistema, mas não credenciais, segredos, campos internos ou dados fora das
+allowlists públicas. Cada novo endpoint deve separar leitura de mutação e
+declarar os perfis por método. `INVENTARIOS-003` corrige o gap necessário para
+a primeira Home mobile; outros endpoints existentes permanecem sujeitos a
+objetivo próprio quando uma interface realmente os consumir, sem ampliar
+permissões silenciosamente.
+
 ### Matriz de recuperação de senha planejada
 
 | Rota                             | Pública | Identidade exigida | Objetivo |

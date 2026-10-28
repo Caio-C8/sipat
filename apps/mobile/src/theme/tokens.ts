@@ -53,6 +53,18 @@ export const layout = {
   wideMinWidth: 900,
 } as const;
 
+export const mobileShell = {
+  canvas: "#f7f9fc",
+  header: "#102747",
+  headerText: "#ffffff",
+  headerTextMuted: "#d7e1ee",
+  navigationActive: "#2860eb",
+  navigationActiveSurface: "#eff5ff",
+  navigationDisabled: "#8a9bb2",
+  navigationDivider: "#dfe7f1",
+  navigationSurface: "#ffffff",
+} as const;
+
 export const platformFont = Platform.select({
   ios: "Menlo",
   android: "monospace",

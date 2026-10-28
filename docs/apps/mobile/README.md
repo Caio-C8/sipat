@@ -15,7 +15,9 @@ código interno da API.
 ## Estado atual
 
 - `/` é a home protegida inicial, com shell, confirmação da sessão e logout,
-  ainda sem widgets ou chamadas de domínio;
+  ainda sem widgets ou chamadas de domínio; sua substituição fiel ao Figma e a
+  integração com setores, patrimônios e inventários estão aprovadas em
+  `MOBILE-HOME-002`, mas ainda não implementadas;
 - `/check` concentra runtime, health check da API e o catálogo tipado das rotas
   reais, acessível sem sessão somente em `development`;
 - `/login`, `/redefinir-senha` e `/senha-atualizada` implementam login, troca
@@ -24,6 +26,8 @@ código interno da API.
   refresh token no `expo-secure-store` e aplica a matriz de acesso nos layouts;
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
   em `development`;
+- o grupo `(app)` aplica a bottom bar do protótipo; somente `Início` representa
+  uma rota existente e os demais destinos permanecem visíveis e disabled;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior
@@ -110,7 +114,7 @@ A comunicação HTTP está em
 
 ## Decisões pendentes do SIPAT
 
-- identidade visual, tema e tokens definitivos;
+- expansão dos tokens do shell para as telas completas de autenticação e Home;
 - validação do novo binário responsivo em tablets Android e iPad reais;
 - biblioteca de estado remoto para dados de domínio;
 - política de cache, persistência e operação offline;

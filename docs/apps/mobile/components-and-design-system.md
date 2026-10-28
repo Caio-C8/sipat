@@ -3,10 +3,12 @@
 ## Estado atual
 
 A base usa primitives do React Native e `StyleSheet`. Tokens semânticos mínimos,
-`AppTopbar` e `DevelopmentCheckBanner` já estão implementados sem biblioteca
-visual externa. Botão, campo, senha, card e feedback continuam sem primitive
-compartilhada até os formulários demonstrarem reutilização real. Esse conjunto
-não constitui um design system definitivo do SIPAT.
+`AppTopbar`, `AppBottomBar` e `DevelopmentCheckBanner` estão implementados. A
+bottom bar usa os ícones Lucide com carregamento de fonte pelo Expo; não foi
+introduzida biblioteca de componentes. Botão, campo, senha, card e feedback
+continuam sem primitive compartilhada até os formulários demonstrarem
+reutilização real. Esse conjunto não constitui um design system definitivo do
+SIPAT.
 
 ## Quando criar um componente
 
@@ -58,9 +60,19 @@ plataformas. Não referencie `apps/web/public` em runtime. Se a mesma imagem for
 copiada para o mobile, preserve a origem e verifique nitidez, transparência e
 dimensões do arquivo final.
 
-O protótipo é a referência visual, não uma licença para fixar a interface na
-largura do frame. Topbar, cards, campos e espaçamentos devem responder ao espaço
-disponível, safe areas, teclado, texto longo e fonte ampliada.
+O protótipo é a referência visual vinculante, não uma licença para fixar a
+interface na largura do frame. Para `MOBILE-UI-001`, `MOBILE-AUTH-003` e
+`MOBILE-HOME-002`, o implementador deve abrir o Figma no aplicativo ou conector
+oficial, acessar a página `Telas Mobile` e comparar diretamente os frames
+`Login`, `Crie sua nova senha`, `Senha atualizada` e `Home`. O arquivo não deve
+ser alterado. Topbar, cards, campos e espaçamentos devem responder ao espaço
+disponível, safe areas, teclado, texto longo e fonte ampliada sem introduzir
+diferenças visuais não justificadas no frame 390×844.
+
+A bottom bar pertence ao layout `(app)`. Destinos ainda sem página permanecem
+visíveis conforme o protótipo, mas usam estado disabled e não justificam criar
+rotas placeholder. `DevelopmentCheckBanner` é uma ferramenta técnica separada
+e não participa da reformulação da topbar.
 
 ## Acessibilidade
 
