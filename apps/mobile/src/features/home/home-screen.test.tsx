@@ -2,6 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { HomeScreen } from "./home-screen";
 
+vi.mock("@react-native-vector-icons/lucide", () => ({
+  Lucide: ({ name }: { name: string }) => <span data-icon={name} />,
+}));
+
 vi.mock("../auth/session/session-context", () => ({
   useSession: () => ({
     manager: { logout: vi.fn() },
