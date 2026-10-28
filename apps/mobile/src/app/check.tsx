@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Redirect, type Href } from "expo-router";
+import { Redirect, usePathname, useRouter, type Href } from "expo-router";
 import {
   ActivityIndicator,
   Platform,
@@ -14,6 +14,12 @@ import {
 import type { HealthResponse } from "@repo/contracts";
 import { publicAppConfig } from "../config/public-app-config";
 import { getApiHealth } from "../lib/api-health";
+import { isCheckRouteAvailable } from "../lib/navigation/check-access";
+import {
+  mobileRoutes,
+  type MobileRouteAccess,
+  type MobileRouteState,
+} from "../lib/navigation/routes";
 import { useSession } from "../features/auth/session/session-context";
 import { protectedRedirect } from "../features/auth/session/session-routing";
 import { layout } from "../theme/tokens";
@@ -27,6 +33,23 @@ type ApiCheckState =
   | { status: "not-configured" };
 
 const { apiHealthUrl, appName, appVersion, environment } = publicAppConfig;
+
+const ACCESS_LABELS: Readonly<Record<MobileRouteAccess, string>> = {
+  anonymous: "Pública para anônimos",
+  authenticated: "Sessão autenticada",
+  "first-access": "Troca obrigatória de senha",
+  development: "Pública somente em development",
+};
+
+const STATE_LABELS: Readonly<Record<MobileRouteState, string>> = {
+  implemented: "Implementada",
+  shell: "Shell implementado",
+};
+
+const PROFILE_LABELS = {
+  ADMINISTRADOR: "Administrador",
+  DIRETOR_PATRIMONIO: "Diretor de Patrimônio",
+} as const;
 
 function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -50,8 +73,10 @@ function StatusIndicator({ available }: Readonly<{ available: boolean }>) {
 
 export default function CheckScreen() {
   const { state } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDevelopment = environment === "development";
+  const isDevelopment = isCheckRouteAvailable(environment);
   const activeRequest = useRef<AbortController | null>(null);
   const [apiCheck, setApiCheck] = useState<ApiCheckState>(
     isDevelopment && apiHealthUrl
@@ -300,6 +325,76 @@ export default function CheckScreen() {
           </View>
         </View>
 
+        <View style={styles.routesHeading}>
+          <Text style={styles.sectionTitle}>Rotas do aplicativo</Text>
+          <Text style={styles.sectionDescription}>
+            O catálogo informa a política de acesso; os guards continuam
+            decidindo cada navegação conforme a sessão.
+          </Text>
+        </View>
+
+        <View
+          style={[styles.routesGrid, usesWideLayout && styles.routesGridWide]}
+        >
+          {mobileRoutes.map((route) => {
+            const isCurrentRoute = pathname === route.path;
+            const profiles = route.profiles.length
+              ? route.profiles
+                  .map((profile) => PROFILE_LABELS[profile])
+                  .join(", ")
+              : "Não se aplica";
+
+            return (
+              <Pressable
+                accessibilityHint={
+                  isCurrentRoute
+                    ? "Esta é a rota atual"
+                    : "Abre a rota e mantém a política de acesso aplicável"
+                }
+                accessibilityRole="link"
+                accessibilityState={{ selected: isCurrentRoute }}
+                key={route.path}
+                onPress={() => {
+                  if (!isCurrentRoute) router.push(route.path as Href);
+                }}
+                style={({ pressed }) => [
+                  styles.routeCard,
+                  usesWideLayout && styles.routeCardWide,
+                  isCurrentRoute && styles.routeCardCurrent,
+                  pressed && !isCurrentRoute && styles.routeCardPressed,
+                ]}
+              >
+                <View style={styles.routeHeader}>
+                  <Text style={styles.routePath}>{route.path}</Text>
+                  <Text style={styles.routeArrow}>
+                    {isCurrentRoute ? "●" : "›"}
+                  </Text>
+                </View>
+                <Text style={styles.routeTitle}>{route.title}</Text>
+                <Text style={styles.routeDescription}>{route.description}</Text>
+                <View style={styles.routeMetadata}>
+                  <View style={styles.routeMetadataRow}>
+                    <Text style={styles.routeMetadataLabel}>Acesso</Text>
+                    <Text style={styles.routeMetadataValue}>
+                      {ACCESS_LABELS[route.access]}
+                    </Text>
+                  </View>
+                  <View style={styles.routeMetadataRow}>
+                    <Text style={styles.routeMetadataLabel}>Perfis</Text>
+                    <Text style={styles.routeMetadataValue}>{profiles}</Text>
+                  </View>
+                  <View style={styles.routeMetadataRow}>
+                    <Text style={styles.routeMetadataLabel}>Estado</Text>
+                    <Text style={styles.routeMetadataValue}>
+                      {STATE_LABELS[route.state]}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
         <Text style={styles.footer}>
           Deslize para baixo para atualizar as verificações.
         </Text>
@@ -370,6 +465,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 2,
     marginLeft: 4,
+  },
+  sectionDescription: {
+    color: "#52665c",
+    fontSize: 14,
+    lineHeight: 21,
+    marginLeft: 4,
+    maxWidth: 680,
   },
   cardsGrid: {
     gap: 16,
@@ -510,6 +612,86 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "800",
+  },
+  routesHeading: {
+    gap: 4,
+    marginTop: 16,
+  },
+  routesGrid: {
+    gap: 16,
+  },
+  routesGridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  routeCard: {
+    backgroundColor: "#ffffff",
+    borderColor: "#dbe5de",
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 20,
+  },
+  routeCardWide: {
+    flexBasis: "48%",
+    flexGrow: 1,
+  },
+  routeCardCurrent: {
+    borderColor: "#1f6848",
+  },
+  routeCardPressed: {
+    backgroundColor: "#edf2ef",
+    transform: [{ scale: 0.995 }],
+  },
+  routeHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  routePath: {
+    color: "#1f6848",
+    fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }),
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  routeArrow: {
+    color: "#1f6848",
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  routeTitle: {
+    color: "#173c31",
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 12,
+  },
+  routeDescription: {
+    color: "#52665c",
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 6,
+  },
+  routeMetadata: {
+    borderTopColor: "#dbe5de",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+    marginTop: 16,
+    paddingTop: 14,
+  },
+  routeMetadataRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 12,
+  },
+  routeMetadataLabel: {
+    color: "#718077",
+    fontSize: 12,
+    width: 52,
+  },
+  routeMetadataValue: {
+    color: "#40564b",
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "600",
   },
   footer: {
     color: "#718077",

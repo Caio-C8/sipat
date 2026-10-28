@@ -34,7 +34,7 @@ outubro de 2026. O backend de sessão está em validação e a execução segue 
 | 1     | [`MOBILE-AUTH-001`](../../tasks/MOBILE-AUTH-001-sessao-nativa.md) — sessão nativa revogável                               | em validação | `AUTH-001`, `AUTH-004` e `CONTRACTS-009`    |
 | 2     | [`MOBILE-FOUNDATION-001`](../../tasks/MOBILE-FOUNDATION-001-estrutura-visual-navegacao.md) — estrutura visual e navegação | em validação | baseline mobile e referência visual         |
 | 3     | [`MOBILE-AUTH-002`](../../tasks/MOBILE-AUTH-002-telas-autenticacao.md) — login e primeiro acesso                          | implementada | `MOBILE-AUTH-001` e `MOBILE-FOUNDATION-001` |
-| 4     | [`MOBILE-HOME-001`](../../tasks/MOBILE-HOME-001-home-check.md) — home protegida e `/check`                                | aprovada     | `MOBILE-AUTH-002`                           |
+| 4     | [`MOBILE-HOME-001`](../../tasks/MOBILE-HOME-001-home-check.md) — home protegida e `/check`                                | implementada | `MOBILE-AUTH-002`                           |
 
 `MOBILE-AUTH-001` e `MOBILE-FOUNDATION-001` podem avançar em paralelo enquanto
 não alterarem o mesmo boundary. As telas e redirects só são integrados depois

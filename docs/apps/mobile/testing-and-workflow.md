@@ -26,13 +26,14 @@ desbloquear uma tela.
 O package usa Vitest em ambiente Node e renderização React Native Web para os
 componentes compartilhados. A suíte atual cobre configuração pública, health,
 cliente e operações de autenticação, formulários, adapter de refresh, sessão,
-concorrência de renovação, matriz de redirects, topbar e faixa de
-desenvolvimento. Como o script `test`
+concorrência de renovação, matriz de redirects, home, completude do catálogo de
+rotas, política de `/check`, topbar e faixa de desenvolvimento. Como o script `test`
 participa do grafo do Turborepo, `pnpm check` executa essa suíte no CI.
 
-O workflow também constrói a imagem de produção do `mobile-web`, inicia o
-container e executa `healthcheck:web`. A verificação aguarda no máximo 30
-segundos, exige `200` com corpo `ok` em `/health` e confirma que `/` serve HTML.
+O workflow também exporta o mobile Web com `EXPO_PUBLIC_APP_ENV=production`,
+constrói a imagem, inicia o container e executa `healthcheck:web`. A verificação
+aguarda no máximo 30 segundos, exige `200` com corpo `ok` em `/health`, confirma
+que `/` e `/check` servem HTML e rejeita conteúdo exclusivo de development.
 Isso valida o export Web, a imagem e o Nginx; não substitui teste de componente,
 execução nativa ou comunicação real do aparelho com a API.
 
@@ -72,7 +73,7 @@ Para reproduzir localmente o smoke test usado pelo CI, construa e inicie a
 imagem antes de executar a sonda:
 
 ```bash
-pnpm --filter @repo/mobile build
+EXPO_PUBLIC_APP_ENV=production pnpm --filter @repo/mobile build
 docker build --file docker/mobile-web.Dockerfile --target ci --tag sipat-mobile-web:ci .
 docker run --detach --name sipat-mobile-web-ci --publish 127.0.0.1:8081:8080 sipat-mobile-web:ci
 pnpm --filter @repo/mobile healthcheck:web

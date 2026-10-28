@@ -2,6 +2,7 @@ import { usePathname, useRouter, type Href } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { AppEnvironment } from "@repo/contracts";
+import { isCheckRouteAvailable } from "../../lib/navigation/check-access";
 import { appRoutes } from "../../lib/navigation/routes";
 import { colors, layout, radii, spacing, typography } from "../../theme/tokens";
 
@@ -14,7 +15,7 @@ export function getDevelopmentCheckBannerCopy(isCheckRoute: boolean) {
 export function shouldShowDevelopmentCheckBanner(
   environment: AppEnvironment,
 ): boolean {
-  return environment === "development";
+  return isCheckRouteAvailable(environment);
 }
 
 export function DevelopmentCheckBanner() {

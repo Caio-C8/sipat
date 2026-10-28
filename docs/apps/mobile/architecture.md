@@ -31,11 +31,15 @@ apps/mobile/
 │   │   ├── _layout.tsx
 │   │   └── check.tsx
 │   ├── components/shared/
+│   ├── features/
+│   │   ├── auth/
+│   │   └── home/
 │   ├── theme/
 │   ├── config/
 │   │   └── public-app-config.ts
 │   └── lib/
-│       └── api-health.ts
+│       ├── api-health.ts
+│       └── navigation/
 ├── app.json
 ├── eas.json
 ├── eslint.config.mjs
@@ -45,8 +49,9 @@ apps/mobile/
 
 O layout raiz instala safe area, topbar, faixa exclusiva de desenvolvimento e
 um `Stack` sem header. A rota `/check` faz a verificação técnica do runtime e da
-API em development. As demais rotas são shells sem sessão, formulário ou regra
-de domínio. Não existe feature patrimonial nem camada genérica de HTTP.
+API em development e apresenta o catálogo único das rotas. Os grupos `(auth)`
+e `(app)` aplicam a matriz de sessão; `/` compõe a home protegida sem dados de
+domínio. Não existe feature patrimonial nem cache remoto de domínio.
 
 ## Responsabilidades
 

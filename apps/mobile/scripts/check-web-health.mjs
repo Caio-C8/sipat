@@ -1,7 +1,30 @@
 const healthUrl =
   process.env.MOBILE_WEB_HEALTH_URL ?? "http://127.0.0.1:8081/health";
 const appUrl = process.env.MOBILE_WEB_URL ?? "http://127.0.0.1:8081/";
+const checkUrl = new URL("check", appUrl).toString();
 const deadline = Date.now() + 30_000;
+
+const developmentOnlyMarkers = [
+  "Ambiente de desenvolvimento",
+  "Verificações da infraestrutura",
+  "Rotas do aplicativo",
+];
+
+async function fetchHtml(url, label) {
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(3_000),
+  });
+  const contentType = response.headers.get("content-type") ?? "";
+  const body = await response.text();
+
+  if (!response.ok || !contentType.includes("text/html")) {
+    throw new Error(
+      `${label} respondeu com HTTP ${response.status} e Content-Type ${JSON.stringify(contentType)}.`,
+    );
+  }
+
+  return body;
+}
 
 let lastError;
 let healthy = false;
@@ -19,18 +42,21 @@ while (Date.now() < deadline) {
       );
     }
 
-    const appResponse = await fetch(appUrl, {
-      signal: AbortSignal.timeout(3_000),
-    });
-    const contentType = appResponse.headers.get("content-type") ?? "";
+    const rootBody = await fetchHtml(appUrl, "A raiz protegida do mobile-web");
+    const checkBody = await fetchHtml(checkUrl, "A rota /check do mobile-web");
+    const exposedMarker = developmentOnlyMarkers.find(
+      (marker) => rootBody.includes(marker) || checkBody.includes(marker),
+    );
 
-    if (!appResponse.ok || !contentType.includes("text/html")) {
+    if (exposedMarker) {
       throw new Error(
-        `A raiz do mobile-web respondeu com HTTP ${appResponse.status} e Content-Type ${JSON.stringify(contentType)}.`,
+        `O export de produção expôs conteúdo exclusivo de development: ${JSON.stringify(exposedMarker)}.`,
       );
     }
 
-    console.log(`mobile-web operacional em ${appUrl}`);
+    console.log(
+      `mobile-web operacional em ${appUrl}; raiz protegida e política de /check verificadas`,
+    );
     healthy = true;
     break;
   } catch (error) {
