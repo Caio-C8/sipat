@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 import crest from "../../../assets/brasao.png";
-import { colors, layout, spacing, typography } from "../../theme/tokens";
+import { layout, mobileShell, spacing } from "../../theme/tokens";
 
 const TABLET_MIN_WIDTH = 768;
 
@@ -41,19 +41,17 @@ export function AppTopbar() {
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: colors.surface,
-    borderBottomColor: colors.border,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: mobileShell.header,
   },
   content: {
     alignItems: "center",
     alignSelf: "center",
     flexDirection: "row",
-    gap: spacing.md,
+    gap: spacing.sm,
     maxWidth: layout.contentMaxWidth,
-    minHeight: 72,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    minHeight: 76,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
     width: "100%",
   },
   contentWide: {
@@ -61,28 +59,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
   },
   crest: {
+    borderRadius: 8,
+    height: 36,
+    width: 36,
+  },
+  crestWide: {
     height: 44,
     width: 44,
   },
-  crestWide: {
-    height: 52,
-    width: 52,
-  },
   wordmark: {
+    alignItems: "center",
     flex: 1,
+    flexDirection: "row",
     flexShrink: 1,
+    justifyContent: "space-between",
   },
   title: {
-    color: colors.text,
-    fontSize: typography.title,
+    color: mobileShell.headerText,
+    fontSize: 22,
     fontWeight: "800",
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
   },
   subtitle: {
-    color: colors.textMuted,
+    color: mobileShell.headerTextMuted,
     flexShrink: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 1,
+    fontSize: 9,
+    lineHeight: 13,
+    maxWidth: 104,
+    textAlign: "right",
   },
 });

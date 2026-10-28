@@ -22,6 +22,15 @@ constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
 raiz protegida e `/check` servem HTML sem expor o conteúdo de development.
 Ainda não existem navegação de domínio, cache/offline ou E2E em dispositivos.
 
+`MOBILE-UI-001` implementou o shell comum observado na página `Telas Mobile`:
+topbar azul-marinho com brasão e identificação municipal, safe area coerente e
+bottom bar somente em `(app)`. `Início` é o único destino ativo; Bens,
+Inventário, Cadastro e Relatórios permanecem disabled, sem rotas placeholder.
+O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003`,
+`INVENTARIOS-003` e `MOBILE-HOME-002` continuam aprovados e não implementados;
+eles cobrem a paridade completa das telas, as consultas necessárias e a Home de
+domínio.
+
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial com logout e sem dados
 de domínio. `/check` preserva o diagnóstico de runtime/API, acrescenta o
 catálogo tipado de todas as rotas e atravessa o gate de restauração somente em

@@ -10,39 +10,53 @@ import {
 import { publicAppConfig } from "../config/public-app-config";
 import { SessionGate } from "../features/auth/session/session-gate";
 import { SessionProvider } from "../features/auth/session/session-context";
-import { colors } from "../theme/tokens";
+import { colors, mobileShell } from "../theme/tokens";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <SafeAreaView
-        edges={["top", "right", "bottom", "left"]}
-        style={styles.safeArea}
-      >
-        <StatusBar style="dark" />
-        {shouldShowDevelopmentCheckBanner(publicAppConfig.environment) ? (
-          <DevelopmentCheckBanner />
-        ) : null}
-        <AppTopbar />
-        <View style={styles.content}>
-          <SessionProvider>
-            <SessionGate>
-              <Stack screenOptions={{ headerShown: false }} />
-            </SessionGate>
-          </SessionProvider>
-        </View>
-      </SafeAreaView>
+      <View style={styles.root}>
+        <StatusBar style="light" />
+        <SafeAreaView
+          edges={["top", "right", "left"]}
+          style={styles.headerSafeArea}
+        >
+          {shouldShowDevelopmentCheckBanner(publicAppConfig.environment) ? (
+            <DevelopmentCheckBanner />
+          ) : null}
+          <AppTopbar />
+        </SafeAreaView>
+        <SafeAreaView
+          edges={["right", "bottom", "left"]}
+          style={styles.contentSafeArea}
+        >
+          <View style={styles.content}>
+            <SessionProvider>
+              <SessionGate>
+                <Stack screenOptions={{ headerShown: false }} />
+              </SessionGate>
+            </SessionProvider>
+          </View>
+        </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     backgroundColor: colors.surface,
     flex: 1,
   },
+  headerSafeArea: {
+    backgroundColor: mobileShell.header,
+  },
+  contentSafeArea: {
+    backgroundColor: mobileShell.navigationSurface,
+    flex: 1,
+  },
   content: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.surface,
     flex: 1,
   },
 });

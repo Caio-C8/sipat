@@ -90,3 +90,16 @@ Ao implementar:
 - mantenha autorização e ownership na API.
 
 Redirecionamento no cliente melhora a experiência, mas não protege endpoint.
+
+## Navegação visual do grupo autenticado
+
+`MOBILE-UI-001` adicionou a bottom bar desenhada no frame `Home` somente ao
+grupo `(app)`. Nesta etapa, `Início` representa a rota real `/`. Bens,
+Inventário, cadastro e relatórios aparecem como no protótipo, mas permanecem
+disabled enquanto seus arquivos de rota e fluxos não existirem. Não crie uma
+rota vazia para fazer um item parecer navegável e não inclua rotas inexistentes
+no catálogo tipado.
+
+A bottom bar não aparece em `(auth)`. A rota técnica `/check` preserva sua
+composição e o `DevelopmentCheckBanner`; ela não deve herdar navegação de
+produto apenas por estar disponível durante development.
