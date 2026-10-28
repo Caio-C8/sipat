@@ -42,8 +42,8 @@ No estado atual:
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
   `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`,
   as cinco rotas administrativas de `/api/responsaveis`, as quatro rotas
-  administrativas de `/api/naturezas`, as quatro rotas administrativas de
-  `/api/especies`, as cinco rotas administrativas de `/api/setores`, as cinco
+  administrativas de `/api/naturezas`, as quatro rotas de `/api/especies`, as
+  cinco rotas de `/api/setores`, as cinco
   rotas administrativas de `/api/fornecedores` e
   `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
   `POST /api/patrimonios` e
@@ -73,12 +73,14 @@ No estado atual:
 - `NaturezasModule` restringe cadastro, consulta, listagem e alteração ao
   `ADMINISTRADOR`, deriva nome normalizado e auditoria no servidor e preserva
   espécies vinculadas durante alterações;
-- `EspeciesModule` restringe cadastro, consulta, listagem e alteração ao
-  `ADMINISTRADOR`, exige uma natureza existente, deriva normalização e auditoria
-  no servidor e preserva patrimônios vinculados ao alterar sua natureza;
-- `SetoresModule` restringe cadastro, consulta, listagem, alteração e mudança de
-  situação ao `ADMINISTRADOR`, exige responsável ativo em novos vínculos,
-  deriva auditoria da sessão e inativa sem excluir nem romper vínculos;
+- `EspeciesModule` permite consulta e listagem aos dois perfis, restringe
+  cadastro e alteração ao `ADMINISTRADOR`, exige uma natureza existente, deriva
+  normalização e auditoria no servidor e preserva patrimônios vinculados ao
+  alterar sua natureza;
+- `SetoresModule` permite consulta e listagem aos dois perfis, restringe
+  cadastro, alteração e mudança de situação ao `ADMINISTRADOR`, exige
+  responsável ativo em novos vínculos, deriva auditoria da sessão e inativa sem
+  excluir nem romper vínculos;
 - `FornecedoresModule` restringe cadastro, consulta, listagem, alteração e
   mudança de situação ao `ADMINISTRADOR`, normaliza CNPJ e contato, protege a
   unicidade sob concorrência e inativa sem excluir nem romper vínculos;

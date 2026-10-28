@@ -266,24 +266,98 @@ describe("gestão de espécies", () => {
     };
   }
 
+  function diretor() {
+    return {
+      get: (path: string) =>
+        request(app.getHttpServer())
+          .get(path)
+          .set("Cookie", cookie(tokenDiretor)),
+      post: (path: string) =>
+        request(app.getHttpServer())
+          .post(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+      patch: (path: string) =>
+        request(app.getHttpServer())
+          .patch(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+    };
+  }
+
   function esperarCodigo(resposta: request.Response, codigo: string) {
     const resultado = RespostaErroSchema.safeParse(resposta.body);
     expect(resultado.success).toBe(true);
     if (resultado.success) expect(resultado.data.codigo).toBe(codigo);
   }
 
-  it("aplica 401 ao anônimo, 403 ao diretor e permite o administrador", async () => {
-    const anonimo = await request(app.getHttpServer()).get("/api/especies");
-    const diretor = await request(app.getHttpServer())
-      .get("/api/especies")
-      .set("Cookie", cookie(tokenDiretor));
-    const autorizado = await administrador().get("/api/especies");
+  it("exige sessão na listagem e na consulta", async () => {
+    const [listagem, consulta] = await Promise.all([
+      request(app.getHttpServer()).get("/api/especies"),
+      request(app.getHttpServer()).get(`/api/especies/${ESPECIE_ID}`),
+    ]);
 
-    expect(anonimo.status).toBe(401);
-    expect(diretor.status).toBe(403);
-    expect(autorizado.status).toBe(200);
-    esperarCodigo(anonimo, "NAO_AUTENTICADO");
-    esperarCodigo(diretor, "ACESSO_NEGADO");
+    expect(listagem.status).toBe(401);
+    expect(consulta.status).toBe(401);
+    esperarCodigo(listagem, "NAO_AUTENTICADO");
+    esperarCodigo(consulta, "NAO_AUTENTICADO");
+  });
+
+  it("permite ao administrador e ao diretor listar e consultar espécies", async () => {
+    const [
+      listaAdministrador,
+      detalheAdministrador,
+      listaDiretor,
+      detalheDiretor,
+    ] = await Promise.all([
+      administrador().get("/api/especies"),
+      administrador().get(`/api/especies/${ESPECIE_ID}`),
+      diretor().get("/api/especies"),
+      diretor().get(`/api/especies/${ESPECIE_ID}`),
+    ]);
+
+    for (const resposta of [listaAdministrador, listaDiretor]) {
+      expect(resposta.status).toBe(200);
+      expect(
+        ListarEspeciesResponseSchema.safeParse(resposta.body).success,
+      ).toBe(true);
+      expect(resposta.body.dados[0]).toMatchObject({
+        id: ESPECIE_ID,
+        nome: "Notebook",
+        natureza: { id: NATUREZA_ID, nome: "Equipamentos" },
+      });
+    }
+
+    for (const resposta of [detalheAdministrador, detalheDiretor]) {
+      expect(resposta.status).toBe(200);
+      expect(EspecieDetalheSchema.safeParse(resposta.body.dados).success).toBe(
+        true,
+      );
+      expect(resposta.body.dados).toMatchObject({
+        id: ESPECIE_ID,
+        nome: "Notebook",
+        natureza: { id: NATUREZA_ID, nome: "Equipamentos" },
+      });
+    }
+  });
+
+  it("nega ao diretor todas as mutações de espécies", async () => {
+    const [criacao, alteracao] = await Promise.all([
+      diretor().post("/api/especies").send({
+        nome: "Câmera",
+        naturezaId: NATUREZA_ID,
+      }),
+      diretor()
+        .patch(`/api/especies/${ESPECIE_ID}`)
+        .send({ descricao: "Alterada" }),
+    ]);
+
+    for (const resposta of [criacao, alteracao]) {
+      expect(resposta.status).toBe(403);
+      esperarCodigo(resposta, "ACESSO_NEGADO");
+    }
   });
 
   it("lista com busca, filtro por natureza e ordem determinística", async () => {

@@ -40,7 +40,7 @@ export class SetoresController {
   constructor(private readonly setoresService: SetoresService) {}
 
   @Get()
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarSetoresResponseDto)
   async listar(
     @Query() query: ListarSetoresQueryDto,
@@ -61,7 +61,7 @@ export class SetoresController {
   }
 
   @Get(":setorId")
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarSetorResponseDto)
   async consultar(
     @Param() params: SetorParamsDto,
