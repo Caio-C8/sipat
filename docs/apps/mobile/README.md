@@ -14,10 +14,9 @@ código interno da API.
 
 ## Estado atual
 
-- `/` é a home protegida inicial, com shell, confirmação da sessão e logout,
-  ainda sem widgets ou chamadas de domínio; sua substituição fiel ao Figma e a
-  integração com setores, patrimônios e inventários estão aprovadas em
-  `MOBILE-HOME-002`, mas ainda não implementadas;
+- `/` é a Home protegida e integrada por perfil: o Administrador acompanha
+  totais de setores, bens e estados de inventários, enquanto o Diretor de
+  Patrimônio recebe progresso, ocorrências e a última conferência disponível;
 - `/check` concentra runtime, health check da API e o catálogo tipado das rotas
   reais, acessível sem sessão somente em `development`;
 - `/login`, `/redefinir-senha` e `/senha-atualizada` implementam login, troca
@@ -26,7 +25,8 @@ código interno da API.
 - a sessão restaura antes da navegação, mantém access token em memória, rotaciona
   refresh token no `expo-secure-store` e aplica a matriz de acesso nos layouts;
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
-  em `development`;
+  em `development`; a topbar mantém a identificação municipal sem sessão e,
+  quando autenticada, apresenta avatar com menu da conta e logout;
 - o grupo `(app)` aplica a bottom bar do protótipo; somente `Início` representa
   uma rota existente e os demais destinos permanecem visíveis e disabled;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
@@ -47,8 +47,11 @@ código interno da API.
   vivo o endpoint `/health` e o documento HTML servido na raiz;
 - `orientation: "default"` permite retrato e paisagem, e a tela técnica adapta
   os cards em duas colunas quando a janela possui largura suficiente;
-- ainda não existem operação de domínio, cache remoto, modo offline ou E2E em
-  dispositivos;
+- as primeiras operações de leitura de domínio consultam setores, patrimônios e
+  inventários com token em memória, paginação mínima, filtros existentes,
+  timeout, cancelamento e validação dos schemas públicos;
+- ainda não existem cache remoto, persistência offline, fila de sincronização
+  ou E2E em dispositivos;
 - testes cobrem configuração, HTTP, formulários, storage, sessão, concorrência,
   redirects, home, completude do catálogo, política de `/check`, topbar e faixa
   de desenvolvimento.
@@ -115,7 +118,6 @@ A comunicação HTTP está em
 
 ## Decisões pendentes do SIPAT
 
-- expansão dos tokens do shell para a Home completa;
 - validação do novo binário responsivo em tablets Android e iPad reais;
 - biblioteca de estado remoto para dados de domínio;
 - política de cache, persistência e operação offline;

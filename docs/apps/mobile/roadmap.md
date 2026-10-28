@@ -48,12 +48,14 @@ que o transporte de sessão estiver verificado. O resultado esperado é:
   mobile, acessível somente em `development`;
 - faixa fixa de desenvolvimento em todas as telas, abaixo da safe area, com
   acesso explícito a `/check`; ela não existe em staging ou produção;
-- topbar SIPAT com brasão e identificação da Câmara em todas as telas.
+- topbar SIPAT com brasão e identificação da Câmara nas telas sem sessão; na
+  área autenticada, o mesmo espaço recebe avatar e menu da conta com logout.
 
-Nenhuma feature patrimonial do SIPAT está implementada no mobile. Antes de uma
-nova entrega, registre contexto, requisitos relacionados, plataformas, rotas,
-estados, contratos, endpoints, permissões, comportamento offline, segurança,
-performance, acessibilidade e testes.
+A Home possui as primeiras leituras patrimoniais do mobile; páginas e mutações
+de domínio continuam pendentes. Antes de uma nova entrega, registre contexto,
+requisitos relacionados, plataformas, rotas, estados, contratos, endpoints,
+permissões, comportamento offline, segurança, performance, acessibilidade e
+testes.
 
 Cache de domínio, operação offline, biometria, attestation, pinning de
 certificado, observabilidade externa e E2E nativo continuam fora desta primeira
@@ -72,11 +74,11 @@ alterado.
 | ----- | ------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------- |
 | 1     | [`MOBILE-UI-001`](../../tasks/MOBILE-UI-001-paridade-figma-shell.md) — topbar, tokens e bottom bar conforme o Figma | implementada | fundação atual e acesso visual ao Figma |
 | 2     | [`MOBILE-AUTH-003`](../../tasks/MOBILE-AUTH-003-paridade-visual-figma.md) — paridade das três telas de autenticação | implementada | `MOBILE-UI-001`                         |
-| 3     | [`INVENTARIOS-003`](../../tasks/INVENTARIOS-003-consulta-administrador.md) — leitura administrativa de inventários  | aprovada     | `INVENTARIOS-001` e `INVENTARIOS-002`   |
-| 4     | [`MOBILE-HOME-002`](../../tasks/MOBILE-HOME-002-home-integrada-por-perfil.md) — Home fiel e integrada por perfil    | aprovada     | `MOBILE-UI-001` e `INVENTARIOS-003`     |
+| 3     | [`INVENTARIOS-003`](../../tasks/INVENTARIOS-003-consulta-administrador.md) — leitura administrativa de inventários  | concluída    | `INVENTARIOS-001` e `INVENTARIOS-002`   |
+| 4     | [`MOBILE-HOME-002`](../../tasks/MOBILE-HOME-002-home-integrada-por-perfil.md) — Home fiel e integrada por perfil    | implementada | `MOBILE-UI-001` e `INVENTARIOS-003`     |
 
-`INVENTARIOS-003` pode avançar depois do shell. `MOBILE-HOME-002` fecha a
-sequência porque depende da autorização real da API e do shell autenticado. A
+`INVENTARIOS-003` e `MOBILE-HOME-002` fecharam a sequência sobre a autorização
+real da API e o shell autenticado. A
 bottom bar e os controles que apontam para páginas ainda inexistentes devem
 aparecer como no protótipo, porém disabled, sem rotas placeholder. A faixa
 técnica de development não faz parte da reformulação e não deve ser alterada.

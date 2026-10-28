@@ -2,21 +2,18 @@
 
 ## Estado e expansão prevista
 
-Hoje `src/lib/api-health.ts` contém somente a operação técnica do health check.
-Quando o primeiro endpoint de domínio existir, a estrutura pode evoluir para:
+O health check continua isolado em `src/lib/api-health.ts`. O cliente comum em
+`src/lib/api/api-client.ts` atende autenticação e as primeiras leituras de
+domínio, organizadas por feature:
 
 ```text
 apps/mobile/src/
 ├── lib/api/
-│   ├── core/
-│   │   ├── api-error.ts
-│   │   ├── create-api-client.ts
-│   │   └── types.ts
-│   └── mobile-api-client.ts
-└── features/<dominio>/api/
-    ├── get-recursos.ts
-    ├── create-recurso.ts
-    └── use-*.ts
+│   ├── api-client.ts
+│   └── api-error.ts
+└── features/home/
+    ├── api/home-operations.ts
+    └── use-home-dashboard.ts
 ```
 
 Crie somente as peças exigidas pela entrega. Não copie toda a infraestrutura da
@@ -37,7 +34,7 @@ explícita. Um build não deve escolher silenciosamente `localhost`.
 
 ## Cliente comum
 
-Uma futura abstração deve concentrar somente comportamento transversal:
+O cliente comum concentra somente comportamento transversal:
 
 - composição de base URL, path e query;
 - JSON e headers comuns não sensíveis;
@@ -120,3 +117,18 @@ for segura para repetição. Mutation de domínio não recebe retry automático.
 Responses com tokens usam `Cache-Control: no-store`; headers e bodies sensíveis
 ficam fora da observabilidade. Os paths acima são os contratos implementados;
 consumidores devem validar responses com os schemas de `@repo/contracts`.
+
+## Leituras da Home implementadas
+
+| Operação            | Método e endpoint  | Perfis                                |
+| ------------------- | ------------------ | ------------------------------------- |
+| Contar setores      | `GET /setores`     | `ADMINISTRADOR`                       |
+| Contar patrimônios  | `GET /patrimonios` | `ADMINISTRADOR`, `DIRETOR_PATRIMONIO` |
+| Resumir inventários | `GET /inventarios` | `ADMINISTRADOR`, `DIRETOR_PATRIMONIO` |
+
+As contagens usam `pagina=1&limite=1` e `meta.total`. Inventários reutilizam o
+filtro público `status`; a conferência finalizada mais recente percorre
+sequencialmente páginas de até 50 itens e compara `dataFim`, pois a listagem é
+ordenada por criação. Cada bloco aceita `AbortSignal`, usa o retry seguro da
+sessão para uma única recuperação de `401` e mantém `403`, timeout, rede e
+contrato inválido como estados distintos na interface.
