@@ -95,7 +95,10 @@ export function SystemSidebar({ perfil }: Readonly<{ perfil: PerfilUsuario }>) {
               <ul className="grid list-none gap-0.5 p-0">
                 {itensDoGrupo.map((item) => {
                   const Icon = item.icon;
-                  const ativo = item.href === pathname;
+                  const ativo =
+                    item.href === pathname ||
+                    (item.href === "/movimentacoes" &&
+                      pathname.startsWith("/movimentacoes/"));
 
                   return (
                     <li key={item.id}>
@@ -110,7 +113,14 @@ export function SystemSidebar({ perfil }: Readonly<{ perfil: PerfilUsuario }>) {
                             size={15}
                             aria-hidden="true"
                           />
-                          <span>{item.label}</span>
+                          <span className="min-w-0">
+                            <span className="block">{item.label}</span>
+                            {!item.implementado ? (
+                              <span className="block text-[9px] font-semibold">
+                                Em desenvolvimento
+                              </span>
+                            ) : null}
+                          </span>
                         </Link>
                       ) : (
                         <span

@@ -83,3 +83,25 @@ Especificação aprovada:
 
 Cada objetivo registra contexto, escopo, estados da interface, contratos e
 endpoints afetados, critérios de acessibilidade, segurança, performance e testes.
+
+## Movimentações
+
+### WEB-MOVIMENTACOES-000 — Placeholder no shell
+
+**Status:** concluído; verificações registradas na tarefa.
+
+Entrega histórica do placeholder, substituída por WEB-MOVIMENTACOES-001.
+[Especificação e evidências](../../tasks/WEB-MOVIMENTACOES-000-placeholder.md).
+
+### WEB-MOVIMENTACOES-001 — Integração de movimentações
+
+**Status:** implementado e validado automaticamente em 28/10/2026; homologação manual com leitor de tela pendente.
+Depende de CONTRACTS-012 e MOVIMENTACOES-001 concluídas e verificadas.
+[Tarefa, frames Figma e critérios](../../tasks/WEB-MOVIMENTACOES-001-integrar-movimentacoes.md).
+
+Consulta e detalhe individual para diretor e administrador; registro somente
+diretor em três etapas, até dez bens, comissão/motivo comuns e destinos
+individuais. Sem código TR ou data manual; erros preservam preenchimento,
+reenvios recuperam a confirmação anterior e horário usa America/Sao_Paulo.
+Lint, tipos, 43 testes unitários, build, 22 E2E padrão e cinco E2E reais passaram.
+Comparação visual, acessibilidade e reprodução estão registradas na tarefa.

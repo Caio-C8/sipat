@@ -33,8 +33,8 @@ No estado atual:
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- existem operações tipadas de autenticação e listagem patrimonial; ainda não
-  há hooks ou política de cache remoto de domínio;
+- existem operações tipadas de autenticação, patrimônio e movimentações;
+  movimentações usa hooks específicos por operação, estado local e URL, sem cache remoto;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
 - login, logout, `/auth/me` e conclusão do primeiro acesso possuem consumidor
@@ -92,8 +92,8 @@ Uma operação representa:
 método HTTP + path + contrato de entrada + contrato de resposta
 ```
 
-Client Components usam hooks somente quando uma biblioteca de estado remoto
-for escolhida pelo projeto. Server Components chamam funções assíncronas comuns.
+Client Components de movimentações usam hooks específicos para operações assíncronas,
+sem implementar cache próprio. Server Components chamam funções assíncronas comuns.
 Não instale ou configure uma biblioteca de cache antes de existir um fluxo que
 defina query keys, invalidação, retry e consistência.
 

@@ -540,3 +540,17 @@ que cada novo contrato patrimonial tenha semântica e consumidores concretos.
 - [x] API, Web e banco passam nas verificações aplicáveis;
 - [x] documentação diferencia o baseline atual das capacidades previstas para o
       SIPAT.
+
+## CONTRACTS-012 — Contratos de movimentações
+
+**Status:** implementado e verificado em 28/10/2026 (123 testes do package; consumidores verificados).
+
+Schemas/tipos para consulta individual e confirmação atômica de até dez bens,
+sem entidade de lote; comissão/motivo comuns, origem esperada, chave de
+idempotência, filtros, erros por item e auxiliares por contexto/perfil.
+[Especificação e verificações](../tasks/CONTRACTS-012-contratos-movimentacoes.md).
+
+Executar antes de MOVIMENTACOES-001 e WEB-MOVIMENTACOES-001. A existência de
+TransferenciaPatrimonio e de correções não comprova contratos gerais.
+A regra B e a vigência de comissão nas transferências comuns estão aprovadas;
+a avaliação de vigência nas correções é futura e não bloqueia este contrato.

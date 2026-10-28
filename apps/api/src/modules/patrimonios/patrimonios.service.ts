@@ -374,4 +374,21 @@ export class PatrimoniosService {
       erros: [{ campo, codigo: "REGRA_DE_NEGOCIO_INVALIDA", mensagem }],
     });
   }
+
+  bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {
+    return this.patrimonios.bloquearParaMovimentacao(ids, tx);
+  }
+  atualizarSetorMovimentacao(
+    id: string,
+    setorId: string,
+    instante: Date,
+    tx: Prisma.TransactionClient,
+  ) {
+    return this.patrimonios.atualizarSetorMovimentacao(
+      id,
+      setorId,
+      instante,
+      tx,
+    );
+  }
 }

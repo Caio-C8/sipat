@@ -14,6 +14,8 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
   reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
   blocos ainda sem integração;
+- `/movimentacoes` e seu detalhe consultam transferências reais para os dois perfis;
+  `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;

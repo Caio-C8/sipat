@@ -1,0 +1,511 @@
+{
+  "setores": [
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "nome": "Almoxarifado",
+      "ativo": true,
+      "responsavelAtual": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "nome": "Responsável atual"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "nome": "Compras",
+      "ativo": true,
+      "responsavelAtual": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "nome": "Responsável atual"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "nome": "Secretaria",
+      "ativo": true,
+      "responsavelAtual": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "nome": "Responsável atual"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000005",
+      "nome": "Arquivo histórico",
+      "ativo": false,
+      "responsavelAtual": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "nome": "Responsável atual"
+      }
+    }
+  ],
+  "comissoes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000006",
+      "nome": "Comissão vigente",
+      "numeroAto": null,
+      "dataVigenciaInicio": "2000-01-01",
+      "dataVigenciaFim": "2999-12-31"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000007",
+      "nome": "Comissão histórica",
+      "numeroAto": null,
+      "dataVigenciaInicio": "2000-01-01",
+      "dataVigenciaFim": "2001-12-31"
+    }
+  ],
+  "bens": [
+    {
+      "id": "00000000-0000-4000-8000-000000000020",
+      "numeroPatrimonio": "1",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 1",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "numeroPatrimonio": "2",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 2",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000022",
+      "numeroPatrimonio": "3",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 3",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000023",
+      "numeroPatrimonio": "4",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 4",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000024",
+      "numeroPatrimonio": "5",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 5",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000025",
+      "numeroPatrimonio": "6",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 6",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000026",
+      "numeroPatrimonio": "7",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 7",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000027",
+      "numeroPatrimonio": "8",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 8",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000028",
+      "numeroPatrimonio": "9",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 9",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000029",
+      "numeroPatrimonio": "10",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 10",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000030",
+      "numeroPatrimonio": "11",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 11",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000031",
+      "numeroPatrimonio": "12",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 12",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "ATIVO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000032",
+      "numeroPatrimonio": "13",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 13",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "BAIXADO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000033",
+      "numeroPatrimonio": "14",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 14",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "EMPRESTADO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000034",
+      "numeroPatrimonio": "15",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 15",
+      "marca": null,
+      "modelo": null,
+      "numeroSerie": null,
+      "status": "EM_MANUTENCAO",
+      "setorAtual": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "nome": "Almoxarifado",
+        "responsavel": {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "nome": "Responsável atual"
+        }
+      },
+      "especie": {
+        "id": "00000000-0000-4000-8000-000000000008",
+        "nome": "Mesa",
+        "natureza": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "nome": "Móveis"
+        }
+      }
+    }
+  ],
+  "detalhe": {
+    "id": "00000000-0000-4000-8000-000000000050",
+    "patrimonio": {
+      "id": "00000000-0000-4000-8000-000000000020",
+      "numeroPatrimonio": "1",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 1"
+    },
+    "setorOrigem": {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "nome": "Almoxarifado"
+    },
+    "setorDestino": {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "nome": "Compras"
+    },
+    "comissao": {
+      "id": "00000000-0000-4000-8000-000000000006",
+      "nome": "Comissão vigente"
+    },
+    "dataTransferencia": "2026-10-28T15:00:00.000Z",
+    "origemRegistro": "COMUM",
+    "observacao": "Mudança de sala",
+    "createdAt": "2026-10-28T15:00:00.000Z",
+    "registradoPor": {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "nome": "João Diretor"
+    },
+    "correcaoInventario": null
+  },
+  "correcao": {
+    "id": "00000000-0000-4000-8000-000000000051",
+    "patrimonio": {
+      "id": "00000000-0000-4000-8000-000000000020",
+      "numeroPatrimonio": "1",
+      "tipoNumeroPatrimonial": "OFICIAL",
+      "descricao": "Mesa de teste 1"
+    },
+    "setorOrigem": {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "nome": "Almoxarifado"
+    },
+    "setorDestino": {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "nome": "Compras"
+    },
+    "comissao": {
+      "id": "00000000-0000-4000-8000-000000000006",
+      "nome": "Comissão vigente"
+    },
+    "dataTransferencia": "2026-10-28T15:00:00.000Z",
+    "origemRegistro": "CORRECAO_INVENTARIO",
+    "observacao": null,
+    "createdAt": "2026-10-28T15:00:00.000Z",
+    "registradoPor": {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "nome": "João Diretor"
+    },
+    "correcaoInventario": {
+      "inventarioId": "00000000-0000-4000-8000-000000000052",
+      "itemInventarioId": "00000000-0000-4000-8000-000000000053"
+    }
+  }
+}

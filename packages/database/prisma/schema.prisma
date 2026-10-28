@@ -147,6 +147,7 @@ model Usuario {
   notasFiscaisCriadas                   NotaFiscal[]
   sessoes                               SessaoUsuario[]
   redefinicaoSenha                      RedefinicaoSenha?
+  idempotenciasMovimentacao             IdempotenciaMovimentacao[]
 
   @@map("usuarios")
 }
@@ -483,6 +484,10 @@ model TransferenciaPatrimonio {
 
   @@index([comissaoId], map: "transferencias_patrimoniais_comissao_id_idx")
   @@index([patrimonioId, dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_patrimonio_data_id_idx")
+  @@index([dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_data_id_idx")
+  @@index([setorAntigoId, dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_origem_data_id_idx")
+  @@index([setorAtualId, dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_destino_data_id_idx")
+  @@index([comissaoId, dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_comissao_data_id_idx")
   @@map("transferencias_patrimoniais")
 }
 
@@ -788,4 +793,17 @@ model ReavaliacaoPatrimonio {
 
   @@index([comissaoId], map: "reavaliacoes_patrimoniais_comissao_id_idx")
   @@map("reavaliacoes_patrimoniais")
+}
+
+// Registro técnico de um pedido confirmado; não representa um lote patrimonial.
+model IdempotenciaMovimentacao {
+  usuarioId String @map("usuario_id") @db.Uuid
+  chave String @db.Uuid
+  payloadHash String @map("payload_hash") @db.Char(64)
+  resultado Json @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@id([usuarioId, chave])
+  @@map("idempotencias_movimentacao")
 }

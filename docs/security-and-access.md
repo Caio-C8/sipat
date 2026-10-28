@@ -487,6 +487,35 @@ concorrentes. Não existe endpoint HTTP de bootstrap.
 - logout deverá permanecer acessível por teclado e expor estado pendente;
 - respostas autenticadas não entram em cache público nem atravessam usuários.
 
+## Movimentações — política implementada
+
+Decisão de 27/10/2026. Regras de recurso em
+[RF13/RF19](./requisitos-SIPAT.md#rf13-transferência-de-patrimônios);
+interface HTTP em [CONTRACTS-012](./tasks/CONTRACTS-012-contratos-movimentacoes.md).
+Consulta Web/API para ambos os perfis; criação Web/API somente para diretor, verificada em 28/10/2026.
+
+| Operação implementada                                             | Administrador | Diretor |
+| ----------------------------------------------------------------- | ------------- | ------- |
+| Listar e consultar transferência individual, comum ou de correção | sim           | sim     |
+| Registrar confirmação de transferências comuns                    | não           | sim     |
+| Auxiliares específicos no contexto FILTRO                         | sim           | sim     |
+| Auxiliares específicos no contexto REGISTRO                       | não           | sim     |
+
+As consultas auxiliares expõem somente os resumos definidos no contrato.
+GET /api/setores e GET /api/comissoes administrativos conservam suas permissões.
+Não criar acesso genérico ao CRUD nem expor integrantes/documentos pessoais.
+
+Sessão, perfil e CSRF continuam obrigatórios conforme o baseline; idempotência
+não concede autorização nem permite consultar a resposta de outro usuário.
+Origem, autoria, instante, comissão, estados e inventários são validados pela
+API, na unidade transacional apropriada, inclusive no conflito concorrente.
+Origem enviada é somente pré-condição, nunca autoridade sobre o histórico.
+Replay de sucesso recupera resultado anterior autorizado sem transferir novamente.
+
+Correções de inventário mantêm controles e validações atuais. A evolução das
+transferências comuns não amplia automaticamente o acesso aos endpoints de
+inventário nem acrescenta revalidação de vigência nesse fluxo específico.
+
 ## Testes obrigatórios
 
 - unitários: parsing de cookie, verificação de sessão, metadata, Guards,

@@ -184,18 +184,57 @@ Patrimônio consultem, listem e filtrem patrimônios cadastrados.
 
 ### RF13: Transferência de Patrimônios
 
-**Descrição:** O sistema deve permitir que o Diretor de Patrimônio transfira um ou vários bens entre setores.
+**Descrição:** O Diretor de Patrimônio pode registrar transferências comuns
+entre setores. Diretor e Administrador podem consultar os registros individuais,
+incluindo transferências originadas em correções de inventário.
 
-**Informações:** Comissão, patrimônios, setor de origem, setor de destino, data, observação e usuário responsável.
+**Informações:** Patrimônio, origem, destino, comissão, motivo em observacao,
+instante da transferência, usuário responsável e origem do registro.
 
-**Regras:**
+**Decisões aprovadas em 27/10/2026 e implementadas em 28/10/2026:**
 
-- A transferência deve ocorrer somente entre setores, e não diretamente entre responsáveis.
-- Uma única operação pode transferir vários patrimônios e cada patrimônio pode possuir um setor de destino diferente.
-- Deve ser selecionada uma comissão vigente quando exigido pelas regras patrimoniais.
-- Patrimônios baixados não podem ser transferidos.
-- Setores inativados não podem ser utilizados como destino.
-- A conclusão da transferência deve atualizar o setor atual do patrimônio e gerar registro histórico da movimentação.
+- Uma confirmação contém de 1 a 10 patrimônios distintos. Cada item gera uma
+  transferência individual, identificada pelo UUID existente; não há entidade
+  de lote nem novo código visível TR.
+- A confirmação é atômica: se qualquer item falhar, nenhuma transferência ou
+  mudança de localização dessa confirmação é gravada. Identificar os itens e
+  campos corrigíveis. A interface evita duplicidade e a API rejeita a confirmação
+  inteira se o mesmo patrimônio se repetir.
+- Comissão e motivo são comuns à confirmação e copiados para cada registro.
+  Motivo é obrigatório nas novas transferências comuns e armazenado em
+  observacao. Motivos/comissões diferentes exigem confirmações separadas.
+  Não exigir preenchimento retroativo de registros existentes.
+- Toda nova transferência comum exige comissão vigente no dia da confirmação.
+  Preservar RF05: sem presidente obrigatório e sem mínimo de integrantes.
+- A origem efetiva é derivada do banco e a autoria da identidade autenticada.
+  Comparar a origem com a esperada pelo usuário; mudança durante o preenchimento
+  exige atualização e nova conferência, sem substituir a origem silenciosamente.
+- Cada patrimônio pode ter um destino diferente; permitir aplicar o mesmo destino
+  a todos na interface. A operação ocorre entre setores, não entre responsáveis.
+- Somente patrimônio ATIVO pode ser transferido pelo fluxo comum; BAIXADO,
+  EMPRESTADO e EM_MANUTENCAO são impedidos.
+- Destino deve existir, estar ativo e diferir da origem. Origem inativa é
+  permitida, respeitados os demais impedimentos.
+- O servidor define data e horário no momento da confirmação; não há data
+  manual, retroatividade nem agendamento. America/Sao_Paulo rege apresentação,
+  filtros por dia e avaliação da vigência da comissão.
+- Revalidar todas as condições na confirmação, inclusive criação/início de
+  inventário durante o preenchimento, conforme RF19.
+- Reconhecer reenvios da mesma confirmação sem duplicar registros, preservando
+  IDs e horário originais; mudança de conteúdo com a mesma chave é conflito.
+- Consultar por patrimônio/busca, origem, destino, período e comissão; apresentar
+  mais recentes primeiro, com desempate determinístico, paginação e limite.
+- O fluxo Web é selecionar bens → definir destinos → revisar e confirmar.
+  Administrador consulta, mas não recebe ação nem permissão de criação.
+- Neste ciclo só registrar e consultar: edição, exclusão e estorno estão fora.
+
+**Transferência comum versus correção de inventário:** o fluxo comum segue as
+regras acima. A correção cadastral de RF19 conserva seu fluxo específico,
+comissão do inventário e validações existentes. Não aplicar automaticamente a
+ela nova revalidação de vigência, motivo obrigatório, bloqueio B ou demais
+restrições novas do formulário comum. A consulta identifica a origem de ambos;
+não recria nem altera os registros antigos. A avaliação futura da vigência em
+correções está registrada em RF19.
 
 ### RF14: Reavaliação de Patrimônios
 
@@ -327,10 +366,28 @@ houver e usuário responsável.
   início.
 - Enquanto um setor estiver EM_ANDAMENTO, operações que alterem localização ou
   elegibilidade de patrimônios desse setor, ou que usem esse setor como origem
-  ou destino, devem ser bloqueadas. Os demais setores podem continuar operando.
-- Movimentações registradas antes do início da conferência de um setor devem
-  manter atualizados o setor esperado e o vínculo do item ainda pendente, sem
-  alterar itens já verificados.
+  ou destino, devem ser bloqueadas, ressalvado o fluxo específico de correção.
+- Para transferências comuns de RF13 aplica-se a mudança aprovada em
+  27/10/2026 (alternativa B), implementada em MOVIMENTACOES-001: origem OU destino com
+  conferência PENDENTE ou EM_ANDAMENTO em qualquer inventário não FINALIZADO
+  bloqueia toda a confirmação. Conferência CONCLUIDA não bloqueia por si só;
+  verificar os demais inventários e impedimentos.
+- Essa regra substitui, somente para transferências comuns, a permissão anterior
+  de operar entre setores pendentes e sincronizar seus itens. Não generalizar o
+  bloqueio novo para empréstimos, manutenção ou correções próprias do inventário.
+- Para patrimônio incluído em inventário não FINALIZADO, manter o bloqueio de
+  transferência comum para destino fora dos setores incluídos naquele inventário.
+  Não aplicar essa restrição a patrimônio não incluído apenas por estar em um
+  setor participante. Avaliar todos os inventários abertos pertinentes.
+- Conferência CONCLUIDA não autoriza reabrir, mover ou sobrescrever verificações
+  já consolidadas. Preservar população, registros e resultados; correção pendente
+  não equivale a conferência PENDENTE e pode subsistir após a finalização.
+- Operações que continuem legitimamente autorizadas pelas respectivas regras
+  devem preservar a coerência de setor esperado/vínculo dos itens ainda
+  pendentes, sem alterar itens já verificados. Isso não autoriza transferências
+  comuns proibidas pela alternativa B.
+- Revalidar origem, destino, estados e pertinência ao inventário na confirmação,
+  em coordenação transacional com criação, início e conclusão de conferências.
 - Empréstimos e manutenções iniciados antes da conferência não impedem o início
   do setor. Se o patrimônio não estiver fisicamente disponível, o encerramento
   deve registrá-lo como NAO_LOCALIZADO e preservar o status do patrimônio e o
@@ -363,13 +420,30 @@ houver e usuário responsável.
   cadastral observado. Quando o bem estiver EMPRESTADO ou EM_MANUTENCAO, o item
   deve apontar para o empréstimo ou item de manutenção vigente que justifica a
   ausência conhecida.
-- A conclusão de um setor libera as operações que estavam bloqueadas por sua
-  conferência. Divergências pendentes ainda podem ser corrigidas enquanto o
-  inventário não estiver FINALIZADO.
+- A conclusão de um setor remove o impedimento decorrente do estado de sua
+  conferência; outras restrições e outros inventários continuam válidos.
+  Divergências pendentes ainda podem ser corrigidas pelo fluxo específico
+  enquanto o inventário não estiver FINALIZADO.
 - O inventário só pode ser finalizado depois que todos os seus setores estiverem
   CONCLUIDOS. A finalização pode preservar correções pendentes, mas deve exigir
   confirmação explícita e bloquear qualquer alteração posterior em seus setores,
   itens e correções.
+
+#### Pendência futura: vigência nas correções de inventário
+
+Neste ciclo, preservar a comissão vinculada e todas as validações existentes
+das correções, sem introduzir revalidação de vigência no instante da correção.
+A regra de comissão vigente na confirmação de RF13 vale para novas
+transferências comuns. Não interpretar RN11 como autorização para ampliar
+silenciosamente o escopo atual das correções.
+
+Uma tarefa futura deverá decidir a data de referência da vigência e como
+regularizar comissão vencida sem impedir definitivamente as correções.
+Avaliar, antes de implementar, substituição formal e auditável da comissão para
+correções futuras ou preservação da competência da comissão original; definir
+quem autoriza, quais registros são preservados e como manter rastreabilidade.
+Nenhuma dessas alternativas está aprovada. Não trocar comissões históricas nem
+retirar validações existentes como solução automática.
 
 ### RF20: Consulta do Histórico Patrimonial
 
@@ -595,11 +669,11 @@ houver e usuário responsável.
 
 ### RN10: Restrição de transferência de patrimônio baixado
 
-**Descrição:** Um patrimônio com situação BAIXADO não poderá ser transferido para outro setor.
+**Descrição:** Um patrimônio com situação BAIXADO não poderá ser transferido para outro setor. No fluxo comum de RF13 também são impedidos EMPRESTADO e EM_MANUTENCAO; somente ATIVO é elegível. Preservar o fluxo específico de correção de RF19.
 
 ### RN11: Comissão vigente para operações patrimoniais
 
-**Descrição:** As operações patrimoniais que exigirem comissão somente poderão ser realizadas quando houver uma comissão vigente associada à operação.
+**Descrição:** As operações patrimoniais que exigirem comissão somente poderão ser realizadas quando houver uma comissão vigente associada à operação, segundo a data de referência definida pelo respectivo fluxo. Em RF13, toda nova transferência comum exige vigência na confirmação. A revalidação de vigência em correções de inventário é a pendência futura delimitada em RF19; preservar as validações já existentes nesse fluxo.
 
 ### RN12: Alteração dos parâmetros de depreciação por reavaliação
 
@@ -738,7 +812,7 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 **Fluxos alternativos / exceções:**
 
 - Tentativa de cadastrar setor sem responsável: o sistema rejeita a operação.
-- Setor inativado: o sistema impede seu uso em novos vínculos e movimentações.
+- Setor inativado: o sistema impede novos vínculos de entrada e uso como destino. RF13 permite retirar bens desse setor para destino ativo, respeitados os demais impedimentos.
 
 **Pós-condição:** O setor permanece disponível conforme sua situação e com um responsável definido.
 
@@ -933,29 +1007,35 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 
 ### UC13 - Transferir patrimônios entre setores
 
-**Ator(es):** Diretor de Patrimônio
+**Ator(es):** Diretor de Patrimônio registra; Diretor e Administrador consultam.
 
-**Pré-condição:** O Diretor deve estar autenticado; deve existir comissão vigente quando exigida e setores ativos disponíveis.
+**Pré-condição:** identidade autenticada e autorizada; comissão vigente para
+registro comum; bens e destinos elegíveis segundo RF13 e RF19.
 
 **Fluxo principal:**
 
-1. O Diretor inicia uma transferência.
-2. O Diretor seleciona a comissão vigente quando aplicável.
-3. O Diretor seleciona um ou mais patrimônios.
-4. O Diretor define o setor de destino de cada item.
-5. O sistema valida a situação dos bens e dos setores.
-6. O Diretor confirma a operação.
-7. O sistema atualiza os setores e cria os históricos de transferência.
+1. O Diretor seleciona de um a dez bens distintos.
+2. Define uma comissão vigente e motivo comuns, e o destino de cada bem.
+3. Revisa o resumo; data/horário serão definidos pelo servidor.
+4. Confirma explicitamente.
+5. O sistema revalida origem esperada, estados, comissão e inventários.
+6. Na mesma transação, atualiza os setores e grava um histórico por bem.
+7. Apresenta os registros individuais; reenvio reconhecido recupera o resultado.
 
 **Fluxos alternativos / exceções:**
 
-- Patrimônio baixado: o sistema bloqueia o item.
-- Setor de destino inativo: o sistema rejeita o destino.
-- Comissão obrigatória inexistente ou fora da vigência: o sistema não permite concluir.
+- Duplicidade, item inelegível, destino inativo/igual, origem alterada,
+  comissão inválida ou bloqueio de inventário: nenhuma transferência é gravada;
+  indicar os campos/itens e preservar o formulário para correção.
+- Falha de conexão após envio: resultado desconhecido; recuperar usando a mesma
+  chave e conteúdo, sem presumir rollback ou iniciar outra transferência.
+- Administrador tenta registrar: negar; suas consultas permanecem permitidas.
+- Consultas incluem correções de inventário identificadas, sem alterar seu fluxo.
 
-**Pós-condição:** Os patrimônios passam a pertencer aos setores de destino e ficam com histórico da movimentação.
+**Pós-condição:** em sucesso, bens e históricos consistentes; em falha, nenhuma
+alteração parcial. Não existe lote de domínio, edição, exclusão ou estorno.
 
-**Requisito relacionado:** RF13
+**Requisito relacionado:** RF13, com bloqueios de RF19.
 
 ### UC14 - Reavaliar patrimônios
 
@@ -1210,7 +1290,7 @@ conferidos, itens não localizados, divergências e correções rastreáveis.
 
 **Eventos:** Administrar os cadastros administrativos do sistema, incluindo usuários, responsáveis, setores, comissões, naturezas de bens, espécies de bens e fornecedores. Também poderá participar do registro e alteração de processos de compra e do gerenciamento de manutenções, consultar todos os dados patrimoniais e acompanhar inventários sem executar operações sobre os patrimônios.
 
-**Serviços:** Autenticação e controle de acesso (RF01); Gestão de Usuários (RF02); Gestão de Responsáveis (RF03); Gestão de Setores (RF04); Gestão de Comissões (RF05); Gestão de Naturezas de Bens (RF06); Gestão de Espécies de Bens (RF07); Gestão de Fornecedores (RF08); Gestão de Processos de Compra e Documentos Fiscais (RF09); Gestão de Manutenções (RF18); Consulta de Patrimônios (RF11); consulta de inventários (RF19); Consulta do Histórico Patrimonial (RF20); Relatórios Patrimoniais (RF21).
+**Serviços:** Autenticação e controle de acesso (RF01); Gestão de Usuários (RF02); Gestão de Responsáveis (RF03); Gestão de Setores (RF04); Gestão de Comissões (RF05); Gestão de Naturezas de Bens (RF06); Gestão de Espécies de Bens (RF07); Gestão de Fornecedores (RF08); Gestão de Processos de Compra e Documentos Fiscais (RF09); Gestão de Manutenções (RF18); Consulta de Patrimônios (RF11); Consulta de Transferências entre Setores (RF13, sem registro); consulta de inventários (RF19); Consulta do Histórico Patrimonial (RF20); Relatórios Patrimoniais (RF21).
 
 **Subpontos de vista:** Diretor de Patrimônio, Usuário do Sistema.
 

@@ -1,3 +1,4 @@
+import movimentacoesFixtures from "./movimentacoes-fixtures.json" with { type: "json" };
 import { createServer } from "node:http";
 
 const port = Number(process.env.PLAYWRIGHT_API_PORT ?? 3201);
@@ -90,6 +91,85 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (
+    request.method === "GET" &&
+    /^\/api\/movimentacoes(?:\/|$)/.test(requestUrl.pathname)
+  ) {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (!session || session === "pending") {
+      json(response, 401, {
+        status: 401,
+        sucesso: false,
+        codigo: "NAO_AUTENTICADO",
+        mensagem: "Autenticação necessária.",
+        erros: [],
+        requisicaoId: "mov-e2e",
+      });
+      return;
+    }
+    if (request.headers.cookie?.includes("sipat_movimentacao_scenario=error")) {
+      json(response, 503, {
+        status: 503,
+        sucesso: false,
+        codigo: "SERVICO_INDISPONIVEL",
+        mensagem: "Consulta temporariamente indisponível.",
+        erros: [],
+        requisicaoId: "mov-e2e",
+      });
+      return;
+    }
+    if (requestUrl.pathname === "/api/movimentacoes") {
+      let dados = [
+        movimentacoesFixtures.detalhe,
+        movimentacoesFixtures.correcao,
+      ].map((item) => ({
+        id: item.id,
+        patrimonio: item.patrimonio,
+        setorOrigem: item.setorOrigem,
+        setorDestino: item.setorDestino,
+        comissao: item.comissao,
+        dataTransferencia: item.dataTransferencia,
+        origemRegistro: item.origemRegistro,
+      }));
+      if (requestUrl.searchParams.has("comissaoId"))
+        dados = dados.filter(
+          (d) => d.comissao.id === requestUrl.searchParams.get("comissaoId"),
+        );
+      if (request.headers.cookie?.includes("sipat_movimentacao_scenario=empty"))
+        dados = [];
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Movimentações listadas.",
+        dados,
+        meta: { pagina: 1, limite: 20, ultimaPagina: 1, total: dados.length },
+      });
+      return;
+    }
+    const id = requestUrl.pathname.split("/").at(-1);
+    const detalhe = [
+      movimentacoesFixtures.detalhe,
+      movimentacoesFixtures.correcao,
+    ].find((item) => item.id === id);
+    if (detalhe) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Movimentação encontrada.",
+        dados: detalhe,
+      });
+      return;
+    }
+    json(response, 404, {
+      status: 404,
+      sucesso: false,
+      codigo: "MOVIMENTACAO_NAO_ENCONTRADA",
+      mensagem: "Movimentação não encontrada.",
+      erros: [],
+      requisicaoId: "mov-e2e",
+    });
+    return;
+  }
   if (request.method === "GET" && requestUrl.pathname === "/api/patrimonios") {
     const session = sessionFromCookie(request.headers.cookie);
 

@@ -189,10 +189,13 @@ offline continuam fora desta sequência.
 
 A população do inventário é formada na criação por todos os setores ativos e
 patrimônios ATIVOS daquele instante. Somente um setor do inventário pode ficar
-EM_ANDAMENTO por vez. O bloqueio de movimentações é restrito ao setor em
-conferência; operações legítimas nos demais setores mantêm atualizado apenas o
-item ainda pendente. Item verificado não é transferido entre setores do
-inventário nem conferido novamente. Empréstimo ou manutenção vigente não impede
+EM_ANDAMENTO por vez. O baseline original bloqueava movimentações no setor em
+conferência. A decisão de 27/10/2026 em RF19/B amplia o impedimento de
+transferências comuns a origem/destino PENDENTE ou EM_ANDAMENTO em inventário
+aberto; implementação ainda pendente em MOVIMENTACOES-001. Não usar a previsão
+antiga de sincronização de itens pendentes para autorizar essas transferências.
+Item verificado não é transferido entre setores do inventário nem conferido
+novamente; o histórico da transferência legítima é preservado separadamente. Empréstimo ou manutenção vigente não impede
 iniciar o setor: se o bem continuar ausente ao encerrá-lo, o item preserva tanto
 NAO_LOCALIZADO quanto o estado e a operação que justificavam a ausência. Baixas
 de patrimônios incluídos e inativações de setores do inventário ficam bloqueadas
@@ -1144,8 +1147,9 @@ operações incompatíveis e concorrência comprovada no PostgreSQL.
   que explique ausência por empréstimo ou manutenção;
 - corrigir por retorno físico ou transferência cadastral atômica;
 - preservar leitura idempotente e rejeitar segunda conferência em outro setor;
-- bloquear localização ou elegibilidade no setor em andamento e sincronizar
-  movimentações legítimas dos itens ainda pendentes nos demais setores;
+- baseline entregue: controles do inventário e bloqueio setorial de operações
+  incompatíveis; para transferências comuns prevalece a evolução RF19/B,
+  planejada em MOVIMENTACOES-001, sem alterar o fluxo específico de correção;
 - bloquear baixa de patrimônio incluído e inativação de setor até a finalização;
 - impedir qualquer mutação depois da finalização;
 - cobrir as corridas de início, leitura, conclusão, correção e finalização.
@@ -1431,3 +1435,22 @@ segurança. Todos os e-mails cadastrados são considerados institucionais e
 confiáveis nesta etapa; verificação de e-mail e MFA permanecem fora do escopo.
 O administrador não recebe permissão para alterar ou redefinir a senha de outra
 pessoa.
+
+## Movimentações entre setores — entregues
+
+**Status:** contratos, API e Web implementados e integrados; verificações automatizadas concluídas em 28/10/2026. Homologação manual com leitor de tela pendente na Web.
+
+1. [CONTRACTS-012](./tasks/CONTRACTS-012-contratos-movimentacoes.md): schemas,
+   tipos, exports e 123 testes do package.
+2. [MOVIMENTACOES-001](./tasks/MOVIMENTACOES-001-transferir-consultar-patrimonios.md):
+   API, idempotência persistente, transações, política B e PostgreSQL real.
+3. [WEB-MOVIMENTACOES-001](./tasks/WEB-MOVIMENTACOES-001-integrar-movimentacoes.md):
+   consulta/detalhe para ambos os perfis, registro em três etapas somente pelo
+   diretor, E2E padrão e real, inspeção visual e limites documentados.
+
+A regra B e as restrições da população fixa estão implementadas para o fluxo
+comum. Correções próprias preservam as validações existentes, sem nova
+revalidação de vigência. A revisão futura dessas correções continua fora deste
+ciclo. UUID individual, sem código TR nem lote; migrations aplicadas no local e
+no ambiente isolado com dados preservados. O placeholder foi substituído.
+[Evidências e reprodução](../PROMPTS-MOVIMENTACOES.md).

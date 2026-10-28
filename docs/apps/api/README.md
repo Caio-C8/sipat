@@ -32,6 +32,11 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 
 No estado atual:
 
+- `MovimentacoesModule` lista/consulta transferências individuais, confirma de 1 a 10
+  atomicamente e oferece auxiliares por contexto. Somente diretor registra; ambos
+  consultam. Idempotência persistente, política B e concorrência foram verificadas
+  em PostgreSQL isolado; ver [MOVIMENTACOES-001](../../tasks/MOVIMENTACOES-001-transferir-consultar-patrimonios.md).
+
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,

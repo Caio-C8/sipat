@@ -91,8 +91,10 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     label: "Movimentações",
     icon: ArrowLeftRight,
     grupo: "principal",
-    perfis: APENAS_DIRETOR,
-    implementado: false,
+    perfis: TODOS_PERFIS,
+    implementado: true,
+    href: "/movimentacoes",
+    breadcrumb: ["Início", "Movimentações"],
   },
   {
     id: "inventario",
@@ -225,5 +227,10 @@ export function listarNavegacaoPorPerfil(
 export function encontrarNavegacaoPorCaminho(
   pathname: string,
 ): ItemNavegacao | undefined {
-  return catalogoNavegacao.find((item) => item.href === pathname);
+  return catalogoNavegacao.find(
+    (item) =>
+      item.href === pathname ||
+      (item.href === "/movimentacoes" &&
+        pathname.startsWith("/movimentacoes/")),
+  );
 }

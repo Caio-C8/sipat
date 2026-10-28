@@ -98,9 +98,11 @@ patrimônios ATIVOS a conferir, além das consultas paginadas do resultado.
 - todos os estados e datas operacionais começam pendentes ou nulos;
 - status patrimonial e vínculos justificadores começam nulos e tornam-se
   imutáveis quando a verificação do item é consolidada;
-- mudanças de localização registradas antes da conferência do respectivo setor
-  podem atualizar somente o setor esperado e o vínculo do item ainda pendente,
-  conforme a política de `INVENTARIOS-002`;
+- a previsão original de atualizar setor esperado/vínculo de item pendente
+  deve ser lida com a evolução de [RF19](../requisitos-SIPAT.md#rf19-inventário-patrimonial):
+  desde a decisão de 27/10/2026, transferências comuns para/de setor PENDENTE
+  também são proibidas; implementação em MOVIMENTACOES-001, ainda pendente.
+  Não alterar resultados verificados nem o fluxo específico de correção;
 - datas do inventário são civis; eventos de setor, verificação e correção usam
   timestamp;
 - a consulta detalhada apresenta agregados, mas itens e setores permanecem em

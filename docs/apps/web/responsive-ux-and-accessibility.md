@@ -6,7 +6,8 @@ A rota `/dashboard` apresenta uma visão geral responsiva dentro do shell
 autenticado compartilhado. Seus totais geral e por status vêm da listagem
 patrimonial; pendências, setores e atividades comunicam explicitamente que a
 integração ainda não existe. O nome e o perfil vêm da identidade autenticada e
-os demais módulos da navegação são apenas apresentação. A home `/` apresenta o
+os demais módulos da navegação são apenas apresentação, exceto o link para o
+módulo integrado de movimentações, com seleção, destinos, revisão e consulta. A home `/` apresenta o
 catálogo público de páginas e endpoints técnicos.
 Em larguras menores, a navegação filtrada por perfil é apresentada por um menu
 expansível com `aria-expanded`, fechamento por `Escape` e devolução de foco. Os

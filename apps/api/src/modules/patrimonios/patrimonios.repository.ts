@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { DatabaseClient, Prisma } from "@repo/database";
+import { type DatabaseClient, Prisma } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import {
   patrimonioDetalheArgs,
@@ -160,6 +160,26 @@ export class PatrimoniosRepository {
         numeroNovo,
         createdBy: { connect: { id: createdById } },
       },
+      select: { id: true },
+    });
+  }
+
+  bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {
+    return tx.$queryRaw<{ id: string; setorAtualId: string; status: string }[]>`
+      SELECT id, setor_atual_id AS "setorAtualId", status::text AS status
+      FROM patrimonios WHERE id = ANY(ARRAY[${Prisma.join(ids)}]::uuid[])
+      ORDER BY id FOR UPDATE
+    `;
+  }
+  atualizarSetorMovimentacao(
+    id: string,
+    setorAtualId: string,
+    instante: Date,
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.patrimonio.update({
+      where: { id },
+      data: { setorAtualId, updatedAt: instante },
       select: { id: true },
     });
   }

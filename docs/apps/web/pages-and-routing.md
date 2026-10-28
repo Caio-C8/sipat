@@ -10,6 +10,8 @@ A aplicação Web do SIPAT expõe:
 - `/senha-atualizada`: confirmação protegida após a troca;
 - `/dashboard`: visão geral protegida com totais patrimoniais para os dois
   perfis;
+- `/movimentacoes` e `/movimentacoes/[movimentacaoId]`: consulta para ambos os perfis;
+- `/movimentacoes/nova`: registro em três etapas somente pelo diretor;
 - `/api/health`: health check da camada Web;
 - `/api/backend/*`: rewrite interno para a API, não uma página navegável.
 
@@ -17,8 +19,7 @@ As páginas de autenticação e o layout do grupo `(sistema)` validam a identida
 pelo endpoint `/auth/me` nas fronteiras Server. O grupo não altera a URL e
 compartilha o shell das páginas autenticadas; formulários, menus e logout ficam
 em pequenas fronteiras Client. O dashboard faz leituras paralelas no servidor;
-ainda não existem outras rotas operacionais de domínio, dinâmicas ou
-interceptadas.
+movimentações acrescenta consulta/detalhe Server e formulário Client integrado.
 
 ## Matriz aprovada para WEB-AUTH-001
 
@@ -40,7 +41,7 @@ deixando explícito que o rewrite herda a política da API e não é uma página
 `WEB-SHELL-001` moveu `/dashboard` para `app/(sistema)/dashboard` e centralizou
 os redirects de sessão em `app/(sistema)/layout.tsx`. O catálogo de navegação é
 a fonte do item ativo e do breadcrumb; somente caminhos Web implementados
-recebem link.
+recebem link. Movimentações está marcado como implementado e inclui suas páginas descendentes no item ativo e breadcrumb.
 
 `WEB-DASHBOARD-001` adicionou `loading.tsx` ao segmento e integrou os totais
 geral e por status por uma operação Server. Erro de integração e zero registros
