@@ -106,7 +106,7 @@ consulta e não altera o arquivo de design:
 | ----- | -------------------------------------------------------------- | --------- | ------------------------------------- |
 | 1     | `MOBILE-UI-001` — shell conforme o Figma                       | concluído | fundação mobile                       |
 | 2     | `MOBILE-AUTH-003` — paridade visual da autenticação            | concluído | `MOBILE-UI-001`                       |
-| 3     | `INVENTARIOS-003` — consulta de inventários pelo Administrador | aprovado  | `INVENTARIOS-001` e `INVENTARIOS-002` |
+| 3     | `INVENTARIOS-003` — consulta de inventários pelo Administrador | concluído | `INVENTARIOS-001` e `INVENTARIOS-002` |
 | 4     | `MOBILE-HOME-002` — Home real por perfil                       | aprovado  | `MOBILE-UI-001` e `INVENTARIOS-003`   |
 
 Especificações:
@@ -178,10 +178,10 @@ Objetivos patrimoniais futuros que exigirem comissão dependerão de
 | 23    | `CONTRACTS-008` — Contratos de inventários         | concluído | RF19, UC19, `CONTRACTS-004`, `CONTRACTS-007`               |
 | 24    | `INVENTARIOS-001` — Criar e consultar inventários  | concluído | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
 | 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | concluído | `INVENTARIOS-001`, concorrência e política de movimentação |
-| 26    | `INVENTARIOS-003` — Consulta pelo Administrador    | aprovado  | `INVENTARIOS-001`, `INVENTARIOS-002` e RNF05               |
+| 26    | `INVENTARIOS-003` — Consulta pelo Administrador    | concluído | `INVENTARIOS-001`, `INVENTARIOS-002` e RNF05               |
 
 Os três primeiros objetivos entregaram contratos, persistência e API sem
-interfaces. `INVENTARIOS-003` altera somente a autorização das consultas
+interfaces. `INVENTARIOS-003` alterou somente a autorização das consultas
 existentes para permitir acompanhamento administrativo; as operações do
 inventário continuam exclusivas do Diretor de Patrimônio. A primeira integração
 mobile é especificada separadamente em `MOBILE-HOME-002`; câmera, scanner e fila
