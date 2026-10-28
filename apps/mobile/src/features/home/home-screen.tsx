@@ -25,7 +25,6 @@ type HomeContentProps = Readonly<{
   name: string;
   profile: PerfilUsuario;
   state: HomeDashboardState;
-  onLogout(): void;
   onRefresh(): void;
   onRetry(block: HomeBlockName): void;
 }>;
@@ -35,15 +34,6 @@ const STATUS_LABELS = {
   EM_ANDAMENTO: "Em andamento",
   FINALIZADO: "Concluído",
 } as const;
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase("pt-BR"))
-    .join("");
-}
 
 function civilDate(value: string | null) {
   if (!value) return null;
@@ -436,7 +426,6 @@ export function HomeContent({
   name,
   profile,
   state,
-  onLogout,
   onRefresh,
   onRetry,
 }: HomeContentProps) {
@@ -456,21 +445,6 @@ export function HomeContent({
               {director ? "Diretor de Patrimônio" : "Administrador"}
             </Text>
           </View>
-          <Pressable
-            accessibilityHint="Encerra a sessão atual"
-            accessibilityLabel="Sair"
-            accessibilityRole="button"
-            onPress={onLogout}
-            style={styles.avatarButton}
-          >
-            <Text style={styles.avatarText}>{initials(name)}</Text>
-            <Lucide
-              accessible={false}
-              color={mobileHome.textMuted}
-              name="log-out"
-              size={14}
-            />
-          </Pressable>
         </View>
 
         <Hero profile={profile} />
@@ -539,7 +513,6 @@ function AuthenticatedHome({
   return (
     <HomeContent
       name={identity.nome}
-      onLogout={() => void manager.logout()}
       onRefresh={dashboard.refresh}
       onRetry={(block) => void dashboard.retry(block)}
       profile={identity.perfil}
@@ -574,16 +547,6 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   profileLabel: { color: mobileHome.textMuted, fontSize: 12, lineHeight: 18 },
-  avatarButton: {
-    alignItems: "center",
-    backgroundColor: mobileHome.avatar,
-    borderRadius: radii.pill,
-    flexDirection: "row",
-    gap: spacing.xs,
-    minHeight: layout.comfortableTouchTarget,
-    paddingHorizontal: spacing.md,
-  },
-  avatarText: { color: mobileHome.text, fontSize: 12, fontWeight: "800" },
   hero: {
     backgroundColor: mobileHome.action,
     borderRadius: 22,

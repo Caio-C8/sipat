@@ -24,8 +24,10 @@ raiz protegida e `/check` servem HTML sem expor o conteúdo de development.
 Ainda não existem páginas de domínio, cache/offline ou E2E em dispositivos.
 
 `MOBILE-UI-001` implementou o shell comum observado na página `Telas Mobile`:
-topbar azul-marinho com brasão e identificação municipal, safe area coerente e
-bottom bar somente em `(app)`. `Início` é o único destino ativo; Bens,
+topbar azul-marinho com brasão, safe area coerente e bottom bar somente em
+`(app)`. Sem sessão, a topbar mantém a identificação municipal; autenticada,
+substitui esse texto pelo avatar da identidade, cujo menu contém o logout.
+`Início` é o único destino ativo; Bens,
 Inventário, Cadastro e Relatórios permanecem disabled, sem rotas placeholder.
 O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003` recompôs login,
 troca obrigatória e confirmação conforme os três frames do Figma, preservando
@@ -37,7 +39,8 @@ contratos, sessão e redirects; a recuperação aparece disabled, sem rota.
 convertidas em zero.
 
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial; `MOBILE-HOME-002`
-preservou proteção e logout e adicionou conteúdo real por perfil. `/check`
+preservou proteção, moveu o logout para o menu da topbar e adicionou conteúdo
+real por perfil. `/check`
 preserva o diagnóstico de runtime/API, acrescenta o
 catálogo tipado de todas as rotas e atravessa o gate de restauração somente em
 `development`; staging e produção aplicam a mesma decisão de sessão da home.

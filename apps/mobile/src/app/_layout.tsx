@@ -17,27 +17,27 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <View style={styles.root}>
         <StatusBar style="light" />
-        <SafeAreaView
-          edges={["top", "right", "left"]}
-          style={styles.headerSafeArea}
-        >
-          {shouldShowDevelopmentCheckBanner(publicAppConfig.environment) ? (
-            <DevelopmentCheckBanner />
-          ) : null}
-          <AppTopbar />
-        </SafeAreaView>
-        <SafeAreaView
-          edges={["right", "bottom", "left"]}
-          style={styles.contentSafeArea}
-        >
-          <View style={styles.content}>
-            <SessionProvider>
+        <SessionProvider>
+          <SafeAreaView
+            edges={["top", "right", "left"]}
+            style={styles.headerSafeArea}
+          >
+            {shouldShowDevelopmentCheckBanner(publicAppConfig.environment) ? (
+              <DevelopmentCheckBanner />
+            ) : null}
+            <AppTopbar />
+          </SafeAreaView>
+          <SafeAreaView
+            edges={["right", "bottom", "left"]}
+            style={styles.contentSafeArea}
+          >
+            <View style={styles.content}>
               <SessionGate>
                 <Stack screenOptions={{ headerShown: false }} />
               </SessionGate>
-            </SessionProvider>
-          </View>
-        </SafeAreaView>
+            </View>
+          </SafeAreaView>
+        </SessionProvider>
       </View>
     </SafeAreaProvider>
   );
@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
   },
   headerSafeArea: {
     backgroundColor: mobileShell.header,
+    zIndex: 10,
   },
   contentSafeArea: {
     backgroundColor: mobileShell.navigationSurface,

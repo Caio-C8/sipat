@@ -90,7 +90,6 @@ const successState: HomeDashboardState = {
 };
 
 const actions = {
-  onLogout: vi.fn(),
   onRefresh: vi.fn(),
   onRetry: vi.fn(),
 };

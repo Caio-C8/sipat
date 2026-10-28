@@ -48,12 +48,14 @@ que o transporte de sessão estiver verificado. O resultado esperado é:
   mobile, acessível somente em `development`;
 - faixa fixa de desenvolvimento em todas as telas, abaixo da safe area, com
   acesso explícito a `/check`; ela não existe em staging ou produção;
-- topbar SIPAT com brasão e identificação da Câmara em todas as telas.
+- topbar SIPAT com brasão e identificação da Câmara nas telas sem sessão; na
+  área autenticada, o mesmo espaço recebe avatar e menu da conta com logout.
 
-Nenhuma feature patrimonial do SIPAT está implementada no mobile. Antes de uma
-nova entrega, registre contexto, requisitos relacionados, plataformas, rotas,
-estados, contratos, endpoints, permissões, comportamento offline, segurança,
-performance, acessibilidade e testes.
+A Home possui as primeiras leituras patrimoniais do mobile; páginas e mutações
+de domínio continuam pendentes. Antes de uma nova entrega, registre contexto,
+requisitos relacionados, plataformas, rotas, estados, contratos, endpoints,
+permissões, comportamento offline, segurança, performance, acessibilidade e
+testes.
 
 Cache de domínio, operação offline, biometria, attestation, pinning de
 certificado, observabilidade externa e E2E nativo continuam fora desta primeira

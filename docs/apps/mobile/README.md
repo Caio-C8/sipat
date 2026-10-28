@@ -25,7 +25,8 @@ código interno da API.
 - a sessão restaura antes da navegação, mantém access token em memória, rotaciona
   refresh token no `expo-secure-store` e aplica a matriz de acesso nos layouts;
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
-  em `development`;
+  em `development`; a topbar mantém a identificação municipal sem sessão e,
+  quando autenticada, apresenta avatar com menu da conta e logout;
 - o grupo `(app)` aplica a bottom bar do protótipo; somente `Início` representa
   uma rota existente e os demais destinos permanecem visíveis e disabled;
 - tokens semânticos mínimos sustentam a base visual compartilhada;

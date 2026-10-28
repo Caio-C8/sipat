@@ -126,8 +126,11 @@ autenticado.
 
 - o frame `Home` da página `Telas Mobile` foi inspecionado no editor Web do
   Figma em modo somente leitura, porque o conector oficial exigiu permissão de
-  edição até para leitura; a implementação preserva saudação/avatar, destaque
-  azul, cards de indicadores, última conferência e bottom bar;
+  edição até para leitura; a implementação preserva saudação, destaque azul,
+  cards de indicadores, última conferência e bottom bar;
+- o avatar foi movido para o espaço direito da topbar autenticada; ao acioná-lo,
+  um menu acessível apresenta identidade, perfil e o botão `Sair`, enquanto
+  telas sem sessão preservam a identificação municipal;
 - a Home consulta as três listagens existentes com Bearer em memória, paginação,
   filtros públicos e validação integral das responses; a última conferência
   percorre sequencialmente os finalizados e compara `dataFim`, sem presumir que
@@ -140,7 +143,7 @@ autenticado.
   timeout, rede/offline e contrato inválido não viram zero;
 - ações futuras e geração de relatório permanecem disabled, sem handler e sem
   rota placeholder; a API não recebeu endpoint novo;
-- passaram typecheck, 54 testes em 17 arquivos, lint, exports Android/iOS/Web,
+- passaram typecheck, 56 testes em 17 arquivos, lint, exports Android/iOS/Web,
   formatação e `git diff --check`;
 - a comparação visual da implementação executada em 390×844, integração com
   API/PostgreSQL reais, aparelho, tablet, rotação, fonte ampliada, TalkBack e

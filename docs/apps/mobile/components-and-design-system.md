@@ -47,8 +47,9 @@ bar, assets e contrastes serem verificados em Android, iOS e Web.
 A primeira entrega deve extrair somente os tokens e componentes usados pelas
 telas aprovadas:
 
-- `AppTopbar`, com brasão, `SIPAT` e identificação da Câmara conforme o Figma,
-  presente em login, troca obrigatória, confirmação, home e `/check`;
+- `AppTopbar`, com brasão e `SIPAT` conforme o Figma, presente em login, troca
+  obrigatória, confirmação, home e `/check`; sem sessão exibe a identificação
+  municipal e, autenticada, usa esse espaço para avatar e menu da conta;
 - `DevelopmentCheckBanner`, global e exclusivo de `development`;
 - primitives de botão, campo, campo de senha, card e feedback somente quando a
   reutilização entre as três telas estiver comprovada;
