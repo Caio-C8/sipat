@@ -56,7 +56,7 @@ export class InventariosController {
   constructor(private readonly inventarios: InventariosService) {}
 
   @Get()
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarInventariosResponseDto)
   async listar(
     @Query() query: ListarInventariosQueryDto,
@@ -74,7 +74,7 @@ export class InventariosController {
   }
 
   @Get(":inventarioId")
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarInventarioResponseDto)
   async consultar(
     @Param() params: InventarioParamsDto,
@@ -89,7 +89,7 @@ export class InventariosController {
   }
 
   @Get(":inventarioId/setores")
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarSetoresInventarioResponseDto)
   async listarSetores(
     @Param() params: InventarioParamsDto,
@@ -111,7 +111,7 @@ export class InventariosController {
   }
 
   @Get(":inventarioId/itens")
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarItensInventarioResponseDto)
   async listarItens(
     @Param() params: InventarioParamsDto,

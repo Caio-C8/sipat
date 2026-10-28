@@ -108,15 +108,16 @@ patrimônios ATIVOS a conferir, além das consultas paginadas do resultado.
 
 ## Matriz de acesso
 
-| Rotas                                        | Pública | Perfil               |
-| -------------------------------------------- | ------- | -------------------- |
-| `GET /api/inventarios[/:inventarioId]`       | não     | `DIRETOR_PATRIMONIO` |
-| `GET /api/inventarios/:inventarioId/setores` | não     | `DIRETOR_PATRIMONIO` |
-| `GET /api/inventarios/:inventarioId/itens`   | não     | `DIRETOR_PATRIMONIO` |
-| `POST /api/inventarios`                      | não     | `DIRETOR_PATRIMONIO` |
+| Rotas                                        | Pública | Perfis                                |
+| -------------------------------------------- | ------- | ------------------------------------- |
+| `GET /api/inventarios[/:inventarioId]`       | não     | `ADMINISTRADOR`, `DIRETOR_PATRIMONIO` |
+| `GET /api/inventarios/:inventarioId/setores` | não     | `ADMINISTRADOR`, `DIRETOR_PATRIMONIO` |
+| `GET /api/inventarios/:inventarioId/itens`   | não     | `ADMINISTRADOR`, `DIRETOR_PATRIMONIO` |
+| `POST /api/inventarios`                      | não     | somente `DIRETOR_PATRIMONIO`          |
 
-Todas as mutações usam a proteção CSRF global existente. Usuário anônimo recebe
-`401` e `ADMINISTRADOR` recebe `403`.
+`INVENTARIOS-003` ampliou posteriormente as consultas aos dois perfis sem
+alterar seus contratos. Todas as mutações usam a proteção CSRF global existente;
+usuário anônimo recebe `401` e `ADMINISTRADOR` recebe `403` nas mutações.
 
 ## Critérios de aceite
 

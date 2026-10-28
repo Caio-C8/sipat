@@ -1,6 +1,6 @@
 # `INVENTARIOS-003` — Permitir consulta administrativa de inventários
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -57,14 +57,22 @@ inventário.
 
 ## Critérios de aceite
 
-- [ ] os quatro `GET` aceitam sessão válida de ambos os perfis;
-- [ ] paginação, filtros, respostas e status HTTP permanecem compatíveis;
-- [ ] todos os `POST` de inventários continuam restritos ao Diretor;
-- [ ] anônimo recebe `401`, Administrador recebe `403` nas mutações e Diretor
+- [x] os quatro `GET` aceitam sessão válida de ambos os perfis;
+- [x] paginação, filtros, respostas e status HTTP permanecem compatíveis;
+- [x] todos os `POST` de inventários continuam restritos ao Diretor;
+- [x] anônimo recebe `401`, Administrador recebe `403` nas mutações e Diretor
       preserva o comportamento atual;
-- [ ] testes E2E usam os Guards reais e cobrem pelo menos um caso por grupo de
+- [x] testes E2E usam os Guards reais e cobrem pelo menos um caso por grupo de
       leitura e cada boundary mutável;
-- [ ] nenhuma rota específica para mobile ou agregação duplicada é criada.
+- [x] nenhuma rota específica para mobile ou agregação duplicada é criada.
+
+Concluída em 28 de outubro de 2026. Os quatro handlers `GET` passaram a declarar
+explicitamente os perfis `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`, sem alterar
+schemas, filtros, paginação, responses ou persistência. Os seis handlers
+mutáveis preservaram a autorização exclusiva do Diretor de Patrimônio. A suíte
+E2E do módulo usa os Guards globais reais para comprovar `401` sem sessão,
+sucesso das quatro consultas nos dois perfis e `403` do Administrador antes de
+qualquer chamada ao service em cada mutação.
 
 ## Arquivos ou módulos potencialmente afetados
 

@@ -274,31 +274,39 @@ describe("inventários", () => {
   const cookie = (token: string) => `sipat_session=${token}`;
   const getDiretor = (path: string) =>
     request(app.getHttpServer()).get(path).set("Cookie", cookie(tokenDiretor));
+  const getAdministrador = (path: string) =>
+    request(app.getHttpServer())
+      .get(path)
+      .set("Cookie", cookie(tokenAdministrador));
   const postDiretor = (path: string) =>
     request(app.getHttpServer())
       .post(path)
       .set("Cookie", cookie(tokenDiretor))
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1");
+  const postAdministrador = (path: string) =>
+    request(app.getHttpServer())
+      .post(path)
+      .set("Cookie", cookie(tokenAdministrador))
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1");
 
-  it("aplica 401 ao anônimo, 403 ao administrador e permite o diretor", async () => {
+  it("aplica 401 ao anônimo e permite listar aos dois perfis", async () => {
     const anonimo = await request(app.getHttpServer()).get("/api/inventarios");
-    const administrador = await request(app.getHttpServer())
-      .get("/api/inventarios")
-      .set("Cookie", cookie(tokenAdministrador));
+    const administrador = await getAdministrador("/api/inventarios");
     const diretor = await getDiretor("/api/inventarios");
 
     expect(anonimo.status).toBe(401);
-    expect(administrador.status).toBe(403);
+    expect(administrador.status).toBe(200);
     expect(diretor.status).toBe(200);
+    expect(
+      ListarInventariosResponseSchema.safeParse(administrador.body).success,
+    ).toBe(true);
     expect(
       ListarInventariosResponseSchema.safeParse(diretor.body).success,
     ).toBe(true);
     expect(RespostaErroSchema.parse(anonimo.body).codigo).toBe(
       "NAO_AUTENTICADO",
-    );
-    expect(RespostaErroSchema.parse(administrador.body).codigo).toBe(
-      "ACESSO_NEGADO",
     );
   });
 
@@ -330,22 +338,72 @@ describe("inventários", () => {
     );
   });
 
-  it("expõe detalhe, setores e itens paginados conforme os contratos", async () => {
-    const [detalhe, setores, itens] = await Promise.all([
+  it("expõe detalhe, setores e itens aos dois perfis conforme os contratos", async () => {
+    const [
+      detalheAdmin,
+      setoresAdmin,
+      itensAdmin,
+      detalheDiretor,
+      setoresDiretor,
+      itensDiretor,
+    ] = await Promise.all([
+      getAdministrador(`/api/inventarios/${INVENTARIO_ID}`),
+      getAdministrador(`/api/inventarios/${INVENTARIO_ID}/setores`),
+      getAdministrador(`/api/inventarios/${INVENTARIO_ID}/itens`),
       getDiretor(`/api/inventarios/${INVENTARIO_ID}`),
       getDiretor(`/api/inventarios/${INVENTARIO_ID}/setores`),
       getDiretor(`/api/inventarios/${INVENTARIO_ID}/itens`),
     ]);
 
-    expect(
-      ConsultarInventarioResponseSchema.safeParse(detalhe.body).success,
-    ).toBe(true);
-    expect(
-      ListarSetoresInventarioResponseSchema.safeParse(setores.body).success,
-    ).toBe(true);
-    expect(
-      ListarItensInventarioResponseSchema.safeParse(itens.body).success,
-    ).toBe(true);
+    for (const detalhe of [detalheAdmin, detalheDiretor]) {
+      expect(
+        ConsultarInventarioResponseSchema.safeParse(detalhe.body).success,
+      ).toBe(true);
+    }
+    for (const setores of [setoresAdmin, setoresDiretor]) {
+      expect(
+        ListarSetoresInventarioResponseSchema.safeParse(setores.body).success,
+      ).toBe(true);
+    }
+    for (const itens of [itensAdmin, itensDiretor]) {
+      expect(
+        ListarItensInventarioResponseSchema.safeParse(itens.body).success,
+      ).toBe(true);
+    }
+  });
+
+  it("nega ao administrador cada mutação do ciclo do inventário", async () => {
+    const rotaSetor = `/api/inventarios/${INVENTARIO_ID}/setores/${SETOR_INVENTARIO_ID}`;
+    const respostas = await Promise.all([
+      postAdministrador("/api/inventarios").send({
+        nome: "Inventário anual",
+        comissaoId: COMISSAO_ID,
+      }),
+      postAdministrador(`${rotaSetor}/iniciar`).send({}),
+      postAdministrador(`${rotaSetor}/verificacoes`).send({
+        numeroPatrimonial: "1001",
+      }),
+      postAdministrador(
+        `/api/inventarios/${INVENTARIO_ID}/itens/${ITEM_ID}/correcoes`,
+      ).send({ tipoCorrecao: "RETORNO_AO_SETOR_CADASTRADO" }),
+      postAdministrador(`${rotaSetor}/concluir`).send({}),
+      postAdministrador(`/api/inventarios/${INVENTARIO_ID}/finalizar`).send({
+        confirmarCorrecoesPendentes: false,
+      }),
+    ]);
+
+    for (const resposta of respostas) {
+      expect(resposta.status).toBe(403);
+      expect(RespostaErroSchema.parse(resposta.body).codigo).toBe(
+        "ACESSO_NEGADO",
+      );
+    }
+    expect(service.criar).not.toHaveBeenCalled();
+    expect(service.iniciarSetor).not.toHaveBeenCalled();
+    expect(service.verificarItem).not.toHaveBeenCalled();
+    expect(service.corrigirItem).not.toHaveBeenCalled();
+    expect(service.concluirSetor).not.toHaveBeenCalled();
+    expect(service.finalizar).not.toHaveBeenCalled();
   });
 
   it("protege e serializa as transições operacionais", async () => {

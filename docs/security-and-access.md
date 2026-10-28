@@ -213,7 +213,7 @@ navegador automaticamente.
 Uma rota pública não recebe autorização implícita para mutar estado sem CSRF,
 validação, limite e tratamento de abuso.
 
-### Consulta administrativa de inventários aprovada
+### Consulta administrativa de inventários implementada
 
 `INVENTARIOS-003` amplia somente os quatro métodos `GET` de inventários para
 `ADMINISTRADOR`, preservando `DIRETOR_PATRIMONIO` em todas as mutações:
@@ -227,8 +227,9 @@ validação, limite e tratamento de abuso.
 | `POST /api/inventarios` e mutações descendentes | não           | sim                   |
 
 Essa decisão permite consulta e acompanhamento administrativo sem autorizar
-criação, conferência, correção, conclusão ou finalização. O status permanece
-planejado até os Guards reais e os testes E2E confirmarem a implementação.
+criação, conferência, correção, conclusão ou finalização. Os Guards reais e os
+testes E2E confirmam o acesso dos dois perfis aos quatro `GET` e a negação do
+Administrador em cada mutação.
 
 A regra de produto aprovada permite ao Administrador consultar dados funcionais
 do sistema, mas não credenciais, segredos, campos internos ou dados fora das

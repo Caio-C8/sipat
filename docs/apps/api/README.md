@@ -81,10 +81,11 @@ No estado atual:
   e composição atomicamente, limita integrantes ativos, garante presidente
   único no PostgreSQL e congela ato, vigência e composição após o primeiro uso
   patrimonial;
-- `InventariosModule` restringe suas dez rotas ao `DIRETOR_PATRIMONIO`, valida
-  comissão vigente, materializa setores ativos e patrimônios `ATIVO`, consulta
-  progresso em lote e executa início, conferência idempotente, correção,
-  conclusão e finalização em transações serializáveis;
+- `InventariosModule` permite a `ADMINISTRADOR` e `DIRETOR_PATRIMONIO` as
+  quatro consultas de inventários e restringe criação e as cinco mutações ao
+  `DIRETOR_PATRIMONIO`; valida comissão vigente, materializa setores ativos e
+  patrimônios `ATIVO`, consulta progresso em lote e executa início, conferência
+  idempotente, correção, conclusão e finalização em transações serializáveis;
 - `BaixasModule` restringe criação, consulta e download ao
   `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com locks
   de patrimônio e comissão e mantém policy e trigger contra inventário aberto;
