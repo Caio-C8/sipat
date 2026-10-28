@@ -257,3 +257,30 @@ Mais detalhes estão em [arquitetura](docs/architecture.md),
 [índice completo da documentação](docs/README.md). Para trabalhos com passagem
 formal entre conversas de planejamento, implementação e versionamento, use o
 [fluxo entre agentes](docs/agents/workflow.md).
+
+Para preparar movimentações em ciclos de planejamento, implementação e
+versionamento, consulte o [guia de prompts](PROMPTS-MOVIMENTACOES.md).
+
+## Seed local de movimentações
+
+O seed padrão não insere dados. Para adicionar um patrimônio fictício e seus
+cadastros auxiliares ao banco local de desenvolvimento:
+
+```powershell
+$env:SIPAT_SEED_MOVIMENTACOES = 'true'
+pnpm db:seed:development
+Remove-Item Env:SIPAT_SEED_MOVIMENTACOES
+```
+
+Exige `APP_ENV=development` e banco `sipat` em servidor local. Cria um notebook
+ativo com numeração temporária `SP-...`, situação contábil inicial, responsável,
+natureza, espécie, dois setores e comissão de demonstração vigente de 2026 a 2036. Os nomes auxiliares usam o prefixo `DEMO -`.
+
+A reexecução não duplica os registros nem redefine o setor/status de um bem já
+movimentado. Não limpa dados, não cria transferências e não cria ou altera
+usuários, senhas ou perfis.
+
+Para registrar, entre com um usuário Diretor de Patrimônio, abra
+`/movimentacoes` e use **Nova movimentação**, no canto superior direito.
+Administrador possui somente consulta. O seed pode ser reexecutado para
+localizar os dados disponíveis; ele não desfaz testes já realizados.

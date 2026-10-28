@@ -364,4 +364,26 @@ export class ComissoesService {
       erros: [],
     });
   }
+
+  bloquearParaMovimentacao(id: string, tx: Prisma.TransactionClient) {
+    return this.comissoes.bloquearParaMovimentacao(id, tx);
+  }
+  async listarOpcoesMovimentacao(
+    busca: string | undefined,
+    dia: Date | undefined,
+    skip: number,
+    take: number,
+  ) {
+    const where: Prisma.ComissaoWhereInput = {
+      ...(busca ? { nome: { contains: busca, mode: "insensitive" } } : {}),
+      ...(dia
+        ? { dataVigenciaInicio: { lte: dia }, dataVigenciaFim: { gte: dia } }
+        : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.comissoes.listarOpcoesMovimentacao(where, skip, take),
+      this.comissoes.contar(where),
+    ]);
+    return { items, total };
+  }
 }

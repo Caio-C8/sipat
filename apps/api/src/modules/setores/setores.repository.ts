@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { DatabaseClient, Prisma } from "@repo/database";
+import { type DatabaseClient, Prisma } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import {
   setorDetalheArgs,
@@ -69,6 +69,30 @@ export class SetoresRepository {
       where: { id: setorId },
       data: { ativo, updatedAt: new Date() },
       ...setorDetalheArgs,
+    });
+  }
+
+  bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {
+    return tx.$queryRaw<
+      { id: string; ativo: boolean }[]
+    >`SELECT id, ativo FROM setores WHERE id = ANY(ARRAY[${Prisma.join(ids)}]::uuid[]) ORDER BY id FOR SHARE`;
+  }
+  listarOpcoesMovimentacao(
+    where: Prisma.SetorWhereInput,
+    skip: number,
+    take: number,
+  ) {
+    return this.database.setor.findMany({
+      where,
+      skip,
+      take,
+      orderBy: [{ nome: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        nome: true,
+        ativo: true,
+        responsavel: { select: { id: true, nome: true } },
+      },
     });
   }
 }

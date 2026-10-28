@@ -1,3 +1,4 @@
+import { MovimentacoesModule } from "./modules/movimentacoes/movimentacoes.module";
 import {
   type MiddlewareConsumer,
   Module,
@@ -43,6 +44,7 @@ import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
     EspeciesModule,
     FornecedoresModule,
     InventariosModule,
+    MovimentacoesModule,
     NaturezasModule,
     NotasFiscaisModule,
     PatrimoniosModule,

@@ -33,6 +33,13 @@ const paginas = [
     perfis: "Administrador e Diretor de Patrimônio",
   },
   {
+    href: "/movimentacoes",
+    titulo: "Movimentações",
+    descricao: "Consulta de transferências e registro de novas movimentações.",
+    acesso: "Protegida",
+    perfis: "Diretor registra; administrador e diretor consultam",
+  },
+  {
     href: "/dashboard",
     titulo: "Visão geral",
     descricao: "Futura home autenticada do SIPAT.",

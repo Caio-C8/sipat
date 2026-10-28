@@ -6,11 +6,24 @@ import {
 } from "../system-navigation";
 
 describe("catálogo de navegação do sistema", () => {
-  it("mantém somente rotas Web implementadas como links", () => {
-    expect(catalogoNavegacao.filter((item) => item.href)).toHaveLength(1);
-    expect(catalogoNavegacao.find((item) => item.href)?.href).toBe(
-      "/dashboard",
-    );
+  it("oferece movimentações implementadas para consulta por ambos os perfis", () => {
+    expect(
+      catalogoNavegacao.filter((item) => item.href).map((item) => item.href),
+    ).toEqual(["/dashboard", "/movimentacoes"]);
+    expect(
+      catalogoNavegacao.find((item) => item.id === "movimentacoes")
+        ?.implementado,
+    ).toBe(true);
+    expect(
+      listarNavegacaoPorPerfil("ADMINISTRADOR").some(
+        (item) => item.href === "/movimentacoes",
+      ),
+    ).toBe(true);
+    expect(
+      listarNavegacaoPorPerfil("DIRETOR_PATRIMONIO").some(
+        (item) => item.href === "/movimentacoes",
+      ),
+    ).toBe(true);
   });
 
   it("aplica a matriz dos dois perfis", () => {
@@ -33,6 +46,10 @@ describe("catálogo de navegação do sistema", () => {
     expect(encontrarNavegacaoPorCaminho("/dashboard")?.breadcrumb).toEqual([
       "Início",
       "Visão geral",
+    ]);
+    expect(encontrarNavegacaoPorCaminho("/movimentacoes")?.breadcrumb).toEqual([
+      "Início",
+      "Movimentações",
     ]);
     expect(encontrarNavegacaoPorCaminho("/rota-inexistente")).toBeUndefined();
   });

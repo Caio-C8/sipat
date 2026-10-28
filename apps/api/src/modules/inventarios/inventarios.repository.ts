@@ -623,4 +623,43 @@ export class InventariosRepository {
       Object.entries(contagens).map(([chave, valor]) => [chave, Number(valor)]),
     ) as { [K in keyof T]: number };
   }
+
+  bloquearInventariosMovimentacao(
+    patrimonios: string[],
+    setores: string[],
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.$queryRaw<{ id: string }[]>`
+      SELECT i.id FROM inventarios i WHERE i.status <> 'FINALIZADO' AND (
+        EXISTS (SELECT 1 FROM setores_inventario s WHERE s.inventario_id = i.id AND s.setor_id = ANY(ARRAY[${Prisma.join(setores)}]::uuid[]))
+        OR EXISTS (SELECT 1 FROM itens_inventario p WHERE p.inventario_id = i.id AND p.patrimonio_id = ANY(ARRAY[${Prisma.join(patrimonios)}]::uuid[]))
+      ) ORDER BY i.id FOR SHARE OF i
+    `;
+  }
+  consultarBloqueiosMovimentacao(
+    patrimonios: string[],
+    setores: string[],
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.$queryRaw<
+      { setorId: string; status: "PENDENTE" | "EM_ANDAMENTO" }[]
+    >`
+      SELECT DISTINCT s.setor_id AS "setorId", s.status FROM setores_inventario s
+      JOIN inventarios i ON i.id = s.inventario_id
+      WHERE i.status <> 'FINALIZADO' AND s.status IN ('PENDENTE', 'EM_ANDAMENTO')
+      AND s.setor_id = ANY(ARRAY[${Prisma.join(setores)}]::uuid[])
+    `;
+  }
+  consultarDestinosForaInventario(
+    itens: { patrimonioId: string; setorDestinoId: string }[],
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.$queryRaw<{ patrimonioId: string }[]>`
+      SELECT DISTINCT v.patrimonio_id AS "patrimonioId" FROM
+      (VALUES ${Prisma.join(itens.map((item) => Prisma.sql`(${item.patrimonioId}::uuid, ${item.setorDestinoId}::uuid)`))}) AS v(patrimonio_id, destino_id)
+      WHERE EXISTS (SELECT 1 FROM itens_inventario ii JOIN inventarios i ON i.id = ii.inventario_id
+        WHERE ii.patrimonio_id = v.patrimonio_id AND i.status <> 'FINALIZADO'
+        AND NOT EXISTS (SELECT 1 FROM setores_inventario si WHERE si.inventario_id = i.id AND si.setor_id = v.destino_id))
+    `;
+  }
 }

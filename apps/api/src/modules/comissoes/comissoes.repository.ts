@@ -160,4 +160,24 @@ export class ComissoesRepository {
       where: { id: membroComissaoId },
     });
   }
+
+  async bloquearParaMovimentacao(id: string, tx: Prisma.TransactionClient) {
+    const linhas = await tx.$queryRaw<
+      { id: string; dataVigenciaInicio: Date; dataVigenciaFim: Date }[]
+    >`SELECT id, data_vigencia_inicio AS "dataVigenciaInicio", data_vigencia_fim AS "dataVigenciaFim" FROM comissoes WHERE id = ${id}::uuid FOR SHARE`;
+    return linhas[0] ?? null;
+  }
+  listarOpcoesMovimentacao(
+    where: Prisma.ComissaoWhereInput,
+    skip: number,
+    take: number,
+  ) {
+    return this.database.comissao.findMany({
+      where,
+      skip,
+      take,
+      orderBy: [{ nome: "asc" }, { id: "asc" }],
+      ...comissaoResumoArgs,
+    });
+  }
 }

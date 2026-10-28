@@ -1,6 +1,14 @@
 # `INVENTARIOS-002` — Conferir, corrigir e finalizar inventários
 
-**Status:** `concluída`
+**Status:** `concluída` para a entrega original.
+
+**Evolução aprovada em 27/10/2026, ainda não implementada:** transferências
+comuns passam a seguir a alternativa B de
+[RF19](../requisitos-SIPAT.md#rf19-inventário-patrimonial), com execução em
+[MOVIMENTACOES-001](./MOVIMENTACOES-001-transferir-consultar-patrimonios.md).
+As evidências/checklists abaixo pertencem à entrega original e não comprovam
+esse novo bloqueio nem a API geral. Correções próprias conservam seu fluxo e
+validações; vigência no momento da correção permanece pendência futura em RF19.
 
 ## Objetivo
 
@@ -97,17 +105,21 @@ tratamento explícito de leituras repetidas e garantias de concorrência.
 - centralizar no domínio de inventários uma política interna reutilizável que
   informe se uma operação pode alterar localização ou elegibilidade de um
   patrimônio ou usar um setor como origem/destino;
-- bloquear essas operações quando afetarem o setor EM_ANDAMENTO; os demais
-  setores continuam operando;
+- baseline original: bloquear operações incompatíveis no setor EM_ANDAMENTO;
+  para novas transferências comuns, prevalece agora RF19/B: origem ou destino
+  PENDENTE ou EM_ANDAMENTO em inventário aberto impede a confirmação; sua
+  implementação é responsabilidade de MOVIMENTACOES-001;
 - permitir que um setor inicie mesmo quando possua patrimônio já EMPRESTADO ou
   EM_MANUTENCAO e bloquear novas mudanças de status desses itens enquanto a
   conferência estiver em andamento;
-- antes do início da conferência de um setor, uma movimentação registrada deve
-  atualizar, na mesma transação, `setorEsperadoId` e `setorInventarioId` do item
-  ainda PENDENTE para que uma movimentação legítima não vire falsa divergência;
+- a previsão original de sincronizar setorEsperadoId e setorInventarioId de
+  itens PENDENTES não autoriza transferências comuns bloqueadas por RF19/B.
+  Preservar coerência somente para operações legitimamente permitidas por suas
+  próprias regras, sem reabrir ou alterar resultados verificados;
 - nunca mover ou reabrir automaticamente item já VERIFICADO;
-- bloquear movimentação para setor que não pertença à população fixa do
-  inventário enquanto ele não estiver FINALIZADO;
+- para patrimônio incluído, bloquear transferência comum para setor que não
+  pertença à população fixa daquele inventário enquanto não estiver FINALIZADO;
+  não estender a restrição a bens não incluídos;
 - bloquear, até a finalização do inventário, a baixa de qualquer patrimônio
   incluído e a inativação de qualquer setor participante;
 - aplicar imediatamente a regra aos módulos existentes que possam inativar
@@ -144,9 +156,11 @@ tratamento explícito de leituras repetidas e garantias de concorrência.
 
 - somente um setor por inventário fica EM_ANDAMENTO; a mesma unidade física não
   pode ser conferida simultaneamente por inventários diferentes;
-- o bloqueio operacional é por setor em conferência, não por inventário inteiro;
-- operações em setores não bloqueados permanecem permitidas e sincronizam itens
-  ainda pendentes;
+- no baseline original, o bloqueio operacional era por setor em conferência;
+  a evolução RF19/B abrange também setores PENDENTES, apenas para transferências
+  comuns; CONCLUIDO não bloqueia por si só e outras restrições são preservadas;
+- a sincronização originalmente prevista para itens pendentes não constitui
+  permissão para transgredir o bloqueio novo; correções seguem fluxo específico;
 - empréstimo ou manutenção vigente não impede iniciar o setor; a ausência fica
   registrada como NAO_LOCALIZADO junto ao snapshot e ao vínculo que a explica;
 - baixa de patrimônio incluído e inativação de setor participante permanecem

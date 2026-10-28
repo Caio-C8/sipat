@@ -161,4 +161,24 @@ export class SetoresService {
       erros: [],
     });
   }
+
+  bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {
+    return this.setores.bloquearParaMovimentacao(ids, tx);
+  }
+  async listarOpcoesMovimentacao(
+    busca: string | undefined,
+    somenteAtivos: boolean,
+    skip: number,
+    take: number,
+  ) {
+    const where: Prisma.SetorWhereInput = {
+      ...(somenteAtivos ? { ativo: true } : {}),
+      ...(busca ? { nome: { contains: busca, mode: "insensitive" } } : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.setores.listarOpcoesMovimentacao(where, skip, take),
+      this.setores.contar(where),
+    ]);
+    return { items, total };
+  }
 }
