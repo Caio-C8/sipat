@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { randomBytes } from "node:crypto";
 export default defineConfig({
   testDir: "./e2e",
   testMatch: "movimentacoes-real.e2e.ts",
@@ -29,8 +30,7 @@ export default defineConfig({
         APP_ENV: "test",
         API_PORT: "3201",
         CORS_ORIGINS: "http://localhost:3100,http://localhost:3000",
-        AUTH_RATE_LIMIT_HMAC_SECRET:
-          "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY",
+        AUTH_RATE_LIMIT_HMAC_SECRET: randomBytes(32).toString("base64"),
         AUTH_ARGON2_MAX_CONCURRENCY: "1",
         AUTH_ARGON2_MAX_QUEUE: "2",
         AUTH_PASSWORD_RESET_ENABLED: "false",
