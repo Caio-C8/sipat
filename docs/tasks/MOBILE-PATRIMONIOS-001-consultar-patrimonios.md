@@ -1,6 +1,6 @@
 # `MOBILE-PATRIMONIOS-001` — Listar e consultar patrimônios no mobile
 
-**Status:** planejada
+**Status:** implementada
 
 ## Objetivo
 
@@ -148,6 +148,35 @@ Figma é somente leitura e não deve ser editado, comentado ou reorganizado.
 - telefone/tablet, retrato/paisagem, Web, fonte ampliada, foco, TalkBack e
   VoiceOver quando disponíveis;
 - `corepack pnpm format:check` e `git diff --check`.
+
+## Handoff da implementação
+
+Em 28 de outubro de 2026, a implementação abriu e comparou no navegador a
+página `Telas Mobile` e os frames `Consultar bens`, busca com resultado,
+`Consulta de dados do patrimônio` e `Consulta de valores do patrimônio`.
+
+Foram entregues `/bens` e `/bens/[patrimonioId]`, operações de listagem,
+detalhe e catálogos com schemas públicos, cancelamento de requests obsoletas,
+busca submetida, filtros, paginação, estados remotos e as abas `Dados` e
+`Valores`. O cálculo do valor atual usa strings decimais escaladas com
+`BigInt`; Histórico e geração de ficha não possuem UI nem handler. O Web serve
+o template estático da rota dinâmica em deep links de patrimônio pelo Nginx.
+
+Verificações executadas:
+
+- lint e typecheck de `@repo/mobile`;
+- 20 suítes e 67 testes de `@repo/mobile`;
+- exports Android, iOS e Web com configuração sintética de API;
+- duas suítes e 21 testes patrimoniais da API, incluindo PostgreSQL 17 em banco
+  local descartável e a matriz HTTP dos dois perfis;
+- build do container `mobile-web` e smoke de `/`, `/check`, `/health` e deep
+  link dinâmico de patrimônio;
+- `git diff --check`.
+
+Permanecem como validação externa: comparação da UI executada com sessão real
+em 390×844, integração completa app–API–PostgreSQL, aparelhos Android/iOS,
+tablet, rotação, fonte ampliada, TalkBack e VoiceOver. Export e testes locais
+não substituem essas evidências.
 
 ## Pendências ou decisões bloqueantes
 

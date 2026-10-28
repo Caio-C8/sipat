@@ -23,10 +23,26 @@ export const mobileRouteCatalog = {
   home: {
     path: "/",
     title: "Início",
-    description: "Home autenticada inicial, ainda sem conteúdo de domínio.",
+    description: "Home autenticada integrada por perfil.",
     access: "authenticated",
     profiles: ALL_PROFILES,
-    state: "shell",
+    state: "implemented",
+  },
+  patrimonios: {
+    path: "/bens",
+    title: "Bens",
+    description: "Listagem, busca, filtros e paginação de patrimônios.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
+  patrimonioDetail: {
+    path: "/bens/[patrimonioId]",
+    title: "Detalhe do bem",
+    description: "Dados e valores atuais de um patrimônio.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
   },
   login: {
     path: "/login",
@@ -67,6 +83,8 @@ export const mobileRoutes = Object.values(mobileRouteCatalog);
 export const appRoutes = {
   check: mobileRouteCatalog.check.path,
   home: mobileRouteCatalog.home.path,
+  patrimonios: mobileRouteCatalog.patrimonios.path,
+  patrimonioDetail: mobileRouteCatalog.patrimonioDetail.path,
   login: mobileRouteCatalog.login.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,
   passwordUpdated: mobileRouteCatalog.passwordUpdated.path,

@@ -1,28 +1,31 @@
 import { Lucide, type LucideIconName } from "@react-native-vector-icons/lucide";
-import { StyleSheet, Text, View } from "react-native";
+import { usePathname, useRouter, type Href } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { layout, mobileShell, spacing } from "../../theme/tokens";
 
 type BottomBarItem = {
   icon: LucideIconName;
   label: string;
   prominent?: boolean;
-  state: "active" | "disabled";
+  path?: "/" | "/bens";
 };
 
 export const appBottomBarItems: readonly BottomBarItem[] = [
-  { icon: "home", label: "Início", state: "active" },
-  { icon: "package", label: "Bens", state: "disabled" },
+  { icon: "home", label: "Início", path: "/" },
+  { icon: "package", label: "Bens", path: "/bens" },
   {
     icon: "scan-barcode",
     label: "Inventário",
     prominent: true,
-    state: "disabled",
   },
-  { icon: "plus", label: "Cadastro", state: "disabled" },
-  { icon: "file-text", label: "Relatórios", state: "disabled" },
+  { icon: "plus", label: "Cadastro" },
+  { icon: "file-text", label: "Relatórios" },
 ] as const;
 
 export function AppBottomBar() {
+  const pathname = usePathname();
+  const router = useRouter();
+
   return (
     <View
       accessibilityLabel="Navegação principal"
@@ -31,7 +34,11 @@ export function AppBottomBar() {
     >
       <View style={styles.content}>
         {appBottomBarItems.map((item) => {
-          const active = item.state === "active";
+          const disabled = item.path === undefined;
+          const active =
+            item.path === "/bens"
+              ? pathname === "/bens" || pathname.startsWith("/bens/")
+              : pathname === item.path;
           const iconColor = item.prominent
             ? mobileShell.headerText
             : active
@@ -39,18 +46,25 @@ export function AppBottomBar() {
               : mobileShell.navigationDisabled;
 
           return (
-            <View
+            <Pressable
               accessible
-              aria-disabled={item.state === "disabled"}
+              aria-disabled={disabled}
               aria-selected={active}
               accessibilityLabel={item.label}
               accessibilityRole="tab"
               accessibilityState={{
-                disabled: item.state === "disabled",
+                disabled,
                 selected: active,
               }}
+              disabled={disabled}
               key={item.label}
-              style={styles.item}
+              onPress={() => {
+                if (item.path && !active) router.replace(item.path as Href);
+              }}
+              style={({ pressed }) => [
+                styles.item,
+                pressed && !disabled && styles.itemPressed,
+              ]}
             >
               <View
                 style={[
@@ -76,7 +90,7 @@ export function AppBottomBar() {
               >
                 {item.label}
               </Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>
@@ -125,6 +139,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     minWidth: 0,
   },
+  itemPressed: { opacity: 0.7 },
   label: {
     color: mobileShell.navigationDisabled,
     fontSize: 10,

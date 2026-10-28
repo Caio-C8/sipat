@@ -21,14 +21,15 @@ cliente contra API e PostgreSQL reais para login, refresh, primeiro acesso e
 logout. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
 raiz protegida e `/check` servem HTML sem expor o conteúdo de development.
-Ainda não existem páginas de domínio, cache/offline ou E2E em dispositivos.
+As primeiras páginas de domínio são `/bens` e `/bens/[patrimonioId]`; ainda não
+existem cache/offline ou E2E em dispositivos.
 
 `MOBILE-UI-001` implementou o shell comum observado na página `Telas Mobile`:
 topbar azul-marinho com brasão, safe area coerente e bottom bar somente em
 `(app)`. Sem sessão, a topbar mantém a identificação municipal; autenticada,
 substitui esse texto pelo avatar da identidade, cujo menu contém o logout.
-`Início` é o único destino ativo; Bens,
-Inventário, Cadastro e Relatórios permanecem disabled, sem rotas placeholder.
+`Início` e `Bens` são destinos ativos; Inventário, Cadastro e Relatórios
+permanecem disabled, sem rotas placeholder.
 O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003` recompôs login,
 troca obrigatória e confirmação conforme os três frames do Figma, preservando
 contratos, sessão e redirects; a recuperação aparece disabled, sem rota.
@@ -37,6 +38,14 @@ contratos, sessão e redirects; a recuperação aparece disabled, sem rota.
 `meta.total` para setores, bens e estados de inventário, além dos agregados de
 `InventarioResumo.progresso`; falhas permanecem isoladas por bloco e não são
 convertidas em zero.
+
+`MOBILE-PATRIMONIOS-001` implementou listagem virtualizada, busca submetida,
+filtros, paginação e detalhe nas abas `Dados` e `Valores` para os dois perfis.
+As responses e o UUID são validados por `@repo/contracts`, requests obsoletas
+são canceladas e o valor atual usa aritmética decimal segura. Os frames da
+página `Telas Mobile` foram comparados no navegador; Histórico e Gerar ficha
+foram omitidos conforme a decisão aprovada. A comparação visual da UI executada
+com sessão real e as validações em dispositivos continuam pendentes.
 
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial; `MOBILE-HOME-002`
 preservou proteção, moveu o logout para o menu da topbar e adicionou conteúdo

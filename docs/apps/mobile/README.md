@@ -27,8 +27,12 @@ código interno da API.
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
   em `development`; a topbar mantém a identificação municipal sem sessão e,
   quando autenticada, apresenta avatar com menu da conta e logout;
-- o grupo `(app)` aplica a bottom bar do protótipo; somente `Início` representa
-  uma rota existente e os demais destinos permanecem visíveis e disabled;
+- o grupo `(app)` aplica a bottom bar do protótipo; `Início` e `Bens`
+  representam rotas existentes e os demais destinos permanecem visíveis e
+  disabled;
+- `/bens` e `/bens/[patrimonioId]` implementam consulta para os dois perfis,
+  com busca submetida, filtros públicos, paginação e detalhe nas abas `Dados` e
+  `Valores`;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior
