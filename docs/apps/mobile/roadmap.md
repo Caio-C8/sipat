@@ -88,11 +88,11 @@ técnica de development não faz parte da reformulação e não deve ser alterad
 Esta sequência habilita os primeiros destinos de domínio da bottom bar sem
 criar endpoints específicos para o aplicativo:
 
-| Ordem | Objetivo                                                                                                        | Status    | Dependências                                 |
-| ----- | --------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------------------- |
-| 1     | [`PATRIMONIOS-004`](../../tasks/PATRIMONIOS-004-leitura-catalogos-diretor.md) — catálogos legíveis pelo Diretor | concluída | espécies, setores e autorização existentes   |
-| 2     | [`MOBILE-PATRIMONIOS-001`](../../tasks/MOBILE-PATRIMONIOS-001-consultar-patrimonios.md) — consulta de bens      | planejada | consulta backend e shell mobile              |
-| 3     | [`MOBILE-PATRIMONIOS-002`](../../tasks/MOBILE-PATRIMONIOS-002-cadastrar-patrimonio.md) — cadastro unitário      | planejada | catálogos, consulta mobile e criação backend |
+| Ordem | Objetivo                                                                                                        | Status       | Dependências                                 |
+| ----- | --------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------- |
+| 1     | [`PATRIMONIOS-004`](../../tasks/PATRIMONIOS-004-leitura-catalogos-diretor.md) — catálogos legíveis pelo Diretor | concluída    | espécies, setores e autorização existentes   |
+| 2     | [`MOBILE-PATRIMONIOS-001`](../../tasks/MOBILE-PATRIMONIOS-001-consultar-patrimonios.md) — consulta de bens      | implementada | consulta backend e shell mobile              |
+| 3     | [`MOBILE-PATRIMONIOS-002`](../../tasks/MOBILE-PATRIMONIOS-002-cadastrar-patrimonio.md) — cadastro unitário      | planejada    | catálogos, consulta mobile e criação backend |
 
 O navegador é obrigatório para abrir a página
 [`Telas Mobile`](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=257-2&p=f)

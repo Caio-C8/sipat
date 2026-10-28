@@ -50,8 +50,10 @@ apps/mobile/
 O layout raiz instala safe area, topbar, faixa exclusiva de desenvolvimento e
 um `Stack` sem header. A rota `/check` faz a verificação técnica do runtime e da
 API em development e apresenta o catálogo único das rotas. Os grupos `(auth)`
-e `(app)` aplicam a matriz de sessão; `/` compõe a home protegida sem dados de
-domínio. Não existe feature patrimonial nem cache remoto de domínio.
+e `(app)` aplicam a matriz de sessão; `/` compõe a home protegida e `/bens` com
+`/bens/[patrimonioId]` compõem a consulta patrimonial. A feature `patrimonios`
+concentra operações, estado remoto sem cache, formatação decimal e apresentação
+da listagem e do detalhe.
 
 ## Responsabilidades
 

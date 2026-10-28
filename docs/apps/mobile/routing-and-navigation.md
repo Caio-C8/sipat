@@ -3,7 +3,8 @@
 ## Estado atual
 
 O Expo Router lê arquivos em `src/app`. O aplicativo possui grupos `(auth)` e
-`(app)`, que preservam os paths públicos `/`, `/login`, `/redefinir-senha` e
+`(app)`, que preservam os paths públicos `/`, `/bens`,
+`/bens/[patrimonioId]`, `/login`, `/redefinir-senha` e
 `/senha-atualizada`, além de `/check`. O layout raiz concentra safe area,
 topbar, faixa de desenvolvimento e restauração neutra da sessão. Os layouts de
 grupo aplicam a matriz autenticada antes de renderizar conteúdo incompatível.
@@ -53,13 +54,15 @@ A autenticação e os redirects foram implementados por `MOBILE-AUTH-001` e
 `MOBILE-AUTH-002`; `MOBILE-HOME-001` tornou `/` a home protegida inicial e
 concentrou o diagnóstico em `/check`. A matriz aplicada é:
 
-| Rota                | Acesso esperado                   | Destino quando o estado não permite acesso           |
-| ------------------- | --------------------------------- | ---------------------------------------------------- |
-| `/login`            | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`   |
-| `/redefinir-senha`  | sessão com troca obrigatória      | anônimo → `/login`; sessão comum → `/`               |
-| `/senha-atualizada` | sessão válida com troca concluída | anônimo → `/login`; pendência → `/redefinir-senha`   |
-| `/`                 | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`   |
-| `/check`            | pública somente em `development`  | fora de development → mesma decisão protegida de `/` |
+| Rota                   | Acesso esperado                   | Destino quando o estado não permite acesso             |
+| ---------------------- | --------------------------------- | ------------------------------------------------------ |
+| `/login`               | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`     |
+| `/redefinir-senha`     | sessão com troca obrigatória      | anônimo → `/login`; sessão comum → `/`                 |
+| `/senha-atualizada`    | sessão válida com troca concluída | anônimo → `/login`; pendência → `/redefinir-senha`     |
+| `/`                    | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
+| `/bens`                | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
+| `/bens/[patrimonioId]` | ambos os perfis, UUID válido      | anônimo → `/login`; ID inválido → estado local de erro |
+| `/check`               | pública somente em `development`  | fora de development → mesma decisão protegida de `/`   |
 
 O botão da confirmação segue para `/`. A restauração da sessão acontece antes
 da decisão de rota e usa um estado neutro de inicialização para impedir flash de
@@ -94,11 +97,16 @@ Redirecionamento no cliente melhora a experiência, mas não protege endpoint.
 ## Navegação visual do grupo autenticado
 
 `MOBILE-UI-001` adicionou a bottom bar desenhada no frame `Home` somente ao
-grupo `(app)`. Nesta etapa, `Início` representa a rota real `/`. Bens,
-Inventário, cadastro e relatórios aparecem como no protótipo, mas permanecem
-disabled enquanto seus arquivos de rota e fluxos não existirem. Não crie uma
-rota vazia para fazer um item parecer navegável e não inclua rotas inexistentes
-no catálogo tipado.
+grupo `(app)`. `Início` representa `/` e `Bens` representa `/bens`, permanecendo
+selecionado também no detalhe dinâmico. Inventário, cadastro e relatórios
+continuam disabled enquanto seus arquivos de rota e fluxos não existirem. Não
+crie uma rota vazia para fazer um item parecer navegável e não inclua rotas
+inexistentes no catálogo tipado.
+
+No export Web estático, o Nginx encaminha `/bens/<id>` ao documento gerado para
+`/bens/[patrimonioId]`; o Expo Router lê o path real e o schema público valida o
+UUID antes de qualquer request. Esse fallback não transforma outros paths
+desconhecidos em sucesso.
 
 A bottom bar não aparece em `(auth)`. A rota técnica `/check` preserva sua
 composição e o `DevelopmentCheckBanner`; ela não deve herdar navegação de

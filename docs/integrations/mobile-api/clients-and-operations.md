@@ -132,3 +132,18 @@ sequencialmente páginas de até 50 itens e compara `dataFim`, pois a listagem �
 ordenada por criação. Cada bloco aceita `AbortSignal`, usa o retry seguro da
 sessão para uma única recuperação de `401` e mantém `403`, timeout, rede e
 contrato inválido como estados distintos na interface.
+
+## Consulta de patrimônios implementada
+
+`MOBILE-PATRIMONIOS-001` adicionou operações para `GET /patrimonios` e
+`GET /patrimonios/:patrimonioId`. A listagem valida e serializa somente busca,
+status, setor, espécie, natureza, tipo de numeração, página e limite aprovados;
+o detalhe valida o UUID antes da rede. Ambas validam a response integral,
+recebem access token somente no escopo da request, aceitam `AbortSignal` e usam
+uma única recuperação segura de `401` coordenada pela sessão.
+
+Os filtros carregam setores ativos e espécies pelas rotas gerais em páginas de
+até 50 itens. Naturezas são deduplicadas da relação pública presente nas
+espécies, evitando chamar uma rota que não pertence à matriz de leitura do
+Diretor. Esse catálogo vive somente em memória durante a tela; não foi criado
+cache ou armazenamento offline.
