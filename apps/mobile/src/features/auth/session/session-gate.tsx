@@ -5,13 +5,21 @@ import {
   Text,
   View,
 } from "react-native";
+import { usePathname } from "expo-router";
+import { publicAppConfig } from "../../../config/public-app-config";
+import { shouldBypassSessionGate } from "../../../lib/navigation/check-access";
 import { colors, spacing, typography } from "../../../theme/tokens";
 import { useSession } from "./session-context";
 
 export function SessionGate({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
   const { manager, state } = useSession();
+
+  if (shouldBypassSessionGate(pathname, publicAppConfig.environment)) {
+    return children;
+  }
 
   if (state.status === "restoring") {
     return (

@@ -14,8 +14,10 @@ código interno da API.
 
 ## Estado atual
 
-- `/` possui o shell neutro da futura home e `/check` concentra o runtime e o
-  health check da API;
+- `/` é a home protegida inicial, com shell, confirmação da sessão e logout,
+  ainda sem widgets ou chamadas de domínio;
+- `/check` concentra runtime, health check da API e o catálogo tipado das rotas
+  reais, acessível sem sessão somente em `development`;
 - `/login`, `/redefinir-senha` e `/senha-atualizada` implementam login, troca
   obrigatória e confirmação sob o grupo `(auth)`;
 - a sessão restaura antes da navegação, mantém access token em memória, rotaciona
@@ -43,7 +45,8 @@ código interno da API.
 - ainda não existem operação de domínio, cache remoto, modo offline ou E2E em
   dispositivos;
 - testes cobrem configuração, HTTP, formulários, storage, sessão, concorrência,
-  redirects, topbar e faixa de desenvolvimento.
+  redirects, home, completude do catálogo, política de `/check`, topbar e faixa
+  de desenvolvimento.
 
 O estado “Aplicativo móvel operacional” confirma apenas que o bundle React
 Native inicializou. Ele não substitui o health check da API.

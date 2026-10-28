@@ -14,12 +14,18 @@ container `mobile-web`; o novo binário ainda precisa ser gerado no EAS e
 validado em dispositivo real.
 
 Vitest cobre configuração, HTTP, formulários, storage, sessão, concorrência,
-redirects e componentes compartilhados. A validação local também executou o
+redirects, home, catálogo de rotas, política de `/check` e componentes
+compartilhados. A validação local também executou o
 cliente contra API e PostgreSQL reais para login, refresh, primeiro acesso e
 logout. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
-raiz serve HTML. Ainda não existem navegação de domínio, cache/offline ou E2E em
-dispositivos.
+raiz protegida e `/check` servem HTML sem expor o conteúdo de development.
+Ainda não existem navegação de domínio, cache/offline ou E2E em dispositivos.
+
+`MOBILE-HOME-001` tornou `/` a home autenticada inicial com logout e sem dados
+de domínio. `/check` preserva o diagnóstico de runtime/API, acrescenta o
+catálogo tipado de todas as rotas e atravessa o gate de restauração somente em
+`development`; staging e produção aplicam a mesma decisão de sessão da home.
 
 O bloqueio global em retrato foi removido com `orientation: "default"`. A tela
 `/check` usa a largura atual da janela e apresenta os cards em duas colunas a

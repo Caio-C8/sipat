@@ -47,6 +47,7 @@ jobs:
 
       - name: Build
         env:
+          EXPO_PUBLIC_APP_ENV: production
           NODE_ENV: production
         run: pnpm build
 

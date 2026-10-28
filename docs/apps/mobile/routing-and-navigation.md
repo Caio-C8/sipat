@@ -50,8 +50,8 @@ build nativo — Expo Go não representa essa integração integralmente.
 ## Navegação autenticada
 
 A autenticação e os redirects foram implementados por `MOBILE-AUTH-001` e
-`MOBILE-AUTH-002`; `MOBILE-HOME-001` ainda entregará o conteúdo da home. A
-matriz aplicada é:
+`MOBILE-AUTH-002`; `MOBILE-HOME-001` tornou `/` a home protegida inicial e
+concentrou o diagnóstico em `/check`. A matriz aplicada é:
 
 | Rota                | Acesso esperado                   | Destino quando o estado não permite acesso           |
 | ------------------- | --------------------------------- | ---------------------------------------------------- |
@@ -73,6 +73,12 @@ rota, informa que aquela é a tela de verificação. A faixa não é renderizada
 staging ou produção, não deve cobrir a topbar ou o conteúdo e precisa permanecer
 acessível com fonte ampliada. A rota não consulta health nem revela catálogo
 fora de development.
+
+O catálogo tipado em `src/lib/navigation/routes.ts` é a fonte única de path,
+título, acesso, perfis e estado das rotas existentes. Um teste compara o
+catálogo com os arquivos reais de `src/app`, para que uma inclusão ou remoção
+não passe silenciosamente. Navegar pelo catálogo não contorna os layouts de
+grupo nem a matriz acima.
 
 Ao implementar:
 

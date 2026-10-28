@@ -1,6 +1,7 @@
 # `MOBILE-HOME-001` — Criar home protegida e rota `/check`
 
-**Status:** `aprovada`
+**Status:** `implementada`; build EAS, validação funcional em Android/iOS reais
+e inspeção com tecnologias assistivas permanecem pendentes.
 
 ## Objetivo
 
@@ -74,22 +75,22 @@ seu aviso exclusivamente em desenvolvimento.
 
 ## Critérios de aceite
 
-- [ ] `/` não executa health check nem contém o conteúdo técnico anterior;
-- [ ] `/` exige sessão comum dos dois perfis e redireciona anônimo ou primeiro
+- [x] `/` não executa health check nem contém o conteúdo técnico anterior;
+- [x] `/` exige sessão comum dos dois perfis e redireciona anônimo ou primeiro
       acesso conforme a matriz;
-- [ ] home não contém dados ilustrativos ou chamadas de domínio e oferece logout
+- [x] home não contém dados ilustrativos ou chamadas de domínio e oferece logout
       acessível no shell;
-- [ ] `/check` preserva todos os estados do runtime e da API já implementados;
-- [ ] catálogo e conjunto real de rotas não divergem sem falhar teste;
-- [ ] `/check` funciona sem sessão em development, inclusive a partir do login;
-- [ ] staging e produção não renderizam `/check`, não chamam health por essa
+- [x] `/check` preserva todos os estados do runtime e da API já implementados;
+- [x] catálogo e conjunto real de rotas não divergem sem falhar teste;
+- [x] `/check` funciona sem sessão em development, inclusive a partir do login;
+- [x] staging e produção não renderizam `/check`, não chamam health por essa
       rota e não exibem a faixa global;
-- [ ] nenhum token, identidade completa ou dado privado aparece na tela técnica;
-- [ ] refresh, deep link e acesso direto a `/`, `/check` e rotas de autenticação
+- [x] nenhum token, identidade completa ou dado privado aparece na tela técnica;
+- [x] refresh, deep link e acesso direto a `/`, `/check` e rotas de autenticação
       obedecem à matriz sem loop;
 - [ ] telefone, tablet, retrato, paisagem, Web estreita/ampla, fonte ampliada e
       leitores de tela preservam conteúdo e ações;
-- [ ] smoke test do container Web é atualizado para a nova raiz protegida e para
+- [x] smoke test do container Web é atualizado para a nova raiz protegida e para
       a política de `/check` sem exigir credencial nativa em storage Web.
 
 ## Arquivos ou módulos potencialmente afetados
@@ -122,3 +123,12 @@ seu aviso exclusivamente em desenvolvimento.
 
 - Nenhuma para a home vazia e a rota técnica. Conteúdo real da home exigirá
   objetivo próprio com contratos, endpoints e desenho mobile aprovados.
+
+## Resultado da execução
+
+- lint, typecheck e 36 testes de `@repo/mobile` passaram;
+- os exports Android, iOS e Web foram gerados com sucesso;
+- o export Web de produção e o container Nginx passaram no smoke test de
+  `/health`, `/` e `/check`, sem conteúdo exclusivo de development;
+- build EAS, dispositivo real, rotação, fonte ampliada, TalkBack e VoiceOver não
+  foram executados neste ambiente e continuam como validação externa.

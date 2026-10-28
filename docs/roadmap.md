@@ -83,7 +83,7 @@ os formulários e redirects.
 | 1     | `MOBILE-AUTH-001` — Sessão nativa revogável            | em validação | `AUTH-001`, `AUTH-004`, `CONTRACTS-009` |
 | 2     | `MOBILE-FOUNDATION-001` — Estrutura visual e navegação | aprovado     | baseline mobile e Figma                 |
 | 3     | `MOBILE-AUTH-002` — Telas e integração de autenticação | aprovado     | dois objetivos anteriores               |
-| 4     | `MOBILE-HOME-001` — Home protegida e `/check`          | aprovado     | `MOBILE-AUTH-002`                       |
+| 4     | `MOBILE-HOME-001` — Home protegida e `/check`          | implementado | `MOBILE-AUTH-002`                       |
 
 Sessão nativa usa access opaco de dez minutos em memória e refresh opaco
 rotativo no Keychain/Keystore, preservando oito horas absolutas, trinta minutos
