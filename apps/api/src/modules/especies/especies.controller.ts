@@ -37,7 +37,7 @@ export class EspeciesController {
   constructor(private readonly especiesService: EspeciesService) {}
 
   @Get()
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarEspeciesResponseDto)
   async listar(
     @Query() query: ListarEspeciesQueryDto,
@@ -58,7 +58,7 @@ export class EspeciesController {
   }
 
   @Get(":especieId")
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarEspecieResponseDto)
   async consultar(
     @Param() params: EspecieParamsDto,

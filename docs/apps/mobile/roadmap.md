@@ -82,3 +82,32 @@ real da API e o shell autenticado. A
 bottom bar e os controles que apontam para páginas ainda inexistentes devem
 aparecer como no protótipo, porém disabled, sem rotas placeholder. A faixa
 técnica de development não faz parte da reformulação e não deve ser alterada.
+
+## Bens e cadastro patrimonial
+
+Esta sequência habilita os primeiros destinos de domínio da bottom bar sem
+criar endpoints específicos para o aplicativo:
+
+| Ordem | Objetivo                                                                                                        | Status    | Dependências                                 |
+| ----- | --------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------------------- |
+| 1     | [`PATRIMONIOS-004`](../../tasks/PATRIMONIOS-004-leitura-catalogos-diretor.md) — catálogos legíveis pelo Diretor | concluída | espécies, setores e autorização existentes   |
+| 2     | [`MOBILE-PATRIMONIOS-001`](../../tasks/MOBILE-PATRIMONIOS-001-consultar-patrimonios.md) — consulta de bens      | planejada | consulta backend e shell mobile              |
+| 3     | [`MOBILE-PATRIMONIOS-002`](../../tasks/MOBILE-PATRIMONIOS-002-cadastrar-patrimonio.md) — cadastro unitário      | planejada | catálogos, consulta mobile e criação backend |
+
+O navegador é obrigatório para abrir a página
+[`Telas Mobile`](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=257-2&p=f)
+e inspecionar diretamente cada frame referenciado nas duas tarefas mobile. O
+arquivo continua somente leitura: visualizar não autoriza editar, comentar ou
+reorganizar o protótipo.
+
+`Bens` passa a navegar para listagem e detalhe para `ADMINISTRADOR` e
+`DIRETOR_PATRIMONIO`. `Cadastro` passa a navegar para o formulário somente
+quando a sessão é do Diretor; para o Administrador, o mesmo destino apresenta
+um estado explicativo de acesso restrito, enquanto `POST /api/patrimonios`
+continua protegido pela API. Inventário e Relatórios mantêm o estado atual até
+seus objetivos próprios.
+
+As diferenças aprovadas em relação aos frames são deliberadas: não haverá
+cadastro de vários bens iguais, aba de histórico nem geração de ficha nesta
+sequência. Esses controles não devem ser implementados como decoração ativa,
+mock, chamada repetida de `POST` ou rota vazia.

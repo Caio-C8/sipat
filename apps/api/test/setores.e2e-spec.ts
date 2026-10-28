@@ -289,24 +289,102 @@ describe("gestão de setores", () => {
     };
   }
 
+  function diretor() {
+    return {
+      get: (path: string) =>
+        request(app.getHttpServer())
+          .get(path)
+          .set("Cookie", cookie(tokenDiretor)),
+      post: (path: string) =>
+        request(app.getHttpServer())
+          .post(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+      patch: (path: string) =>
+        request(app.getHttpServer())
+          .patch(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+    };
+  }
+
   function esperarCodigo(resposta: request.Response, codigo: string) {
     const resultado = RespostaErroSchema.safeParse(resposta.body);
     expect(resultado.success).toBe(true);
     if (resultado.success) expect(resultado.data.codigo).toBe(codigo);
   }
 
-  it("aplica 401 ao anônimo, 403 ao diretor e permite o administrador", async () => {
-    const anonimo = await request(app.getHttpServer()).get("/api/setores");
-    const diretor = await request(app.getHttpServer())
-      .get("/api/setores")
-      .set("Cookie", cookie(tokenDiretor));
-    const permitido = await administrador().get("/api/setores");
+  it("exige sessão na listagem e na consulta", async () => {
+    const [listagem, consulta] = await Promise.all([
+      request(app.getHttpServer()).get("/api/setores"),
+      request(app.getHttpServer()).get(`/api/setores/${SETOR_ID}`),
+    ]);
 
-    expect(anonimo.status).toBe(401);
-    expect(diretor.status).toBe(403);
-    expect(permitido.status).toBe(200);
-    esperarCodigo(anonimo, "NAO_AUTENTICADO");
-    esperarCodigo(diretor, "ACESSO_NEGADO");
+    expect(listagem.status).toBe(401);
+    expect(consulta.status).toBe(401);
+    esperarCodigo(listagem, "NAO_AUTENTICADO");
+    esperarCodigo(consulta, "NAO_AUTENTICADO");
+  });
+
+  it("permite ao administrador e ao diretor listar e consultar setores", async () => {
+    const [
+      listaAdministrador,
+      detalheAdministrador,
+      listaDiretor,
+      detalheDiretor,
+    ] = await Promise.all([
+      administrador().get("/api/setores"),
+      administrador().get(`/api/setores/${SETOR_ID}`),
+      diretor().get("/api/setores"),
+      diretor().get(`/api/setores/${SETOR_ID}`),
+    ]);
+
+    for (const resposta of [listaAdministrador, listaDiretor]) {
+      expect(resposta.status).toBe(200);
+      expect(ListarSetoresResponseSchema.safeParse(resposta.body).success).toBe(
+        true,
+      );
+      expect(resposta.body.dados[0]).toMatchObject({
+        nome: "Almoxarifado",
+        sala: "12",
+        ativo: true,
+        responsavel: { id: RESPONSAVEL_ID, nome: "Responsável ativo" },
+      });
+    }
+
+    for (const resposta of [detalheAdministrador, detalheDiretor]) {
+      expect(resposta.status).toBe(200);
+      expect(SetorDetalheSchema.safeParse(resposta.body.dados).success).toBe(
+        true,
+      );
+      expect(resposta.body.dados).toMatchObject({
+        id: SETOR_ID,
+        nome: "Almoxarifado",
+        sala: "12",
+        ativo: true,
+        responsavel: { id: RESPONSAVEL_ID, nome: "Responsável ativo" },
+      });
+    }
+  });
+
+  it("nega ao diretor todas as mutações de setores", async () => {
+    const [criacao, alteracao, situacao] = await Promise.all([
+      diretor().post("/api/setores").send({
+        nome: "Arquivo",
+        responsavelId: RESPONSAVEL_ID,
+      }),
+      diretor().patch(`/api/setores/${SETOR_ID}`).send({ sala: "20" }),
+      diretor()
+        .patch(`/api/setores/${SETOR_ID}/situacao`)
+        .send({ ativo: false }),
+    ]);
+
+    for (const resposta of [criacao, alteracao, situacao]) {
+      expect(resposta.status).toBe(403);
+      esperarCodigo(resposta, "ACESSO_NEGADO");
+    }
   });
 
   it("lista com paginação, busca, responsável, situação e ordem", async () => {

@@ -115,6 +115,42 @@ Especificações:
 [INVENTARIOS-003](./tasks/INVENTARIOS-003-consulta-administrador.md) e
 [MOBILE-HOME-002](./tasks/MOBILE-HOME-002-home-integrada-por-perfil.md).
 
+### Consulta e cadastro de patrimônios no mobile
+
+A próxima sequência transforma os itens `Bens` e `Cadastro` do shell em rotas
+reais. O implementador deve abrir obrigatoriamente no navegador a página
+[`Telas Mobile` do Figma](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=257-2&p=f)
+e comparar os frames indicados nas tarefas; descrição textual ou imagem
+copiada para o repositório não substitui essa inspeção.
+
+| Ordem | Objetivo                                                                                  | Status    | Dependências                                      |
+| ----- | ----------------------------------------------------------------------------------------- | --------- | ------------------------------------------------- |
+| 1     | `PATRIMONIOS-004` — leitura dos catálogos de cadastro pelo Diretor                        | concluído | `ESPECIES-001`, `SETORES-001` e `SEC-001`         |
+| 2     | `MOBILE-PATRIMONIOS-001` — listar e consultar patrimônios                                 | planejado | `PATRIMONIOS-002`, `MOBILE-UI-001` e autenticação |
+| 3     | `MOBILE-PATRIMONIOS-002` — cadastrar um patrimônio e comunicar restrição ao Administrador | planejado | dois objetivos anteriores e `PATRIMONIOS-001`     |
+
+Especificações:
+[PATRIMONIOS-004](./tasks/PATRIMONIOS-004-leitura-catalogos-diretor.md),
+[MOBILE-PATRIMONIOS-001](./tasks/MOBILE-PATRIMONIOS-001-consultar-patrimonios.md)
+e
+[MOBILE-PATRIMONIOS-002](./tasks/MOBILE-PATRIMONIOS-002-cadastrar-patrimonio.md).
+
+As telas reutilizam `GET /api/patrimonios`,
+`GET /api/patrimonios/:patrimonioId`, os catálogos existentes e
+`POST /api/patrimonios`; não será criada rota com semântica exclusiva de
+mobile. `PATRIMONIOS-004` amplia somente a leitura de setores e espécies para o
+Diretor, mantendo todas as mutações desses cadastros exclusivas do
+Administrador. A API já restringe o cadastro patrimonial ao Diretor e continua
+sendo a barreira de autorização, independentemente da interface.
+
+Por decisão de produto, esta sequência cadastra exatamente um bem por operação
+e não renderiza o controle `Mais de um bem igual?` do protótipo. A aba
+`Histórico` e a ação `Gerar ficha do bem` também não pertencem a estes
+objetivos; serão tratadas com relatórios e não terão handler, simulação ou rota
+placeholder. Para o Administrador, `Cadastro` permanece visível na navegação e
+abre um estado de acesso restrito coerente com o protótipo, sem carregar o
+formulário nem disparar operações de criação.
+
 ## Ordem das entregas básicas de patrimônios
 
 | Ordem | Objetivo                                      | Status    | Dependências                         |

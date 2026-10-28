@@ -231,6 +231,33 @@ criação, conferência, correção, conclusão ou finalização. Os Guards reai
 testes E2E confirmam o acesso dos dois perfis aos quatro `GET` e a negação do
 Administrador em cada mutação.
 
+### Leitura de catálogos para cadastro patrimonial implementada
+
+`PATRIMONIOS-004` amplia somente as consultas existentes de setores e espécies
+para que o Diretor de Patrimônio obtenha os vínculos necessários ao cadastro de
+um bem. Não cria rota mobile e não transfere ao Diretor a gestão desses
+cadastros:
+
+| Rota                           | Administrador | Diretor de Patrimônio |
+| ------------------------------ | ------------- | --------------------- |
+| `GET /api/setores`             | sim           | sim                   |
+| `GET /api/setores/:setorId`    | sim           | sim                   |
+| `POST/PATCH /api/setores...`   | sim           | não                   |
+| `GET /api/especies`            | sim           | sim                   |
+| `GET /api/especies/:especieId` | sim           | sim                   |
+| `POST/PATCH /api/especies...`  | sim           | não                   |
+| `GET /api/patrimonios...`      | sim           | sim                   |
+| `POST /api/patrimonios`        | não           | sim                   |
+
+Os Guards reais e os testes E2E confirmam `401` sem sessão, acesso dos dois
+perfis aos quatro `GET` e `403` para o Diretor em todas as mutações de setores
+e espécies.
+
+O cliente pode esconder ou substituir o formulário por uma explicação de
+permissão, mas isso é apenas UX. O Guard da API continua obrigatório e deve
+responder `403` se um Administrador tentar criar patrimônio por qualquer
+cliente.
+
 A regra de produto aprovada permite ao Administrador consultar dados funcionais
 do sistema, mas não credenciais, segredos, campos internos ou dados fora das
 allowlists públicas. Cada novo endpoint deve separar leitura de mutação e
