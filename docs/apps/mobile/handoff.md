@@ -2,21 +2,24 @@
 
 ## Estado operacional
 
-O mobile possui a infraestrutura inicial e a fundação visual: grupos `(auth)` e
-`(app)`, shells das cinco rotas aprovadas, safe area global, topbar SIPAT com
-brasão local, faixa exclusiva de development, tokens semânticos e `/check` com
-o health check existente. Ainda não há sessão, formulários ou guard de acesso.
+O mobile possui a infraestrutura inicial, a fundação visual e a autenticação
+nativa. Os grupos `(auth)` e `(app)` aplicam a matriz de acesso; login, troca
+obrigatória, confirmação, restauração, refresh coordenado e logout usam os
+contratos de `/api/auth/mobile`. O access token fica em memória e o refresh fica
+atrás do adapter `expo-secure-store` nativo.
 
 O baseline usa Expo SDK 58, React Native 0.88 e React 19.3. A migração passou
 nas verificações locais, nos três exports, no Expo Doctor e no smoke test do
 container `mobile-web`; o novo binário ainda precisa ser gerado no EAS e
 validado em dispositivo real.
 
-Vitest cobre configuração pública, cliente do health check, rotas e renderização
-dos componentes compartilhados. O CI também
+Vitest cobre configuração, HTTP, formulários, storage, sessão, concorrência,
+redirects e componentes compartilhados. A validação local também executou o
+cliente contra API e PostgreSQL reais para login, refresh, primeiro acesso e
+logout. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
-raiz serve HTML. Ainda não existem autenticação, navegação de domínio, dados
-persistidos, operações patrimoniais, cache/offline ou E2E em dispositivos.
+raiz serve HTML. Ainda não existem navegação de domínio, cache/offline ou E2E em
+dispositivos.
 
 O bloqueio global em retrato foi removido com `orientation: "default"`. A tela
 `/check` usa a largura atual da janela e apresenta os cards em duas colunas a

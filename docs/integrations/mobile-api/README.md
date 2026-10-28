@@ -15,12 +15,10 @@ Controllers, services e repositories ficam em [API](../../apps/api/README.md).
 
 ```text
 apps/mobile
-    ↓ GET /api/health
+    ↓ health público ou operações /api/auth/mobile
 apps/api
-    ↓ JSON HealthResponse
-validação no boundary mobile
-    ↓
-estado apresentado na tela
+    ↓ response validada por schema compartilhado
+sessão em memória + refresh no storage nativo
 ```
 
 - o mobile chama a API diretamente, sem proxy equivalente ao Next.js;
@@ -29,7 +27,8 @@ estado apresentado na tela
 - a response do health check é validada em runtime;
 - a consulta possui timeout de oito segundos e cancelamento;
 - a request anterior é abortada antes de outra verificação;
-- não existem cliente geral, operação de domínio, autenticação, cache ou offline;
+- existe cliente HTTP comum para as operações de autenticação; operação de
+  domínio, cache e offline ainda não existem;
 - o health check público não envia credencial.
 
 ## Diferença entre Web e nativo
@@ -74,8 +73,8 @@ política diferente para credenciais persistidas.
 - limites de request/response e metas de latência;
 - comportamento no background e retomada.
 
-O mecanismo de sessão nativa, as durações, a rotação e o SecureStore foram
-aprovados em [Autenticação e armazenamento](./auth-storage.md), mas ainda não
-estão implementados.
+O mecanismo de sessão nativa, a rotação e o SecureStore foram implementados em
+[Autenticação e armazenamento](./auth-storage.md). Renovação periódica em
+background, cache de domínio e fila offline continuam fora desta entrega.
 
 Não escolha essas políticas silenciosamente apenas para completar estrutura.

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Redirect, type Href } from "expo-router";
 import {
   ActivityIndicator,
   Platform,
@@ -11,9 +12,10 @@ import {
   View,
 } from "react-native";
 import type { HealthResponse } from "@repo/contracts";
-import { FoundationScreen } from "../components/shared/foundation-screen";
 import { publicAppConfig } from "../config/public-app-config";
 import { getApiHealth } from "../lib/api-health";
+import { useSession } from "../features/auth/session/session-context";
+import { protectedRedirect } from "../features/auth/session/session-routing";
 import { layout } from "../theme/tokens";
 
 const API_TIMEOUT_MS = 8_000;
@@ -47,6 +49,7 @@ function StatusIndicator({ available }: Readonly<{ available: boolean }>) {
 }
 
 export default function CheckScreen() {
+  const { state } = useSession();
   const { width } = useWindowDimensions();
   const isDevelopment = environment === "development";
   const activeRequest = useRef<AbortController | null>(null);
@@ -131,12 +134,9 @@ export default function CheckScreen() {
   }, [checkApi, isDevelopment]);
 
   if (!isDevelopment) {
-    return (
-      <FoundationScreen
-        description="As verificações técnicas ficam disponíveis somente no ambiente de desenvolvimento."
-        title="Verificação indisponível"
-      />
-    );
+    const destination = protectedRedirect(state);
+    if (destination) return <Redirect href={destination as Href} />;
+    return <Redirect href={"/" as Href} />;
   }
 
   const apiAvailable = apiCheck.status === "success";

@@ -2,9 +2,10 @@
 
 ## Estado atual
 
-O mobile ainda não possui formulário de domínio nem biblioteca de formulários.
-Escolha a solução quando uma feature concreta exigir controle de campos,
-performance e composição suficientes para justificar a dependência.
+O mobile possui os formulários de login e primeiro acesso sem biblioteca de
+formulários. Eles usam estado local, controles React Native e schemas
+compartilhados; uma biblioteca permanece condicionada à necessidade concreta de
+uma feature de domínio.
 
 Validação no aparelho melhora a experiência, mas a API sempre repete validação,
 autorização e regra de negócio.

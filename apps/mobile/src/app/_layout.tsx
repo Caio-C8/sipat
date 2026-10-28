@@ -8,6 +8,8 @@ import {
   shouldShowDevelopmentCheckBanner,
 } from "../components/shared/development-check-banner";
 import { publicAppConfig } from "../config/public-app-config";
+import { SessionGate } from "../features/auth/session/session-gate";
+import { SessionProvider } from "../features/auth/session/session-context";
 import { colors } from "../theme/tokens";
 
 export default function RootLayout() {
@@ -23,7 +25,11 @@ export default function RootLayout() {
         ) : null}
         <AppTopbar />
         <View style={styles.content}>
-          <Stack screenOptions={{ headerShown: false }} />
+          <SessionProvider>
+            <SessionGate>
+              <Stack screenOptions={{ headerShown: false }} />
+            </SessionGate>
+          </SessionProvider>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>

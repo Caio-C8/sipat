@@ -25,6 +25,7 @@ describe("getPublicAppConfig", () => {
         appName: "SIPAT Mobile",
         appVersion: "1.2.3",
         environment,
+        apiBaseUrl: "https://api.example.test",
         apiHealthUrl: "https://api.example.test/api/health",
       });
     },
@@ -43,6 +44,7 @@ describe("getPublicAppConfig", () => {
       appName: "SIPAT",
       appVersion: "1.2.3",
       environment: "development",
+      apiBaseUrl: "http://192.168.1.20:3100",
       apiHealthUrl: "http://192.168.1.20:3100/api/health",
     });
   });

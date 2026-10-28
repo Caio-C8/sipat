@@ -3,7 +3,10 @@
 ## Estado atual
 
 O backend de autenticação mobile está implementado em `/api/auth/mobile`. O
-cliente e o armazenamento seguro permanecem para `MOBILE-AUTH-002`.
+cliente de `MOBILE-AUTH-002` mantém access token somente em memória, persiste o
+refresh atrás de um adapter `expo-secure-store`, coordena renovação concorrente
+e restaura a sessão antes de decidir a rota inicial. O adapter Web não persiste
+Bearer.
 
 ## Arquitetura aprovada
 

@@ -1,10 +1,5 @@
-import { FoundationScreen } from "../../components/shared/foundation-screen";
+import { PasswordUpdated } from "../../features/auth/forms/password-updated";
 
 export default function PasswordUpdatedScreen() {
-  return (
-    <FoundationScreen
-      description="A confirmação será exibida após a troca segura das credenciais."
-      title="Senha atualizada"
-    />
-  );
+  return <PasswordUpdated />;
 }

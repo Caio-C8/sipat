@@ -5,8 +5,8 @@
 O Expo Router lê arquivos em `src/app`. O aplicativo possui grupos `(auth)` e
 `(app)`, que preservam os paths públicos `/`, `/login`, `/redefinir-senha` e
 `/senha-atualizada`, além de `/check`. O layout raiz concentra safe area,
-topbar e faixa de desenvolvimento; os layouts de grupo ainda não aplicam
-guards porque a sessão não foi implementada.
+topbar, faixa de desenvolvimento e restauração neutra da sessão. Os layouts de
+grupo aplicam a matriz autenticada antes de renderizar conteúdo incompatível.
 
 `/check` preserva a tela de infraestrutura em development. Fora desse ambiente,
 ela não dispara o health check e apresenta somente o estado indisponível até a
@@ -49,9 +49,9 @@ build nativo — Expo Go não representa essa integração integralmente.
 
 ## Navegação autenticada
 
-Autenticação ainda não existe. A primeira entrega autenticada foi aprovada nas
-tarefas `MOBILE-AUTH-001`, `MOBILE-AUTH-002` e `MOBILE-HOME-001` com esta
-matriz:
+A autenticação e os redirects foram implementados por `MOBILE-AUTH-001` e
+`MOBILE-AUTH-002`; `MOBILE-HOME-001` ainda entregará o conteúdo da home. A
+matriz aplicada é:
 
 | Rota                | Acesso esperado                   | Destino quando o estado não permite acesso           |
 | ------------------- | --------------------------------- | ---------------------------------------------------- |
