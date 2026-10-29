@@ -348,7 +348,7 @@ describe("gestão de usuários", () => {
       .send({
         nome: "Novo usuário",
         email: "novo@example.com",
-        senha: "frase secreta inicial",
+        senha: "frase secreta inicial 1!",
         perfil: "DIRETOR_PATRIMONIO",
       });
 
@@ -357,7 +357,7 @@ describe("gestão de usuários", () => {
   });
 
   it("cria ativo, deriva auditoria da sessão e persiste apenas o hash", async () => {
-    const senha = "frase secreta inicial";
+    const senha = "frase secreta inicial 1!";
     const resposta = await requisicaoAdministrador()
       .post("/api/usuarios")
       .send({
@@ -391,7 +391,7 @@ describe("gestão de usuários", () => {
     const criacao = await requisicaoAdministrador().post("/api/usuarios").send({
       nome: "Duplicado",
       email: "DUPLICADO@EXAMPLE.COM",
-      senha: "frase secreta inicial",
+      senha: "frase secreta inicial 1!",
       perfil: "DIRETOR_PATRIMONIO",
     });
     const alteracao = await requisicaoAdministrador()
