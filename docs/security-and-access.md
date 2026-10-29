@@ -285,8 +285,10 @@ podem selecionar outro usuário na confirmação.
   submetidas aos Guards globais;
 - criação recebe senha em texto puro somente no body validado e persiste hash
   Argon2id com `memoryCost` 19.456 KiB, `timeCost` 2 e `parallelism` 1;
-- a senha inicial possui de 15 a 128 pontos de código Unicode, permite espaços
-  e não exige combinação artificial de classes de caracteres;
+- a senha inicial possui de 8 a 128 pontos de código Unicode e exige ao menos
+  uma letra, um número e um símbolo; letras e números seguem as categorias
+  Unicode, símbolos aceitam pontuação ou símbolos Unicode e espaços são
+  preservados, mas não satisfazem nenhuma dessas classes;
 - e-mail é normalizado de forma determinística antes da comparação e
   persistência, mantendo a unicidade também no banco;
 - responses usam `select` e mapper explícitos e nunca incluem senha ou hash;
@@ -301,6 +303,21 @@ podem selecionar outro usuário na confirmação.
   conflito de escrita;
 - inativação e revogação de sessões formam uma única operação atômica;
 - erros e logs não permitem enumerar hashes, tokens ou detalhes internos.
+
+## Política de senha
+
+Desde 28 de outubro de 2026, criação de usuário, primeiro acesso, alteração e
+recuperação compartilham a mesma política: 8 a 128 pontos de código Unicode,
+ao menos uma letra, um número e um símbolo. Pontuação e símbolos Unicode
+satisfazem a última classe; espaço é preservado, mas não conta como símbolo.
+
+Esta é uma decisão de produto que substitui a política anterior de no mínimo 15
+caracteres sem composição. Ela é um desvio deliberado do
+[NIST SP 800-63B](https://pages.nist.gov/800-63-4/sp800-63b.html#passwordver),
+que exige no mínimo 15 caracteres quando a senha é o único fator e orienta não
+impor composição, e da
+[orientação da OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html#implement-proper-password-strength-controls),
+que também privilegia comprimento e rejeição de senhas comprometidas.
 
 ## Segurança do login e logout
 
@@ -388,8 +405,9 @@ O `AUTH-002` implementa estas decisões:
   redefinir a senha de outra pessoa;
 - o body contém somente `senhaAtual`, `novaSenha` e
   `confirmacaoNovaSenha`;
-- a nova senha segue a política existente de 15 a 128 pontos de código
-  Unicode, aceita espaços e não impõe composição por classes;
+- a nova senha segue a política existente de 8 a 128 pontos de código Unicode
+  e exige ao menos uma letra, um número e um símbolo; espaços são preservados,
+  mas não contam como símbolo;
 - senha atual inválida produz erro público estável sem modificar senha, sessão
   ou redefinição pendente;
 - verificação da senha atual e criação do novo hash passam pela capacidade
@@ -567,8 +585,9 @@ reais e prova a ordem dos controles globais.
 
 - autoinativação é proibida;
 - inativação do último administrador ativo é proibida;
-- senha inicial: 15 a 128 pontos de código Unicode, espaços permitidos, sem
-  regra de composição e hash Argon2id;
+- senha inicial: 8 a 128 pontos de código Unicode, ao menos uma letra, um
+  número e um símbolo, espaços preservados sem contar como símbolo e hash
+  Argon2id;
 - troca, recuperação e redefinição de senha não pertencem ao `USERS-001`;
 - a interface Web de usuários permanece no objetivo separado
   `WEB-USERS-001`; biblioteca de formulário e estado remoto ainda serão

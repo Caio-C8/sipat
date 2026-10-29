@@ -67,7 +67,7 @@ describe("operações de autenticação", () => {
 
   it("envia conclusão e logout como mutações sem contrato de body na resposta", async () => {
     const { auth, request } = clienteComResposta(undefined);
-    const novaSenha = "uma nova senha segura";
+    const novaSenha = "uma nova senha segura 1!";
 
     await auth.concluirPrimeiroAcesso({
       novaSenha,

@@ -472,8 +472,8 @@ persistência.
 
 ### Escopo
 
-- promover a regra de senha de 15 a 128 pontos de código Unicode para uma
-  primitive reutilizável, preservando compatibilidade com a criação de usuário;
+- promover a regra de senha para uma primitive reutilizável, preservando
+  compatibilidade com a criação de usuário;
 - contrato estrito de alteração com senha atual, nova senha e confirmação;
 - contrato estrito de solicitação de redefinição com e-mail;
 - contrato estrito de redefinição com token, nova senha e confirmação;
@@ -1456,9 +1456,10 @@ Estas decisões afetam segurança ou comportamento externo e não podem ser
 inventadas pelo agente executor:
 
 As decisões do `USERS-001` foram confirmadas: o administrador não pode inativar
-a própria conta nem o último administrador ativo; a senha inicial aceita de 15
-a 128 pontos de código Unicode, inclusive espaços, sem regra de composição, e
-é persistida com Argon2id. Troca, recuperação e redefinição de senha continuam
+a própria conta nem o último administrador ativo; a senha inicial segue a
+política vigente documentada em
+[Identidade, sessão e controle de acesso](./security-and-access.md) e é
+persistida com Argon2id. Troca, recuperação e redefinição de senha continuam
 fora desse objetivo.
 
 As decisões de `AUTH-001` foram confirmadas e estão registradas em

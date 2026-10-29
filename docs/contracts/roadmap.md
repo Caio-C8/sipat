@@ -159,8 +159,8 @@ detalhes de SMTP em contratos públicos.
 
 **Escopo**
 
-- primitive pública de senha com 15 a 128 pontos de código Unicode, espaços
-  permitidos e sem regra artificial de composição;
+- primitive pública de senha compartilhada pelos fluxos de criação, alteração,
+  primeiro acesso e recuperação;
 - preservação da compatibilidade semântica do contrato de senha inicial já
   consumido por `CriarUsuarioSchema`;
 - `AlterarSenhaBodySchema` com `senhaAtual`, `novaSenha` e

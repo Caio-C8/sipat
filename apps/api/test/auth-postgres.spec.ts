@@ -312,7 +312,7 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
   it("altera o hash e revoga todas as sessões na mesma transação", async () => {
     const senhaHasher = new SenhaHasher();
     const senhaAtual = "uma senha atual segura";
-    const novaSenha = "uma nova senha segura";
+    const novaSenha = "uma nova senha segura 1!";
     const usuario = await database.usuario.create({
       data: {
         nome: "Diretor",
@@ -369,13 +369,13 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     const resultados = await Promise.allSettled([
       service.alterarSenha(usuario.id, {
         senhaAtual,
-        novaSenha: "primeira nova senha segura",
-        confirmacaoNovaSenha: "primeira nova senha segura",
+        novaSenha: "primeira nova senha segura 1!",
+        confirmacaoNovaSenha: "primeira nova senha segura 1!",
       }),
       service.alterarSenha(usuario.id, {
         senhaAtual,
-        novaSenha: "segunda nova senha segura",
-        confirmacaoNovaSenha: "segunda nova senha segura",
+        novaSenha: "segunda nova senha segura 2@",
+        confirmacaoNovaSenha: "segunda nova senha segura 2@",
       }),
     ]);
 
@@ -395,8 +395,14 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
       select: { senha: true },
     });
     const hashesValidos = await Promise.all([
-      senhaHasher.verificarHash(persistido.senha, "primeira nova senha segura"),
-      senhaHasher.verificarHash(persistido.senha, "segunda nova senha segura"),
+      senhaHasher.verificarHash(
+        persistido.senha,
+        "primeira nova senha segura 1!",
+      ),
+      senhaHasher.verificarHash(
+        persistido.senha,
+        "segunda nova senha segura 2@",
+      ),
     ]);
     expect(hashesValidos.filter(Boolean)).toHaveLength(1);
   });
@@ -428,7 +434,10 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
       },
     });
     const service = criarAuthService(database, "development", senhaHasher);
-    const senhas = ["primeira senha definitiva", "segunda senha definitiva"];
+    const senhas = [
+      "primeira senha definitiva 1!",
+      "segunda senha definitiva 2@",
+    ];
 
     const resultados = await Promise.allSettled(
       senhas.map((novaSenha) =>
@@ -565,8 +574,8 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     const token = new URL(mensagem.link).searchParams.get("token")!;
     const dados = {
       token,
-      novaSenha: "uma senha redefinida segura",
-      confirmacaoNovaSenha: "uma senha redefinida segura",
+      novaSenha: "uma senha redefinida segura 1!",
+      confirmacaoNovaSenha: "uma senha redefinida segura 1!",
     };
 
     const resultados = await Promise.allSettled([
@@ -596,7 +605,7 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     await expect(
       senhaHasher.verificarHash(
         persistido.senha,
-        "uma senha redefinida segura",
+        "uma senha redefinida segura 1!",
       ),
     ).resolves.toBe(true);
   });
@@ -629,15 +638,15 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
 
     await service.alterarSenha(usuario.id, {
       senhaAtual,
-      novaSenha: "uma senha alterada segura",
-      confirmacaoNovaSenha: "uma senha alterada segura",
+      novaSenha: "uma senha alterada segura 1!",
+      confirmacaoNovaSenha: "uma senha alterada segura 1!",
     });
 
     await expect(
       service.redefinirSenha({
         token,
-        novaSenha: "outra senha redefinida segura",
-        confirmacaoNovaSenha: "outra senha redefinida segura",
+        novaSenha: "outra senha redefinida segura 2@",
+        confirmacaoNovaSenha: "outra senha redefinida segura 2@",
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(

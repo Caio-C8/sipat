@@ -55,8 +55,8 @@ que “Formato ou tipo de dado inválido”.
 Uma regra específica mantém sua mensagem junto ao schema:
 
 ```ts
-const SenhaSchema = z.string().min(8, {
-  error: "A senha deve possuir pelo menos 8 caracteres.",
+const TituloSchema = z.string().min(3, {
+  error: "O título deve possuir pelo menos 3 caracteres.",
 });
 ```
 

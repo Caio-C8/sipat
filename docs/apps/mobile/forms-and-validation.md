@@ -79,7 +79,8 @@ compartilhados quando a representação do campo for idêntica. O formulário:
 - diferencia validação local, credencial inválida, `429`, sessão expirada e
   indisponibilidade, sem revelar se a conta existe;
 - na confirmação da nova senha, associa o erro ao campo correspondente e mantém
-  as regras de 15 a 128 pontos de código Unicode já definidas pelo contrato;
+  a política de 8 a 128 pontos de código Unicode, com ao menos uma letra, um
+  número e um símbolo, já definida pelo contrato;
 - limpa valores sensíveis ao concluir, sair do fluxo ou receber invalidação
   definitiva da sessão.
 

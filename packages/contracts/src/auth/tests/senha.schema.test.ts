@@ -15,20 +15,31 @@ import {
 } from "../redefinir-senha.schema";
 import { SenhaSchema } from "../senha.schema";
 
-const novaSenha = "  frase longa segura  ";
+const novaSenha = "  frase segura 1!  ";
 const tokenValido = "A".repeat(43);
 
 describe("SenhaSchema", () => {
-  it("preserva espaços e conta limites em pontos de código Unicode", () => {
-    const senhaComEspacos = " ".repeat(15);
-    const senhaUnicode = "🔐".repeat(15);
+  it("preserva espaços e aceita classes de caracteres Unicode", () => {
+    const senhaComEspacos = " Senha 1! ";
+    const senhaUnicode = "Árvore٢🔐x";
 
+    assert.equal(parseValido(SenhaSchema, "Senha1!a"), "Senha1!a");
     assert.equal(parseValido(SenhaSchema, senhaComEspacos), senhaComEspacos);
     assert.equal(parseValido(SenhaSchema, senhaUnicode), senhaUnicode);
-    assert.equal(parseValido(SenhaSchema, "🔐".repeat(128)), "🔐".repeat(128));
+    assert.equal(
+      parseValido(SenhaSchema, `A1!${"🔐".repeat(125)}`),
+      `A1!${"🔐".repeat(125)}`,
+    );
+  });
+
+  it("exige oito pontos de código, letra, número e símbolo", () => {
     esperaInvalidos(SenhaSchema, [
-      "🔐".repeat(14),
-      "🔐".repeat(129),
+      "Aa1!xyz",
+      "1234!678",
+      "Senha!aa",
+      "Senha123",
+      "Senha 12",
+      `A1!${"🔐".repeat(126)}`,
       null,
       undefined,
     ]);
@@ -55,7 +66,7 @@ describe("AlterarSenhaBodySchema", () => {
       {
         senhaAtual: "senha atual",
         novaSenha,
-        confirmacaoNovaSenha: "outra frase longa segura",
+        confirmacaoNovaSenha: "outra senha 2@ segura",
       },
       "confirmacaoNovaSenha",
     );
@@ -145,7 +156,7 @@ describe("RedefinirSenhaBodySchema", () => {
       {
         token: tokenValido,
         novaSenha,
-        confirmacaoNovaSenha: "outra frase longa segura",
+        confirmacaoNovaSenha: "outra senha 2@ segura",
       },
       "confirmacaoNovaSenha",
     );

@@ -471,8 +471,8 @@ describe("autenticação E2E", () => {
     cookie: string,
     body: Record<string, unknown> = {
       senhaAtual: senha,
-      novaSenha: "uma nova senha segura de teste",
-      confirmacaoNovaSenha: "uma nova senha segura de teste",
+      novaSenha: "uma nova senha segura de teste 1!",
+      confirmacaoNovaSenha: "uma nova senha segura de teste 1!",
     },
   ) {
     return request(app.getHttpServer())
@@ -485,7 +485,7 @@ describe("autenticação E2E", () => {
 
   function concluirPrimeiroAcesso(
     cookie: string,
-    novaSenha = "uma nova senha segura de primeiro acesso",
+    novaSenha = "uma nova senha segura de primeiro acesso 1!",
   ) {
     return request(app.getHttpServer())
       .post("/api/auth/concluir-primeiro-acesso")
@@ -505,7 +505,7 @@ describe("autenticação E2E", () => {
 
   function redefinirSenha(
     token: string,
-    novaSenha = "uma senha redefinida segura",
+    novaSenha = "uma senha redefinida segura 1!",
   ) {
     return request(app.getHttpServer())
       .post("/api/auth/redefinir-senha")
@@ -658,7 +658,7 @@ describe("autenticação E2E", () => {
     await expect(
       senhaHasher.verificarHash(
         usuarios.find(({ id }) => id === ids.pendente)!.senha,
-        "uma nova senha segura de primeiro acesso",
+        "uma nova senha segura de primeiro acesso 1!",
       ),
     ).resolves.toBe(true);
   });
@@ -681,7 +681,7 @@ describe("autenticação E2E", () => {
       await expect(
         senhaHasher.verificarHash(
           usuario.senha,
-          "uma nova senha segura de teste",
+          "uma nova senha segura de teste 1!",
         ),
       ).resolves.toBe(true);
       expect(
@@ -696,7 +696,7 @@ describe("autenticação E2E", () => {
         .set("Cookie", cookieDaResposta(segunda))
         .expect(401);
       await login(email).expect(401);
-      await login(email, "uma nova senha segura de teste").expect(200);
+      await login(email, "uma nova senha segura de teste 1!").expect(200);
     },
   );
 
@@ -709,8 +709,8 @@ describe("autenticação E2E", () => {
 
     const resposta = await alterarSenha(cookieDaResposta(respostaLogin), {
       senhaAtual: "senha incorreta",
-      novaSenha: "uma nova senha segura de teste",
-      confirmacaoNovaSenha: "uma nova senha segura de teste",
+      novaSenha: "uma nova senha segura de teste 1!",
+      confirmacaoNovaSenha: "uma nova senha segura de teste 1!",
     }).expect(401);
 
     expect(resposta.body).toEqual(
@@ -785,7 +785,9 @@ describe("autenticação E2E", () => {
       .set("Cookie", cookieDaResposta(primeiraSessao))
       .expect(401);
     await login("admin@example.com").expect(401);
-    await login("admin@example.com", "uma senha redefinida segura").expect(200);
+    await login("admin@example.com", "uma senha redefinida segura 1!").expect(
+      200,
+    );
     expect(mensagensEmail.at(-1)).toEqual({
       tipo: "SENHA_REDEFINIDA",
       destinatario: "admin@example.com",
@@ -847,8 +849,8 @@ describe("autenticação E2E", () => {
       .set(CABECALHO_CSRF, "1")
       .send({
         token: "A".repeat(43),
-        novaSenha: "uma senha redefinida segura",
-        confirmacaoNovaSenha: "uma senha redefinida segura",
+        novaSenha: "uma senha redefinida segura 1!",
+        confirmacaoNovaSenha: "uma senha redefinida segura 1!",
         email: "admin@example.com",
       })
       .expect(400);
@@ -872,7 +874,7 @@ describe("autenticação E2E", () => {
   });
 
   it("protege a alteração por autenticação, perfil, CSRF e body estrito", async () => {
-    const confirmacaoDivergente = `${senha}-diferente`;
+    const confirmacaoDivergente = "uma nova senha segura de teste 2@";
 
     await request(app.getHttpServer())
       .post("/api/auth/alterar-senha")
@@ -880,8 +882,8 @@ describe("autenticação E2E", () => {
       .set(CABECALHO_CSRF, "1")
       .send({
         senhaAtual: senha,
-        novaSenha: "uma nova senha segura de teste",
-        confirmacaoNovaSenha: "uma nova senha segura de teste",
+        novaSenha: "uma nova senha segura de teste 1!",
+        confirmacaoNovaSenha: "uma nova senha segura de teste 1!",
       })
       .expect(401);
 
@@ -894,22 +896,28 @@ describe("autenticação E2E", () => {
       .set("Cookie", cookie)
       .send({
         senhaAtual: senha,
-        novaSenha: "uma nova senha segura de teste",
-        confirmacaoNovaSenha: "uma nova senha segura de teste",
+        novaSenha: "uma nova senha segura de teste 1!",
+        confirmacaoNovaSenha: "uma nova senha segura de teste 1!",
       })
       .expect(403);
 
     await alterarSenha(cookie, {
       senhaAtual: senha,
-      novaSenha: "uma nova senha segura de teste",
-      confirmacaoNovaSenha: "uma nova senha segura de teste",
+      novaSenha: "uma nova senha segura de teste 1!",
+      confirmacaoNovaSenha: "uma nova senha segura de teste 1!",
       usuarioId: ids.diretor,
     }).expect(400);
 
     await alterarSenha(cookie, {
       senhaAtual: senha,
-      novaSenha: "uma nova senha segura de teste",
+      novaSenha: "uma nova senha segura de teste 1!",
       confirmacaoNovaSenha: confirmacaoDivergente,
+    }).expect(400);
+
+    await alterarSenha(cookie, {
+      senhaAtual: senha,
+      novaSenha: "Senha123",
+      confirmacaoNovaSenha: "Senha123",
     }).expect(400);
   });
 

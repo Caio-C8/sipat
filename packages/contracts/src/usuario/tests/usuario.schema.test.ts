@@ -23,7 +23,7 @@ const usuarioDetalhe = {
 
 describe("contratos de usuários", () => {
   it("normaliza nome e e-mail na criação sem alterar a senha", () => {
-    const senha = "  frase longa segura  ";
+    const senha = "  frase segura 1!  ";
     const resultado = parseValido(CriarUsuarioSchema, {
       nome: "  Maria da Silva  ",
       email: "  MARIA@EXAMPLE.COM  ",
@@ -36,8 +36,8 @@ describe("contratos de usuários", () => {
     assert.equal(resultado.senha, senha);
   });
 
-  it("aceita espaços e Unicode e conta pontos de código na senha", () => {
-    const senha = "🔐".repeat(15);
+  it("aceita letras, números e símbolos Unicode sem alterar a senha", () => {
+    const senha = "Árvore٢🔐x";
     assert.equal(
       parseValido(CriarUsuarioSchema, {
         nome: "Usuário",
@@ -53,7 +53,7 @@ describe("contratos de usuários", () => {
       {
         nome: "Usuário",
         email: "usuario@example.com",
-        senha: "🔐".repeat(14),
+        senha: "Senha123",
         perfil: "DIRETOR_PATRIMONIO",
       },
       "senha",
@@ -66,7 +66,7 @@ describe("contratos de usuários", () => {
       {
         nome: "Usuário",
         email: "usuario@example.com",
-        senha: "a".repeat(129),
+        senha: `A1!${"a".repeat(126)}`,
         perfil: "ADMINISTRADOR",
       },
       "senha",
@@ -74,7 +74,7 @@ describe("contratos de usuários", () => {
     esperaInvalido(CriarUsuarioSchema, {
       nome: "Usuário",
       email: "usuario@example.com",
-      senha: "a".repeat(15),
+      senha: "Senha123!",
       perfil: "ADMINISTRADOR",
       ativo: false,
     });

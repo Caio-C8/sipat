@@ -126,7 +126,8 @@ export function RedefinirForm() {
         ) : null}
       </div>
       <p className="mt-0.5 text-xs leading-7 text-[#52647f]">
-        Use uma senha diferente da senha inicial.
+        Use no mínimo 8 caracteres, com uma letra, um número e um símbolo.
+        <br />A senha deve ser diferente da senha inicial.
         <br />A confirmação deve ser igual à nova senha.
       </p>
       <Button
