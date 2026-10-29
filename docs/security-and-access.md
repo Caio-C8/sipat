@@ -420,8 +420,8 @@ O `AUTH-002` implementa estas decisões:
   criação automática de nova sessão;
 - a response de sucesso é `204 No Content` e nunca contém hash ou credencial.
 
-O model de redefinição ainda não existe. O `AUTH-003`, responsável por criá-lo,
-também integra sua invalidação à transação já implementada pelo `AUTH-002`.
+O model de redefinição e sua invalidação transacional foram implementados por
+`AUTH-003` e integrados ao fluxo autenticado de `AUTH-002`.
 
 ## Recuperação da senha por e-mail institucional
 
@@ -465,9 +465,11 @@ sejam institucionais.
   log, métrica ou correlation context;
 - o link usa uma URL-base configurada, nunca o header `Host`, e não contém
   e-mail, ID ou perfil;
-- a URL de produção usa HTTPS; o futuro consumidor Web deverá aplicar
-  `Referrer-Policy: no-referrer` e retirar o token da barra de endereço assim
-  que o capturar.
+- `WEB-AUTH-002` passa o token no fragmento
+  `/recuperar-senha#token=...`, que não é enviado ao servidor nem no
+  `Referer`; a fronteira Client valida o formato, mantém o valor somente em
+  memória e remove o fragmento da barra assim que o capturar;
+- a URL de produção usa HTTPS e aponta somente para o consumidor Web.
 
 ### Redefinição
 
@@ -484,6 +486,27 @@ sejam institucionais.
   novo login;
 - após a alteração, uma mensagem informa que a senha foi redefinida, sem
   incluir senha, token ou novo link.
+
+### Consumidores Web e mobile aprovados
+
+- Web e mobile podem iniciar a mesma solicitação por
+  `POST /api/auth/esqueceu-senha` e exibem a mesma response neutra;
+- somente a Web consome o token e chama `POST /api/auth/redefinir-senha`;
+- `/redefinir-senha` permanece reservado ao primeiro acesso autenticado, e
+  `/recuperar-senha` representa exclusivamente a recuperação por token;
+- a conclusão Web não cria sessão e oferece login Web ou o deep link tokenless
+  `sipat://login?origem=recuperacao-senha`;
+- o deep link não transporta token, e-mail, senha, ID ou perfil. O app mostra
+  apenas uma confirmação neutra e exige novo login;
+- o transporte nativo da solicitação não usa cookie nem Bearer. A API deve
+  permitir esse uso no endpoint existente sem forjar Origin Web e sem remover
+  CSRF das demais mutations;
+- o rate limit persistente, a validação estrita e a response neutra continuam
+  sendo as defesas contra abuso e enumeração dessa operação pública.
+
+As especificações de execução são
+[WEB-AUTH-002](./tasks/WEB-AUTH-002-recuperar-senha.md) e
+[MOBILE-AUTH-004](./tasks/MOBILE-AUTH-004-solicitar-recuperacao-senha.md).
 
 ### Transporte de e-mail
 

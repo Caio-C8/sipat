@@ -318,7 +318,7 @@ export class AuthService {
     const link = new URL(
       this.config.getOrThrow("AUTH_PASSWORD_RESET_URL", { infer: true }),
     );
-    link.searchParams.set("token", token);
+    link.hash = new URLSearchParams({ token }).toString();
     this.despachanteEmail.despachar({
       tipo: "REDEFINIR_SENHA",
       destinatario: usuario.email,

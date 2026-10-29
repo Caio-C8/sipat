@@ -41,6 +41,28 @@ tipadas e aplicam a matriz de sessão. A entrega implementou:
 Especificação aprovada:
 [WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md).
 
+### WEB-AUTH-002 — Recuperação de senha por e-mail
+
+**Status:** implementado e validado automaticamente em 29 de outubro de 2026;
+a integração contra PostgreSQL e SMTP fake e a abertura do esquema em build
+nativo permanecem pendentes.
+
+Foram entregues `/esqueci-senha`, `/recuperar-senha` e
+`/recuperacao-concluida`, reutilizando os dois endpoints públicos já
+implementados. `/redefinir-senha` permanece exclusivo do primeiro acesso
+autenticado. O token chega no fragmento do link, é mantido somente em memória e
+é removido da barra antes da submissão; o sucesso não cria sessão.
+
+A conclusão oferece `Voltar ao app` por
+`sipat://login?origem=recuperacao-senha`, sem dado sensível, e a alternativa
+`Ir para o login Web`. As três telas novas não possuem frames explícitos. O
+implementador deve abrir `Telas PC` no Figma e derivá-las dos frames `Login`,
+`Crie sua nova senha` e `Senha atualizada`, além de comparar os componentes já
+implementados.
+
+Contrato de execução e evidências:
+[WEB-AUTH-002](../../tasks/WEB-AUTH-002-recuperar-senha.md).
+
 ### WEB-USERS-001 — Gestão de usuários
 
 **Status:** planejado; depende de `WEB-AUTH-001`.

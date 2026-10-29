@@ -8,6 +8,7 @@ export function PasswordInput({
   id,
   name,
   autoComplete,
+  autoFocus,
   placeholder,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
@@ -15,6 +16,7 @@ export function PasswordInput({
   id: string;
   name: string;
   autoComplete: string;
+  autoFocus?: boolean;
   placeholder?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
@@ -32,6 +34,7 @@ export function PasswordInput({
         name={name}
         type={visible ? "text" : "password"}
         autoComplete={autoComplete}
+        autoFocus={autoFocus}
         placeholder={placeholder}
         required
         maxLength={128}

@@ -31,13 +31,16 @@ fronteiras entre UI, contratos e integração HTTP.
   patrimonial e os estados do dashboard;
 - Playwright cobre o catálogo, o fluxo de autenticação, redirects, estados do
   dashboard, acessibilidade automatizável e headers de segurança;
-- as rotas `/login`, `/redefinir-senha` e `/senha-atualizada` estão integradas
-  à API por operações tipadas;
+- as rotas `/login`, `/redefinir-senha`, `/senha-atualizada`,
+  `/esqueci-senha`, `/recuperar-senha` e `/recuperacao-concluida` estão
+  integradas à API por operações tipadas quando há mutation;
 - o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb, notificações e
   menu do usuário, com navegação filtrada por perfil;
 - não existem biblioteca de cache remoto nem estado global na Web;
 - `WEB-AUTH-001` está implementado com backend mockado estrito no E2E; a
   validação adicional contra uma stack real permanece pendente.
+- `WEB-AUTH-002` está implementado com backend mockado estrito no E2E; a
+  validação adicional contra PostgreSQL e SMTP fake permanece pendente.
 
 `WEB-AUTH-001` transformou `/` no catálogo público de rotas e moveu a visão
 geral ilustrativa para `/dashboard`, protegida para os dois perfis.

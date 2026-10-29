@@ -61,6 +61,26 @@ Cache de domínio, operação offline, biometria, attestation, pinning de
 certificado, observabilidade externa e E2E nativo continuam fora desta primeira
 entrega até que um objetivo próprio defina seus critérios.
 
+## Recuperação de senha iniciada no mobile
+
+| Ordem | Objetivo                                                                                                       | Status   | Dependências                            |
+| ----- | -------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- |
+| 1     | [`WEB-AUTH-002`](../../tasks/WEB-AUTH-002-recuperar-senha.md) — consumidor Web do token                        | aprovado | backend e contratos de recuperação      |
+| 2     | [`MOBILE-AUTH-004`](../../tasks/MOBILE-AUTH-004-solicitar-recuperacao-senha.md) — solicitação e retorno ao app | aprovado | `WEB-AUTH-002` e autenticação existente |
+
+O app recebe uma nova rota pública `/esqueci-senha`, mas não recebe o token nem
+define a nova senha. Ele reutiliza `POST /api/auth/esqueceu-senha`; o e-mail
+abre a Web, que consome `POST /api/auth/redefinir-senha`. Depois do sucesso, a
+Web pode abrir `sipat://login?origem=recuperacao-senha`. Esse retorno apenas
+mostra uma confirmação neutra no login e não restaura sessão nem autentica.
+
+A tela de e-mail não existe explicitamente no Figma. O implementador deve abrir
+obrigatoriamente no navegador a página
+[`Telas Mobile`](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=257-2&p=f)
+e inspecionar `Login` (`334:43423`), `Crie sua nova senha` (`315:43371`) e
+`Senha atualizada` (`315:43202`). A nova composição deriva desses frames e dos
+componentes implementados; o arquivo permanece somente leitura.
+
 ## Paridade com o protótipo e primeira Home de domínio
 
 As telas implementadas não correspondem ao protótipo aprovado. A correção não

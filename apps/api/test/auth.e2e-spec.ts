@@ -43,6 +43,10 @@ type RedefinicaoSenhaMemoria = {
   updatedAt: Date;
 };
 
+function obterTokenDoLink(link: string): string | null {
+  return new URLSearchParams(new URL(link).hash.slice(1)).get("token");
+}
+
 describe("autenticação E2E", () => {
   let app: INestApplication;
   let usuarios: UsuarioMemoria[];
@@ -744,7 +748,7 @@ describe("autenticação E2E", () => {
     if (mensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
-    const token = new URL(mensagem.link).searchParams.get("token")!;
+    const token = obterTokenDoLink(mensagem.link)!;
     expect(redefinicoes[0]!.tokenHash).toBe(
       calcularHashTokenRedefinicaoSenha(token),
     );
@@ -762,18 +766,14 @@ describe("autenticação E2E", () => {
     if (primeiraMensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
-    const primeiroToken = new URL(primeiraMensagem.link).searchParams.get(
-      "token",
-    )!;
+    const primeiroToken = obterTokenDoLink(primeiraMensagem.link)!;
 
     await solicitarRedefinicao("admin@example.com").expect(202);
     const segundaMensagem = mensagensEmail.at(-1);
     if (segundaMensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
-    const segundoToken = new URL(segundaMensagem.link).searchParams.get(
-      "token",
-    )!;
+    const segundoToken = obterTokenDoLink(segundaMensagem.link)!;
 
     expect(segundoToken).not.toBe(primeiroToken);
     await redefinirSenha(primeiroToken).expect(401);
@@ -863,7 +863,7 @@ describe("autenticação E2E", () => {
     if (mensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
-    const token = new URL(mensagem.link).searchParams.get("token")!;
+    const token = obterTokenDoLink(mensagem.link)!;
 
     await alterarSenha(cookieDaResposta(respostaLogin)).expect(204);
     const respostaTokenInvalidado = await redefinirSenha(token);

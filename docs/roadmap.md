@@ -96,6 +96,35 @@ As especificações são
 [MOBILE-AUTH-002](./tasks/MOBILE-AUTH-002-telas-autenticacao.md) e
 [MOBILE-HOME-001](./tasks/MOBILE-HOME-001-home-check.md).
 
+## Recuperação de senha na Web e no mobile
+
+O backend e os contratos de `AUTH-003` e `CONTRACTS-003` estão concluídos, mas
+o link enviado por e-mail ainda não possui consumidor Web funcional. A entrega
+aprovada separa a solicitação da redefinição e mantém um único fluxo de token:
+
+| Ordem | Objetivo                                                        | Status   | Dependências                           |
+| ----- | --------------------------------------------------------------- | -------- | -------------------------------------- |
+| 1     | `WEB-AUTH-002` — solicitar e concluir recuperação na Web        | aprovado | `AUTH-003`, `CONTRACTS-003` e Web auth |
+| 2     | `MOBILE-AUTH-004` — solicitar no app e retornar ao login mobile | aprovado | `WEB-AUTH-002` e autenticação mobile   |
+
+A Web e o mobile terão uma nova tela para informar o e-mail. Ambos reutilizam
+`POST /api/auth/esqueceu-senha`; somente a Web recebe e consome o token por
+`POST /api/auth/redefinir-senha`. O e-mail abre
+`/recuperar-senha#token=...`, e a conclusão Web pode abrir o login instalado
+por `sipat://login?origem=recuperacao-senha`. O deep link não transporta token,
+e-mail, senha, ID ou perfil e não autentica automaticamente.
+
+As telas novas não existem explicitamente no protótipo. Os implementadores são
+obrigados a abrir no navegador o arquivo Figma `YGy7F6OGLf6FhXrVomleGk` e
+inspecionar `Telas PC` ou `Telas Mobile`, conforme a tarefa, antes de editar.
+Elas estendem a forma e o estilo das telas `Login`, `Crie sua nova senha` e
+`Senha atualizada`; a ausência de frame próprio impede declarar paridade pixel
+a pixel para o conteúdo novo.
+
+Especificações:
+[WEB-AUTH-002](./tasks/WEB-AUTH-002-recuperar-senha.md) e
+[MOBILE-AUTH-004](./tasks/MOBILE-AUTH-004-solicitar-recuperacao-senha.md).
+
 ### Correção visual e primeira integração de domínio mobile
 
 As telas atuais funcionam, mas não reproduzem o protótipo aprovado. A execução

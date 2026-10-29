@@ -103,6 +103,26 @@ describe("instrumentarApiClient", () => {
     expect(JSON.stringify(metricas[0])).not.toContain("ATIVO");
   });
 
+  it.each([
+    ["/auth/esqueceu-senha", "auth.solicitar_recuperacao_senha"],
+    ["/auth/redefinir-senha", "auth.redefinir_senha"],
+  ])("normaliza a operação sensível %s", async (path, nome) => {
+    const metricas: MetricaOperacaoApi[] = [];
+    const apiClient = instrumentarApiClient(
+      criarApiClient(async () => undefined),
+      {
+        origem: "navegador",
+        observar: (metrica) => metricas.push(metrica),
+        agora: criarRelogio(10, 11),
+      },
+    );
+
+    await apiClient.request({ path, method: "POST" });
+
+    expect(metricas[0]).toMatchObject({ nome, metodo: "POST" });
+    expect(metricas[0]).not.toHaveProperty("path");
+  });
+
   it("registra status e categoria de uma falha conhecida", async () => {
     const metricas: MetricaOperacaoApi[] = [];
 
