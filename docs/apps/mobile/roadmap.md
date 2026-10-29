@@ -131,3 +131,32 @@ As diferenças aprovadas em relação aos frames são deliberadas: não haverá
 cadastro de vários bens iguais, aba de histórico nem geração de ficha nesta
 sequência. Esses controles não devem ser implementados como decoração ativa,
 mock, chamada repetida de `POST` ou rota vazia.
+
+## Conferência de inventário
+
+Esta sequência habilita `Inventário` para o Diretor de Patrimônio e reutiliza
+exclusivamente as operações gerais entregues por `INVENTARIOS-001` e
+`INVENTARIOS-002`:
+
+| Ordem | Objetivo                                                                                                                | Status   | Dependências                                    |
+| ----- | ----------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
+| 1     | [`MOBILE-INVENTARIOS-001`](../../tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md) — selecionar e iniciar setor | aprovada | contratos, API e shell mobile                   |
+| 2     | [`MOBILE-INVENTARIOS-002`](../../tasks/MOBILE-INVENTARIOS-002-conferir-itens.md) — conferir por etiqueta ou número      | aprovada | tarefa anterior e validação da etiqueta real    |
+| 3     | [`MOBILE-INVENTARIOS-003`](../../tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md) — corrigir e concluir setor   | aprovada | tarefa anterior e ciclo operacional já entregue |
+
+O fluxo do aplicativo começa pela seleção de um inventário `PENDENTE` ou
+`EM_ANDAMENTO`, segue pela seleção de um setor e termina quando esse
+`SetorInventario` fica `CONCLUIDO`. O mobile não cadastra inventários e não
+executa a finalização global. O Administrador continua observador conforme
+RF19 e não recebe controles mutáveis.
+
+O navegador deve abrir os frames vinculados em cada tarefa na página
+[`Telas Mobile`](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=257-2&p=f).
+O arquivo permanece somente leitura. Os rótulos `Finalizar inventário` e
+`Enviar Ocorrências` do protótipo não refletem as operações existentes: a UI
+deve concluir o setor e navegar às divergências já persistidas, sem inventar
+finalização global ou endpoint de ocorrência.
+
+`expo-camera` entra somente em `MOBILE-INVENTARIOS-002`, com permissão de câmera
+e sem áudio. Scanner e entrada manual enviam o mesmo `numeroPatrimonial`; não
+há fila offline nem sucesso local sem confirmação da API.

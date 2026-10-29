@@ -70,9 +70,12 @@ ser alterado. Topbar, cards, campos e espaçamentos devem responder ao espaço
 disponível, safe areas, teclado, texto longo e fonte ampliada sem introduzir
 diferenças visuais não justificadas no frame 390×844.
 
-A bottom bar pertence ao layout `(app)`. Destinos ainda sem página permanecem
-visíveis conforme o protótipo, mas usam estado disabled e não justificam criar
-rotas placeholder. `DevelopmentCheckBanner` é uma ferramenta técnica separada
+A bottom bar pertence ao layout `(app)`. Inventário fica navegável para o
+Diretor e preserva o destaque em toda a árvore da conferência; para o
+Administrador, o item permanece disabled com descrição acessível da restrição.
+Destinos ainda sem página permanecem visíveis conforme o protótipo, mas usam
+estado disabled e não justificam criar rotas placeholder.
+`DevelopmentCheckBanner` é uma ferramenta técnica separada
 e não participa da reformulação da topbar.
 
 ## Acessibilidade

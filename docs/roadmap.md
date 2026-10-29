@@ -180,6 +180,31 @@ placeholder. Para o Administrador, `Cadastro` permanece visível na navegação 
 abre um estado de acesso restrito coerente com o protótipo, sem carregar o
 formulário nem disparar operações de criação.
 
+### Conferência de inventário no mobile
+
+O aplicativo executará somente a conferência dos inventários previamente
+cadastrados. A criação e a finalização global continuam fora do mobile; o fluxo
+seleciona inventário e setor, inicia ou retoma o setor, registra leituras,
+corrige divergências quando solicitado e conclui o `SetorInventario`.
+
+| Ordem | Objetivo                                              | Status   | Dependências                                   |
+| ----- | ----------------------------------------------------- | -------- | ---------------------------------------------- |
+| 1     | `MOBILE-INVENTARIOS-001` — selecionar e iniciar setor | aprovado | `INVENTARIOS-001/002`, shell e autenticação    |
+| 2     | `MOBILE-INVENTARIOS-002` — conferir itens             | aprovado | tarefa anterior, `expo-camera` e etiqueta real |
+| 3     | `MOBILE-INVENTARIOS-003` — corrigir e concluir setor  | aprovado | tarefa anterior e contratos de inventário      |
+
+Especificações:
+[MOBILE-INVENTARIOS-001](./tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md),
+[MOBILE-INVENTARIOS-002](./tasks/MOBILE-INVENTARIOS-002-conferir-itens.md) e
+[MOBILE-INVENTARIOS-003](./tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md).
+
+As tarefas reutilizam as operações de leitura e mutação necessárias do módulo
+de inventários e não criam API mobile, entidade de ocorrência ou fila offline.
+A câmera é uma dependência nativa isolada na segunda tarefa. Os frames do Figma
+são referência visual obrigatória, com dois desvios semânticos aprovados:
+`Finalizar inventário` deve concluir somente o setor, e `Enviar Ocorrências`
+deve navegar às divergências já persistidas, sem novo envio.
+
 ## Ordem das entregas básicas de patrimônios
 
 | Ordem | Objetivo                                      | Status    | Dependências                         |

@@ -27,12 +27,16 @@ código interno da API.
 - o layout raiz aplica safe area, topbar SIPAT e a faixa de verificação somente
   em `development`; a topbar mantém a identificação municipal sem sessão e,
   quando autenticada, apresenta avatar com menu da conta e logout;
-- o grupo `(app)` aplica a bottom bar do protótipo; `Início` e `Bens`
-  representam rotas existentes e os demais destinos permanecem visíveis e
+- o grupo `(app)` aplica a bottom bar do protótipo; `Início`, `Bens`,
+  `Inventário` para o Diretor e `Cadastro` representam rotas existentes;
+  Inventário comunica a restrição ao Administrador e Relatórios permanece
   disabled;
 - `/bens` e `/bens/[patrimonioId]` implementam consulta para os dois perfis,
   com busca submetida, filtros públicos, paginação e detalhe nas abas `Dados` e
   `Valores`;
+- `/inventarios`, `/inventarios/[inventarioId]` e o detalhe do setor permitem
+  selecionar um inventário aberto, buscar e paginar setores e iniciar ou
+  retomar exatamente uma conferência; o Administrador recebe somente leitura;
 - `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
   de cadastro unitário; o Administrador recebe `Cadastro restrito` sem montar o
   formulário nem consultar catálogos;

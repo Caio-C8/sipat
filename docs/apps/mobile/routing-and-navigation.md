@@ -4,8 +4,10 @@
 
 O Expo Router lê arquivos em `src/app`. O aplicativo possui grupos `(auth)` e
 `(app)`, que preservam os paths públicos `/`, `/bens`,
-`/bens/[patrimonioId]`, `/cadastro/patrimonio`, `/login`, `/esqueci-senha`,
-`/redefinir-senha` e `/senha-atualizada`, além de `/check`. O layout raiz
+`/bens/[patrimonioId]`, `/inventarios`, `/inventarios/[inventarioId]`,
+`/inventarios/[inventarioId]/setores/[setorInventarioId]`,
+`/cadastro/patrimonio`, `/login`, `/esqueci-senha`, `/redefinir-senha` e
+`/senha-atualizada`, além de `/check`. O layout raiz
 concentra safe area,
 topbar, faixa de desenvolvimento e restauração neutra da sessão. Os layouts de
 grupo aplicam a matriz autenticada antes de renderizar conteúdo incompatível.
@@ -55,17 +57,20 @@ A autenticação e os redirects foram implementados por `MOBILE-AUTH-001` e
 `MOBILE-AUTH-002`; `MOBILE-HOME-001` tornou `/` a home protegida inicial e
 concentrou o diagnóstico em `/check`. A matriz aplicada é:
 
-| Rota                   | Acesso esperado                   | Destino quando o estado não permite acesso             |
-| ---------------------- | --------------------------------- | ------------------------------------------------------ |
-| `/login`               | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`     |
-| `/esqueci-senha`       | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`     |
-| `/redefinir-senha`     | sessão com troca obrigatória      | anônimo → `/login`; sessão comum → `/`                 |
-| `/senha-atualizada`    | sessão válida com troca concluída | anônimo → `/login`; pendência → `/redefinir-senha`     |
-| `/`                    | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
-| `/bens`                | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
-| `/bens/[patrimonioId]` | ambos os perfis, UUID válido      | anônimo → `/login`; ID inválido → estado local de erro |
-| `/cadastro/patrimonio` | ambos; formulário só para Diretor | anônimo → `/login`; Administrador → estado restrito    |
-| `/check`               | pública somente em `development`  | fora de development → mesma decisão protegida de `/`   |
+| Rota                                                      | Acesso esperado                               | Destino quando o estado não permite acesso                   |
+| --------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------ |
+| `/login`                                                  | anônimo                                       | pendência → `/redefinir-senha`; sessão comum → `/`           |
+| `/esqueci-senha`                                          | anônimo                                       | pendência → `/redefinir-senha`; sessão comum → `/`           |
+| `/redefinir-senha`                                        | sessão com troca obrigatória                  | anônimo → `/login`; sessão comum → `/`                       |
+| `/senha-atualizada`                                       | sessão válida com troca concluída             | anônimo → `/login`; pendência → `/redefinir-senha`           |
+| `/`                                                       | ambos os perfis, troca concluída              | anônimo → `/login`; pendência → `/redefinir-senha`           |
+| `/bens`                                                   | ambos os perfis, troca concluída              | anônimo → `/login`; pendência → `/redefinir-senha`           |
+| `/bens/[patrimonioId]`                                    | ambos os perfis, UUID válido                  | anônimo → `/login`; ID inválido → estado local de erro       |
+| `/cadastro/patrimonio`                                    | ambos; formulário só para Diretor             | anônimo → `/login`; Administrador → estado restrito          |
+| `/inventarios`                                            | ambos; bottom bar ativa só para Diretor       | anônimo → `/login`; Administrador → consulta somente leitura |
+| `/inventarios/[inventarioId]`                             | ambos, UUID válido                            | anônimo → `/login`; ID inválido → estado local de erro       |
+| `/inventarios/[inventarioId]/setores/[setorInventarioId]` | ambos, UUIDs válidos; mutação só para Diretor | anônimo → `/login`; IDs inválidos → estado local de erro     |
+| `/check`                                                  | pública somente em `development`              | fora de development → mesma decisão protegida de `/`         |
 
 `MOBILE-AUTH-004` acrescentou `/esqueci-senha` como rota pública do grupo
 `(auth)`. O deep link tokenless
@@ -114,8 +119,9 @@ Redirecionamento no cliente melhora a experiência, mas não protege endpoint.
 `MOBILE-UI-001` adicionou a bottom bar desenhada no frame `Home` somente ao
 grupo `(app)`. `Início` representa `/`, `Bens` representa `/bens` e `Cadastro`
 representa `/cadastro/patrimonio`; Bens permanece selecionado no detalhe e
-Cadastro na sua árvore. Inventário e relatórios continuam disabled enquanto
-seus arquivos de rota e fluxos não existirem. Não
+Cadastro na sua árvore. Inventário fica ativo na sua árvore para o Diretor de
+Patrimônio e comunica a restrição ao Administrador; Relatórios continua
+disabled enquanto seu fluxo não existir. Não
 crie uma rota vazia para fazer um item parecer navegável e não inclua rotas
 inexistentes no catálogo tipado.
 
