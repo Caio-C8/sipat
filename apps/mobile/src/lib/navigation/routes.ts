@@ -53,6 +53,32 @@ export const mobileRouteCatalog = {
     profiles: ALL_PROFILES,
     state: "implemented",
   },
+  inventarios: {
+    path: "/inventarios",
+    title: "Inventários",
+    description:
+      "Seleção paginada de inventários abertos para conferência de setores.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
+  inventarioSetores: {
+    path: "/inventarios/[inventarioId]",
+    title: "Setores do inventário",
+    description: "Busca, paginação e progresso dos setores selecionados.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
+  inventarioSetorDetail: {
+    path: "/inventarios/[inventarioId]/setores/[setorInventarioId]",
+    title: "Conferência do setor",
+    description:
+      "Resumo do setor, início para Diretor e consulta somente leitura para Administrador.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
   login: {
     path: "/login",
     title: "Login",
@@ -103,6 +129,9 @@ export const appRoutes = {
   patrimonios: mobileRouteCatalog.patrimonios.path,
   patrimonioDetail: mobileRouteCatalog.patrimonioDetail.path,
   createPatrimonio: mobileRouteCatalog.createPatrimonio.path,
+  inventarios: mobileRouteCatalog.inventarios.path,
+  inventarioSetores: mobileRouteCatalog.inventarioSetores.path,
+  inventarioSetorDetail: mobileRouteCatalog.inventarioSetorDetail.path,
   login: mobileRouteCatalog.login.path,
   forgotPassword: mobileRouteCatalog.forgotPassword.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,

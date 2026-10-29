@@ -12,11 +12,11 @@ vi.mock("expo-router", () => ({
 }));
 
 describe("AppBottomBar", () => {
-  it("mantém Início, Bens e Cadastro navegáveis", () => {
+  it("habilita Inventário para o Diretor e mantém apenas Relatórios desabilitado", () => {
     expect(appBottomBarItems).toEqual([
       expect.objectContaining({ label: "Início", path: "/" }),
       expect.objectContaining({ label: "Bens", path: "/bens" }),
-      expect.objectContaining({ label: "Inventário" }),
+      expect.objectContaining({ label: "Inventário", path: "/inventarios" }),
       expect.objectContaining({
         label: "Cadastro",
         path: "/cadastro/patrimonio",
@@ -24,11 +24,24 @@ describe("AppBottomBar", () => {
       expect.objectContaining({ label: "Relatórios" }),
     ]);
 
-    const markup = renderToStaticMarkup(<AppBottomBar />);
+    const markup = renderToStaticMarkup(
+      <AppBottomBar profile="DIRETOR_PATRIMONIO" />,
+    );
 
     expect(markup).toContain('aria-label="Navegação principal"');
     expect(markup).toContain('aria-selected="true"');
-    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(2);
+    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(1);
     expect(markup).not.toContain("href=");
+  });
+
+  it("comunica a restrição de Inventário para o Administrador", () => {
+    const markup = renderToStaticMarkup(
+      <AppBottomBar profile="ADMINISTRADOR" />,
+    );
+
+    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(2);
+    expect(markup).toContain(
+      "Conferência disponível somente para o Diretor de Patrimônio",
+    );
   });
 });

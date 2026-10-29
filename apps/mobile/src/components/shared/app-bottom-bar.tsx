@@ -1,4 +1,5 @@
 import { Lucide, type LucideIconName } from "@react-native-vector-icons/lucide";
+import type { PerfilUsuario } from "@repo/contracts";
 import { usePathname, useRouter, type Href } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { layout, mobileShell, spacing } from "../../theme/tokens";
@@ -7,7 +8,7 @@ type BottomBarItem = {
   icon: LucideIconName;
   label: string;
   prominent?: boolean;
-  path?: "/" | "/bens" | "/cadastro/patrimonio";
+  path?: "/" | "/bens" | "/inventarios" | "/cadastro/patrimonio";
 };
 
 export const appBottomBarItems: readonly BottomBarItem[] = [
@@ -17,12 +18,15 @@ export const appBottomBarItems: readonly BottomBarItem[] = [
     icon: "scan-barcode",
     label: "Inventário",
     prominent: true,
+    path: "/inventarios",
   },
   { icon: "plus", label: "Cadastro", path: "/cadastro/patrimonio" },
   { icon: "file-text", label: "Relatórios" },
 ] as const;
 
-export function AppBottomBar() {
+export function AppBottomBar({
+  profile,
+}: Readonly<{ profile?: PerfilUsuario }>) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -34,13 +38,17 @@ export function AppBottomBar() {
     >
       <View style={styles.content}>
         {appBottomBarItems.map((item) => {
-          const disabled = item.path === undefined;
+          const inventoryRestricted =
+            item.path === "/inventarios" && profile !== "DIRETOR_PATRIMONIO";
+          const disabled = item.path === undefined || inventoryRestricted;
           const active =
             item.path === "/bens"
               ? pathname === "/bens" || pathname.startsWith("/bens/")
-              : item.path === "/cadastro/patrimonio"
-                ? pathname === item.path || pathname.startsWith("/cadastro/")
-                : pathname === item.path;
+              : item.path === "/inventarios"
+                ? pathname === item.path || pathname.startsWith("/inventarios/")
+                : item.path === "/cadastro/patrimonio"
+                  ? pathname === item.path || pathname.startsWith("/cadastro/")
+                  : pathname === item.path;
           const iconColor = item.prominent
             ? mobileShell.headerText
             : active
@@ -52,7 +60,11 @@ export function AppBottomBar() {
               accessible
               aria-disabled={disabled}
               aria-selected={active}
-              accessibilityLabel={item.label}
+              accessibilityLabel={
+                inventoryRestricted
+                  ? `${item.label}. Conferência disponível somente para o Diretor de Patrimônio`
+                  : item.label
+              }
               accessibilityRole="tab"
               accessibilityState={{
                 disabled,
