@@ -138,11 +138,11 @@ Esta sequência habilita `Inventário` para o Diretor de Patrimônio e reutiliza
 exclusivamente as operações gerais entregues por `INVENTARIOS-001` e
 `INVENTARIOS-002`:
 
-| Ordem | Objetivo                                                                                                                | Status   | Dependências                                    |
-| ----- | ----------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| 1     | [`MOBILE-INVENTARIOS-001`](../../tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md) — selecionar e iniciar setor | aprovada | contratos, API e shell mobile                   |
-| 2     | [`MOBILE-INVENTARIOS-002`](../../tasks/MOBILE-INVENTARIOS-002-conferir-itens.md) — conferir por etiqueta ou número      | aprovada | tarefa anterior e validação da etiqueta real    |
-| 3     | [`MOBILE-INVENTARIOS-003`](../../tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md) — corrigir e concluir setor   | aprovada | tarefa anterior e ciclo operacional já entregue |
+| Ordem | Objetivo                                                                                                                | Status       | Dependências                                    |
+| ----- | ----------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------- |
+| 1     | [`MOBILE-INVENTARIOS-001`](../../tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md) — selecionar e iniciar setor | aprovada     | contratos, API e shell mobile                   |
+| 2     | [`MOBILE-INVENTARIOS-002`](../../tasks/MOBILE-INVENTARIOS-002-conferir-itens.md) — conferir por etiqueta ou número      | aprovada     | tarefa anterior e validação da etiqueta real    |
+| 3     | [`MOBILE-INVENTARIOS-003`](../../tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md) — corrigir e concluir setor   | implementada | tarefa anterior e ciclo operacional já entregue |
 
 O fluxo do aplicativo começa pela seleção de um inventário `PENDENTE` ou
 `EM_ANDAMENTO`, segue pela seleção de um setor e termina quando esse

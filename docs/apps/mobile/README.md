@@ -41,6 +41,12 @@ código interno da API.
   entrada manual, valida o número patrimonial no boundary, serializa mutations,
   refaz o progresso confirmado e distingue sucesso, divergência, idempotência e
   erros públicos; a simbologia final ainda depende do teste com a etiqueta real;
+- divergências pendentes podem ser corrigidas imediatamente ou pelo resumo
+  paginado do setor, com retorno físico ou transferência cadastral definidos
+  pelo contrato e sem retry automático;
+- o Diretor pode concluir somente a conferência do setor após uma confirmação
+  com contagens reais; o resumo refaz setor e pendências, apresenta corretos,
+  divergências e não localizados e não expõe finalização global do inventário;
 - `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
   de cadastro unitário; o Administrador recebe `Cadastro restrito` sem montar o
   formulário nem consultar catálogos;

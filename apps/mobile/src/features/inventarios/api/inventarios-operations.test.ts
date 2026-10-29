@@ -3,6 +3,7 @@ import { createInventariosOperations } from "./inventarios-operations";
 
 const INVENTARIO_ID = "11111111-1111-4111-8111-111111111111";
 const SETOR_ID = "22222222-2222-4222-8222-222222222222";
+const ITEM_ID = "66666666-6666-4666-8666-666666666666";
 
 function jsonResponse(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -48,8 +49,9 @@ function inventario(status: "PENDENTE" | "EM_ANDAMENTO" = "PENDENTE") {
   };
 }
 
-function setor(status: "PENDENTE" | "EM_ANDAMENTO" = "PENDENTE") {
+function setor(status: "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDO" = "PENDENTE") {
   const started = status === "EM_ANDAMENTO";
+  const completed = status === "CONCLUIDO";
   return {
     id: SETOR_ID,
     status,
@@ -57,18 +59,52 @@ function setor(status: "PENDENTE" | "EM_ANDAMENTO" = "PENDENTE") {
       id: "55555555-5555-4555-8555-555555555555",
       nome: "Gabinete 01",
     },
-    dataInicio: started ? "2026-10-29T12:00:00.000Z" : null,
-    dataFim: null,
-    iniciadoPorId: started ? "33333333-3333-4333-8333-333333333333" : null,
-    concluidoPorId: null,
+    dataInicio: started || completed ? "2026-10-29T12:00:00.000Z" : null,
+    dataFim: completed ? "2026-10-29T13:00:00.000Z" : null,
+    iniciadoPorId:
+      started || completed ? "33333333-3333-4333-8333-333333333333" : null,
+    concluidoPorId: completed ? "33333333-3333-4333-8333-333333333333" : null,
     progresso: {
       totalItens: 2,
-      itensPendentes: 2,
-      itensVerificados: 0,
-      corretos: 0,
+      itensPendentes: completed ? 0 : 2,
+      itensVerificados: completed ? 2 : 0,
+      corretos: completed ? 1 : 0,
       divergencias: 0,
-      naoLocalizados: 0,
+      naoLocalizados: completed ? 1 : 0,
     },
+  };
+}
+
+function divergentItem(corrected = false) {
+  return {
+    id: ITEM_ID,
+    patrimonio: {
+      id: "77777777-7777-4777-8777-777777777777",
+      numeroPatrimonio: "1001",
+      descricao: "Notebook corporativo",
+    },
+    setorEsperado: {
+      id: "55555555-5555-4555-8555-555555555555",
+      nome: "Tecnologia da Informação",
+    },
+    observacao: null,
+    statusVerificacao: "VERIFICADO",
+    situacao: "DIVERGENCIA",
+    setorEncontrado: {
+      id: "88888888-8888-4888-8888-888888888888",
+      nome: "Gabinete 01",
+    },
+    dataVerificacao: "2026-10-29T12:00:00.000Z",
+    verificadoPorId: "33333333-3333-4333-8333-333333333333",
+    statusPatrimonioNaVerificacao: "ATIVO",
+    ausenciaJustificada: null,
+    statusCorrecao: corrected ? "CORRIGIDO" : "PENDENTE",
+    tipoCorrecao: corrected ? "TRANSFERENCIA_CADASTRAL" : null,
+    dataCorrecao: corrected ? "2026-10-29T13:00:00.000Z" : null,
+    corrigidoPorId: corrected ? "33333333-3333-4333-8333-333333333333" : null,
+    transferenciaCorrecaoId: corrected
+      ? "99999999-9999-4999-8999-999999999999"
+      : null,
   };
 }
 
@@ -252,6 +288,89 @@ describe("createInventariosOperations", () => {
       }),
     ).rejects.toBeTruthy();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("lista divergências pendentes do setor com paginação e filtros explícitos", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(paginated([divergentItem()], meta(11, 2, 2, 10))),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const operations = createInventariosOperations("https://api.example.test");
+
+    await operations.listarItens(
+      INVENTARIO_ID,
+      {
+        pagina: "2",
+        limite: "10",
+        setorInventarioId: SETOR_ID,
+        situacao: "DIVERGENCIA",
+        statusCorrecao: "PENDENTE",
+      },
+      { accessToken: "token" },
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.example.test/api/inventarios/${INVENTARIO_ID}/itens?pagina=2&limite=10&setorInventarioId=${SETOR_ID}&situacao=DIVERGENCIA&statusCorrecao=PENDENTE`,
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("corrige por transferência com um único POST e valida o vínculo retornado", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(success(divergentItem(true))));
+    vi.stubGlobal("fetch", fetchMock);
+    const operations = createInventariosOperations("https://api.example.test");
+
+    await expect(
+      operations.corrigirItem(
+        INVENTARIO_ID,
+        ITEM_ID,
+        {
+          tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
+          observacao: "Bem em uso no gabinete.",
+        },
+        { accessToken: "token" },
+      ),
+    ).resolves.toMatchObject({
+      tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
+      transferenciaCorrecaoId: "99999999-9999-4999-8999-999999999999",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.example.test/api/inventarios/${INVENTARIO_ID}/itens/${ITEM_ID}/correcoes`,
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
+          observacao: "Bem em uso no gabinete.",
+        }),
+      }),
+    );
+  });
+
+  it("conclui o setor com um único POST vazio e valida o estado consolidado", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse(success(setor("CONCLUIDO"))));
+    vi.stubGlobal("fetch", fetchMock);
+    const operations = createInventariosOperations("https://api.example.test");
+
+    await expect(
+      operations.concluirSetor(INVENTARIO_ID, SETOR_ID, {
+        accessToken: "token",
+      }),
+    ).resolves.toMatchObject({
+      status: "CONCLUIDO",
+      progresso: { naoLocalizados: 1 },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.example.test/api/inventarios/${INVENTARIO_ID}/setores/${SETOR_ID}/concluir`,
+      expect.objectContaining({ method: "POST", body: "{}" }),
+    );
   });
 
   it("rejeita UUIDs inválidos antes da rede", async () => {

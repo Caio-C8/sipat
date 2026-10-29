@@ -1,5 +1,6 @@
 import type {
   InventarioDetalhe,
+  ListarItensInventarioResponse,
   ListarSetoresInventarioResponse,
   SetorInventarioResumo,
   StatusInventario,
@@ -29,9 +30,13 @@ function unavailableOperations(): InventariosOperations {
     listar: fail,
     consultar: fail,
     listarSetores: fail,
+    listarItens: fail,
     consultarSetor: fail,
+    consultarItem: fail,
     iniciarSetor: fail,
     verificarItem: fail,
+    corrigirItem: fail,
+    concluirSetor: fail,
   } as InventariosOperations;
 }
 
@@ -51,6 +56,10 @@ export function inventarioErrorMessage(error: ApiError, detail = false) {
   if (error.status === 409) {
     if (error.code === "OUTRO_SETOR_INVENTARIO_EM_ANDAMENTO")
       return "Outro setor já está em conferência. Os dados foram atualizados.";
+    if (error.code === "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL")
+      return "Há um vínculo operacional incompatível ou o setor mudou de estado. Os dados foram atualizados.";
+    if (error.code === "INVENTARIO_FINALIZADO")
+      return "O inventário foi finalizado e não aceita novas alterações.";
     return "O inventário foi alterado por outra pessoa. Os dados foram atualizados.";
   }
   if (error.kind === "timeout")
@@ -73,7 +82,9 @@ export function useInventariosOperations() {
   );
 }
 
-function useCancelableLoad<T>(loadData: (signal: AbortSignal) => Promise<T>) {
+export function useCancelableLoad<T>(
+  loadData: (signal: AbortSignal) => Promise<T>,
+) {
   const [state, setState] = useState<RemoteState<T>>(loading);
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
@@ -188,6 +199,7 @@ export type SetorDetailData = Readonly<{
   inventario: InventarioDetalhe;
   setor: SetorInventarioResumo;
   setorEmAndamento: SetorInventarioResumo | null;
+  pendencias: ListarItensInventarioResponse;
 }>;
 
 export function useSetorInventarioDetail(
@@ -195,6 +207,7 @@ export function useSetorInventarioDetail(
   inventarioId: string,
   setorInventarioId: string,
   validIds: boolean,
+  paginaPendencias = 1,
 ) {
   const operations = useInventariosOperations();
   const loadData = useCallback(
@@ -202,9 +215,20 @@ export function useSetorInventarioDetail(
       if (!validIds) throw new ApiError("invalid-response");
       return manager.authorizedRequest(async (accessToken) => {
         const options = { accessToken, signal };
-        const [inventario, setor] = await Promise.all([
+        const [inventario, setor, pendencias] = await Promise.all([
           operations.consultar(inventarioId, options),
           operations.consultarSetor(inventarioId, setorInventarioId, options),
+          operations.listarItens(
+            inventarioId,
+            {
+              pagina: String(paginaPendencias),
+              limite: "10",
+              setorInventarioId,
+              situacao: "DIVERGENCIA",
+              statusCorrecao: "PENDENTE",
+            },
+            options,
+          ),
         ]);
         if (!setor) throw new ApiError("http", 404);
         const setoresEmAndamento = await operations.listarSetores(
@@ -216,14 +240,24 @@ export function useSetorInventarioDetail(
           inventario,
           setor,
           setorEmAndamento: setoresEmAndamento.dados[0] ?? null,
+          pendencias,
         };
       }, true);
     },
-    [inventarioId, manager, operations, setorInventarioId, validIds],
+    [
+      inventarioId,
+      manager,
+      operations,
+      paginaPendencias,
+      setorInventarioId,
+      validIds,
+    ],
   );
   const remote = useCancelableLoad(loadData);
   const [starting, setStarting] = useState(false);
   const startingRef = useRef(false);
+  const [concluding, setConcluding] = useState(false);
+  const concludingRef = useRef(false);
   const [mutationError, setMutationError] = useState<ApiError | null>(null);
 
   const start = useCallback(async () => {
@@ -259,5 +293,38 @@ export function useSetorInventarioDetail(
     }
   }, [inventarioId, manager, operations, remote, setorInventarioId, validIds]);
 
-  return { ...remote, start, starting, mutationError };
+  const conclude = useCallback(async () => {
+    if (concludingRef.current || !validIds) return false;
+    concludingRef.current = true;
+    setConcluding(true);
+    setMutationError(null);
+    try {
+      await manager.authorizedRequest(
+        (accessToken) =>
+          operations.concluirSetor(inventarioId, setorInventarioId, {
+            accessToken,
+          }),
+        false,
+      );
+      await remote.reload();
+      return true;
+    } catch (error) {
+      const normalized = normalizeError(error);
+      setMutationError(normalized);
+      if (normalized.status === 409) await remote.reload();
+      return false;
+    } finally {
+      concludingRef.current = false;
+      setConcluding(false);
+    }
+  }, [inventarioId, manager, operations, remote, setorInventarioId, validIds]);
+
+  return {
+    ...remote,
+    conclude,
+    concluding,
+    start,
+    starting,
+    mutationError,
+  };
 }
