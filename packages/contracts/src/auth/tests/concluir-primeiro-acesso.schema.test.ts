@@ -7,7 +7,7 @@ import {
 } from "../../contract-assertions";
 import { ConcluirPrimeiroAcessoBodySchema } from "../concluir-primeiro-acesso.schema";
 
-const novaSenha = "  frase longa segura  ";
+const novaSenha = "  frase segura 1!  ";
 
 describe("ConcluirPrimeiroAcessoBodySchema", () => {
   it("aceita somente a nova senha confirmada e preserva seu valor", () => {
@@ -25,14 +25,14 @@ describe("ConcluirPrimeiroAcessoBodySchema", () => {
       ConcluirPrimeiroAcessoBodySchema,
       {
         novaSenha,
-        confirmacaoNovaSenha: "outra frase longa segura",
+        confirmacaoNovaSenha: "outra senha 2@ segura",
       },
       "confirmacaoNovaSenha",
     );
   });
 
   it("rejeita limites inválidos e propriedades extras", () => {
-    for (const senha of ["🔐".repeat(14), "🔐".repeat(129)]) {
+    for (const senha of ["Aa1!xyz", "Senha123", `A1!${"🔐".repeat(126)}`]) {
       esperaInvalidos(ConcluirPrimeiroAcessoBodySchema, [
         { novaSenha: senha, confirmacaoNovaSenha: senha },
       ]);

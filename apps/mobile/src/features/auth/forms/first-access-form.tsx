@@ -99,8 +99,9 @@ export function FirstAccessForm() {
           value={confirmation}
         />
         <Text style={styles.passwordHint}>
-          Use uma senha diferente da senha inicial.{"\n"}A confirmação deve ser
-          igual à nova senha.
+          Use no mínimo 8 caracteres, com uma letra, um número e um símbolo.
+          {"\n"}A senha deve ser diferente da senha inicial.{"\n"}A confirmação
+          deve ser igual à nova senha.
         </Text>
         <PrimaryButton
           label="Salvar senha e continuar"

@@ -45,6 +45,9 @@ describe("apresentação dos formulários de autenticação", () => {
       "Olá, Ana Souza. Falta só esta etapa para entrar.",
     );
     expect(markup).toContain("Troca obrigatória da senha inicial");
+    expect(markup).toContain(
+      "Use no mínimo 8 caracteres, com uma letra, um número e um símbolo.",
+    );
     expect(markup).toContain("Salvar senha e continuar");
     expect(markup).not.toContain("Paulo");
   });

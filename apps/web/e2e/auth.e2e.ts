@@ -328,8 +328,8 @@ test.describe("Autenticação Web", () => {
       ({ body, headers }) => {
         expect(headers["x-sipat-csrf"]).toBe("1");
         expect(body).toEqual({
-          novaSenha: "uma nova senha segura",
-          confirmacaoNovaSenha: "uma nova senha segura",
+          novaSenha: "uma nova senha segura 1!",
+          confirmacaoNovaSenha: "uma nova senha segura 1!",
         });
 
         return {
@@ -352,10 +352,10 @@ test.describe("Autenticação Web", () => {
 
     await page
       .getByLabel("Nova senha *", { exact: true })
-      .fill("uma nova senha segura");
+      .fill("uma nova senha segura 1!");
     await page
       .getByLabel("Confirmar nova senha *")
-      .fill("uma nova senha segura");
+      .fill("uma nova senha segura 1!");
     await page
       .getByRole("button", { name: "Salvar nova senha e continuar" })
       .click();
