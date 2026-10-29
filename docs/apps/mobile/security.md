@@ -78,6 +78,12 @@ confiável. Não transporte credencial ou dado sensível em link. Valide esquema
 host, path e parâmetros antes de navegar ou abrir outro aplicativo. Links de
 retorno de autenticação exigem nonce/state e fluxo documentado.
 
+Na recuperação de senha, o retorno aprovado não autentica e não carrega
+credencial: `sipat://login?origem=recuperacao-senha`. O login aceita somente
+essa origem literal, remove o parâmetro depois de consumi-lo e pede novas
+credenciais. Token, e-mail, senha, ID e perfil permanecem na Web/API e nunca
+entram no link, em logs ou no armazenamento do app.
+
 ## Permissões nativas
 
 Solicite câmera, fotos, localização, notificações ou biometria somente no

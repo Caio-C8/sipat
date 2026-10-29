@@ -10,6 +10,7 @@ import { CABECALHO_CSRF, VALOR_CABECALHO_CSRF } from "@repo/contracts";
 import { parsearOrigensCors } from "../../../common/http/origens-cors";
 import type { EnvironmentVariables } from "../../../environment";
 import {
+  CHAVE_ISENTA_CSRF_SOLICITACAO_PUBLICA,
   CHAVE_TRANSPORTE_AUTH_MOBILE,
   METODOS_PROTEGIDOS_POR_CSRF,
 } from "../auth.constants";
@@ -24,6 +25,12 @@ export class CsrfGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<RequisicaoAutenticada>();
+
+    const solicitacaoPublicaIsenta = this.reflector.getAllAndOverride<boolean>(
+      CHAVE_ISENTA_CSRF_SOLICITACAO_PUBLICA,
+      [context.getHandler()],
+    );
+    if (solicitacaoPublicaIsenta === true) return true;
 
     const transporteMobile = this.reflector.getAllAndOverride<string>(
       CHAVE_TRANSPORTE_AUTH_MOBILE,

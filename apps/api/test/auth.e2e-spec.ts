@@ -826,23 +826,23 @@ describe("autenticação E2E", () => {
     expect(inativa.body.codigo).toBe(expirada.body.codigo);
   });
 
-  it("mantém Origin, CSRF e body estrito nas rotas públicas de recuperação", async () => {
+  it("isenta somente a solicitação pública e mantém CSRF e body estrito na redefinição", async () => {
     await request(app.getHttpServer())
       .post("/api/auth/esqueceu-senha")
-      .set(CABECALHO_CSRF, "1")
       .send({ email: "admin@example.com" })
-      .expect(403);
+      .expect(202);
     await request(app.getHttpServer())
       .post("/api/auth/esqueceu-senha")
-      .set("Origin", "http://localhost:3000")
-      .send({ email: "admin@example.com" })
-      .expect(403);
-    await request(app.getHttpServer())
-      .post("/api/auth/esqueceu-senha")
-      .set("Origin", "http://localhost:3000")
-      .set(CABECALHO_CSRF, "1")
       .send({ email: "admin@example.com", usuarioId: ids.administrador })
       .expect(400);
+    await request(app.getHttpServer())
+      .post("/api/auth/redefinir-senha")
+      .send({
+        token: "A".repeat(43),
+        novaSenha: "uma senha redefinida segura 1!",
+        confirmacaoNovaSenha: "uma senha redefinida segura 1!",
+      })
+      .expect(403);
     await request(app.getHttpServer())
       .post("/api/auth/redefinir-senha")
       .set("Origin", "http://localhost:3000")

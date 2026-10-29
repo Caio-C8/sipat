@@ -3,6 +3,8 @@ export const CHAVE_PERFIS_PERMITIDOS = "sipat:perfis-permitidos";
 export const CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA =
   "sipat:permite-troca-senha-obrigatoria";
 export const CHAVE_TRANSPORTE_AUTH_MOBILE = "sipat:transporte-auth-mobile";
+export const CHAVE_ISENTA_CSRF_SOLICITACAO_PUBLICA =
+  "sipat:isenta-csrf-solicitacao-publica";
 
 export const DURACAO_ABSOLUTA_SESSAO_MS = 8 * 60 * 60 * 1_000;
 export const DURACAO_ACCESS_TOKEN_MOBILE_MS = 10 * 60 * 1_000;

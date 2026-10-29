@@ -141,7 +141,9 @@ No estado atual:
   escopo, troca o hash e revoga todas as sessões atomicamente e expira o cookie;
 - recuperação usa response neutra, token aleatório armazenado somente por hash,
   uso único, validade de 15 minutos, SMTP desacoplado e revogação atômica das
-  sessões; fora de desenvolvimento, permanece desligada por flag até haver
+  sessões; a solicitação pública é a única mutation Web/nativa isenta de CSRF,
+  sem cookie ou sessão, enquanto redefinição e demais mutations mantêm Origin e
+  header; fora de desenvolvimento, permanece desligada por flag até haver
   consumidor HTTPS e SMTP;
 - a duração absoluta é 8 horas, a inatividade efetiva fica entre
   aproximadamente 25 e 30 minutos e no máximo cinco sessões ficam ativas por

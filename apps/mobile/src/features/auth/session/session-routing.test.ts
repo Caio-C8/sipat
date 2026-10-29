@@ -17,8 +17,9 @@ const pending: SessionState = {
 };
 
 describe("matriz de rotas autenticadas", () => {
-  it("mantém somente login para anônimo", () => {
+  it("mantém somente as rotas públicas de autenticação para anônimo", () => {
     expect(authRedirect(anonymous, "/login")).toBeNull();
+    expect(authRedirect(anonymous, "/esqueci-senha")).toBeNull();
     expect(authRedirect(anonymous, "/redefinir-senha")).toBe("/login");
     expect(protectedRedirect(anonymous)).toBe("/login");
   });
@@ -26,6 +27,7 @@ describe("matriz de rotas autenticadas", () => {
   it("mantém somente troca obrigatória para sessão pendente", () => {
     expect(authRedirect(pending, "/login")).toBe("/redefinir-senha");
     expect(authRedirect(pending, "/redefinir-senha")).toBeNull();
+    expect(authRedirect(pending, "/esqueci-senha")).toBe("/redefinir-senha");
     expect(protectedRedirect(pending)).toBe("/redefinir-senha");
   });
 
@@ -33,6 +35,7 @@ describe("matriz de rotas autenticadas", () => {
     expect(authRedirect(common, "/senha-atualizada")).toBeNull();
     expect(authRedirect(common, "/login")).toBe("/");
     expect(authRedirect(common, "/redefinir-senha")).toBe("/");
+    expect(authRedirect(common, "/esqueci-senha")).toBe("/");
     expect(protectedRedirect(common)).toBeNull();
   });
 });

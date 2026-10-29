@@ -82,11 +82,13 @@ Não escolha essas políticas silenciosamente apenas para completar estrutura.
 
 ## Recuperação de senha aprovada
 
-`MOBILE-AUTH-004` adicionará uma operação pública para o endpoint existente
+`MOBILE-AUTH-004` adicionou uma operação pública para o endpoint existente
 `POST /auth/esqueceu-senha`. Ela não envia Bearer, não usa refresh, não recebe
 retry automático e valida a response neutra compartilhada. A API deve aceitar
 o transporte nativo dessa solicitação sem exigir que o app forje uma origem
-Web, preservando a proteção das demais mutations.
+Web. A exceção de CSRF é metadata exclusiva desse handler público, que não lê
+cookie ou sessão; login Web, redefinição, logout e demais mutations preservam
+Origin e `X-SIPAT-CSRF`.
 
 O app não recebe nem consome o token. O e-mail abre o consumidor Web de
 `WEB-AUTH-002`; depois do sucesso, `sipat://login?origem=recuperacao-senha`

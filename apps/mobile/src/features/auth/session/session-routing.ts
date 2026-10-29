@@ -5,7 +5,9 @@ export function authRedirect(
   pathname: string,
 ): "/" | "/login" | "/redefinir-senha" | null {
   if (state.status === "anonymous")
-    return pathname === "/login" ? null : "/login";
+    return pathname === "/login" || pathname === "/esqueci-senha"
+      ? null
+      : "/login";
   if (state.status !== "authenticated") return null;
   if (state.identity.trocaSenhaObrigatoria) {
     return pathname === "/redefinir-senha" ? null : "/redefinir-senha";

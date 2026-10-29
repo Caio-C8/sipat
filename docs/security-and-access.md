@@ -4,10 +4,10 @@ Este documento registra a arquitetura das primeiras entregas de segurança do
 SIPAT. A barreira de sessão, perfil e CSRF do `SEC-001`, a gestão de usuários
 do `USERS-001` e o backend de autenticação do `AUTH-001` estão implementados.
 O backend de alteração autenticada da própria senha do `AUTH-002` também está
-implementado, assim como a recuperação de senha do `AUTH-003`. As interfaces
-As interfaces Web e mobile continuam fora dessas entregas de backend. `CONTRACTS-009` e o
+implementado, assim como a recuperação de senha do `AUTH-003`. `CONTRACTS-009` e o
 backend do `AUTH-004` estão implementados; `WEB-AUTH-001` também foi entregue.
-A primeira integração de backend mobile foi entregue por `MOBILE-AUTH-001`. O estado e
+A primeira integração de backend mobile foi entregue por `MOBILE-AUTH-001`, e
+`MOBILE-AUTH-004` entregou a solicitação e o retorno tokenless. O estado e
 a ordem de execução ficam no
 [roadmap inicial](./roadmap.md).
 
@@ -15,7 +15,8 @@ a ordem de execução ficam no
 
 - `GET /api/health`, `POST /api/auth/login`, `POST /api/auth/logout`,
   `POST /api/auth/esqueceu-senha` e `POST /api/auth/redefinir-senha` são rotas
-  públicas; os métodos mutáveis continuam submetidos a Origin e CSRF;
+  públicas; somente a solicitação neutra de recuperação é isenta de Origin e
+  CSRF para permitir transporte nativo sem cookie ou sessão;
 - autenticação, autorização e CSRF são Guards globais registrados nessa ordem;
 - rotas protegidas sem perfis declarados negam acesso por padrão;
 - o cookie é escolhido por ambiente e contém um token opaco de 32 bytes em
@@ -23,7 +24,8 @@ a ordem de execução ficam no
 - sessão inexistente, expirada, revogada ou de usuário inativo produz `401`;
 - identidade válida sem um perfil permitido produz `403`;
 - `POST`, `PUT`, `PATCH` e `DELETE` exigem Origin exato permitido e
-  `X-SIPAT-CSRF: 1`, inclusive quando uma rota for pública;
+  `X-SIPAT-CSRF: 1`, inclusive quando uma rota for pública, salvo a exceção
+  granular de `POST /api/auth/esqueceu-senha`;
 - `POST /api/auth/login` cria a sessão, `GET /api/auth/me` consulta a identidade
   atual e `POST /api/auth/logout` encerra a sessão de forma idempotente;
 - `POST /api/auth/alterar-senha` exige a senha atual, altera somente a
@@ -37,8 +39,8 @@ a ordem de execução ficam no
   acesso e logout com Bearer opaco, sem criar ou alterar cookie Web;
 - access mobile dura até dez minutos, refresh rotaciona a cada uso e replay
   revoga a família; os hashes são os únicos verificadores persistidos;
-- Cookie e Bearer simultâneos são recusados, e somente o transporte Bearer e as
-  rotas mobile declaradas ficam isentos de CSRF.
+- Cookie e Bearer simultâneos são recusados; transporte Bearer, rotas mobile
+  declaradas e a solicitação pública neutra ficam isentos de CSRF.
 
 ## Requisitos atendidos
 
@@ -173,6 +175,11 @@ O nome e o valor do header devem ser constantes compartilhadas pela
 infraestrutura Web/API. Ele prova que a chamada passou pelo cliente esperado e
 força preflight em contexto cross-origin; não funciona como credencial e não
 contém segredo.
+
+`POST /api/auth/esqueceu-senha` é a única exceção pública documentada. O
+handler não lê cookie ou sessão, recebe apenas e-mail validado, devolve sempre a
+response neutra e mantém o rate limit persistente por HMAC. A metadata de rota
+não se aplica à redefinição, ao login, ao logout nem a outras mutations.
 
 Uploads continuam sujeitos à validação exata de origem e ao header
 `X-SIPAT-CSRF: 1` nas mutações; `multipart/form-data` não reduz esses controles.

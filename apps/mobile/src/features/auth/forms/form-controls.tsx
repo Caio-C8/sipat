@@ -89,6 +89,25 @@ export function FormAlert({ children }: Readonly<{ children: string }>) {
   );
 }
 
+export function FormNotice({ children }: Readonly<{ children: string }>) {
+  return (
+    <View
+      accessibilityLiveRegion="polite"
+      accessible
+      role="status"
+      style={styles.notice}
+    >
+      <Lucide
+        accessible={false}
+        color={mobileAuth.success}
+        name="circle-check"
+        size={18}
+      />
+      <Text style={styles.noticeText}>{children}</Text>
+    </View>
+  );
+}
+
 export function InformationPanel({
   title,
   children,
@@ -201,6 +220,23 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: spacing.lg,
     padding: spacing.md,
+  },
+  notice: {
+    alignItems: "flex-start",
+    backgroundColor: mobileAuth.successSurface,
+    borderColor: mobileAuth.success,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+  },
+  noticeText: {
+    color: mobileAuth.text,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
   },
   informationPanel: {
     alignItems: "flex-start",

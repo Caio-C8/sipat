@@ -47,3 +47,23 @@ export function authErrorMessage(error: unknown) {
   if (error.status === 403) return "Sua sessão não permite esta operação.";
   return "Não foi possível concluir a operação. Tente novamente.";
 }
+
+export function passwordRecoveryErrorMessage(error: unknown) {
+  if (!isApiError(error))
+    return "Não foi possível enviar a solicitação. Tente novamente.";
+  if (error.status === 429) {
+    const wait = error.retryAfterSeconds;
+    return wait
+      ? `Muitas solicitações. Aguarde ${wait} segundos e tente novamente.`
+      : "Muitas solicitações. Aguarde e tente novamente.";
+  }
+  if (error.kind === "network")
+    return "Sem conexão com o SIPAT. Verifique a rede e tente novamente.";
+  if (error.kind === "timeout")
+    return "O SIPAT demorou para responder. Tente novamente.";
+  if (error.kind === "invalid-response")
+    return "O SIPAT retornou uma resposta incompatível. Tente novamente mais tarde.";
+  if (error.status !== undefined && error.status >= 500)
+    return "O serviço de recuperação está indisponível. Tente novamente mais tarde.";
+  return "Não foi possível enviar a solicitação. Tente novamente.";
+}
