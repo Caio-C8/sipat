@@ -27,8 +27,8 @@ sessão em memória + refresh no storage nativo
 - a response do health check é validada em runtime;
 - a consulta possui timeout de oito segundos e cancelamento;
 - a request anterior é abortada antes de outra verificação;
-- o cliente HTTP comum atende autenticação e as leituras da Home em
-  `/api/setores`, `/api/patrimonios` e `/api/inventarios`;
+- o cliente HTTP comum atende autenticação, leituras de domínio e o cadastro
+  unitário de patrimônio com os catálogos gerais existentes;
 - cache e offline ainda não existem;
 - o health check público não envia credencial.
 

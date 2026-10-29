@@ -123,11 +123,11 @@ reais. O implementador deve abrir obrigatoriamente no navegador a página
 e comparar os frames indicados nas tarefas; descrição textual ou imagem
 copiada para o repositório não substitui essa inspeção.
 
-| Ordem | Objetivo                                                                                  | Status    | Dependências                                      |
-| ----- | ----------------------------------------------------------------------------------------- | --------- | ------------------------------------------------- |
-| 1     | `PATRIMONIOS-004` — leitura dos catálogos de cadastro pelo Diretor                        | concluído | `ESPECIES-001`, `SETORES-001` e `SEC-001`         |
-| 2     | `MOBILE-PATRIMONIOS-001` — listar e consultar patrimônios                                 | planejado | `PATRIMONIOS-002`, `MOBILE-UI-001` e autenticação |
-| 3     | `MOBILE-PATRIMONIOS-002` — cadastrar um patrimônio e comunicar restrição ao Administrador | planejado | dois objetivos anteriores e `PATRIMONIOS-001`     |
+| Ordem | Objetivo                                                                                  | Status       | Dependências                                      |
+| ----- | ----------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------- |
+| 1     | `PATRIMONIOS-004` — leitura dos catálogos de cadastro pelo Diretor                        | concluído    | `ESPECIES-001`, `SETORES-001` e `SEC-001`         |
+| 2     | `MOBILE-PATRIMONIOS-001` — listar e consultar patrimônios                                 | implementado | `PATRIMONIOS-002`, `MOBILE-UI-001` e autenticação |
+| 3     | `MOBILE-PATRIMONIOS-002` — cadastrar um patrimônio e comunicar restrição ao Administrador | implementado | dois objetivos anteriores e `PATRIMONIOS-001`     |
 
 Especificações:
 [PATRIMONIOS-004](./tasks/PATRIMONIOS-004-leitura-catalogos-diretor.md),

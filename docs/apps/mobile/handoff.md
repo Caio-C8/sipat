@@ -28,7 +28,7 @@ existem cache/offline ou E2E em dispositivos.
 topbar azul-marinho com brasão, safe area coerente e bottom bar somente em
 `(app)`. Sem sessão, a topbar mantém a identificação municipal; autenticada,
 substitui esse texto pelo avatar da identidade, cujo menu contém o logout.
-`Início` e `Bens` são destinos ativos; Inventário, Cadastro e Relatórios
+`Início`, `Bens` e `Cadastro` são destinos ativos; Inventário e Relatórios
 permanecem disabled, sem rotas placeholder.
 O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003` recompôs login,
 troca obrigatória e confirmação conforme os três frames do Figma, preservando
@@ -46,6 +46,16 @@ são canceladas e o valor atual usa aritmética decimal segura. Os frames da
 página `Telas Mobile` foram comparados no navegador; Histórico e Gerar ficha
 foram omitidos conforme a decisão aprovada. A comparação visual da UI executada
 com sessão real e as validações em dispositivos continuam pendentes.
+
+`MOBILE-PATRIMONIOS-002` implementou `/cadastro/patrimonio`. O Diretor recebe
+quatro etapas, retorno sem perda de rascunho, seleção paginada dos catálogos,
+resumo do processo, residual em valor ou percentual, revisão editável,
+submissão única e confirmação com a response real. O Administrador recebe
+`Cadastro restrito` e a ação `Consultar bens`; o gate ocorre antes da montagem
+do formulário e não dispara catálogos. Os seis frames do Figma foram abertos no
+navegador em 390×844 e comparados quanto a hierarquia, cards e ações. A
+comparação visual da implementação executada, tecnologias assistivas e
+dispositivos reais permanecem pendentes.
 
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial; `MOBILE-HOME-002`
 preservou proteção, moveu o logout para o menu da topbar e adicionou conteúdo

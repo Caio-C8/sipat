@@ -33,6 +33,7 @@ describe("catálogo de rotas mobile", () => {
   it("mantém os aliases a partir do catálogo único", () => {
     expect(appRoutes).toEqual({
       check: "/check",
+      createPatrimonio: "/cadastro/patrimonio",
       home: "/",
       patrimonioDetail: "/bens/[patrimonioId]",
       patrimonios: "/bens",

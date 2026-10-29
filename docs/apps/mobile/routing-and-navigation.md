@@ -4,8 +4,9 @@
 
 O Expo Router lê arquivos em `src/app`. O aplicativo possui grupos `(auth)` e
 `(app)`, que preservam os paths públicos `/`, `/bens`,
-`/bens/[patrimonioId]`, `/login`, `/redefinir-senha` e
-`/senha-atualizada`, além de `/check`. O layout raiz concentra safe area,
+`/bens/[patrimonioId]`, `/cadastro/patrimonio`, `/login`,
+`/redefinir-senha` e `/senha-atualizada`, além de `/check`. O layout raiz
+concentra safe area,
 topbar, faixa de desenvolvimento e restauração neutra da sessão. Os layouts de
 grupo aplicam a matriz autenticada antes de renderizar conteúdo incompatível.
 
@@ -62,6 +63,7 @@ concentrou o diagnóstico em `/check`. A matriz aplicada é:
 | `/`                    | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
 | `/bens`                | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
 | `/bens/[patrimonioId]` | ambos os perfis, UUID válido      | anônimo → `/login`; ID inválido → estado local de erro |
+| `/cadastro/patrimonio` | ambos; formulário só para Diretor | anônimo → `/login`; Administrador → estado restrito    |
 | `/check`               | pública somente em `development`  | fora de development → mesma decisão protegida de `/`   |
 
 O botão da confirmação segue para `/`. A restauração da sessão acontece antes
@@ -97,9 +99,10 @@ Redirecionamento no cliente melhora a experiência, mas não protege endpoint.
 ## Navegação visual do grupo autenticado
 
 `MOBILE-UI-001` adicionou a bottom bar desenhada no frame `Home` somente ao
-grupo `(app)`. `Início` representa `/` e `Bens` representa `/bens`, permanecendo
-selecionado também no detalhe dinâmico. Inventário, cadastro e relatórios
-continuam disabled enquanto seus arquivos de rota e fluxos não existirem. Não
+grupo `(app)`. `Início` representa `/`, `Bens` representa `/bens` e `Cadastro`
+representa `/cadastro/patrimonio`; Bens permanece selecionado no detalhe e
+Cadastro na sua árvore. Inventário e relatórios continuam disabled enquanto
+seus arquivos de rota e fluxos não existirem. Não
 crie uma rota vazia para fazer um item parecer navegável e não inclua rotas
 inexistentes no catálogo tipado.
 
