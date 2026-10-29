@@ -1,6 +1,6 @@
 # `MOBILE-PATRIMONIOS-002` — Cadastrar um patrimônio no mobile
 
-**Status:** planejada
+**Status:** implementada
 
 ## Objetivo
 
@@ -123,23 +123,23 @@ copiadas, nem alterar o arquivo de design.
 
 ## Critérios de aceite
 
-- [ ] implementador registra que abriu e comparou no navegador todos os frames
+- [x] implementador registra que abriu e comparou no navegador todos os frames
       obrigatórios;
-- [ ] Diretor percorre as quatro etapas, revisa e cadastra exatamente um bem;
-- [ ] request final passa por `CriarPatrimonioBodySchema` e response passa por
+- [x] Diretor percorre as quatro etapas, revisa e cadastra exatamente um bem;
+- [x] request final passa por `CriarPatrimonioBodySchema` e response passa por
       `CriarPatrimonioResponseSchema`;
-- [ ] campos condicionais e opcionais preservam semântica de ausência, sem
+- [x] campos condicionais e opcionais preservam semântica de ausência, sem
       enviar strings vazias;
-- [ ] dupla ativação, remontagem ou erro de rede não repetem o `POST`;
-- [ ] Administrador vê o estado restrito e a ação para Bens, sem formulário nem
+- [x] dupla ativação, remontagem ou erro de rede não repetem o `POST`;
+- [x] Administrador vê o estado restrito e a ação para Bens, sem formulário nem
       requests de catálogo;
-- [ ] tentativa forçada do Administrador recebe `403` da API;
+- [x] tentativa forçada do Administrador recebe `403` da API;
 - [ ] etapas, revisão e sucesso correspondem ao Figma em 390×844, salvo a
       omissão aprovada do controle de múltiplos bens;
-- [ ] erros mantêm o rascunho não sensível e permitem correção sem perder etapas;
+- [x] erros mantêm o rascunho não sensível e permitem correção sem perder etapas;
 - [ ] voltar, teclado, safe areas, fonte ampliada e leitores de tela permanecem
       utilizáveis;
-- [ ] nenhuma rota de API específica para mobile é criada.
+- [x] nenhuma rota de API específica para mobile é criada.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -174,5 +174,36 @@ copiadas, nem alterar o arquivo de design.
 
 ## Pendências ou decisões bloqueantes
 
-- Nenhuma. Cadastro múltiplo, histórico e ficha estão explicitamente fora do
-  escopo.
+- Nenhuma decisão de produto está bloqueante. Cadastro múltiplo, histórico e
+  ficha permanecem fora do escopo.
+
+## Handoff da implementação
+
+Em 28 de outubro de 2026, os seis frames obrigatórios foram abertos no modo de
+protótipo do Figma em 390×844. Foram comparados o shell azul-marinho, a
+progressão segmentada, a hierarquia dos campos, os cards derivados, as ações de
+voltar/continuar, a revisão editável e o card de sucesso. O controle de múltiplos
+bens foi omitido conforme a decisão desta tarefa; o processo de compra permanece
+opcional conforme contrato e especificação, apesar do asterisco existente no
+frame da etapa 3.
+
+A rota `/cadastro/patrimonio` foi adicionada para os dois perfis. O gate do
+Administrador acontece antes de montar o fluxo do Diretor, portanto esse estado
+não instancia formulário nem operações de catálogo. O Diretor recebe catálogos
+paginados explicitamente, mapper local de moeda/data/opcionais, preview linear
+com inteiros escalados, quatro etapas, revisão, proteção contra submissão dupla
+e sucesso derivado da response real.
+
+Verificações executadas:
+
+- `corepack pnpm --filter @repo/mobile lint`;
+- `corepack pnpm --filter @repo/mobile typecheck`;
+- `corepack pnpm --filter @repo/mobile test` — 23 arquivos e 85 testes;
+- `EXPO_PUBLIC_APP_ENV=production corepack pnpm --filter @repo/mobile build` —
+  exports Android, iOS e Web;
+- 5 suítes e 41 testes relacionados da API, incluindo criação real no
+  PostgreSQL isolado e E2E com Guards para patrimônios e catálogos.
+
+A inspeção visual da implementação executada em 390×844, TalkBack, VoiceOver,
+fonte ampliada, teclado e dispositivos/tablets reais continua manual e não foi
+apresentada como validada por esses checks automatizados.

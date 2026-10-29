@@ -44,6 +44,15 @@ export const mobileRouteCatalog = {
     profiles: ALL_PROFILES,
     state: "implemented",
   },
+  createPatrimonio: {
+    path: "/cadastro/patrimonio",
+    title: "Cadastrar patrimônio",
+    description:
+      "Cadastro unitário para o Diretor e estado restrito para o Administrador.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
   login: {
     path: "/login",
     title: "Login",
@@ -85,6 +94,7 @@ export const appRoutes = {
   home: mobileRouteCatalog.home.path,
   patrimonios: mobileRouteCatalog.patrimonios.path,
   patrimonioDetail: mobileRouteCatalog.patrimonioDetail.path,
+  createPatrimonio: mobileRouteCatalog.createPatrimonio.path,
   login: mobileRouteCatalog.login.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,
   passwordUpdated: mobileRouteCatalog.passwordUpdated.path,

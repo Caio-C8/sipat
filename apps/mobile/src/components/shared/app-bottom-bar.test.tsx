@@ -12,12 +12,15 @@ vi.mock("expo-router", () => ({
 }));
 
 describe("AppBottomBar", () => {
-  it("mantém Início e Bens navegáveis e os destinos inexistentes desabilitados", () => {
+  it("mantém Início, Bens e Cadastro navegáveis", () => {
     expect(appBottomBarItems).toEqual([
       expect.objectContaining({ label: "Início", path: "/" }),
       expect.objectContaining({ label: "Bens", path: "/bens" }),
       expect.objectContaining({ label: "Inventário" }),
-      expect.objectContaining({ label: "Cadastro" }),
+      expect.objectContaining({
+        label: "Cadastro",
+        path: "/cadastro/patrimonio",
+      }),
       expect.objectContaining({ label: "Relatórios" }),
     ]);
 
@@ -25,7 +28,7 @@ describe("AppBottomBar", () => {
 
     expect(markup).toContain('aria-label="Navegação principal"');
     expect(markup).toContain('aria-selected="true"');
-    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(3);
+    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(2);
     expect(markup).not.toContain("href=");
   });
 });

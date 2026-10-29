@@ -33,6 +33,9 @@ código interno da API.
 - `/bens` e `/bens/[patrimonioId]` implementam consulta para os dois perfis,
   com busca submetida, filtros públicos, paginação e detalhe nas abas `Dados` e
   `Valores`;
+- `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
+  de cadastro unitário; o Administrador recebe `Cadastro restrito` sem montar o
+  formulário nem consultar catálogos;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior
@@ -56,7 +59,8 @@ código interno da API.
   timeout, cancelamento e validação dos schemas públicos;
 - ainda não existem cache remoto, persistência offline, fila de sincronização
   ou E2E em dispositivos;
-- testes cobrem configuração, HTTP, formulários, storage, sessão, concorrência,
+- testes cobrem configuração, HTTP, formulários, mapper patrimonial, storage,
+  sessão, concorrência,
   redirects, home, completude do catálogo, política de `/check`, topbar e faixa
   de desenvolvimento.
 
