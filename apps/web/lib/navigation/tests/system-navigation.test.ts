@@ -6,10 +6,10 @@ import {
 } from "../system-navigation";
 
 describe("catálogo de navegação do sistema", () => {
-  it("oferece movimentações implementadas para consulta por ambos os perfis", () => {
+  it("oferece movimentações e manutenções implementadas para ambos os perfis", () => {
     expect(
       catalogoNavegacao.filter((item) => item.href).map((item) => item.href),
-    ).toEqual(["/dashboard", "/movimentacoes"]);
+    ).toEqual(["/dashboard", "/movimentacoes", "/manutencoes"]);
     expect(
       catalogoNavegacao.find((item) => item.id === "movimentacoes")
         ?.implementado,
@@ -24,6 +24,12 @@ describe("catálogo de navegação do sistema", () => {
         (item) => item.href === "/movimentacoes",
       ),
     ).toBe(true);
+    for (const perfil of ["ADMINISTRADOR", "DIRETOR_PATRIMONIO"] as const)
+      expect(
+        listarNavegacaoPorPerfil(perfil).some(
+          (item) => item.href === "/manutencoes",
+        ),
+      ).toBe(true);
   });
 
   it("aplica a matriz dos dois perfis", () => {

@@ -24,3 +24,4 @@ export interface HealthResponse {
   timestamp: string;
 }
 export * from "./movimentacao";
+export * from "./manutencao";

@@ -64,6 +64,13 @@ enum StatusManutencao {
   CONCLUIDA
 }
 
+enum FaseDocumentoManutencao {
+  PEDIDO
+  ENVIO
+  RECEBIMENTO
+  LEGADO
+}
+
 enum StatusInventario {
   FINALIZADO
   PENDENTE
@@ -148,6 +155,10 @@ model Usuario {
   sessoes                               SessaoUsuario[]
   redefinicaoSenha                      RedefinicaoSenha?
   idempotenciasMovimentacao             IdempotenciaMovimentacao[]
+  itensManutencaoRecebidos              ItemManutencao[]               @relation("ItemManutencaoRecebidoPor")
+  revisoesOrcamentoManutencao            RevisaoOrcamentoManutencao[]
+  documentosManutencao                   DocumentoManutencao[]
+  idempotenciasManutencao                IdempotenciaManutencao[]
 
   @@map("usuarios")
 }
@@ -339,6 +350,8 @@ model Fornecedor {
   createdBy    Usuario      @relation(fields: [createdById], references: [id])
   notasFiscais NotaFiscal[]
   manutencoes  Manutencao[]
+  itensManutencao ItemManutencao[]
+  revisoesOrcamentoManutencao RevisaoOrcamentoManutencao[]
 
   @@map("fornecedores")
 }
@@ -538,7 +551,7 @@ model Manutencao {
   numeroRequisicao       String?          @map("numero_requisicao") @db.VarChar(50)
   numeroEmpenho          String?          @map("numero_empenho") @db.VarChar(50)
   anoEmpenho             Int?             @map("ano_empenho") @db.SmallInt
-  tipo                   TipoManutencao
+  tipo                   TipoManutencao?
   justificativa          String?          @db.Text
   dataEmpenho            DateTime?        @map("data_empenho") @db.Date
   dataEnvio              DateTime         @map("data_envio") @db.Date
@@ -558,13 +571,25 @@ model Manutencao {
   comissao   Comissao         @relation(fields: [comissaoId], references: [id])
   createdBy  Usuario          @relation(fields: [createdById], references: [id])
   itens      ItemManutencao[]
+  documentos DocumentoManutencao[]
+  idempotencias IdempotenciaManutencao[]
 
   @@index([comissaoId], map: "manutencoes_comissao_id_idx")
+  @@index([status, dataEnvio(sort: Desc), id(sort: Desc)], map: "manutencoes_status_envio_id_idx")
+  @@index([dataEnvio(sort: Desc), id(sort: Desc)], map: "manutencoes_envio_id_idx")
   @@map("manutencoes")
 }
 
 model ItemManutencao {
   id                        String    @id @default(uuid()) @db.Uuid
+  tipo                      TipoManutencao
+  fornecedorId              String?   @map("fornecedor_id") @db.Uuid
+  previsaoRetorno           DateTime? @map("previsao_retorno") @db.Date
+  versaoOrcamento           Int       @default(0) @map("versao_orcamento")
+  descricaoGarantia         String?   @map("descricao_garantia") @db.Text
+  dataFimGarantia           DateTime? @map("data_fim_garantia") @db.Date
+  recebidoPorId             String?   @map("recebido_por_id") @db.Uuid
+  recebidoEm               DateTime? @map("recebido_em") @db.Timestamp(6)
   descricaoProblema         String?   @map("descricao_problema") @db.Text
   dataOrcamento             DateTime? @map("data_orcamento") @db.Date
   descricaoOrcamento        String?   @map("descricao_orcamento") @db.Text
@@ -582,11 +607,78 @@ model ItemManutencao {
 
   manutencao                  Manutencao       @relation(fields: [manutencaoId], references: [id])
   patrimonio                  Patrimonio       @relation(fields: [patrimonioId], references: [id])
+  fornecedor                  Fornecedor?      @relation(fields: [fornecedorId], references: [id])
+  recebidoPor                 Usuario?         @relation("ItemManutencaoRecebidoPor", fields: [recebidoPorId], references: [id])
+  revisoesOrcamento           RevisaoOrcamentoManutencao[]
+  documentos                  DocumentoManutencao[]
+  idempotencias               IdempotenciaManutencao[]
   itensInventarioJustificados ItemInventario[]
 
   @@unique([id, patrimonioId], map: "itens_manutencao_id_patrimonio_id_key")
+  @@unique([manutencaoId, patrimonioId], map: "itens_manutencao_pedido_patrimonio_key")
+  @@unique([patrimonioId], map: "itens_manutencao_abertos_patrimonio_key", where: { dataRetorno: null })
   @@index([patrimonioId, id], map: "itens_manutencao_patrimonio_id_idx")
   @@map("itens_manutencao")
+}
+
+model RevisaoOrcamentoManutencao {
+  id                   String   @id @default(uuid()) @db.Uuid
+  itemId               String   @map("item_id") @db.Uuid
+  versao               Int
+  dataOrcamento        DateTime @map("data_orcamento") @db.Date
+  descricaoOrcamento   String   @map("descricao_orcamento") @db.Text
+  valorOrcamento       Decimal  @map("valor_orcamento") @db.Decimal(19, 7)
+  fornecedorId         String?  @map("fornecedor_id") @db.Uuid
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById          String   @map("created_by_id") @db.Uuid
+
+  item        ItemManutencao @relation(fields: [itemId], references: [id])
+  fornecedor  Fornecedor?     @relation(fields: [fornecedorId], references: [id])
+  createdBy   Usuario        @relation(fields: [createdById], references: [id])
+
+  @@unique([itemId, versao], map: "revisoes_orcamento_item_versao_key")
+  @@map("revisoes_orcamento_manutencao")
+}
+
+model DocumentoManutencao {
+  id            String                   @id @default(uuid()) @db.Uuid
+  manutencaoId  String                   @map("manutencao_id") @db.Uuid
+  itemId        String?                  @map("item_id") @db.Uuid
+  fase          FaseDocumentoManutencao
+  chave         String                   @db.VarChar(500)
+  nome          String                   @db.VarChar(255)
+  tamanhoBytes  Int?                     @map("tamanho_bytes")
+  hashSha256    String?                  @map("hash_sha256") @db.Char(64)
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById   String?                  @map("created_by_id") @db.Uuid
+
+  manutencao  Manutencao     @relation(fields: [manutencaoId], references: [id])
+  item        ItemManutencao? @relation(fields: [itemId], references: [id])
+  createdBy   Usuario?       @relation(fields: [createdById], references: [id])
+
+  @@index([manutencaoId, createdAt, id], map: "documentos_manutencao_pedido_data_idx")
+  @@index([itemId, createdAt, id], map: "documentos_manutencao_item_data_idx")
+  @@map("documentos_manutencao")
+}
+
+model IdempotenciaManutencao {
+  id            String   @id @default(uuid()) @db.Uuid
+  usuarioId     String   @map("usuario_id") @db.Uuid
+  chave         String   @db.Uuid
+  tipo          String   @db.VarChar(20)
+  hashPayload   String   @map("hash_payload") @db.Char(64)
+  resultado     Json
+  manutencaoId  String   @map("manutencao_id") @db.Uuid
+  itemId        String?  @map("item_id") @db.Uuid
+  documentoId   String?  @map("documento_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  usuario    Usuario      @relation(fields: [usuarioId], references: [id])
+  manutencao Manutencao   @relation(fields: [manutencaoId], references: [id])
+  item       ItemManutencao? @relation(fields: [itemId], references: [id])
+
+  @@unique([usuarioId, chave], map: "idempotencias_manutencao_usuario_chave_key")
+  @@map("idempotencias_manutencao")
 }
 
 model Inventario {

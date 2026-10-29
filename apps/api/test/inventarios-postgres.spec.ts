@@ -404,7 +404,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
         dataEnvio: new Date("2026-10-24T00:00:00.000Z"),
         comissaoId,
         createdById: identidade.id,
-        itens: { create: { patrimonioId: patrimonio.id } },
+        itens: { create: { patrimonioId: patrimonio.id, tipo: "CORRETIVA" } },
       },
       include: { itens: true },
     });

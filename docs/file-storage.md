@@ -1,9 +1,8 @@
 # Armazenamento local de documentos
 
 Este documento é a fonte de verdade para o armazenamento de documentos do
-SIPAT no filesystem da máquina que executa o sistema. Notas fiscais e baixas
-patrimoniais já consomem essa infraestrutura; as mesmas regras orientam os
-campos de anexos de manutenção previstos no schema.
+SIPAT no filesystem da máquina que executa o sistema. Notas fiscais, baixas
+patrimoniais e manutenções consomem essa infraestrutura.
 
 ## Escopo e ambientes
 
@@ -72,6 +71,12 @@ Para baixas, o servidor usa o `id` do patrimônio, a data UTC de geração e um
 UUID. O identificador participa apenas da organização do arquivo; o download
 continua sendo autorizado pelo recurso de baixa, nunca pela chave persistida.
 
+Na manutenção, o servidor gera chaves sob `uploads/manutencoes/` com ID do
+pedido, data UTC e UUID. O documento comum do pedido é opcional e limitado a
+um PDF; cada item admite até vinte PDFs adicionais de envio ou recebimento,
+sem substituir documentos anteriores. Caminhos antigos migrados recebem fase
+`LEGADO`, sem inferir sua origem.
+
 ## Entrada e validação
 
 Cada nota fiscal aceita zero ou um arquivo. Quando presente, o arquivo deve:
@@ -89,6 +94,12 @@ um campo textual `dados`, com o JSON da operação, e no máximo um campo de
 arquivo `documento`; portanto, o parser limita `files` a 1, `fields` a 1 e
 `parts` a 2. As mesmas validações de extensão, MIME, assinatura e gravação em
 disco aplicadas às notas fiscais valem para o documento da baixa.
+
+Na manutenção, cada upload separado recebe `dados` em JSON (chave de repetição,
+fase e item quando aplicável) e um campo `documento`. O parser limita `files`
+a 1, `fields` a 1, `parts` a 2 e cada PDF a 10 MiB; extensão, MIME e assinatura
+são validados. Documento de `ENVIO` exige item pendente; `RECEBIMENTO` exige
+retorno registrado.
 
 A criação conjunta de processo aceita no máximo 20 notas e 20 arquivos. O
 parser multipart limita `files` a 20, `fields` a um campo `dados` e `parts` a
@@ -117,6 +128,11 @@ A leitura do documento de uma baixa será feita por:
 ```text
 GET /api/patrimonios/:patrimonioId/baixa/anexo
 ```
+
+Documentos de manutenção são lidos por
+`GET /api/manutencoes/:manutencaoId/documentos/:documentoId`, com conferência
+do vínculo ao pedido e sessão dos dois perfis. A resposta usa PDF em stream e
+`Cache-Control: private, no-store`; ausência ou vínculo incorreto retorna 404.
 
 A rota passa pelos Guards globais, exige sessão válida e aceita os perfis
 `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`. O service carrega a nota, confirma que a
@@ -168,6 +184,13 @@ histórico e altera o status do patrimônio. Falha na transação remove o arqui
 novo; como a baixa é imutável, esta entrega não prevê substituição ou remoção
 posterior do documento. A reconciliação reúne as chaves de notas fiscais e de
 `baixas_patrimoniais` antes de classificar um arquivo como órfão.
+
+Na manutenção, o upload é independente da criação e do retorno. Se a
+persistência do documento falhar, o arquivo novo é compensado sem desfazer um
+pedido ou retorno já confirmado. A reconciliação inclui as chaves de
+`documentos_manutencao` antes de classificar órfãos. Testes HTTP reais cobrem
+upload válido, arquivo inválido, download autenticado e negação sem sessão;
+ver [MANUTENCOES-001](./tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
 
 ## Operação e limites
 

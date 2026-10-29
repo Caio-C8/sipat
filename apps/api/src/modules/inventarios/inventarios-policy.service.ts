@@ -50,6 +50,32 @@ export class InventariosPolicyService {
       tx,
     );
   }
+
+  async coordenarManutencao(
+    patrimonios: string[],
+    setores: string[],
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
+    if (patrimonios.length === 0 || setores.length === 0) return;
+    await this.inventarios.bloquearInventariosMovimentacao(
+      patrimonios,
+      setores,
+      tx,
+    );
+    const bloqueios = await this.inventarios.consultarBloqueiosMovimentacao(
+      patrimonios,
+      setores,
+      tx,
+    );
+    if (bloqueios.some((bloqueio) => bloqueio.status === "EM_ANDAMENTO")) {
+      throw new ConflictException({
+        codigo: "SETOR_EM_INVENTARIO_EM_ANDAMENTO",
+        mensagem:
+          "O setor está em conferência; aguarde a conclusão para alterar a situação do patrimônio.",
+        erros: [],
+      });
+    }
+  }
   async impedimentosMovimentacao(
     itens: ItemMovimentacaoBodyData[],
     tx: Prisma.TransactionClient,

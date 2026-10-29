@@ -32,6 +32,7 @@
     "db:migrate:staging": "dotenv -e .env.staging -- pnpm --filter @repo/database db:migrate:deploy",
     "db:migrate:production": "dotenv -e .env.production -- pnpm --filter @repo/database db:migrate:deploy",
     "db:seed:development": "dotenv -e .env.development -- pnpm --filter @repo/database db:seed",
+    "db:seed:manutencoes:development": "dotenv -e .env.development -- pnpm --filter @repo/database db:seed:manutencoes",
     "db:studio": "dotenv -e .env.development -- pnpm --filter @repo/database db:studio",
     "mobile:android": "dotenv -e .env.development -- pnpm --filter @repo/mobile android",
     "mobile:ios": "dotenv -e .env.development -- pnpm --filter @repo/mobile ios",

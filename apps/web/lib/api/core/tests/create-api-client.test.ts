@@ -309,4 +309,37 @@ describe("createApiClient", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("envia FormData sem Content-Type manual e mantém CSRF", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      criarRespostaJson({
+        status: 200,
+        sucesso: true,
+        dados: { id: "documento" },
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: "/api/backend",
+      fetchImplementation: fetchMock,
+    });
+    const form = new FormData();
+    form.append("dados", "{}");
+    form.append(
+      "documento",
+      new Blob(["%PDF-"], { type: "application/pdf" }),
+      "teste.pdf",
+    );
+    await client.request({
+      path: "/manutencoes/id/documentos",
+      method: "POST",
+      body: form,
+      headers: { "X-SIPAT-CSRF": "1" },
+      responseSchema,
+    });
+    const init = fetchMock.mock.calls[0]?.[1];
+    expect(init?.body).toBe(form);
+    const headers = new Headers(init?.headers);
+    expect(headers.has("Content-Type")).toBe(false);
+    expect(headers.get("X-SIPAT-CSRF")).toBe("1");
+  });
 });

@@ -28,12 +28,12 @@ No estado atual:
   interna da API;
 - `@repo/contracts` é compartilhado entre Web e API;
 - existem clientes HTTP centrais separados para navegador e servidor;
-- `createApiClient` usa `fetch` nativo, timeout, cancelamento, serialização JSON,
+- `createApiClient` usa `fetch` nativo, timeout, cancelamento, serialização JSON ou `FormData`,
   validação de responses, normalização de erros e `204 No Content`;
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- existem operações tipadas de autenticação, patrimônio e movimentações;
+- existem operações tipadas de autenticação, patrimônio, movimentações e manutenções;
   movimentações usa hooks específicos por operação, estado local e URL, sem cache remoto;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
@@ -52,6 +52,14 @@ O dashboard usa o cliente Server para cinco consultas paralelas e finitas a
 `pagina=1`, `limite=1`, cache desabilitado e cookie encaminhado explicitamente.
 Somente `meta.total` alimenta a interface; a Web não percorre páginas para
 calcular agregados ausentes.
+
+Em manutenção, a listagem e o detalhe usam operações Server com cookie
+encaminhado por requisição e cache desabilitado. Criação, orçamento, retorno e
+upload usam operações do navegador com CSRF; `FormData` deixa o navegador
+definir o boundary do multipart. Após sucesso, o detalhe consulta novamente a
+API. Nenhuma mutação recebe retry automático. O percurso Web → API →
+PostgreSQL descartável está registrado em
+[WEB-MANUTENCOES-001](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
 
 ## Transporte HTTP
 

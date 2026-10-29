@@ -126,6 +126,7 @@ function criarHeaders(
   defaultHeaders: HeadersInit | undefined,
   requestHeaders: HeadersInit | undefined,
   possuiBody: boolean,
+  multipart: boolean,
 ): Headers {
   const headers = new Headers(defaultHeaders);
 
@@ -139,7 +140,9 @@ function criarHeaders(
     headers.set("Accept", "application/json");
   }
 
-  if (possuiBody && !headers.has("Content-Type")) {
+  if (multipart) {
+    headers.delete("Content-Type");
+  } else if (possuiBody && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -320,24 +323,34 @@ export function createApiClient({
 
       const url = criarUrl(baseUrl, path, query);
       const possuiBody = body !== undefined;
+      const multipart = body instanceof FormData;
 
-      const headers = criarHeaders(defaultHeaders, requestHeaders, possuiBody);
+      const headers = criarHeaders(
+        defaultHeaders,
+        requestHeaders,
+        possuiBody,
+        multipart,
+      );
 
-      let bodySerializado: string | undefined;
+      let bodySerializado: BodyInit | undefined;
 
       const controleAbort = criarControleAbort(signal, timeoutMs);
 
       if (possuiBody) {
         try {
-          const resultadoSerializacao = JSON.stringify(body);
+          if (multipart) {
+            bodySerializado = body;
+          } else {
+            const resultadoSerializacao = JSON.stringify(body);
 
-          if (resultadoSerializacao === undefined) {
-            throw new TypeError(
-              "O body não possui uma representação JSON válida.",
-            );
+            if (resultadoSerializacao === undefined) {
+              throw new TypeError(
+                "O body não possui uma representação JSON válida.",
+              );
+            }
+
+            bodySerializado = resultadoSerializacao;
           }
-
-          bodySerializado = resultadoSerializacao;
         } catch (error: unknown) {
           throw new ApiError({
             status: null,

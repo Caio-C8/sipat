@@ -25,7 +25,7 @@ export class ReconciliadorDocumentosService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap(): Promise<void> {
     try {
-      const [notas, baixas] = await Promise.all([
+      const [notas, baixas, manutencoes] = await Promise.all([
         this.database.notaFiscal.findMany({
           where: { caminhoAnexoNotaFiscal: { not: null } },
           select: { caminhoAnexoNotaFiscal: true },
@@ -34,6 +34,7 @@ export class ReconciliadorDocumentosService implements OnApplicationBootstrap {
           where: { caminhoAnexoDocumento: { not: null } },
           select: { caminhoAnexoDocumento: true },
         }),
+        this.database.documentoManutencao.findMany({ select: { chave: true } }),
       ]);
       const chavesReferenciadas = new Set([
         ...notas.flatMap(({ caminhoAnexoNotaFiscal }) =>
@@ -42,6 +43,7 @@ export class ReconciliadorDocumentosService implements OnApplicationBootstrap {
         ...baixas.flatMap(({ caminhoAnexoDocumento }) =>
           caminhoAnexoDocumento === null ? [] : [caminhoAnexoDocumento],
         ),
+        ...manutencoes.map(({ chave }) => chave),
       ]);
       const limite = new Date(Date.now() - CARENCIA_RECONCILIACAO_MS);
       await this.armazenamento.reconciliar({

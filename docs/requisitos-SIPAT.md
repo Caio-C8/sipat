@@ -337,6 +337,21 @@ anexado, comissão e usuário responsável.
 - A manutenção não deve alterar automaticamente o valor patrimonial do bem.
 - O status do patrimônio deve refletir o envio e o retorno da manutenção.
 
+**Decisões confirmadas para RF18:** comissão e data de envio pertencem ao pedido;
+fornecedor, tipo (`PREVENTIVA` ou `CORRETIVA`) e previsão de retorno pertencem a
+cada item. A data de envio pode ser passada, mas não futura, e a comissão deve
+estar vigente nela. A comissão original permanece vinculada durante revisões e
+retornos posteriores. Cada item admite revisões de orçamento somente antes do
+retorno, preservando as versões anteriores. O retorno é individual e único, com
+descrição do serviço, valor e garantia com descrição e data final opcional. O
+pedido só é concluído quando todos os itens retornarem; sua data agregada é a
+do último retorno. O PDF comum do pedido é opcional; PDFs adicionais por item
+são associados ao envio ou ao recebimento e mantidos no histórico. Nova
+vinculação de fornecedor exige cadastro ativo, sem apagar vínculos históricos.
+Durante conferência de setor em andamento, envio e retorno que mudem a
+elegibilidade do bem ficam bloqueados; setor apenas pendente não recebe esse
+bloqueio. A manutenção não altera automaticamente o valor patrimonial.
+
 ### RF19: Inventário Patrimonial
 
 **Descrição:** O sistema deve permitir que o Diretor de Patrimônio cadastre um

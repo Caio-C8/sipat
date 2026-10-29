@@ -118,7 +118,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Wrench,
     grupo: "principal",
     perfis: TODOS_PERFIS,
-    implementado: false,
+    implementado: true,
+    href: "/manutencoes",
+    breadcrumb: ["Início", "Manutenções"],
   },
   {
     id: "reavaliacao",
