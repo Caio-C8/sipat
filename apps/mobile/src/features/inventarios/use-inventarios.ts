@@ -31,7 +31,8 @@ function unavailableOperations(): InventariosOperations {
     listarSetores: fail,
     consultarSetor: fail,
     iniciarSetor: fail,
-  } as unknown as InventariosOperations;
+    verificarItem: fail,
+  } as InventariosOperations;
 }
 
 function normalizeError(error: unknown) {
@@ -62,7 +63,7 @@ export function inventarioErrorMessage(error: ApiError, detail = false) {
     : "Não foi possível carregar os inventários.";
 }
 
-function useOperations() {
+export function useInventariosOperations() {
   return useMemo(
     () =>
       publicAppConfig.apiBaseUrl
@@ -120,7 +121,7 @@ export function useInventarios(
   busca: string | undefined,
   pagina: number,
 ) {
-  const operations = useOperations();
+  const operations = useInventariosOperations();
   return useCancelableLoad(
     useCallback(
       (signal: AbortSignal) =>
@@ -155,7 +156,7 @@ export function useInventarioSetores(
   status: StatusSetorInventario | undefined,
   pagina: number,
 ) {
-  const operations = useOperations();
+  const operations = useInventariosOperations();
   return useCancelableLoad(
     useCallback(
       async (signal: AbortSignal) => {
@@ -195,7 +196,7 @@ export function useSetorInventarioDetail(
   setorInventarioId: string,
   validIds: boolean,
 ) {
-  const operations = useOperations();
+  const operations = useInventariosOperations();
   const loadData = useCallback(
     async (signal: AbortSignal): Promise<SetorDetailData> => {
       if (!validIds) throw new ApiError("invalid-response");
@@ -226,7 +227,7 @@ export function useSetorInventarioDetail(
   const [mutationError, setMutationError] = useState<ApiError | null>(null);
 
   const start = useCallback(async () => {
-    if (startingRef.current || !validIds) return;
+    if (startingRef.current || !validIds) return false;
     startingRef.current = true;
     setStarting(true);
     setMutationError(null);
@@ -246,10 +247,12 @@ export function useSetorInventarioDetail(
             }
           : current,
       );
+      return true;
     } catch (error) {
       const normalized = normalizeError(error);
       setMutationError(normalized);
       if (normalized.status === 409) await remote.reload();
+      return false;
     } finally {
       startingRef.current = false;
       setStarting(false);

@@ -37,6 +37,15 @@
         {
           "configureAndroidBackup": true
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que o SIPAT use a câmera para ler etiquetas patrimoniais.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
       ]
     ],
     "experiments": {

@@ -57,6 +57,21 @@ navegador em 390×844 e comparados quanto a hierarquia, cards e ações. A
 comparação visual da implementação executada, tecnologias assistivas e
 dispositivos reais permanecem pendentes.
 
+`MOBILE-INVENTARIOS-002` adicionou a rota de conferência sob o setor em
+andamento, `expo-camera@~58.0.14` sem permissão de microfone/áudio, scanner e
+entrada manual convergindo na mesma mutation validada. A câmera é desmontada
+fora de foco, durante a mutation e enquanto o modal está aberto; o callback e a
+entrada manual compartilham uma trava que impede requests concorrentes. O
+progresso só muda depois do refetch, e rede/timeout não produzem sucesso local.
+Os frames `Conferencia de bens` (`280:257`) e `inconsistência leitura do bem`
+(`280:449`) foram abertos no navegador integrado e conferidos em 390×844: a
+implementação preserva título/progresso, área de câmera, campo manual, última
+leitura e bottom sheet de divergência. O texto `Adicionar a ocorrência` foi
+adaptado para `Continuar conferência`, pois a verificação já persiste a
+divergência. A correção permanece pendente para `MOBILE-INVENTARIOS-003`; a
+simbologia do scanner e a comparação visual da tela executada ainda exigem
+etiqueta e dispositivo reais.
+
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial; `MOBILE-HOME-002`
 preservou proteção, moveu o logout para o menu da topbar e adicionou conteúdo
 real por perfil. `/check`

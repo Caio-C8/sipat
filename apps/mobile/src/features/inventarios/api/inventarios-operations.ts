@@ -7,12 +7,15 @@ import {
   ListarSetoresInventarioQuerySchema,
   ListarSetoresInventarioResponseSchema,
   SetorInventarioParamsSchema,
+  VerificarItemInventarioBodySchema,
+  VerificarItemInventarioResponseSchema,
   type InventarioDetalhe,
   type ListarInventariosQueryInput,
   type ListarInventariosResponse,
   type ListarSetoresInventarioQueryInput,
   type ListarSetoresInventarioResponse,
   type SetorInventarioResumo,
+  type VerificarItemInventarioResultado,
 } from "@repo/contracts";
 import { apiRequest } from "../../../lib/api/api-client";
 
@@ -136,6 +139,31 @@ export function createInventariosOperations(baseUrl: string) {
         body: {},
         token: options.accessToken,
         responseSchema: IniciarSetorInventarioResponseSchema,
+        signal: options.signal,
+      });
+      return response.dados;
+    },
+
+    async verificarItem(
+      inventarioId: string,
+      setorInventarioId: string,
+      numeroPatrimonial: string,
+      options: RequestOptions,
+    ): Promise<VerificarItemInventarioResultado> {
+      const params = SetorInventarioParamsSchema.parse({
+        inventarioId,
+        setorInventarioId,
+      });
+      const body = VerificarItemInventarioBodySchema.parse({
+        numeroPatrimonial,
+      });
+      const response = await apiRequest({
+        baseUrl,
+        path: `/inventarios/${encodeURIComponent(params.inventarioId)}/setores/${encodeURIComponent(params.setorInventarioId)}/verificacoes`,
+        method: "POST",
+        body,
+        token: options.accessToken,
+        responseSchema: VerificarItemInventarioResponseSchema,
         signal: options.signal,
       });
       return response.dados;

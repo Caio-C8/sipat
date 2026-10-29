@@ -192,6 +192,68 @@ describe("createInventariosOperations", () => {
     );
   });
 
+  it("verifica o número canônico com um único POST e valida o resultado", async () => {
+    const item = {
+      id: "66666666-6666-4666-8666-666666666666",
+      patrimonio: {
+        id: "77777777-7777-4777-8777-777777777777",
+        numeroPatrimonio: "1001",
+        descricao: "Mesa de trabalho",
+      },
+      setorEsperado: {
+        id: "55555555-5555-4555-8555-555555555555",
+        nome: "Gabinete 01",
+      },
+      observacao: null,
+      statusVerificacao: "VERIFICADO",
+      situacao: "CORRETO",
+      setorEncontrado: null,
+      dataVerificacao: "2026-10-29T12:00:00.000Z",
+      verificadoPorId: "33333333-3333-4333-8333-333333333333",
+      statusPatrimonioNaVerificacao: "ATIVO",
+      ausenciaJustificada: null,
+      statusCorrecao: null,
+      tipoCorrecao: null,
+      dataCorrecao: null,
+      corrigidoPorId: null,
+      transferenciaCorrecaoId: null,
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse(success({ tipo: "CONFERENCIA_REGISTRADA", item })),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const operations = createInventariosOperations("https://api.example.test");
+
+    await expect(
+      operations.verificarItem(INVENTARIO_ID, SETOR_ID, "1001", {
+        accessToken: "token",
+      }),
+    ).resolves.toMatchObject({ tipo: "CONFERENCIA_REGISTRADA" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.example.test/api/inventarios/${INVENTARIO_ID}/setores/${SETOR_ID}/verificacoes`,
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ numeroPatrimonial: "1001" }),
+      }),
+    );
+  });
+
+  it("rejeita número patrimonial inválido antes da mutation", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const operations = createInventariosOperations("https://api.example.test");
+
+    await expect(
+      operations.verificarItem(INVENTARIO_ID, SETOR_ID, "001", {
+        accessToken: "token",
+      }),
+    ).rejects.toBeTruthy();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("rejeita UUIDs inválidos antes da rede", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

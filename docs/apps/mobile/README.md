@@ -37,6 +37,10 @@ código interno da API.
 - `/inventarios`, `/inventarios/[inventarioId]` e o detalhe do setor permitem
   selecionar um inventário aberto, buscar e paginar setores e iniciar ou
   retomar exatamente uma conferência; o Administrador recebe somente leitura;
+- a rota de conferência do setor em andamento aceita leitura pela câmera ou
+  entrada manual, valida o número patrimonial no boundary, serializa mutations,
+  refaz o progresso confirmado e distingue sucesso, divergência, idempotência e
+  erros públicos; a simbologia final ainda depende do teste com a etiqueta real;
 - `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
   de cadastro unitário; o Administrador recebe `Cadastro restrito` sem montar o
   formulário nem consultar catálogos;
@@ -136,7 +140,7 @@ A comunicação HTTP está em
 - observabilidade, crash reporting e analytics;
 - ampliar a suíte unitária e adicionar testes de componentes e E2E em
   dispositivos;
-- permissões nativas, notificações e deep links universais;
+- demais permissões nativas, notificações e deep links universais;
 - metas numéricas de inicialização, frames, memória, bundle e rede;
 - publicação Android na Play Store e política de EAS Update.
 
