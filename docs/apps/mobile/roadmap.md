@@ -63,10 +63,10 @@ entrega até que um objetivo próprio defina seus critérios.
 
 ## Recuperação de senha iniciada no mobile
 
-| Ordem | Objetivo                                                                                                       | Status   | Dependências                            |
-| ----- | -------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- |
-| 1     | [`WEB-AUTH-002`](../../tasks/WEB-AUTH-002-recuperar-senha.md) — consumidor Web do token                        | aprovado | backend e contratos de recuperação      |
-| 2     | [`MOBILE-AUTH-004`](../../tasks/MOBILE-AUTH-004-solicitar-recuperacao-senha.md) — solicitação e retorno ao app | aprovado | `WEB-AUTH-002` e autenticação existente |
+| Ordem | Objetivo                                                                                                       | Status       | Dependências                            |
+| ----- | -------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------- |
+| 1     | [`WEB-AUTH-002`](../../tasks/WEB-AUTH-002-recuperar-senha.md) — consumidor Web do token                        | aprovado     | backend e contratos de recuperação      |
+| 2     | [`MOBILE-AUTH-004`](../../tasks/MOBILE-AUTH-004-solicitar-recuperacao-senha.md) — solicitação e retorno ao app | implementado | `WEB-AUTH-002` e autenticação existente |
 
 O app recebe uma nova rota pública `/esqueci-senha`, mas não recebe o token nem
 define a nova senha. Ele reutiliza `POST /api/auth/esqueceu-senha`; o e-mail

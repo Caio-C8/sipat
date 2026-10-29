@@ -5,12 +5,16 @@ import {
   MobileLoginResponseSchema,
   MobileMeResponseSchema,
   MobileRefreshResponseSchema,
+  SolicitarRedefinicaoSenhaBodySchema,
+  SolicitarRedefinicaoSenhaResponseSchema,
   type MobileConcluirPrimeiroAcessoBody,
   type MobileLoginBody,
   type MobileLoginResponse,
   type MobileRefreshResponse,
   type MobileMeResponse,
   type MobileConcluirPrimeiroAcessoResponse,
+  type SolicitarRedefinicaoSenhaBody,
+  type SolicitarRedefinicaoSenhaResponse,
 } from "@repo/contracts";
 import { apiRequest } from "../../../lib/api/api-client";
 
@@ -46,6 +50,16 @@ export function createAuthOperations(baseUrl: string) {
         responseSchema: MobileMeResponseSchema,
       });
       return response.dados;
+    },
+    async requestPasswordReset(body: SolicitarRedefinicaoSenhaBody) {
+      const validBody = SolicitarRedefinicaoSenhaBodySchema.parse(body);
+      return apiRequest<SolicitarRedefinicaoSenhaResponse>({
+        baseUrl,
+        path: "/auth/esqueceu-senha",
+        method: "POST",
+        body: validBody,
+        responseSchema: SolicitarRedefinicaoSenhaResponseSchema,
+      });
     },
     async completeFirstAccess(
       accessToken: string,

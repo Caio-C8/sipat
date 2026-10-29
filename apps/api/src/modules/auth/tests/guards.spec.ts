@@ -247,6 +247,19 @@ describe("CsrfGuard", () => {
     ).toBe(true);
   });
 
+  it("isenta somente a solicitação pública marcada para transporte nativo", () => {
+    const reflectorIsento = {
+      getAllAndOverride: jest.fn().mockReturnValue(true),
+    } as unknown as Reflector;
+    const guardIsento = new CsrfGuard(criarConfig(), reflectorIsento);
+
+    expect(
+      guardIsento.canActivate(
+        criarContexto({ method: "POST", headers: Object.create(null) }),
+      ),
+    ).toBe(true);
+  });
+
   it.each(["POST", "PUT", "PATCH", "DELETE"])(
     "aceita %s com Origin e header exatos",
     (method) => {

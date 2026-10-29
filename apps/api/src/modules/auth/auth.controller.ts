@@ -20,7 +20,10 @@ import {
 import { ZodSerializerDto } from "nestjs-zod";
 import type { EnvironmentVariables } from "../../environment";
 import { AuthService } from "./auth.service";
-import { CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA } from "./auth.constants";
+import {
+  CHAVE_ISENTA_CSRF_SOLICITACAO_PUBLICA,
+  CHAVE_PERMITE_TROCA_SENHA_OBRIGATORIA,
+} from "./auth.constants";
 import type { RequisicaoAutenticada } from "./auth.types";
 import { PerfisPermitidos } from "./decorators/perfis-permitidos.decorator";
 import { Publica } from "./decorators/publica.decorator";
@@ -139,6 +142,7 @@ export class AuthController {
 
   @Post("esqueceu-senha")
   @Publica()
+  @SetMetadata(CHAVE_ISENTA_CSRF_SOLICITACAO_PUBLICA, true)
   @HttpCode(HttpStatus.ACCEPTED)
   @ZodSerializerDto(SolicitarRedefinicaoSenhaResponseDto)
   async solicitarRedefinicaoSenha(

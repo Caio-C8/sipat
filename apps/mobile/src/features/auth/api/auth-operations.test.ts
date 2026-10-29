@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MENSAGEM_SOLICITACAO_REDEFINICAO_SENHA } from "@repo/contracts";
 import { createAuthOperations } from "./auth-operations";
 
 const token = "A".repeat(43);
@@ -96,5 +97,64 @@ describe("operações de autenticação mobile", () => {
         }),
       }),
     );
+  });
+
+  it("solicita recuperação sem credencial, normaliza o e-mail e valida a response neutra", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            status: 202,
+            sucesso: true,
+            mensagem: MENSAGEM_SOLICITACAO_REDEFINICAO_SENHA,
+          }),
+          { status: 202, headers: { "content-type": "application/json" } },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      createAuthOperations("https://api.example.test").requestPasswordReset({
+        email: "  PESSOA@EXAMPLE.INVALID  ",
+      }),
+    ).resolves.toEqual({
+      status: 202,
+      sucesso: true,
+      mensagem: MENSAGEM_SOLICITACAO_REDEFINICAO_SENHA,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/auth/esqueceu-senha",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ email: "pessoa@example.invalid" }),
+        headers: expect.not.objectContaining({
+          Authorization: expect.anything(),
+        }),
+      }),
+    );
+  });
+
+  it("recusa response de recuperação incompatível sem repetir a mutation", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            status: 200,
+            sucesso: true,
+            mensagem: "Conta existe",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      createAuthOperations("https://api.example.test").requestPasswordReset({
+        email: identity.email,
+      }),
+    ).rejects.toMatchObject({ kind: "invalid-response" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

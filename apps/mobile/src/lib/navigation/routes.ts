@@ -61,6 +61,14 @@ export const mobileRouteCatalog = {
     profiles: ALL_PROFILES,
     state: "implemented",
   },
+  forgotPassword: {
+    path: "/esqueci-senha",
+    title: "Recuperar senha",
+    description: "Solicitação pública de instruções pelo e-mail institucional.",
+    access: "anonymous",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
   resetPassword: {
     path: "/redefinir-senha",
     title: "Primeiro acesso",
@@ -96,6 +104,7 @@ export const appRoutes = {
   patrimonioDetail: mobileRouteCatalog.patrimonioDetail.path,
   createPatrimonio: mobileRouteCatalog.createPatrimonio.path,
   login: mobileRouteCatalog.login.path,
+  forgotPassword: mobileRouteCatalog.forgotPassword.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,
   passwordUpdated: mobileRouteCatalog.passwordUpdated.path,
 } as const;

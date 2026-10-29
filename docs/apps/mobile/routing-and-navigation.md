@@ -4,7 +4,7 @@
 
 O Expo Router lê arquivos em `src/app`. O aplicativo possui grupos `(auth)` e
 `(app)`, que preservam os paths públicos `/`, `/bens`,
-`/bens/[patrimonioId]`, `/cadastro/patrimonio`, `/login`,
+`/bens/[patrimonioId]`, `/cadastro/patrimonio`, `/login`, `/esqueci-senha`,
 `/redefinir-senha` e `/senha-atualizada`, além de `/check`. O layout raiz
 concentra safe area,
 topbar, faixa de desenvolvimento e restauração neutra da sessão. Os layouts de
@@ -58,6 +58,7 @@ concentrou o diagnóstico em `/check`. A matriz aplicada é:
 | Rota                   | Acesso esperado                   | Destino quando o estado não permite acesso             |
 | ---------------------- | --------------------------------- | ------------------------------------------------------ |
 | `/login`               | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`     |
+| `/esqueci-senha`       | anônimo                           | pendência → `/redefinir-senha`; sessão comum → `/`     |
 | `/redefinir-senha`     | sessão com troca obrigatória      | anônimo → `/login`; sessão comum → `/`                 |
 | `/senha-atualizada`    | sessão válida com troca concluída | anônimo → `/login`; pendência → `/redefinir-senha`     |
 | `/`                    | ambos os perfis, troca concluída  | anônimo → `/login`; pendência → `/redefinir-senha`     |
@@ -66,12 +67,17 @@ concentrou o diagnóstico em `/check`. A matriz aplicada é:
 | `/cadastro/patrimonio` | ambos; formulário só para Diretor | anônimo → `/login`; Administrador → estado restrito    |
 | `/check`               | pública somente em `development`  | fora de development → mesma decisão protegida de `/`   |
 
-`MOBILE-AUTH-004` acrescentará `/esqueci-senha` como rota pública do grupo
+`MOBILE-AUTH-004` acrescentou `/esqueci-senha` como rota pública do grupo
 `(auth)`. O deep link tokenless
 `sipat://login?origem=recuperacao-senha` resolve para `/login`, comunica uma
 vez que a redefinição foi concluída na Web e remove o parâmetro da navegação.
 Ele não transporta token, não autentica e não contorna a restauração de sessão.
 Uma sessão revogada continua levando ao login pela matriz existente.
+
+O Expo Router recebe o link tanto no cold start quanto com o aplicativo já
+aberto. O login aceita somente o valor literal `recuperacao-senha`; origem
+ausente, repetida ou inválida não produz aviso. Depois do consumo, `setParams`
+remove a query sem adicionar uma entrada ao histórico.
 
 O botão da confirmação segue para `/`. A restauração da sessão acontece antes
 da decisão de rota e usa um estado neutro de inicialização para impedir flash de

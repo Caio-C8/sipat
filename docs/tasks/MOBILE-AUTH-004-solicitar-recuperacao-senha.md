@@ -1,6 +1,7 @@
 # `MOBILE-AUTH-004` — Solicitar recuperação de senha e retornar ao app
 
-**Status:** aprovada
+**Status:** implementada e validada automaticamente em 29 de outubro de 2026;
+validação em build nativo/aparelho permanece pendente.
 
 ## Objetivo
 
@@ -117,23 +118,45 @@ no login; o aviso de retorno não concede acesso nem altera essa decisão.
 
 ## Critérios de aceite
 
-- [ ] `Esqueci minha senha` deixa de estar disabled e abre a nova rota;
-- [ ] o formulário valida o contrato e envia somente o e-mail normalizado;
-- [ ] conta ativa, inexistente ou inativa produz a mesma confirmação pública;
-- [ ] `429`, timeout, offline, indisponível e response inválida são distintos
+- [x] `Esqueci minha senha` deixa de estar disabled e abre a nova rota;
+- [x] o formulário valida o contrato e envia somente o e-mail normalizado;
+- [x] conta ativa, inexistente ou inativa produz a mesma confirmação pública;
+- [x] `429`, timeout, offline, indisponível e response inválida são distintos
       sem revelar existência da conta;
-- [ ] não existe Bearer, refresh, retry automático ou storage na solicitação;
-- [ ] a API reutiliza o mesmo endpoint e preserva CSRF nas demais mutations;
-- [ ] a nova composição foi comparada diretamente com os três frames e segue
+- [x] não existe Bearer, refresh, retry automático ou storage na solicitação;
+- [x] a API reutiliza o mesmo endpoint e preserva CSRF nas demais mutations;
+- [x] a nova composição foi comparada diretamente com os três frames e segue
       os componentes/tokens existentes, com a ausência de frame registrada;
 - [ ] o deep link abre o login em cold start e com o app em background;
-- [ ] o login anuncia o retorno uma vez, exige credenciais e não mostra dado
+- [x] o login anuncia o retorno uma vez, exige credenciais e não mostra dado
       sensível;
-- [ ] token, e-mail e senha nunca aparecem no deep link, catálogo, logs,
+- [x] token, e-mail e senha nunca aparecem no deep link, catálogo, logs,
       métricas ou armazenamento local;
-- [ ] sessão anterior revogada não é restaurada depois da redefinição;
+- [x] sessão anterior revogada não é restaurada depois da redefinição;
 - [ ] Android e iOS/export Web não sofrem regressão, e a abertura real é
       validada ao menos em build nativo disponível, com limitações relatadas.
+
+## Evidência da execução em 29 de outubro de 2026
+
+- Figma inspecionado no navegador, em modo somente leitura, nos frames `Login`
+  (`334:43423`), `Crie sua nova senha` (`315:43371`) e `Senha atualizada`
+  (`315:43202`), todos em 390×844. A nova tela deriva da composição existente;
+  não há frame próprio e não foi declarada paridade pixel perfect.
+- API: lint, typecheck, 376 testes unitários/E2E e build aprovados. A suíte
+  focada do Guard e autenticação aprovou 42 testes.
+- PostgreSQL descartável `sipat_auth003_test`: 18 migrations aplicadas e 12
+  testes de autenticação aprovados com despachante de e-mail fake; a base foi
+  removida depois da execução.
+- Mobile: lint, typecheck, 90 testes e exports Android, iOS e Web aprovados. A
+  suíte focada de autenticação/rotas aprovou 26 testes.
+- Prévia Expo Web revisada manualmente em 390×844: o link do login abriu
+  `/esqueci-senha` sem overflow visível; o retorno com
+  `origem=recuperacao-senha` exibiu o aviso neutro e removeu a query da URL.
+- `pnpm security:patches`, `pnpm format:check` e `git diff --check` aprovados.
+- Não foi produzido development build/APK nesta execução e não houve aparelho
+  ou simulador iOS/Android disponível. Cold start, retorno com o app em
+  background, teclado, fonte ampliada e TalkBack/VoiceOver permanecem como
+  homologação nativa; os exports não comprovam esses comportamentos.
 
 ## Arquivos ou módulos potencialmente afetados
 

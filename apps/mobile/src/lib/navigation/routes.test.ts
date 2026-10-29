@@ -34,6 +34,7 @@ describe("catálogo de rotas mobile", () => {
     expect(appRoutes).toEqual({
       check: "/check",
       createPatrimonio: "/cadastro/patrimonio",
+      forgotPassword: "/esqueci-senha",
       home: "/",
       patrimonioDetail: "/bens/[patrimonioId]",
       patrimonios: "/bens",
