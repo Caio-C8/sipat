@@ -157,3 +157,14 @@ o access token existe somente no escopo da request. Leituras podem recuperar
 uma única vez um `401` pela sessão, mas a mutation nunca recebe retry
 automático. A UI bloqueia ativação duplicada enquanto a confirmação está
 pendente.
+
+## Conferência inicial de inventário implementada
+
+`MOBILE-INVENTARIOS-001` reutiliza `GET /inventarios`,
+`GET /inventarios/:inventarioId`,
+`GET /inventarios/:inventarioId/setores` e
+`POST /inventarios/:inventarioId/setores/:setorInventarioId/iniciar`.
+Listagens preservam busca, status e paginação explícitos; parâmetros e
+responses são validados integralmente pelos schemas públicos. Leituras podem
+recuperar uma única vez um `401`, enquanto iniciar setor nunca recebe retry
+automático e usa trava local contra ativação duplicada.
