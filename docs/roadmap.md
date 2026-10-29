@@ -187,11 +187,11 @@ cadastrados. A criação e a finalização global continuam fora do mobile; o fl
 seleciona inventário e setor, inicia ou retoma o setor, registra leituras,
 corrige divergências quando solicitado e conclui o `SetorInventario`.
 
-| Ordem | Objetivo                                               | Status   | Dependências                                   |
-| ----- | ------------------------------------------------------ | -------- | ---------------------------------------------- |
-| 1     | `MOBILE-INVENTARIOS-001` — selecionar e iniciar setor  | aprovado | `INVENTARIOS-001/002`, shell e autenticação    |
-| 2     | `MOBILE-INVENTARIOS-002` — conferir itens              | aprovado | tarefa anterior, `expo-camera` e etiqueta real |
-| 3     | `MOBILE-INVENTARIOS-003` — corrigir e concluir setor   | aprovado | tarefa anterior e contratos de inventário      |
+| Ordem | Objetivo                                              | Status   | Dependências                                   |
+| ----- | ----------------------------------------------------- | -------- | ---------------------------------------------- |
+| 1     | `MOBILE-INVENTARIOS-001` — selecionar e iniciar setor | aprovado | `INVENTARIOS-001/002`, shell e autenticação    |
+| 2     | `MOBILE-INVENTARIOS-002` — conferir itens             | aprovado | tarefa anterior, `expo-camera` e etiqueta real |
+| 3     | `MOBILE-INVENTARIOS-003` — corrigir e concluir setor  | aprovado | tarefa anterior e contratos de inventário      |
 
 Especificações:
 [MOBILE-INVENTARIOS-001](./tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md),
