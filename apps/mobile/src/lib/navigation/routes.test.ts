@@ -38,6 +38,8 @@ describe("catálogo de rotas mobile", () => {
       home: "/",
       inventarioSetorDetail:
         "/inventarios/[inventarioId]/setores/[setorInventarioId]",
+      inventarioConferencia:
+        "/inventarios/[inventarioId]/setores/[setorInventarioId]/conferencia",
       inventarioSetores: "/inventarios/[inventarioId]",
       inventarios: "/inventarios",
       patrimonioDetail: "/bens/[patrimonioId]",

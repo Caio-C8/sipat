@@ -79,6 +79,15 @@ export const mobileRouteCatalog = {
     profiles: ALL_PROFILES,
     state: "implemented",
   },
+  inventarioConferencia: {
+    path: "/inventarios/[inventarioId]/setores/[setorInventarioId]/conferencia",
+    title: "Conferir itens",
+    description:
+      "Leitura de etiqueta ou número patrimonial em setor em andamento.",
+    access: "authenticated",
+    profiles: ["DIRETOR_PATRIMONIO"],
+    state: "implemented",
+  },
   login: {
     path: "/login",
     title: "Login",
@@ -132,6 +141,7 @@ export const appRoutes = {
   inventarios: mobileRouteCatalog.inventarios.path,
   inventarioSetores: mobileRouteCatalog.inventarioSetores.path,
   inventarioSetorDetail: mobileRouteCatalog.inventarioSetorDetail.path,
+  inventarioConferencia: mobileRouteCatalog.inventarioConferencia.path,
   login: mobileRouteCatalog.login.path,
   forgotPassword: mobileRouteCatalog.forgotPassword.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,

@@ -9,6 +9,7 @@ export class ApiError extends Error {
     readonly code?: string,
     readonly fieldErrors: readonly ErroCampo[] = [],
     readonly retryAfterSeconds?: number,
+    readonly data?: unknown,
     options?: ErrorOptions,
   ) {
     super(messageFor(kind, status), options);
@@ -29,7 +30,22 @@ export function parseHttpError(
   payload: unknown,
   retryAfter: string | null,
 ): ApiError {
-  const parsed = RespostaErroSchema.safeParse(payload);
+  const objectPayload =
+    typeof payload === "object" && payload !== null && !Array.isArray(payload)
+      ? payload
+      : null;
+  const parsed = RespostaErroSchema.safeParse(
+    objectPayload
+      ? {
+          status: Reflect.get(objectPayload, "status"),
+          sucesso: Reflect.get(objectPayload, "sucesso"),
+          codigo: Reflect.get(objectPayload, "codigo"),
+          mensagem: Reflect.get(objectPayload, "mensagem"),
+          erros: Reflect.get(objectPayload, "erros"),
+          requisicaoId: Reflect.get(objectPayload, "requisicaoId"),
+        }
+      : payload,
+  );
   const retryAfterSeconds = retryAfter ? Number(retryAfter) : undefined;
   return new ApiError(
     "http",
@@ -37,6 +53,7 @@ export function parseHttpError(
     parsed.success ? parsed.data.codigo : undefined,
     parsed.success ? parsed.data.erros : [],
     Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : undefined,
+    objectPayload ? Reflect.get(objectPayload, "dados") : undefined,
   );
 }
 

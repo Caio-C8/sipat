@@ -48,12 +48,24 @@ export async function apiRequest<T = void>({
     });
   } catch (cause) {
     if (timedOut)
-      throw new ApiError("timeout", undefined, undefined, [], undefined, {
-        cause,
-      });
-    throw new ApiError("network", undefined, undefined, [], undefined, {
-      cause,
-    });
+      throw new ApiError(
+        "timeout",
+        undefined,
+        undefined,
+        [],
+        undefined,
+        undefined,
+        { cause },
+      );
+    throw new ApiError(
+      "network",
+      undefined,
+      undefined,
+      [],
+      undefined,
+      undefined,
+      { cause },
+    );
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener("abort", abortFromCaller);
@@ -71,6 +83,7 @@ export async function apiRequest<T = void>({
       response.status,
       undefined,
       [],
+      undefined,
       undefined,
       { cause },
     );

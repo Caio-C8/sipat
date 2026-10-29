@@ -1,5 +1,5 @@
 import { Lucide } from "@react-native-vector-icons/lucide";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -36,10 +36,14 @@ export function SetorInventarioScreen({
     validIds,
   );
   const [confirmationVisible, setConfirmationVisible] = useState(false);
-  const [resumeNotice, setResumeNotice] = useState(false);
   const isDirector =
     session.status === "authenticated" &&
     session.identity.perfil === "DIRETOR_PATRIMONIO";
+
+  const openConference = () =>
+    router.push(
+      `/inventarios/${inventarioId}/setores/${setorInventarioId}/conferencia` as Href,
+    );
 
   if (remote.state.status === "loading") {
     return (
@@ -130,13 +134,6 @@ export function SetorInventarioScreen({
             Iniciar e retomar conferências é restrito ao Diretor de Patrimônio.
           </Notice>
         ) : null}
-        {resumeNotice ? (
-          <Notice title="Setor selecionado">
-            A conferência em andamento foi selecionada para continuar. Leitura e
-            verificação de itens pertencem à próxima etapa do fluxo.
-          </Notice>
-        ) : null}
-
         <View style={styles.summaryCard}>
           <Text style={styles.cardEyebrow}>PROGRESSO DO SETOR</Text>
           <ProgressLine
@@ -189,7 +186,7 @@ export function SetorInventarioScreen({
         {isDirector && setor.status === "EM_ANDAMENTO" ? (
           <Pressable
             accessibilityRole="button"
-            onPress={() => setResumeNotice(true)}
+            onPress={openConference}
             style={styles.primaryButton}
           >
             <Lucide
@@ -243,7 +240,9 @@ export function SetorInventarioScreen({
                 accessibilityRole="button"
                 onPress={() => {
                   setConfirmationVisible(false);
-                  void remote.start();
+                  void remote.start().then((started) => {
+                    if (started) openConference();
+                  });
                 }}
                 style={styles.primaryDialogButton}
               >
