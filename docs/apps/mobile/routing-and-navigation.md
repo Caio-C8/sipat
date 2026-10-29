@@ -66,6 +66,13 @@ concentrou o diagnóstico em `/check`. A matriz aplicada é:
 | `/cadastro/patrimonio` | ambos; formulário só para Diretor | anônimo → `/login`; Administrador → estado restrito    |
 | `/check`               | pública somente em `development`  | fora de development → mesma decisão protegida de `/`   |
 
+`MOBILE-AUTH-004` acrescentará `/esqueci-senha` como rota pública do grupo
+`(auth)`. O deep link tokenless
+`sipat://login?origem=recuperacao-senha` resolve para `/login`, comunica uma
+vez que a redefinição foi concluída na Web e remove o parâmetro da navegação.
+Ele não transporta token, não autentica e não contorna a restauração de sessão.
+Uma sessão revogada continua levando ao login pela matriz existente.
+
 O botão da confirmação segue para `/`. A restauração da sessão acontece antes
 da decisão de rota e usa um estado neutro de inicialização para impedir flash de
 conteúdo protegido. O destino seguro originalmente solicitado pode ser

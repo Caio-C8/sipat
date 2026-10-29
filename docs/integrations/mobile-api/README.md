@@ -79,3 +79,16 @@ O mecanismo de sessão nativa, a rotação e o SecureStore foram implementados e
 background, cache de domínio e fila offline continuam fora desta entrega.
 
 Não escolha essas políticas silenciosamente apenas para completar estrutura.
+
+## Recuperação de senha aprovada
+
+`MOBILE-AUTH-004` adicionará uma operação pública para o endpoint existente
+`POST /auth/esqueceu-senha`. Ela não envia Bearer, não usa refresh, não recebe
+retry automático e valida a response neutra compartilhada. A API deve aceitar
+o transporte nativo dessa solicitação sem exigir que o app forje uma origem
+Web, preservando a proteção das demais mutations.
+
+O app não recebe nem consome o token. O e-mail abre o consumidor Web de
+`WEB-AUTH-002`; depois do sucesso, `sipat://login?origem=recuperacao-senha`
+pode voltar ao login do app sem credencial ou identificação. Consulte a
+[especificação](../../tasks/MOBILE-AUTH-004-solicitar-recuperacao-senha.md).

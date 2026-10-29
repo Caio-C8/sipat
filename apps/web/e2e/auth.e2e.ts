@@ -29,6 +29,169 @@ function loginResponse(
 }
 
 test.describe("Autenticação Web", () => {
+  test("abre a solicitação pelo login e exibe a confirmação neutra", async ({
+    page,
+    apiMock,
+  }) => {
+    apiMock.expectPost("/auth/esqueceu-senha", ({ body, headers }) => {
+      expect(body).toEqual({ email: "maria@example.com" });
+      expect(headers["x-sipat-csrf"]).toBe("1");
+      expect(headers.origin).toBe(new URL(page.url()).origin);
+
+      return {
+        status: 202,
+        body: {
+          status: 202,
+          sucesso: true,
+          mensagem:
+            "Se houver uma conta elegível, enviaremos as instruções para redefinir a senha.",
+        },
+      };
+    });
+
+    await page.goto("/login");
+    await page.getByRole("link", { name: "Esqueci minha senha" }).click();
+    await expect(page).toHaveURL(/\/esqueci-senha$/);
+    await expect(page).toHaveTitle(/^Esqueci minha senha \| .+/);
+
+    await page.getByLabel("E-mail institucional").fill("  MARIA@EXAMPLE.COM  ");
+    await page.getByRole("button", { name: "Enviar instruções" }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Verifique seu e-mail" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "Se houver uma conta elegível, enviaremos as instruções para redefinir a senha.",
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/não confirma se uma conta existe/i),
+    ).toBeVisible();
+  });
+
+  test("trata rate limit da solicitação sem revelar a conta", async ({
+    page,
+    apiMock,
+  }) => {
+    apiMock.expectPost("/auth/esqueceu-senha", () => ({
+      status: 429,
+      body: {
+        status: 429,
+        sucesso: false,
+        codigo: "MUITAS_REQUISICOES",
+        mensagem: "Muitas requisições.",
+        erros: [],
+        requisicaoId: "e2e-request",
+      },
+    }));
+
+    await page.goto("/esqueci-senha");
+    await page.getByLabel("E-mail institucional").fill("maria@example.com");
+    await page.getByRole("button", { name: "Enviar instruções" }).click();
+
+    await expect(
+      page.getByRole("alert").getByText(/Muitas tentativas/),
+    ).toBeVisible();
+    await expect(page.getByLabel("E-mail institucional")).toHaveValue(
+      "maria@example.com",
+    );
+  });
+
+  test("remove o fragmento, redefine uma única vez e substitui o histórico", async ({
+    page,
+    apiMock,
+  }) => {
+    const token = "A".repeat(43);
+    const novaSenha = "uma nova senha segura 1!";
+
+    apiMock.expectPost("/auth/redefinir-senha", ({ body, headers }) => {
+      expect(headers["x-sipat-csrf"]).toBe("1");
+      expect(headers.origin).toBe(new URL(page.url()).origin);
+      expect(body).toEqual({
+        token,
+        novaSenha,
+        confirmacaoNovaSenha: novaSenha,
+      });
+
+      return { status: 204 };
+    });
+
+    await page.goto("/login");
+    await page.goto(`/recuperar-senha#token=${token}`);
+    await expect(page).toHaveURL(/\/recuperar-senha$/);
+    await expect(page).toHaveTitle(/^Recuperar senha \| .+/);
+    await expect(
+      page.getByLabel("Nova senha *", { exact: true }),
+    ).toBeFocused();
+
+    await page.getByLabel("Nova senha *", { exact: true }).fill(novaSenha);
+    await page.getByLabel("Confirmar nova senha *").fill(novaSenha);
+    await page.getByRole("button", { name: "Salvar nova senha" }).click();
+
+    await expect(page).toHaveURL(/\/recuperacao-concluida$/);
+    await expect(page).toHaveTitle(/^Recuperação concluída \| .+/);
+    await expect(
+      page.getByRole("link", { name: "Voltar ao app" }),
+    ).toHaveAttribute("href", "sipat://login?origem=recuperacao-senha");
+    await expect(
+      page.getByRole("link", { name: "Ir para o login Web" }),
+    ).toHaveAttribute("href", "/login");
+    expect(page.url()).not.toContain(token);
+    expect(page.url()).not.toContain(novaSenha);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByLabel("Nova senha *", { exact: true })).toHaveCount(
+      0,
+    );
+  });
+
+  test("não chama a API sem token válido e unifica a falha pública do token", async ({
+    page,
+    apiMock,
+  }) => {
+    await page.goto("/recuperar-senha#token=invalido");
+    await expect(page).toHaveURL(/\/recuperar-senha$/);
+    await expect(
+      page.getByRole("region", { name: "Acesso ao SIPAT" }).getByRole("alert"),
+    ).toContainText(
+      "Este link de recuperação é inválido, expirou ou já foi utilizado.",
+    );
+
+    const token = "A".repeat(43);
+    apiMock.expectPost("/auth/redefinir-senha", () => ({
+      status: 401,
+      body: {
+        status: 401,
+        sucesso: false,
+        codigo: "TOKEN_REDEFINICAO_INVALIDO",
+        mensagem: "Token de redefinição inválido.",
+        erros: [],
+        requisicaoId: "e2e-request",
+      },
+    }));
+
+    await page.goto("/login");
+    await page.goto(`/recuperar-senha#token=${token}`);
+    await page
+      .getByLabel("Nova senha *", { exact: true })
+      .fill("uma nova senha segura 1!");
+    await page
+      .getByLabel("Confirmar nova senha *")
+      .fill("uma nova senha segura 1!");
+    await page.getByRole("button", { name: "Salvar nova senha" }).click();
+
+    await expect(
+      page.getByRole("region", { name: "Acesso ao SIPAT" }).getByRole("alert"),
+    ).toContainText(
+      "Este link de recuperação é inválido, expirou ou já foi utilizado.",
+    );
+    await expect(page.getByLabel("Nova senha *", { exact: true })).toHaveCount(
+      0,
+    );
+  });
+
   test("exibe credenciais inválidas e preserva o e-mail", async ({
     page,
     apiMock,
@@ -384,7 +547,7 @@ test.describe("Autenticação Web", () => {
     await expect(page).toHaveURL(/\/redefinir-senha$/);
   });
 
-  test("login e primeiro acesso não possuem violações automatizáveis", async ({
+  test("autenticação e recuperação não possuem violações automatizáveis", async ({
     page,
   }) => {
     await page.goto("/login");
@@ -411,6 +574,33 @@ test.describe("Autenticação Web", () => {
     expect(
       redefinir.violations,
       JSON.stringify(redefinir.violations, null, 2),
+    ).toEqual([]);
+
+    await page.goto("/esqueci-senha");
+    const solicitarRecuperacao = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      solicitarRecuperacao.violations,
+      JSON.stringify(solicitarRecuperacao.violations, null, 2),
+    ).toEqual([]);
+
+    await page.goto("/recuperar-senha");
+    const recuperarSenha = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      recuperarSenha.violations,
+      JSON.stringify(recuperarSenha.violations, null, 2),
+    ).toEqual([]);
+
+    await page.goto("/recuperacao-concluida");
+    const recuperacaoConcluida = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      recuperacaoConcluida.violations,
+      JSON.stringify(recuperacaoConcluida.violations, null, 2),
     ).toEqual([]);
   });
 

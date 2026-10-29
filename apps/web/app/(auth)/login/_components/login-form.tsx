@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LoginBodySchema } from "@repo/contracts";
 import { ArrowRight, Mail } from "lucide-react";
@@ -87,7 +88,7 @@ export function LoginForm() {
             name="email"
             type="email"
             autoComplete="username"
-            placeholder="paulo.caixeta@exemplo.invalid"
+            placeholder="email@exemplo.com"
             required
             maxLength={150}
             className="h-[clamp(2.4rem,2.9vw,3.5rem)] rounded-lg border-[#cbd8e8] bg-white pr-4 pl-11 text-sm text-[#294665] placeholder:text-[#8a9bb2]"
@@ -105,12 +106,14 @@ export function LoginForm() {
         ) : null}
       </div>
       <div className="grid gap-2">
-        <label
-          className="text-xs font-bold text-[#244163]"
-          htmlFor="login-senha"
-        >
-          Senha
-        </label>
+        <div className="flex items-center justify-between gap-4">
+          <label
+            className="text-xs font-bold text-[#244163]"
+            htmlFor="login-senha"
+          >
+            Senha
+          </label>
+        </div>
         <PasswordInput
           id="login-senha"
           name="senha"
@@ -128,9 +131,17 @@ export function LoginForm() {
           </p>
         ) : null}
       </div>
-      <p className="mt-1 text-xs leading-6 text-[#596b84]">
-        A mesma conta e os mesmos dados do SIPAT.
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="mt-1 text-xs leading-6 text-[#596b84]">
+          A mesma conta e os mesmos dados do SIPAT.
+        </p>
+        <Link
+          className="text-xs font-semibold text-[#26588d] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#8dbbf0]"
+          href="/esqueci-senha"
+        >
+          Esqueci minha senha
+        </Link>
+      </div>
       <Button
         className="h-[clamp(2rem,2.25vw,2.75rem)] w-full justify-start gap-3 rounded-md bg-[#223d64] px-5 text-xs font-bold text-white hover:bg-[#2b507e] focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#8dbbf0]"
         type="submit"

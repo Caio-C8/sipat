@@ -3,6 +3,7 @@ import {
   AuthMeResponseSchema,
   CABECALHO_CSRF,
   LoginResponseSchema,
+  SolicitarRedefinicaoSenhaResponseSchema,
   VALOR_CABECALHO_CSRF,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
@@ -85,6 +86,45 @@ describe("operações de autenticação", () => {
       path: "/auth/logout",
       method: "POST",
       headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+    });
+  });
+
+  it("solicita recuperação com response neutra e conclui sem esperar body", async () => {
+    const respostaNeutra = {
+      status: 202,
+      sucesso: true,
+      mensagem:
+        "Se houver uma conta elegível, enviaremos as instruções para redefinir a senha.",
+    } as const;
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(respostaNeutra)
+      .mockResolvedValueOnce(undefined);
+    const auth = criarOperacoesAuth({ request } as unknown as ApiClient);
+    const token = "A".repeat(43);
+    const novaSenha = "uma nova senha segura 1!";
+
+    await expect(
+      auth.solicitarRedefinicaoSenha({ email: "  MARIA@EXAMPLE.COM  " }),
+    ).resolves.toEqual(respostaNeutra);
+    await auth.redefinirSenha({
+      token,
+      novaSenha,
+      confirmacaoNovaSenha: novaSenha,
+    });
+
+    expect(request).toHaveBeenNthCalledWith(1, {
+      path: "/auth/esqueceu-senha",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      body: { email: "maria@example.com" },
+      responseSchema: SolicitarRedefinicaoSenhaResponseSchema,
+    });
+    expect(request).toHaveBeenNthCalledWith(2, {
+      path: "/auth/redefinir-senha",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      body: { token, novaSenha, confirmacaoNovaSenha: novaSenha },
     });
   });
 });

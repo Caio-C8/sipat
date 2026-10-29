@@ -4,10 +4,16 @@ import {
   ConcluirPrimeiroAcessoBodySchema,
   LoginBodySchema,
   LoginResponseSchema,
+  RedefinirSenhaBodySchema,
+  SolicitarRedefinicaoSenhaBodySchema,
+  SolicitarRedefinicaoSenhaResponseSchema,
   VALOR_CABECALHO_CSRF,
   type ConcluirPrimeiroAcessoBody,
   type IdentidadeAutenticada,
   type LoginBody,
+  type RedefinirSenhaBody,
+  type SolicitarRedefinicaoSenhaBody,
+  type SolicitarRedefinicaoSenhaResponse,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
 
@@ -49,6 +55,31 @@ export function criarOperacoesAuth(apiClient: ApiClient) {
 
       await apiClient.request({
         path: "/auth/concluir-primeiro-acesso",
+        method: "POST",
+        headers: csrfHeaders,
+        body: bodyValidado,
+      });
+    },
+
+    async solicitarRedefinicaoSenha(
+      body: SolicitarRedefinicaoSenhaBody,
+    ): Promise<SolicitarRedefinicaoSenhaResponse> {
+      const bodyValidado = SolicitarRedefinicaoSenhaBodySchema.parse(body);
+
+      return apiClient.request({
+        path: "/auth/esqueceu-senha",
+        method: "POST",
+        headers: csrfHeaders,
+        body: bodyValidado,
+        responseSchema: SolicitarRedefinicaoSenhaResponseSchema,
+      });
+    },
+
+    async redefinirSenha(body: RedefinirSenhaBody): Promise<void> {
+      const bodyValidado = RedefinirSenhaBodySchema.parse(body);
+
+      await apiClient.request({
+        path: "/auth/redefinir-senha",
         method: "POST",
         headers: csrfHeaders,
         body: bodyValidado,

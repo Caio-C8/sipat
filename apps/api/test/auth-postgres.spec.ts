@@ -19,6 +19,10 @@ const databaseUrl = process.env.AUTH_INTEGRATION_DATABASE_URL;
 const describeComPostgres = databaseUrl ? describe : describe.skip;
 const SEGREDO_TESTE = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY";
 
+function obterTokenDoLink(link: string): string | null {
+  return new URLSearchParams(new URL(link).hash.slice(1)).get("token");
+}
+
 function criarConfig(
   ambiente: "development" | "test",
   concorrencia = 4,
@@ -32,7 +36,7 @@ function criarConfig(
       if (chave === "AUTH_ARGON2_MAX_QUEUE") return fila;
       if (chave === "AUTH_PASSWORD_RESET_ENABLED") return true;
       if (chave === "AUTH_PASSWORD_RESET_URL")
-        return "https://sipat.example/redefinir-senha";
+        return "https://sipat.example/recuperar-senha";
       throw new Error(`Configuração inesperada: ${chave}`);
     }),
   } as unknown as ConfigService<EnvironmentVariables, true>;
@@ -571,7 +575,7 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     if (mensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
-    const token = new URL(mensagem.link).searchParams.get("token")!;
+    const token = obterTokenDoLink(mensagem.link)!;
     const dados = {
       token,
       novaSenha: "uma senha redefinida segura 1!",
@@ -634,7 +638,7 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     if (mensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
-    const token = new URL(mensagem.link).searchParams.get("token")!;
+    const token = obterTokenDoLink(mensagem.link)!;
 
     await service.alterarSenha(usuario.id, {
       senhaAtual,

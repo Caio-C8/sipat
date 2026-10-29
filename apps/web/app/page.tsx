@@ -19,6 +19,27 @@ const paginas = [
     perfis: "Administrador e Diretor de Patrimônio",
   },
   {
+    href: "/esqueci-senha",
+    titulo: "Recuperar senha",
+    descricao: "Solicitação neutra de recuperação por e-mail institucional.",
+    acesso: "Pública",
+    perfis: "Usuários com conta institucional",
+  },
+  {
+    href: "/recuperar-senha",
+    titulo: "Definir nova senha",
+    descricao: "Consumo do link de recuperação recebido por e-mail.",
+    acesso: "Pública com token transitório",
+    perfis: "Usuários com link válido",
+  },
+  {
+    href: "/recuperacao-concluida",
+    titulo: "Recuperação concluída",
+    descricao: "Retorno ao aplicativo ou ao login Web.",
+    acesso: "Pública",
+    perfis: "Todos",
+  },
+  {
     href: "/redefinir-senha",
     titulo: "Primeiro acesso",
     descricao: "Troca obrigatória da senha inicial.",

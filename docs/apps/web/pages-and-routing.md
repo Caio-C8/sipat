@@ -6,6 +6,9 @@ A aplicação Web do SIPAT expõe:
 
 - `/`: catálogo público das páginas, acessos e endpoints técnicos;
 - `/login`: autenticação integrada à API para usuários anônimos;
+- `/esqueci-senha`: solicitação pública e neutra de recuperação por e-mail;
+- `/recuperar-senha#token=…`: redefinição pública por token transitório;
+- `/recuperacao-concluida`: confirmação pública sem dado sensível;
 - `/redefinir-senha`: conclusão protegida do primeiro acesso;
 - `/senha-atualizada`: confirmação protegida após a troca;
 - `/dashboard`: visão geral protegida com totais patrimoniais para os dois
@@ -46,6 +49,20 @@ recebem link. Movimentações está marcado como implementado e inclui suas pág
 `WEB-DASHBOARD-001` adicionou `loading.tsx` ao segmento e integrou os totais
 geral e por status por uma operação Server. Erro de integração e zero registros
 são estados distintos da página.
+
+## Matriz implementada por WEB-AUTH-002
+
+| Rota                       | Acesso                        | Responsabilidade              |
+| -------------------------- | ----------------------------- | ----------------------------- |
+| `/esqueci-senha`           | pública                       | solicitar e-mail              |
+| `/recuperar-senha#token=…` | pública com token transitório | definir senha                 |
+| `/recuperacao-concluida`   | pública, sem dado sensível    | voltar ao app ou ao login Web |
+
+`/recuperar-senha` não é um modo de `/redefinir-senha`: a primeira usa token
+de uso único e a segunda continua exigindo sessão com primeiro acesso pendente.
+Depois do sucesso, a navegação substitui o histórico para que Voltar não
+reexiba o formulário ou o fragmento. Consulte
+[WEB-AUTH-002](../../tasks/WEB-AUTH-002-recuperar-senha.md).
 
 ## Convenções
 

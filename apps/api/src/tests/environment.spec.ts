@@ -94,7 +94,7 @@ describe("validateEnvironment", () => {
       validateEnvironment({
         ...ambienteValido(),
         AUTH_PASSWORD_RESET_ENABLED: "true",
-        AUTH_PASSWORD_RESET_URL: "http://localhost/redefinir-senha",
+        AUTH_PASSWORD_RESET_URL: "http://localhost/recuperar-senha",
       }),
     ).toThrow();
 
@@ -102,7 +102,7 @@ describe("validateEnvironment", () => {
       validateEnvironment({
         ...ambienteValido(),
         AUTH_PASSWORD_RESET_ENABLED: "true",
-        AUTH_PASSWORD_RESET_URL: "https://sipat.example/redefinir-senha",
+        AUTH_PASSWORD_RESET_URL: "https://sipat.example/recuperar-senha",
         SMTP_HOST: "smtp.example",
         SMTP_PORT: "587",
         SMTP_SECURE: "false",
@@ -137,12 +137,12 @@ describe("validateEnvironment", () => {
         ...ambienteValido(),
         APP_ENV: "development",
         AUTH_PASSWORD_RESET_ENABLED: "true",
-        AUTH_PASSWORD_RESET_URL: "http://localhost:3000/redefinir-senha",
+        AUTH_PASSWORD_RESET_URL: "http://localhost:3000/recuperar-senha",
         ...smtp,
       }),
     ).toEqual(
       expect.objectContaining({
-        AUTH_PASSWORD_RESET_URL: "http://localhost:3000/redefinir-senha",
+        AUTH_PASSWORD_RESET_URL: "http://localhost:3000/recuperar-senha",
       }),
     );
 
@@ -151,7 +151,7 @@ describe("validateEnvironment", () => {
         ...ambienteValido(),
         APP_ENV: "development",
         AUTH_PASSWORD_RESET_ENABLED: "true",
-        AUTH_PASSWORD_RESET_URL: "http://sipat.example/redefinir-senha",
+        AUTH_PASSWORD_RESET_URL: "http://sipat.example/recuperar-senha",
         ...smtp,
       }),
     ).toThrow();
@@ -163,7 +163,7 @@ describe("validateEnvironment", () => {
         ...ambienteValido(),
         APP_ENV: "production",
         AUTH_PASSWORD_RESET_ENABLED: "true",
-        AUTH_PASSWORD_RESET_URL: "https://sipat.example/redefinir-senha",
+        AUTH_PASSWORD_RESET_URL: "https://sipat.example/recuperar-senha",
         SMTP_HOST: "smtp.example",
         SMTP_PORT: "587",
         SMTP_SECURE: "false",

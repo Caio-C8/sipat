@@ -13,6 +13,18 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
     nome: "auth.login",
   },
   {
+    pattern: /^\/esqueci-senha$/,
+    nome: "auth.recuperacao_solicitar",
+  },
+  {
+    pattern: /^\/recuperar-senha$/,
+    nome: "auth.recuperacao_redefinir",
+  },
+  {
+    pattern: /^\/recuperacao-concluida$/,
+    nome: "auth.recuperacao_concluida",
+  },
+  {
     pattern: /^\/redefinir-senha$/,
     nome: "auth.primeiro_acesso",
   },

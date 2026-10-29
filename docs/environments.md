@@ -48,7 +48,9 @@ Quando `AUTH_PASSWORD_RESET_ENABLED` é `true`, a API exige
 `AUTH_PASSWORD_RESET_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
 `SMTP_PASSWORD` e `SMTP_FROM`. A URL usa HTTPS em todos os ambientes; somente
 em `development` também pode usar HTTP com `localhost`, `127.0.0.1` ou `::1`,
-para que a página Web local receba o token quando existir. `SMTP_SECURE`
+para que a página Web local receba o token quando existir. A URL-base aponta
+para `/recuperar-senha`; a API acrescenta o token somente no fragmento.
+`SMTP_SECURE`
 seleciona TLS desde a conexão e `SMTP_REQUIRE_TLS` exige upgrade STARTTLS; em
 staging e produção pelo menos um deles deve ser `true`, sempre com validação do
 certificado.

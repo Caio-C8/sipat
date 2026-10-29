@@ -152,9 +152,31 @@ fluxo; falta de perfil permanece negação de acesso, não expiração de sessã
 ## Decisões pendentes
 
 - biblioteca de estado remoto e regras de cache;
-- consumidor Web da recuperação de senha por e-mail e token;
 - retry por operação e idempotência;
 - propagação de correlation ID para dependências externas;
 - provedor de observabilidade, retenção, alertas e metas.
 
 Não escolha essas políticas silenciosamente apenas para completar a estrutura.
+
+## Recuperação de senha implementada
+
+`WEB-AUTH-002` é o consumidor Web dos endpoints existentes. O pedido pode
+ser iniciado em `/esqueci-senha` na Web ou no app, mas o token enviado por
+e-mail sempre é consumido pela Web:
+
+```text
+Web ou mobile
+  └─ POST /auth/esqueceu-senha
+       └─ e-mail → /recuperar-senha#token=...
+            └─ POST /auth/redefinir-senha
+                 └─ /recuperacao-concluida
+                      ├─ sipat://login?origem=recuperacao-senha
+                      └─ /login
+```
+
+O fragmento não é enviado ao servidor. A fronteira Client valida o formato,
+mantém o token somente em memória e remove o fragmento da URL. O deep link de
+retorno nunca carrega o token e não cria sessão. `/redefinir-senha` continua
+sendo a página autenticada do primeiro acesso.
+
+Consulte o [contrato de execução](../../tasks/WEB-AUTH-002-recuperar-senha.md).

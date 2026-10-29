@@ -88,7 +88,7 @@ describe("AuthService", () => {
         return "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY";
       if (chave === "AUTH_PASSWORD_RESET_ENABLED") return true;
       if (chave === "AUTH_PASSWORD_RESET_URL")
-        return "https://sipat.example/redefinir-senha";
+        return "https://sipat.example/recuperar-senha";
       throw new Error(`Configuração inesperada: ${chave}`);
     }),
   } as unknown as ConfigService<EnvironmentVariables, true>;
@@ -711,8 +711,11 @@ describe("AuthService", () => {
 
     const mensagem = (despachanteEmail.despachar as jest.Mock).mock
       .calls[0]![0];
-    const token = new URL(mensagem.link as string).searchParams.get("token");
+    const link = new URL(mensagem.link as string);
+    const token = new URLSearchParams(link.hash.slice(1)).get("token");
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(link.pathname).toBe("/recuperar-senha");
+    expect(link.search).toBe("");
     expect(authRepository.substituirRedefinicaoSenha).toHaveBeenCalledWith(
       identidadeBase.id,
       calcularHashTokenRedefinicaoSenha(token!),

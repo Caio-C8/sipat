@@ -78,6 +78,18 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
     },
   },
   {
+    pattern: /^\/auth\/esqueceu-senha$/,
+    operacoes: {
+      POST: "auth.solicitar_recuperacao_senha",
+    },
+  },
+  {
+    pattern: /^\/auth\/redefinir-senha$/,
+    operacoes: {
+      POST: "auth.redefinir_senha",
+    },
+  },
+  {
     pattern: /^\/auth\/logout$/,
     operacoes: {
       POST: "auth.logout",
