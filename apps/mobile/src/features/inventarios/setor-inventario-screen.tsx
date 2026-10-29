@@ -13,6 +13,7 @@ import {
 import { layout, mobileInventarios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import { Notice, ProgressLine, StatusBadge } from "./inventario-components";
+import { PendenciasCorrecao } from "./resumo/pendencias-correcao";
 import {
   inventarioErrorMessage,
   useSetorInventarioDetail,
@@ -29,13 +30,17 @@ export function SetorInventarioScreen({
 }>) {
   const router = useRouter();
   const { manager, state: session } = useSession();
+  const [pendingPage, setPendingPage] = useState(1);
   const remote = useSetorInventarioDetail(
     manager,
     inventarioId,
     setorInventarioId,
     validIds,
+    pendingPage,
   );
-  const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [confirmation, setConfirmation] = useState<"start" | "conclude" | null>(
+    null,
+  );
   const isDirector =
     session.status === "authenticated" &&
     session.identity.perfil === "DIRETOR_PATRIMONIO";
@@ -87,7 +92,7 @@ export function SetorInventarioScreen({
     );
   }
 
-  const { inventario, setor, setorEmAndamento } = remote.state.data;
+  const { inventario, pendencias, setor, setorEmAndamento } = remote.state.data;
   const conflictingSector =
     setorEmAndamento && setorEmAndamento.id !== setor.id
       ? setorEmAndamento
@@ -119,7 +124,7 @@ export function SetorInventarioScreen({
         <Text style={styles.subtitle}>Resumo da conferência deste setor</Text>
 
         {remote.mutationError ? (
-          <Notice kind="error" title="Não foi possível iniciar">
+          <Notice kind="error" title="Não foi possível atualizar o setor">
             {inventarioErrorMessage(remote.mutationError, true)}
           </Notice>
         ) : null}
@@ -154,8 +159,8 @@ export function SetorInventarioScreen({
 
         {setor.status === "CONCLUIDO" ? (
           <Notice title="Conferência concluída">
-            Este setor está encerrado e permanece disponível somente para
-            consulta.
+            O resultado do setor está consolidado. Divergências pendentes ainda
+            podem ser corrigidas enquanto o inventário permanecer aberto.
           </Notice>
         ) : null}
 
@@ -166,7 +171,7 @@ export function SetorInventarioScreen({
               disabled: remote.starting || Boolean(conflictingSector),
             }}
             disabled={remote.starting || Boolean(conflictingSector)}
-            onPress={() => setConfirmationVisible(true)}
+            onPress={() => setConfirmation("start")}
             style={[
               styles.primaryButton,
               (remote.starting || conflictingSector) && styles.disabledButton,
@@ -184,20 +189,50 @@ export function SetorInventarioScreen({
           </Pressable>
         ) : null}
         {isDirector && setor.status === "EM_ANDAMENTO" ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={openConference}
-            style={styles.primaryButton}
-          >
-            <Lucide
-              accessible={false}
-              color="#ffffff"
-              name="scan-barcode"
-              size={20}
-            />
-            <Text style={styles.primaryButtonText}>Retomar conferência</Text>
-          </Pressable>
+          <View style={styles.actionStack}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={openConference}
+              style={styles.primaryButton}
+            >
+              <Lucide
+                accessible={false}
+                color="#ffffff"
+                name="scan-barcode"
+                size={20}
+              />
+              <Text style={styles.primaryButtonText}>Retomar conferência</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: remote.concluding }}
+              disabled={remote.concluding}
+              onPress={() => setConfirmation("conclude")}
+              style={[
+                styles.concludeButton,
+                remote.concluding && styles.disabledButton,
+              ]}
+            >
+              <Lucide
+                accessible={false}
+                color={mobileInventarios.action}
+                name="circle-check"
+                size={20}
+              />
+              <Text style={styles.concludeButtonText}>
+                {remote.concluding
+                  ? "Concluindo…"
+                  : "Concluir conferência do setor"}
+              </Text>
+            </Pressable>
+          </View>
         ) : null}
+        <PendenciasCorrecao
+          inventarioId={inventarioId}
+          items={pendencias}
+          mutable={isDirector && inventario.status === "EM_ANDAMENTO"}
+          onPage={setPendingPage}
+        />
         <Pressable
           accessibilityRole="button"
           onPress={remote.reload}
@@ -215,23 +250,26 @@ export function SetorInventarioScreen({
 
       <Modal
         animationType="fade"
-        onRequestClose={() => setConfirmationVisible(false)}
+        onRequestClose={() => setConfirmation(null)}
         transparent
-        visible={confirmationVisible}
+        visible={confirmation !== null}
       >
         <View style={styles.overlay}>
           <View accessibilityViewIsModal style={styles.dialog}>
             <Text accessibilityRole="header" style={styles.dialogTitle}>
-              Iniciar conferência?
+              {confirmation === "conclude"
+                ? "Concluir conferência do setor?"
+                : "Iniciar conferência?"}
             </Text>
             <Text style={styles.dialogText}>
-              Você iniciará a conferência de {setor.setor.nome}. Somente um
-              setor pode permanecer em andamento.
+              {confirmation === "conclude"
+                ? `${setor.progresso.itensVerificados} item(ns) já foram verificados. ${setor.progresso.itensPendentes} item(ns) ainda pendente(s) serão classificados pela API como não localizados. Há ${pendencias.meta.total} correção(ões) pendente(s) registrada(s).`
+                : `Você iniciará a conferência de ${setor.setor.nome}. Somente um setor pode permanecer em andamento.`}
             </Text>
             <View style={styles.dialogActions}>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => setConfirmationVisible(false)}
+                onPress={() => setConfirmation(null)}
                 style={styles.secondaryButton}
               >
                 <Text style={styles.secondaryButtonText}>Cancelar</Text>
@@ -239,14 +277,23 @@ export function SetorInventarioScreen({
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
-                  setConfirmationVisible(false);
-                  void remote.start().then((started) => {
-                    if (started) openConference();
-                  });
+                  const action = confirmation;
+                  setConfirmation(null);
+                  if (action === "conclude") {
+                    void remote.conclude();
+                  } else {
+                    void remote.start().then((started) => {
+                      if (started) openConference();
+                    });
+                  }
                 }}
                 style={styles.primaryDialogButton}
               >
-                <Text style={styles.primaryButtonText}>Confirmar início</Text>
+                <Text style={styles.primaryButtonText}>
+                  {confirmation === "conclude"
+                    ? "Confirmar conclusão"
+                    : "Confirmar início"}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -380,6 +427,20 @@ const styles = StyleSheet.create({
   },
   disabledButton: { opacity: 0.5 },
   primaryButtonText: { color: "#ffffff", fontWeight: "800" },
+  actionStack: { gap: spacing.sm },
+  concludeButton: {
+    alignItems: "center",
+    backgroundColor: mobileInventarios.surface,
+    borderColor: mobileInventarios.action,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "center",
+    minHeight: 52,
+    paddingHorizontal: spacing.lg,
+  },
+  concludeButtonText: { color: mobileInventarios.action, fontWeight: "800" },
   refreshButton: {
     alignItems: "center",
     alignSelf: "center",

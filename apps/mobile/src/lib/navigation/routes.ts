@@ -88,6 +88,15 @@ export const mobileRouteCatalog = {
     profiles: ["DIRETOR_PATRIMONIO"],
     state: "implemented",
   },
+  inventarioCorrecao: {
+    path: "/inventarios/[inventarioId]/itens/[itemInventarioId]/correcao",
+    title: "Corrigir divergência",
+    description:
+      "Correção de localização pendente por retorno físico ou transferência cadastral.",
+    access: "authenticated",
+    profiles: ["DIRETOR_PATRIMONIO"],
+    state: "implemented",
+  },
   login: {
     path: "/login",
     title: "Login",
@@ -142,6 +151,7 @@ export const appRoutes = {
   inventarioSetores: mobileRouteCatalog.inventarioSetores.path,
   inventarioSetorDetail: mobileRouteCatalog.inventarioSetorDetail.path,
   inventarioConferencia: mobileRouteCatalog.inventarioConferencia.path,
+  inventarioCorrecao: mobileRouteCatalog.inventarioCorrecao.path,
   login: mobileRouteCatalog.login.path,
   forgotPassword: mobileRouteCatalog.forgotPassword.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,

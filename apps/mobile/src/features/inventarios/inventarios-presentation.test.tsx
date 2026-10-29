@@ -59,9 +59,18 @@ vi.mock("./use-inventarios", () => ({
           },
           setor,
           setorEmAndamento: scenario.status === "EM_ANDAMENTO" ? setor : null,
+          pendencias: {
+            status: 200,
+            sucesso: true,
+            mensagem: "Itens listados.",
+            dados: [],
+            meta: { total: 0, pagina: 1, ultimaPagina: 1, limite: 10 },
+          },
         },
       },
       reload: vi.fn(),
+      conclude: vi.fn(),
+      concluding: false,
       start: vi.fn(),
       starting: false,
       mutationError: null,
@@ -95,6 +104,8 @@ describe("apresentação do setor de inventário", () => {
     const markup = render();
 
     expect(markup).toContain("Retomar conferência");
+    expect(markup).toContain("Concluir conferência do setor");
+    expect(markup).not.toContain("Finalizar inventário");
     expect(markup).not.toContain("Confirmar início");
   });
 
@@ -104,6 +115,7 @@ describe("apresentação do setor de inventário", () => {
     const markup = render();
 
     expect(markup).toContain("Conferência concluída");
+    expect(markup).toContain("Não localizados");
     expect(markup).not.toContain("Iniciar conferência");
     expect(markup).not.toContain("Retomar conferência");
   });

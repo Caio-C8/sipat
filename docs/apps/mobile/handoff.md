@@ -68,9 +68,36 @@ Os frames `Conferencia de bens` (`280:257`) e `inconsistência leitura do bem`
 implementação preserva título/progresso, área de câmera, campo manual, última
 leitura e bottom sheet de divergência. O texto `Adicionar a ocorrência` foi
 adaptado para `Continuar conferência`, pois a verificação já persiste a
-divergência. A correção permanece pendente para `MOBILE-INVENTARIOS-003`; a
-simbologia do scanner e a comparação visual da tela executada ainda exigem
-etiqueta e dispositivo reais.
+divergência. A simbologia do scanner e a comparação visual da tela executada
+ainda exigem etiqueta e dispositivo reais.
+
+`MOBILE-INVENTARIOS-003` adicionou a rota validada de correção por
+`inventarioId` e `itemInventarioId`, a listagem paginada das divergências
+pendentes do setor e a conclusão exclusiva do setor. `Trazer para o setor
+cadastrado` envia `RETORNO_AO_SETOR_CADASTRADO`; `Manter no setor onde foi
+encontrado` envia `TRANSFERENCIA_CADASTRAL`, sem aceitar ou criar transferência
+no cliente. A observação permanece opcional e limitada a 2.000 caracteres. As
+mutations possuem trava de submissão, não recebem retry automático e só
+atualizam a UI depois da response validada e do refetch aplicável. A confirmação
+de conclusão informa verificados, itens que a API converterá em
+`NAO_LOCALIZADO` e correções pendentes; nenhum controle chama a finalização
+global do inventário.
+
+Os frames somente leitura `Corrigir localização` (`315:43263`), `Inventário
+finalizado` (`280:511`) e o modal `inconsistência leitura do bem` (`280:449`)
+foram abertos no navegador integrado em 29/10/2026. A implementação preserva a
+hierarquia de item, setores esperado/encontrado, escolhas, observação, contagens
+e ocorrências paginadas. Conforme a decisão aprovada, o asterisco da observação
+foi removido, `Inventário finalizado` virou `Conferência concluída` e `Enviar
+Ocorrências` foi substituído pelo acesso às correções pendentes. A comparação
+visual da UI executada em 390×844, telefone/tablet, orientação, fonte ampliada,
+TalkBack e VoiceOver permanece pendente de ambiente/dispositivo.
+
+A validação local desta entrega passou em lint, typecheck, 134 testes Vitest,
+formatação, `git diff --check` e exports Expo Android, iOS e Web. A integração
+real com API/PostgreSQL e a acessibilidade em dispositivos não foram repetidas
+nesta execução; a fronteira mobile usa os contratos e endpoints já cobertos
+pela integração de `INVENTARIOS-002`.
 
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial; `MOBILE-HOME-002`
 preservou proteção, moveu o logout para o menu da topbar e adicionou conteúdo

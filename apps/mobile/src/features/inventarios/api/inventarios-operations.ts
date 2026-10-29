@@ -1,7 +1,13 @@
 import {
+  ConcluirSetorInventarioResponseSchema,
   ConsultarInventarioResponseSchema,
+  CorrigirItemInventarioBodySchema,
+  CorrigirItemInventarioResponseSchema,
   IniciarSetorInventarioResponseSchema,
   InventarioParamsSchema,
+  ItemInventarioParamsSchema,
+  ListarItensInventarioQuerySchema,
+  ListarItensInventarioResponseSchema,
   ListarInventariosQuerySchema,
   ListarInventariosResponseSchema,
   ListarSetoresInventarioQuerySchema,
@@ -9,7 +15,11 @@ import {
   SetorInventarioParamsSchema,
   VerificarItemInventarioBodySchema,
   VerificarItemInventarioResponseSchema,
+  type CorrigirItemInventarioBodyData,
   type InventarioDetalhe,
+  type ItemInventarioResponse,
+  type ListarItensInventarioQueryInput,
+  type ListarItensInventarioResponse,
   type ListarInventariosQueryInput,
   type ListarInventariosResponse,
   type ListarSetoresInventarioQueryInput,
@@ -57,6 +67,33 @@ export function createInventariosOperations(baseUrl: string) {
     });
   }
 
+  async function listarItens(
+    inventarioId: string,
+    input: ListarItensInventarioQueryInput,
+    options: RequestOptions,
+  ): Promise<ListarItensInventarioResponse> {
+    const params = InventarioParamsSchema.parse({ inventarioId });
+    const query = ListarItensInventarioQuerySchema.parse(input);
+    return apiRequest({
+      baseUrl,
+      path: `/inventarios/${encodeURIComponent(params.inventarioId)}/itens?${queryString(
+        {
+          pagina: query.pagina,
+          limite: query.limite,
+          busca: query.busca,
+          setorInventarioId: query.setorInventarioId,
+          statusVerificacao: query.statusVerificacao,
+          situacao: query.situacao,
+          statusCorrecao: query.statusCorrecao,
+        },
+      )}`,
+      method: "GET",
+      token: options.accessToken,
+      responseSchema: ListarItensInventarioResponseSchema,
+      signal: options.signal,
+    });
+  }
+
   return {
     async listar(
       input: ListarInventariosQueryInput,
@@ -95,6 +132,35 @@ export function createInventariosOperations(baseUrl: string) {
     },
 
     listarSetores,
+
+    listarItens,
+
+    async consultarItem(
+      inventarioId: string,
+      itemInventarioId: string,
+      options: RequestOptions,
+    ): Promise<ItemInventarioResponse | null> {
+      const params = ItemInventarioParamsSchema.parse({
+        inventarioId,
+        itemInventarioId,
+      });
+      let pagina = 1;
+      let ultimaPagina = 1;
+      do {
+        const response = await listarItens(
+          params.inventarioId,
+          { pagina: String(pagina), limite: "50" },
+          options,
+        );
+        const item = response.dados.find(
+          (candidate) => candidate.id === params.itemInventarioId,
+        );
+        if (item) return item;
+        ultimaPagina = response.meta.ultimaPagina;
+        pagina += 1;
+      } while (pagina <= ultimaPagina);
+      return null;
+    },
 
     async consultarSetor(
       inventarioId: string,
@@ -164,6 +230,50 @@ export function createInventariosOperations(baseUrl: string) {
         body,
         token: options.accessToken,
         responseSchema: VerificarItemInventarioResponseSchema,
+        signal: options.signal,
+      });
+      return response.dados;
+    },
+
+    async corrigirItem(
+      inventarioId: string,
+      itemInventarioId: string,
+      input: CorrigirItemInventarioBodyData,
+      options: RequestOptions,
+    ): Promise<ItemInventarioResponse> {
+      const params = ItemInventarioParamsSchema.parse({
+        inventarioId,
+        itemInventarioId,
+      });
+      const body = CorrigirItemInventarioBodySchema.parse(input);
+      const response = await apiRequest({
+        baseUrl,
+        path: `/inventarios/${encodeURIComponent(params.inventarioId)}/itens/${encodeURIComponent(params.itemInventarioId)}/correcoes`,
+        method: "POST",
+        body,
+        token: options.accessToken,
+        responseSchema: CorrigirItemInventarioResponseSchema,
+        signal: options.signal,
+      });
+      return response.dados;
+    },
+
+    async concluirSetor(
+      inventarioId: string,
+      setorInventarioId: string,
+      options: RequestOptions,
+    ): Promise<SetorInventarioResumo> {
+      const params = SetorInventarioParamsSchema.parse({
+        inventarioId,
+        setorInventarioId,
+      });
+      const response = await apiRequest({
+        baseUrl,
+        path: `/inventarios/${encodeURIComponent(params.inventarioId)}/setores/${encodeURIComponent(params.setorInventarioId)}/concluir`,
+        method: "POST",
+        body: {},
+        token: options.accessToken,
+        responseSchema: ConcluirSetorInventarioResponseSchema,
         signal: options.signal,
       });
       return response.dados;

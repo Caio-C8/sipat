@@ -5,7 +5,7 @@ import {
   type BarcodeScanningResult,
   useCameraPermissions,
 } from "expo-camera";
-import { useIsFocused, useRouter } from "expo-router";
+import { useIsFocused, useRouter, type Href } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -258,6 +258,14 @@ export function ConferenciaScreen({
       </ScrollView>
 
       <DivergenceModal
+        onCorrect={() => {
+          const item = conference.lastResult?.item;
+          if (item?.situacao !== "DIVERGENCIA") return;
+          conference.setDivergenceOpen(false);
+          router.push(
+            `/inventarios/${inventarioId}/itens/${item.id}/correcao` as Href,
+          );
+        }}
         onContinue={() => conference.setDivergenceOpen(false)}
         result={
           conference.divergenceOpen &&
@@ -382,9 +390,11 @@ function LastReading({
 }
 
 function DivergenceModal({
+  onCorrect,
   onContinue,
   result,
 }: Readonly<{
+  onCorrect: () => void;
   onContinue: () => void;
   result: VerificarItemInventarioResultado | null;
 }>) {
@@ -437,19 +447,17 @@ function DivergenceModal({
                 </Text>
               </Pressable>
               <Pressable
-                accessibilityHint="A correção será habilitada pela próxima etapa do fluxo de inventário"
                 accessibilityRole="button"
-                accessibilityState={{ disabled: true }}
-                disabled
-                style={[styles.secondaryButton, styles.disabledButton]}
+                onPress={onCorrect}
+                style={styles.secondaryButton}
               >
                 <Text style={styles.secondaryButtonText}>
                   Corrigir localização agora
                 </Text>
               </Pressable>
               <Text style={styles.correctionHint}>
-                A divergência já foi salva e permanece pendente até o fluxo de
-                correção.
+                A divergência já foi salva e pode ser corrigida agora ou pelo
+                resumo do setor.
               </Text>
             </>
           ) : null}

@@ -1,6 +1,6 @@
 # `MOBILE-INVENTARIOS-003` — Corrigir divergências e concluir setor no mobile
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -91,22 +91,22 @@ somente leitura.
 
 ## Critérios de aceite
 
-- [ ] o implementador registra a inspeção dos frames obrigatórios;
-- [ ] as duas escolhas enviam exatamente o enum correspondente e nenhuma
+- [x] o implementador registra a inspeção dos frames obrigatórios;
+- [x] as duas escolhas enviam exatamente o enum correspondente e nenhuma
       transferência criada pelo cliente;
-- [ ] correção por transferência retorna `transferenciaCorrecaoId`, enquanto
+- [x] correção por transferência retorna `transferenciaCorrecaoId`, enquanto
       retorno físico permanece sem transferência;
-- [ ] pular correção mantém o item divergente e pendente e libera a próxima
+- [x] pular correção mantém o item divergente e pendente e libera a próxima
       leitura;
-- [ ] divergência pendente pode ser reaberta e corrigida depois, enquanto o
+- [x] divergência pendente pode ser reaberta e corrigida depois, enquanto o
       inventário não estiver finalizado;
-- [ ] a confirmação informa quantos itens serão marcados como não localizados;
-- [ ] conclusão chama somente a operação do setor e o resultado reflete
+- [x] a confirmação informa quantos itens serão marcados como não localizados;
+- [x] conclusão chama somente a operação do setor e o resultado reflete
       `CONCLUIDO` e os `NAO_LOCALIZADO` retornados/refetchados;
-- [ ] nenhum controle chama a finalização global do inventário;
-- [ ] dupla ativação, falha de rede ou conflito não produzem correção ou
+- [x] nenhum controle chama a finalização global do inventário;
+- [x] dupla ativação, falha de rede ou conflito não produzem correção ou
       conclusão duplicada;
-- [ ] resumo e pendências permanecem paginados, acessíveis e fiéis ao estado
+- [x] resumo e pendências permanecem paginados, acessíveis e fiéis ao estado
       real da API.
 
 ## Arquivos ou módulos potencialmente afetados
