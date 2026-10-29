@@ -16,6 +16,10 @@ fronteiras entre UI, contratos e integração HTTP.
   blocos ainda sem integração;
 - `/movimentacoes` e seu detalhe consultam transferências reais para os dois perfis;
   `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
+- `/manutencoes`, `/manutencoes/nova` e o detalhe permitem aos dois perfis
+  consultar, criar, revisar orçamento, registrar retorno e anexar/abrir PDFs
+  pela API real; o percurso Chromium com banco isolado está em
+  [WEB-MANUTENCOES-001](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md);
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;

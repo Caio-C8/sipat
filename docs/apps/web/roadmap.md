@@ -106,6 +106,16 @@ Especificação aprovada:
 Cada objetivo registra contexto, escopo, estados da interface, contratos e
 endpoints afetados, critérios de acessibilidade, segurança, performance e testes.
 
+## Manutenção de patrimônios
+
+### WEB-MANUTENCOES-001 — Interface simples integrada
+
+**Status:** implementada e verificada com API e PostgreSQL descartável em 29/10/2026.
+
+Lista, criação e detalhe no shell autenticado, com orçamento e retorno por item,
+histórico e documentos reais. O percurso Chromium/axe e os limites da verificação
+estão na [tarefa](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
+
 ## Movimentações
 
 ### WEB-MOVIMENTACOES-000 — Placeholder no shell

@@ -37,6 +37,12 @@ No estado atual:
   consultam. Idempotência persistente, política B e concorrência foram verificadas
   em PostgreSQL isolado; ver [MOVIMENTACOES-001](../../tasks/MOVIMENTACOES-001-transferir-consultar-patrimonios.md).
 
+- `ManutencoesModule` lista pedidos, itens, orçamentos e documentos, oferece
+  seletores específicos e permite criação, revisão de orçamento, retorno por
+  item e PDF privado para Administrador e Diretor. A migration foi testada com
+  dados legados fictícios, e o fluxo HTTP/Web foi verificado em PostgreSQL
+  descartável; ver [MANUTENCOES-001](../../tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
+
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,

@@ -541,6 +541,14 @@ que cada novo contrato patrimonial tenha semântica e consumidores concretos.
 - [x] documentação diferencia o baseline atual das capacidades previstas para o
       SIPAT.
 
+## CONTRACTS-013 — Contratos de manutenção
+
+**Status:** implementado e verificado em 29/10/2026 (127 testes do pacote, tipos e lint).
+
+Schemas e tipos de consulta, criação, orçamento, retorno e documentos de
+manutenção, com limite de itens, versões e respostas públicas. API e Web
+consomem os mesmos contratos. [Resultado](../tasks/CONTRACTS-013-contratos-manutencoes.md).
+
 ## CONTRACTS-012 — Contratos de movimentações
 
 **Status:** implementado e verificado em 28/10/2026 (123 testes do package; consumidores verificados).

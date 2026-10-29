@@ -12,9 +12,10 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "db:seed:manutencoes": "tsx prisma/seed-manutencoes.ts",
     "db:studio": "prisma studio",
-    "lint": "eslint src prisma/seed.ts prisma.config.ts",
-    "lint:fix": "eslint src prisma/seed.ts prisma.config.ts --fix",
+    "lint": "eslint src prisma/seed.ts prisma/seed-manutencoes.ts prisma.config.ts",
+    "lint:fix": "eslint src prisma/seed.ts prisma/seed-manutencoes.ts prisma.config.ts --fix",
     "typecheck": "prisma generate && tsc --noEmit"
   },
   "dependencies": {

@@ -28,6 +28,7 @@ import { ComissoesModule } from "./modules/comissoes/comissoes.module";
 import { InventariosModule } from "./modules/inventarios/inventarios.module";
 import { BaixasModule } from "./modules/baixas/baixas.module";
 import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
+import { ManutencoesModule } from "./modules/manutencoes/manutencoes.module";
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
     EspeciesModule,
     FornecedoresModule,
     InventariosModule,
+    ManutencoesModule,
     MovimentacoesModule,
     NaturezasModule,
     NotasFiscaisModule,

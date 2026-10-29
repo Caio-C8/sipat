@@ -304,10 +304,13 @@ test.describe("Autenticação Web", () => {
     await expect(
       navigation.getByText("Manutenção", { exact: true }),
     ).toBeVisible();
-    await expect(navigation.getByRole("link")).toHaveCount(2);
+    await expect(navigation.getByRole("link")).toHaveCount(3);
     await expect(
       navigation.getByRole("link", { name: "Movimentações", exact: true }),
     ).toHaveAttribute("href", "/movimentacoes");
+    await expect(
+      navigation.getByRole("link", { name: "Manutenção", exact: true }),
+    ).toHaveAttribute("href", "/manutencoes");
     await expect(
       navigation.getByRole("link", { name: "Início" }),
     ).toHaveAttribute("aria-current", "page");

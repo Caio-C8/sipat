@@ -54,6 +54,19 @@ Os dois perfis públicos são exatamente `ADMINISTRADOR` e
 representar “usuário do sistema”; essa expressão dos requisitos descreve a
 identidade autenticada, não um perfil adicional.
 
+## Manutenção patrimonial
+
+As rotas de `/api/manutencoes` exigem sessão válida e aceitam
+`ADMINISTRADOR` e `DIRETOR_PATRIMONIO`. Criação, revisão de orçamento,
+retorno e upload também exigem Origin permitido e `X-SIPAT-CSRF: 1` na Web.
+O servidor confirma o vínculo entre pedido, item, documento e patrimônio;
+valida situação do bem, retorno anterior, versão do orçamento, vigência da
+comissão na data de envio e fornecedor ativo em novo vínculo. Conferência de
+setor em andamento impede envio e retorno. Os seletores de fornecedor e
+comissão disponíveis a ambos não ampliam as rotas administrativas desses
+cadastros. PDFs são lidos por rota protegida, sem receber chave lógica do
+cliente. Ver [MANUTENCOES-001](./tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
+
 ## Fronteira de confiança
 
 ```text

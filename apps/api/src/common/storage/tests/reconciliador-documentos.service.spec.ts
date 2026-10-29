@@ -3,7 +3,7 @@ import type { ArmazenamentoDocumentosPorta } from "../armazenamento-documentos.p
 import { ReconciliadorDocumentosService } from "../reconciliador-documentos.service";
 
 describe("ReconciliadorDocumentosService", () => {
-  it("preserva em uma única allowlist as referências de notas e baixas", async () => {
+  it("preserva em uma única allowlist as referências de notas, baixas e manutenções", async () => {
     const database = {
       notaFiscal: {
         findMany: jest
@@ -18,6 +18,11 @@ describe("ReconciliadorDocumentosService", () => {
           .mockResolvedValue([
             { caminhoAnexoDocumento: "uploads/baixas/baixa.pdf" },
           ]),
+      },
+      documentoManutencao: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([{ chave: "uploads/manutencoes/documento.pdf" }]),
       },
     } as unknown as DatabaseClient;
     const armazenamento = {
@@ -35,6 +40,7 @@ describe("ReconciliadorDocumentosService", () => {
         chavesReferenciadas: new Set([
           "uploads/notas-fiscais/nota.pdf",
           "uploads/baixas/baixa.pdf",
+          "uploads/manutencoes/documento.pdf",
         ]),
         temporariosModificadosAntesDe: expect.any(Date),
         orfaosModificadosAntesDe: expect.any(Date),

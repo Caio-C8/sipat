@@ -284,3 +284,25 @@ Para registrar, entre com um usuário Diretor de Patrimônio, abra
 `/movimentacoes` e use **Nova movimentação**, no canto superior direito.
 Administrador possui somente consulta. O seed pode ser reexecutado para
 localizar os dados disponíveis; ele não desfaz testes já realizados.
+
+## Seed local de manutenções
+
+Com o banco de desenvolvimento atualizado pelas migrations, adicione um pedido
+fictício com dois patrimônios e seus cadastros auxiliares:
+
+```powershell
+$env:SIPAT_SEED_MANUTENCOES = 'true'
+pnpm db:seed:manutencoes:development
+Remove-Item Env:SIPAT_SEED_MANUTENCOES
+```
+
+O seed aceita somente `APP_ENV=development` e o banco local `sipat`. Ele cria
+`DEMO-MAN-001` com dois itens, fornecedor e comissão de demonstração. A
+numeração dos bens `SP-...` depende da sequência atual do
+banco. A reexecução mantém o pedido, os itens e a situação dos patrimônios, sem
+criar usuários ou credenciais e sem desfazer retornos registrados.
+
+Entre como Diretor de Patrimônio ou Administrador e abra
+<http://localhost:3000/manutencoes> para consultar o pedido. Abra o pedido para
+atualizar o orçamento de cada item, registrar o retorno e enviar ou consultar
+os PDFs. Para criar outro pedido, use **Novo pedido** com patrimônios ativos.

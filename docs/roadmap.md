@@ -1502,6 +1502,20 @@ confiáveis nesta etapa; verificação de e-mail e MFA permanecem fora do escopo
 O administrador não recebe permissão para alterar ou redefinir a senha de outra
 pessoa.
 
+## Manutenção de patrimônios — implementada em ambiente de teste
+
+**Status:** contratos, API, persistência e Web implementados e verificados em
+29/10/2026 com PostgreSQL descartável. A migration também foi aplicada ao
+banco de demonstração e ao banco local de desenvolvimento `sipat`; não foi
+aplicada a staging ou produção. O seed local opt-in inclui um pedido fictício
+com dois itens, e o percurso Web → API → PostgreSQL isolado passou após o pull.
+
+Entregues em ordem: [CONTRACTS-013](./tasks/CONTRACTS-013-contratos-manutencoes.md),
+[MANUTENCOES-001](./tasks/MANUTENCOES-001-api-persistencia-manutencoes.md) e
+[WEB-MANUTENCOES-001](./tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
+As decisões de produto estão em [RF18/UC18](./requisitos-SIPAT.md); segurança,
+documentos e inventário são dependências da etapa API.
+
 ## Movimentações entre setores — entregues
 
 **Status:** contratos, API e Web implementados e integrados; verificações automatizadas concluídas em 28/10/2026. Homologação manual com leitor de tela pendente na Web.
