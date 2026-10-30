@@ -33,6 +33,8 @@
     "db:migrate:production": "dotenv -e .env.production -- pnpm --filter @repo/database db:migrate:deploy",
     "db:seed:development": "dotenv -e .env.development -- pnpm --filter @repo/database db:seed",
     "db:seed:manutencoes:development": "dotenv -e .env.development -- pnpm --filter @repo/database db:seed:manutencoes",
+    "db:seed:geral:development": "dotenv -e .env.development -- pnpm --filter @repo/api build && dotenv -e .env.development -- pnpm --filter @repo/api seed:geral",
+    "db:seed:geral:staging": "docker compose --env-file .env.staging -f compose.yaml -f compose.staging.yaml run --rm --build seed-geral",
     "db:studio": "dotenv -e .env.development -- pnpm --filter @repo/database db:studio",
     "mobile:android": "dotenv -e .env.development -- pnpm --filter @repo/mobile android",
     "mobile:ios": "dotenv -e .env.development -- pnpm --filter @repo/mobile ios",

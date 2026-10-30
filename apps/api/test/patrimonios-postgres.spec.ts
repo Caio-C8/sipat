@@ -345,6 +345,17 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     });
     expect(busca.total).toBe(1);
     expect(busca.items[0]?.descricao).toBe("CAMERA LOTE 12");
+
+    const buscaNumero = await service.listar({
+      pagina: 1,
+      limite: 20,
+      busca: "001012",
+    });
+    expect(
+      buscaNumero.items.some(
+        ({ numeroPatrimonio }) => numeroPatrimonio === "1012",
+      ),
+    ).toBe(true);
   });
 
   it("executa e observa o plano da query crítica sobre a massa representativa", async () => {

@@ -14,6 +14,6 @@ import { InventariosService } from "./inventarios.service";
     InventariosService,
     InventariosPolicyService,
   ],
-  exports: [InventariosPolicyService],
+  exports: [InventariosPolicyService, InventariosService],
 })
 export class InventariosModule {}

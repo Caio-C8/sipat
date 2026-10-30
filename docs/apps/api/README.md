@@ -32,6 +32,11 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 
 No estado atual:
 
+- `SEED-GERAL-001` fornece um comando Nest standalone opt-in para development e
+  staging, cria a massa sintética pelos services da API, grava PDFs pelo storage
+  privado e audita o estado final; production, test, migrations incompatíveis e
+  banco não vazio são recusados;
+
 - `MovimentacoesModule` lista/consulta transferências individuais, confirma de 1 a 10
   atomicamente e oferece auxiliares por contexto. Somente diretor registra; ambos
   consultam. Idempotência persistente, política B e concorrência foram verificadas
@@ -125,9 +130,9 @@ No estado atual:
 - a substituição do número oficial usa o número atual como precondição
   otimista, gera o novo valor pela sequence oficial e atualiza o mesmo patrimônio
   com histórico auditável na mesma transação;
-- a consulta patrimonial usa paginação finita, busca normalizada, filtros,
-  seleção mínima, ordenação determinística e relações atuais de setor,
-  responsável, espécie e natureza;
+- a consulta patrimonial usa paginação finita, busca textual normalizada ou
+  número patrimonial exato, filtros, seleção mínima, ordenação determinística e
+  relações atuais de setor, responsável, espécie e natureza;
 - a listagem de usuários usa paginação finita, busca e filtros com seleção
   mínima e ordenação determinística; sua criação usa Argon2id e auditoria
   derivada da sessão;

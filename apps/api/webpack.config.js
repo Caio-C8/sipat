@@ -10,6 +10,10 @@ module.exports = function configureWebpack(options) {
         __dirname,
         "src/commands/provisionar-administrador.ts",
       ),
+      "commands/seed-geral": path.resolve(
+        __dirname,
+        "src/commands/seed-geral.ts",
+      ),
     },
     output: {
       ...options.output,

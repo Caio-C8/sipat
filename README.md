@@ -212,27 +212,29 @@ build, alterá-la exige reconstruir a imagem. Consulte a
 
 ## Comandos principais
 
-| Comando                                                                             | Finalidade                                       |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `pnpm dev`                                                                          | Executa todos os apps que têm script `dev`       |
-| `pnpm dev:web` / `pnpm dev:api`                                                     | Executa apenas Web ou API                        |
-| `pnpm dev:mobile`                                                                   | Inicia o Metro do aplicativo mobile              |
-| `pnpm mobile:android`                                                               | Abre o app no Android                            |
-| `pnpm mobile:ios`                                                                   | Abre o app no iOS; simulador exige macOS         |
-| `pnpm mobile:web`                                                                   | Abre a interface mobile no navegador             |
-| `pnpm mobile:build:android`                                                         | Gera um APK instalável pelo EAS                  |
-| `pnpm mobile:build:testflight`                                                      | Gera e envia o build iOS ao TestFlight           |
-| `pnpm stack:staging:up`                                                             | Sobe API, Web, mobile-web e banco em homologação |
-| `pnpm stack:production:up`                                                          | Sobe API, Web, mobile-web e banco em produção    |
-| `pnpm check`                                                                        | Gera Prisma Client, roda lint, tipos e testes    |
-| `pnpm build:staging`                                                                | Build local com variáveis de homologação         |
-| `pnpm build:production`                                                             | Build local com variáveis de produção            |
-| `pnpm db:migrate:development`                                                       | Cria/aplica migrations durante desenvolvimento   |
-| `pnpm db:migrate:staging`                                                           | Aplica migrations já versionadas em homologação  |
-| `pnpm db:migrate:production`                                                        | Aplica migrations já versionadas em produção     |
-| `pnpm db:studio`                                                                    | Abre o Prisma Studio no ambiente local           |
-| `pnpm format`                                                                       | Formata arquivos suportados                      |
-| `pnpm exec dotenv -e .env.development -- pnpm --filter @repo/api provisionar:admin` | Criar usuário administrador através do terminal  |
+| Comando                                                                             | Finalidade                                         |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `pnpm dev`                                                                          | Executa todos os apps que têm script `dev`         |
+| `pnpm dev:web` / `pnpm dev:api`                                                     | Executa apenas Web ou API                          |
+| `pnpm dev:mobile`                                                                   | Inicia o Metro do aplicativo mobile                |
+| `pnpm mobile:android`                                                               | Abre o app no Android                              |
+| `pnpm mobile:ios`                                                                   | Abre o app no iOS; simulador exige macOS           |
+| `pnpm mobile:web`                                                                   | Abre a interface mobile no navegador               |
+| `pnpm mobile:build:android`                                                         | Gera um APK instalável pelo EAS                    |
+| `pnpm mobile:build:testflight`                                                      | Gera e envia o build iOS ao TestFlight             |
+| `pnpm stack:staging:up`                                                             | Sobe API, Web, mobile-web e banco em homologação   |
+| `pnpm stack:production:up`                                                          | Sobe API, Web, mobile-web e banco em produção      |
+| `pnpm check`                                                                        | Gera Prisma Client, roda lint, tipos e testes      |
+| `pnpm build:staging`                                                                | Build local com variáveis de homologação           |
+| `pnpm build:production`                                                             | Build local com variáveis de produção              |
+| `pnpm db:migrate:development`                                                       | Cria/aplica migrations durante desenvolvimento     |
+| `pnpm db:migrate:staging`                                                           | Aplica migrations já versionadas em homologação    |
+| `pnpm db:migrate:production`                                                        | Aplica migrations já versionadas em produção       |
+| `pnpm db:studio`                                                                    | Abre o Prisma Studio no ambiente local             |
+| `pnpm db:seed:geral:development`                                                    | Cria a base sintética protegida em desenvolvimento |
+| `pnpm db:seed:geral:staging`                                                        | Executa o seed one-shot no Compose de homologação  |
+| `pnpm format`                                                                       | Formata arquivos suportados                        |
+| `pnpm exec dotenv -e .env.development -- pnpm --filter @repo/api provisionar:admin` | Criar usuário administrador através do terminal    |
 
 O guia completo do aplicativo — Web, Expo Go, rede local, túnel HTTPS, APK e
 TestFlight — está em
@@ -260,6 +262,44 @@ formal entre conversas de planejamento, implementação e versionamento, use o
 
 Para preparar movimentações em ciclos de planejamento, implementação e
 versionamento, consulte o [guia de prompts](PROMPTS-MOVIMENTACOES.md).
+
+## Seed geral de desenvolvimento e homologação
+
+O seed geral prepara, por meio dos services da API, a massa sintética completa
+descrita em [SEED-GERAL-001](docs/tasks/SEED-GERAL-001-base-realista-desenvolvimento-staging.md).
+Ele exige migrations atuais, diretório privado gravável e banco sem dados de
+domínio; nunca limpa ou sobrescreve uma base existente. `production` e `test`
+são recusados antes da inicialização do contexto Nest.
+
+Configure temporariamente no `.env.development` ou `.env.staging`:
+
+```dotenv
+SIPAT_ALLOW_DEMO_SEED=true
+SIPAT_DEMO_SEED_CONFIRMATION=development
+SIPAT_DEMO_ADMIN_PASSWORD=<senha-forte-sem-valor-padrao>
+SIPAT_DEMO_DIRECTOR_PASSWORD=<outra-senha-forte-sem-valor-padrao>
+```
+
+Em homologação, a confirmação deve ser `staging`. Depois execute um dos
+comandos abaixo e remova os quatro valores sensíveis do arquivo:
+
+```powershell
+pnpm db:seed:geral:development
+pnpm db:seed:geral:staging
+```
+
+O comando de staging carrega `.env.staging`, constrói a mesma imagem runner da
+API e inicia somente o serviço one-shot `seed-geral`, na rede interna e com o
+mesmo bind mount `/data/uploads`. O sucesso cria duas contas ativas com primeiro
+acesso concluído, dez setores, cinquenta bens, dez processos, vinte notas/PDFs,
+três comissões, um inventário finalizado e duas manutenções. Senhas, tokens,
+`DATABASE_URL` e caminhos privados não são incluídos no resumo do comando.
+
+Não repita após sucesso. Uma interrupção pode deixar banco e uploads parciais;
+o seed recusará a nova tentativa. Nesse caso, descarte exclusivamente o banco e
+o diretório de uploads desse ambiente de demonstração, reaplique as migrations
+e execute novamente. Preserve backup e confirme o `COMPOSE_PROJECT_NAME` e o
+`UPLOADS_HOST_PATH` antes de remover qualquer volume ou diretório.
 
 ## Seed local de movimentações
 

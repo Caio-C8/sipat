@@ -87,6 +87,42 @@ services:
     networks:
       - internal
 
+  seed-geral:
+    profiles: ["seed"]
+    image: ${COMPOSE_PROJECT_NAME:-sipat}-api:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: runner
+    command: ["node", "dist/commands/seed-geral.js"]
+    environment:
+      <<: *app-environment
+      UPLOADS_ROOT_PATH: /data/uploads
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      AUTH_RATE_LIMIT_HMAC_SECRET: ${AUTH_RATE_LIMIT_HMAC_SECRET}
+      AUTH_ARGON2_MAX_CONCURRENCY: ${AUTH_ARGON2_MAX_CONCURRENCY}
+      AUTH_ARGON2_MAX_QUEUE: ${AUTH_ARGON2_MAX_QUEUE}
+      AUTH_PASSWORD_RESET_ENABLED: "false"
+      SIPAT_ALLOW_DEMO_SEED: ${SIPAT_ALLOW_DEMO_SEED:-false}
+      SIPAT_DEMO_SEED_CONFIRMATION: ${SIPAT_DEMO_SEED_CONFIRMATION:-}
+      SIPAT_DEMO_ADMIN_PASSWORD: ${SIPAT_DEMO_ADMIN_PASSWORD:-}
+      SIPAT_DEMO_DIRECTOR_PASSWORD: ${SIPAT_DEMO_DIRECTOR_PASSWORD:-}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    volumes:
+      - type: bind
+        source: ${UPLOADS_HOST_PATH}
+        target: /data/uploads
+        bind:
+          create_host_path: false
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - internal
+    restart: "no"
+
   web:
     image: ${COMPOSE_PROJECT_NAME:-sipat}-web:${IMAGE_TAG:-local}
     build:
