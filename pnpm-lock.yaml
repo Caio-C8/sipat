@@ -6,6 +6,8 @@ settings:
   injectWorkspacePackages: true
 
 overrides:
+  node-forge@<=1.4.0: ^1.4.2
+  systeminformation@<5.33.16: ^5.33.18
   brace-expansion@>=2.0.0 <2.1.5: ^2.1.5
   brace-expansion@>=2.0.0 <2.1.6: ^2.1.6
   brace-expansion@>=2.0.0 <2.1.7: ^2.1.7
@@ -21,7 +23,7 @@ overrides:
   uuid@<11.1.1: ^11.1.1
 
 patchedDependencies:
-  node-forge@1.4.0: 4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0
+  deepmerge@4.3.1: baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92
   zod@3.25.76: 9462cfdbc3427882d2c60c9482b1437d287f8bd7fb626af812b05292d9dd6824
 
 importers:
@@ -6812,8 +6814,8 @@ packages:
       encoding:
         optional: true
 
-  node-forge@1.4.0:
-    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
+  node-forge@1.4.2:
+    resolution: {integrity: sha512-rRtAR5XLJ8gCKd9du4qrKAsgCG1ObGP4gLeNJMa4vYSeq4bmBMOJk5IHkrviBV0q7uoAJlVd8HEQYQSVUb4FGQ==}
     engines: {node: '>= 6.13.0'}
 
   node-gyp-build@4.8.4:
@@ -7980,8 +7982,8 @@ packages:
     resolution: {integrity: sha512-eNRKgb3z66Yp3D2CixVujOUvXLFUTij/zVnV8KRyvFdQwpz7I5DS8UfRkTeLzb64u+dkzDSdelE24izu+zSSUg==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  systeminformation@5.33.15:
-    resolution: {integrity: sha512-s5RloL0F7xhN0ZjfHtLGnbf7EW74EI0N8NFL+1xR7Oxz9QA33obNZsl7lyfnJOhN04E/kGFPoJPlvY7TZ5fzmw==}
+  systeminformation@5.33.18:
+    resolution: {integrity: sha512-SF8DBQx3ypa8zDqZlezpHQ6M2g7TrqSEWpAtC4OsHCdLmi7J2WdxaSbA8/DJyEn2l/CHPrW0VFenoqoDccrw6g==}
     engines: {node: '>=10.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
@@ -9402,7 +9404,7 @@ snapshots:
       object-treeify: 1.1.33
       open: 8.4.2
       picomatch: 4.0.7
-      systeminformation: 5.33.15
+      systeminformation: 5.33.18
       undici: 7.30.1
       which: 4.0.0
       yocto-spinner: 1.2.2
@@ -9622,7 +9624,7 @@ snapshots:
       glob: 13.0.6
       lan-network: 0.2.1
       multitars: 1.0.2
-      node-forge: 1.4.0(patch_hash=4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0)
+      node-forge: 1.4.2
       npm-package-arg: 11.0.3
       ora: 3.4.0
       picomatch: 4.0.7
@@ -9659,7 +9661,7 @@ snapshots:
 
   '@expo/code-signing-certificates@0.0.7':
     dependencies:
-      node-forge: 1.4.0(patch_hash=4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0)
+      node-forge: 1.4.2
 
   '@expo/config-plugins@58.0.10(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
@@ -9689,7 +9691,7 @@ snapshots:
       '@expo/json-file': 11.2.1
       '@expo/platforms': 58.0.1
       '@expo/require-utils': 58.0.4(supports-color@8.1.1)(typescript@6.0.3)
-      deepmerge: 4.3.1
+      deepmerge: 4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92)
       getenv: 2.0.0
       glob: 13.0.6
       resolve-workspace-root: 2.0.1
@@ -12063,7 +12065,7 @@ snapshots:
       '@dotenvx/dotenvx': 1.75.1
       cn: 0.2.6
       code-block-writer: 13.0.3
-      deepmerge: 4.3.1
+      deepmerge: 4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92)
       execa: 9.6.1
       fast-glob: 3.3.3
       fs-extra: 11.4.1
@@ -13714,7 +13716,7 @@ snapshots:
 
   deepmerge-ts@8.0.2: {}
 
-  deepmerge@4.3.1: {}
+  deepmerge@4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92): {}
 
   default-browser-id@5.0.1: {}
 
@@ -14771,7 +14773,7 @@ snapshots:
       chalk: 4.1.2
       chokidar: 4.0.3
       cosmiconfig: 8.3.6(typescript@5.9.3)
-      deepmerge: 4.3.1
+      deepmerge: 4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92)
       fs-extra: 10.1.0
       memfs: 3.5.3
       minimatch: 3.1.5
@@ -15351,7 +15353,7 @@ snapshots:
       babel-jest: 30.5.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       chalk: 4.1.2
       ci-info: 4.4.0
-      deepmerge: 4.3.1
+      deepmerge: 4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92)
       glob: 13.0.6
       graceful-fs: 4.2.11
       jest-circus: 30.5.2(supports-color@8.1.1)
@@ -16209,7 +16211,7 @@ snapshots:
   nestjs-zod@5.5.0(@nestjs/common@11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(rxjs@7.8.2)(zod@4.6.7):
     dependencies:
       '@nestjs/common': 11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
-      deepmerge: 4.3.1
+      deepmerge: 4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92)
       rxjs: 7.8.2
       zod: 4.6.7
 
@@ -16266,7 +16268,7 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
-  node-forge@1.4.0(patch_hash=4fa957cddb4b4601a48b535053d0fec7ed013f9d075660a38365f285fc830fe0): {}
+  node-forge@1.4.2: {}
 
   node-gyp-build@4.8.4: {}
 
@@ -17326,7 +17328,7 @@ snapshots:
       cn: 0.2.6
       commander: 14.0.3
       dedent: 1.7.2
-      deepmerge: 4.3.1
+      deepmerge: 4.3.1(patch_hash=baf654e6c0a07b5a497891a670a4db98fd1410f7a705ba814948d883eda34d92)
       diff: 8.0.4
       execa: 9.6.1
       fast-glob: 3.3.3
@@ -17676,7 +17678,7 @@ snapshots:
     dependencies:
       '@pkgr/core': 0.3.6
 
-  systeminformation@5.33.15: {}
+  systeminformation@5.33.18: {}
 
   tagged-tag@1.0.0: {}
 
