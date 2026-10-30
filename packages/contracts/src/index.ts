@@ -25,3 +25,4 @@ export interface HealthResponse {
 }
 export * from "./movimentacao";
 export * from "./manutencao";
+export * from "./reavaliacao-patrimonio";

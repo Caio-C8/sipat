@@ -29,6 +29,7 @@ import { InventariosModule } from "./modules/inventarios/inventarios.module";
 import { BaixasModule } from "./modules/baixas/baixas.module";
 import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
 import { ManutencoesModule } from "./modules/manutencoes/manutencoes.module";
+import { ReavaliacoesModule } from "./modules/reavaliacoes/reavaliacoes.module";
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ManutencoesModule } from "./modules/manutencoes/manutencoes.module";
     NotasFiscaisModule,
     PatrimoniosModule,
     ProcessosCompraModule,
+    ReavaliacoesModule,
     ResponsaveisModule,
     SetoresModule,
     UsuariosModule,

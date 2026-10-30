@@ -48,6 +48,11 @@ No estado atual:
   dados legados fictícios, e o fluxo HTTP/Web foi verificado em PostgreSQL
   descartável; ver [MANUTENCOES-001](../../tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
 
+- `ReavaliacoesModule` oferece prévia, confirmação atômica, histórico e
+  consulta. Os testes de API e PostgreSQL isolado passaram; a data de
+  referência é limitada ao mês corrente até hoje; ver
+  [REAVALIACOES-001](../../tasks/REAVALIACOES-001-api-persistencia-reavaliacoes.md).
+
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,

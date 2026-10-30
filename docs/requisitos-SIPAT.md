@@ -247,9 +247,12 @@ correções está registrada em RF19.
 - A reavaliação pode aumentar ou diminuir o valor do bem.
 - O usuário deve informar o novo valor de cada patrimônio reavaliado.
 - Patrimônios baixados não podem ser reavaliados.
-- O parâmetro de depreciação vigente deve ser encerrado e um novo parâmetro deve ser criado com base nos dados reavaliados.
+- Se houver parâmetro de depreciação vigente, ele deve ser encerrado e um novo parâmetro deve ser criado com base nos dados reavaliados. Se o bem nunca teve parâmetro, o Diretor pode confirmar na reavaliação a criação do primeiro com o novo valor bruto, vida útil e residual informados, iniciado na data de referência; o histórico deve indicar que não havia parâmetro anterior e a depreciação acumulada anterior deve ser zero.
 - A situação contábil do patrimônio deve ser atualizada, com novo valor bruto e reinício do acumulado de depreciação aplicável ao novo parâmetro.
 - Cada patrimônio reavaliado deve gerar seu próprio registro histórico.
+- Um bem elegível com depreciação pendente na competência corrente deve ser depreciado antes de ser reavaliado. Bens já no residual ou ainda no mês de início do parâmetro não são bloqueados por essa condição.
+- O dia civil institucional da reavaliação e a competência de depreciação usam o fuso `America/Sao_Paulo`, inclusive na virada do mês.
+- A data de referência da reavaliação deve estar no mês corrente e não pode ultrapassar o dia atual nesse fuso; datas de meses anteriores e datas futuras são recusadas.
 
 ### RF15: Depreciação Automática de Patrimônios
 
@@ -261,7 +264,7 @@ correções está registrada em RF19.
 
 - A depreciação deve utilizar o método linear definido pela instituição.
 - A documentação registra como referência o cálculo do valor periódico a partir do valor ainda depreciável, do valor residual e da vida útil restante.
-- Cada execução deve tratar somente a competência civil mensal corrente do servidor; competências passadas ou futuras não podem ser processadas.
+- Cada execução deve tratar somente a competência civil mensal corrente em `America/Sao_Paulo`; competências passadas ou futuras não podem ser processadas.
 - O mesmo patrimônio não pode possuir duas depreciações para o mesmo parâmetro na mesma competência.
 - A instituição adota a depreciação mensal integral a partir da competência seguinte à `dataInicio` do parâmetro, sem cálculo proporcional por dias no primeiro mês.
 - Um patrimônio cadastrado depois de uma execução pode integrar nova execução da competência corrente somente se seu parâmetro tiver `dataInicio` anterior ao primeiro dia dessa competência; não devem ser criadas depreciações retroativas para compensar competências encerradas.
@@ -618,7 +621,7 @@ retirar validações existentes como solução automática.
 - O valor periódico deve ser calculado com precisão de até sete casas decimais a partir do valor ainda depreciável dividido pela vida útil restante; a última quota deve absorver eventual diferença sem ultrapassar o valor residual.
 - Cada depreciação deve possuir registro da competência e do valor depreciado.
 - Não deve ser possível registrar duas depreciações para o mesmo patrimônio, utilizando o mesmo parâmetro e sendo na mesma competência.
-- Uma reavaliação deve invalidar o parâmetro de depreciação anterior e criar um novo parâmetro.
+- Uma reavaliação deve invalidar o parâmetro de depreciação anterior, quando houver, e criar um novo parâmetro. Para bem que nunca teve parâmetro, a criação do primeiro exige confirmação explícita na reavaliação.
 
 ### RNF11: Integridade das Operações Concorrentes
 

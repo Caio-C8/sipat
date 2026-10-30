@@ -116,6 +116,17 @@ Lista, criação e detalhe no shell autenticado, com orçamento e retorno por it
 histórico e documentos reais. O percurso Chromium/axe e os limites da verificação
 estão na [tarefa](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
 
+## Reavaliações
+
+### WEB-REAVALIACOES-001 — Consulta e registro integrados
+
+**Status:** implementado e verificado com API e PostgreSQL descartável em 29/10/2026.
+
+Lista e detalhe acessíveis aos dois perfis; seleção, prévia e confirmação pelo
+Diretor com a API real. A data de referência é limitada ao mês corrente até
+hoje. O percurso Web–API–PostgreSQL, viewport estreita e axe passaram.
+[Tarefa](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md).
+
 ## Movimentações
 
 ### WEB-MOVIMENTACOES-000 — Placeholder no shell

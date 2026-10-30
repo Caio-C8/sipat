@@ -122,7 +122,10 @@ async function main() {
               tipoNumeroPatrimonial: "SEM_NUMERO_OFICIAL",
               descricao,
               marca: "DEMO",
-              textoBusca: descricao.toLowerCase(),
+              textoBusca: descricao
+                .normalize("NFD")
+                .replace(/\p{M}/gu, "")
+                .toUpperCase(),
               status: "ATIVO",
               dataTombamento: new Date("2026-10-28T00:00:00.000Z"),
               valorIncorporacao: valor,

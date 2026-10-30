@@ -20,6 +20,10 @@ fronteiras entre UI, contratos e integração HTTP.
   consultar, criar, revisar orçamento, registrar retorno e anexar/abrir PDFs
   pela API real; o percurso Chromium com banco isolado está em
   [WEB-MANUTENCOES-001](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md);
+- `/reavaliacoes`, `/reavaliacoes/nova` e o detalhe oferecem consultas,
+  prévia e confirmação na API real; o percurso Chromium com PostgreSQL
+  isolado está em
+  [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md);
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;
