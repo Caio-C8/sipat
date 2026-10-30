@@ -7,13 +7,25 @@ const repositoryRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const mobileRequire = createRequire(
   join(repositoryRoot, "apps", "mobile", "package.json"),
 );
+const webRequire = createRequire(
+  join(repositoryRoot, "apps", "web", "package.json"),
+);
 const expoRequire = createRequire(mobileRequire.resolve("expo/package.json"));
 const expoCliRequire = createRequire(
   expoRequire.resolve("@expo/cli/package.json"),
 );
 const expoCliManifest = expoCliRequire("./package.json");
+const expoConfigRequire = createRequire(
+  expoCliRequire.resolve("@expo/config/package.json"),
+);
+const shadcnRequire = createRequire(webRequire.resolve("shadcn"));
+const dotenvxRequire = createRequire(shadcnRequire.resolve("@dotenvx/dotenvx"));
 
 assert.equal(expoCliManifest.version, "58.1.16");
+assert.equal(expoCliRequire("node-forge/package.json").version, "1.4.2");
+assert.equal(expoConfigRequire("deepmerge/package.json").version, "4.3.1");
+assert.equal(expoCliRequire("zod/package.json").version, "3.25.76");
+assert.equal(dotenvxRequire("systeminformation").version(), "5.33.18");
 
 const { z: zodV3 } = expoCliRequire("zod");
 let parsedArrayElements = 0;
@@ -106,4 +118,15 @@ assert.throws(
   /DigestInfo value/,
 );
 
-console.log("Patches de segurança das dependências verificados.");
+const deepmerge = expoConfigRequire("deepmerge");
+const maliciousDefaults = { session: null };
+const maliciousSource = JSON.parse(
+  '{"session":{"__proto__":{"isAdmin":true}}}',
+);
+const merged = deepmerge(maliciousDefaults, maliciousSource);
+
+assert.equal(Object.getPrototypeOf(merged.session), Object.prototype);
+assert.equal(merged.session.isAdmin, undefined);
+assert.equal(Object.hasOwn(merged.session, "__proto__"), false);
+
+console.log("Correções de segurança das dependências verificadas.");
