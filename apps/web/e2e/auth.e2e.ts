@@ -304,13 +304,16 @@ test.describe("Autenticação Web", () => {
     await expect(
       navigation.getByText("Manutenção", { exact: true }),
     ).toBeVisible();
-    await expect(navigation.getByRole("link")).toHaveCount(3);
+    await expect(navigation.getByRole("link")).toHaveCount(4);
     await expect(
       navigation.getByRole("link", { name: "Movimentações", exact: true }),
     ).toHaveAttribute("href", "/movimentacoes");
     await expect(
       navigation.getByRole("link", { name: "Manutenção", exact: true }),
     ).toHaveAttribute("href", "/manutencoes");
+    await expect(
+      navigation.getByRole("link", { name: "Reavaliação", exact: true }),
+    ).toHaveAttribute("href", "/reavaliacoes");
     await expect(
       navigation.getByRole("link", { name: "Início" }),
     ).toHaveAttribute("aria-current", "page");
@@ -335,6 +338,9 @@ test.describe("Autenticação Web", () => {
     await expect(
       navigation.getByText("Manutenção", { exact: true }),
     ).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: "Reavaliação", exact: true }),
+    ).toHaveAttribute("href", "/reavaliacoes");
   });
 
   test("expõe os estados deliberadamente vazios do shell e restaura o foco", async ({
