@@ -1504,6 +1504,30 @@ plano da consulta com volume representativo.
 Especificação de execução:
 [DEPRECIACOES-001](./tasks/DEPRECIACOES-001-consultar-executar-depreciacoes.md).
 
+## Base realista para desenvolvimento e staging — concluída
+
+**Status:** concluída em 30 de outubro de 2026.
+
+`SEED-GERAL-001` prepara, pelos services da API, uma base sintética realista e
+protegida para desenvolvimento e homologação. O cenário aprovado possui dois
+usuários, dez setores, cinquenta patrimônios, dez processos de compra, vinte
+notas com PDFs, três comissões, um inventário finalizado e duas manutenções. Não
+executa baixas, movimentações comuns, depreciações nem reavaliações.
+
+A execução exige banco de domínio vazio, opt-in explícito e armazenamento
+gravável, recusa produção e não limpa dados. O comando de homologação faz parte
+do critério de aceite e deve estar disponível como
+`pnpm db:seed:geral:staging`, usando um serviço one-shot com o mesmo banco e
+volume privado de uploads da API.
+
+Especificação de execução:
+[SEED-GERAL-001](./tasks/SEED-GERAL-001-base-realista-desenvolvimento-staging.md).
+
+O comando standalone foi integrado à imagem da API e aos wrappers de
+development/staging. A execução isolada em PostgreSQL 17 e filesystem real
+confirmou as contagens, distribuições, estados, documentos privados e recusa de
+reexecução; essa evidência é local e não representa staging remoto.
+
 ## Decisões necessárias antes dos objetivos seguintes
 
 Estas decisões afetam segurança ou comportamento externo e não podem ser

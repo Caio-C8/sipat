@@ -30,6 +30,6 @@ import { SmtpEmailAdapter } from "./smtp-email.adapter";
     { provide: APP_GUARD, useClass: AutorizacaoGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
   ],
-  exports: [AuthService],
+  exports: [AuthService, SenhaHasher],
 })
 export class AuthModule {}

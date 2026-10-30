@@ -132,3 +132,45 @@ por proxy reverso, ingress ou pela plataforma.
 Em uma plataforma gerenciada, prefira o cofre de segredos da plataforma em vez de copiar arquivos `.env`. O Compose aceita as mesmas variáveis injetadas pelo processo de deploy.
 
 Senhas usadas em `DATABASE_URL` precisam estar codificadas como URL quando contêm caracteres reservados. O valor de `POSTGRES_PASSWORD` continua sendo a senha original.
+
+## Seed geral opt-in
+
+`SEED-GERAL-001` aceita somente `development` e `staging`. Quatro variáveis não
+versionadas protegem a execução:
+
+| Variável                       | Regra                                              |
+| ------------------------------ | -------------------------------------------------- |
+| `SIPAT_ALLOW_DEMO_SEED`        | deve ser exatamente `true`                         |
+| `SIPAT_DEMO_SEED_CONFIRMATION` | deve coincidir com `APP_ENV`                       |
+| `SIPAT_DEMO_ADMIN_PASSWORD`    | senha da conta Administrador sintética, sem padrão |
+| `SIPAT_DEMO_DIRECTOR_PASSWORD` | senha da conta Diretor sintética, sem padrão       |
+
+O comando direto de desenvolvimento usa `DATABASE_URL` e
+`UPLOADS_ROOT_PATH` do `.env.development`:
+
+```powershell
+pnpm db:seed:geral:development
+```
+
+O comando de homologação carrega `.env.staging` e executa o serviço one-shot
+`seed-geral` na rede interna do Compose. O serviço reutiliza a imagem runner da
+API, depende do `migrate`, recebe a URL do PostgreSQL interno e monta o mesmo
+`UPLOADS_HOST_PATH` em `/data/uploads`:
+
+```powershell
+pnpm db:seed:geral:staging
+```
+
+Antes do primeiro registro de domínio, o processo confirma ambiente, opt-in,
+confirmação, credenciais, migrations, banco de domínio vazio e armazenamento
+gravável. Uma segunda execução ou uma base parcialmente preenchida é recusada;
+não há opção de força, limpeza ou sobrescrita. O cenário concluído é auditado
+quanto a contagens, distribuições, relações, estados e PDFs físicos.
+
+Não existe transação única entre Argon2, PostgreSQL e filesystem. Se o processo
+falhar após começar a criação, descarte somente a infraestrutura isolada desse
+ambiente de demonstração: confirme primeiro `COMPOSE_PROJECT_NAME`, banco e
+`UPLOADS_HOST_PATH`, preserve o que precisar de backup, remova o volume do banco
+e o conteúdo privado correspondentes, recrie o diretório com permissões de
+leitura/escrita, reaplique migrations e só então repita. Nunca aplique esse
+procedimento a staging compartilhado ou produção.
