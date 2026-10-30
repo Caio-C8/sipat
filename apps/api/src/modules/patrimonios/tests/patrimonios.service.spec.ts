@@ -110,7 +110,10 @@ describe("PatrimoniosService", () => {
       limite: 20,
     });
     const where = {
-      textoBusca: { contains: "CAMERA SAO JOSE" },
+      OR: [
+        { textoBusca: { contains: "CAMERA SAO JOSE" } },
+        { numeroPatrimonio: { equals: "CAMERA SAO JOSE" } },
+      ],
       status: "ATIVO",
       setorAtualId: query.setorId,
       especieId: query.especieId,
@@ -120,6 +123,23 @@ describe("PatrimoniosService", () => {
     expect(repository.listar).toHaveBeenCalledWith({
       where,
       skip: 20,
+      take: 20,
+    });
+    expect(repository.contar).toHaveBeenCalledWith(where);
+  });
+
+  it("busca exatamente pelo número patrimonial exibido", async () => {
+    await service.listar({ pagina: 1, limite: 20, busca: "SP-000031" });
+
+    const where = {
+      OR: [
+        { textoBusca: { contains: "SP-000031" } },
+        { numeroPatrimonio: { equals: "SP-31" } },
+      ],
+    };
+    expect(repository.listar).toHaveBeenCalledWith({
+      where,
+      skip: 0,
       take: 20,
     });
     expect(repository.contar).toHaveBeenCalledWith(where);

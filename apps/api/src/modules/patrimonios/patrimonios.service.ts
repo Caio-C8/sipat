@@ -160,10 +160,21 @@ export class PatrimoniosService {
   private criarFiltro(
     query: ListarPatrimoniosQueryData,
   ): Prisma.PatrimonioWhereInput {
+    const buscaNormalizada =
+      query.busca === undefined ? undefined : this.normalizarTexto(query.busca);
+    const buscaNumero =
+      buscaNormalizada === undefined
+        ? undefined
+        : this.normalizarBuscaNumeroPatrimonial(buscaNormalizada);
     return {
-      ...(query.busca === undefined
+      ...(buscaNormalizada === undefined
         ? {}
-        : { textoBusca: { contains: this.normalizarTexto(query.busca) } }),
+        : {
+            OR: [
+              { textoBusca: { contains: buscaNormalizada } },
+              { numeroPatrimonio: { equals: buscaNumero } },
+            ],
+          }),
       ...(query.status === undefined ? {} : { status: query.status }),
       ...(query.setorId === undefined ? {} : { setorAtualId: query.setorId }),
       ...(query.especieId === undefined ? {} : { especieId: query.especieId }),
@@ -174,6 +185,14 @@ export class PatrimoniosService {
         ? {}
         : { tipoNumeroPatrimonial: query.tipoNumeroPatrimonial }),
     };
+  }
+
+  private normalizarBuscaNumeroPatrimonial(busca: string): string {
+    const numeroFormatado = /^(SP-)?0*(\d+)$/.exec(busca);
+    if (!numeroFormatado) return busca;
+    const prefixo = numeroFormatado[1] ?? "";
+    const digitos = numeroFormatado[2]!;
+    return `${prefixo}${BigInt(digitos).toString()}`;
   }
 
   private async validarRelacoes(

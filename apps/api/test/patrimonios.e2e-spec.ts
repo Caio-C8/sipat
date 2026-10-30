@@ -298,7 +298,10 @@ describe("patrimônios", () => {
         take: 10,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         where: {
-          textoBusca: { contains: "CAMERA" },
+          OR: [
+            { textoBusca: { contains: "CAMERA" } },
+            { numeroPatrimonio: { equals: "CAMERA" } },
+          ],
           status: "ATIVO",
           setorAtualId: SETOR_ID,
           especieId: ESPECIE_ID,
