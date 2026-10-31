@@ -17,7 +17,6 @@ describe("catálogo de navegação do sistema", () => {
       "/emprestimos",
       "/manutencoes",
       "/reavaliacoes",
-
     ]);
     expect(
       catalogoNavegacao.find((item) => item.id === "movimentacoes")
