@@ -1,5 +1,11 @@
 # Roadmap da aplicação Web
 
+## WEB-EMPRESTIMOS-001 — Consulta, saída e devolução
+
+**Status:** implementada e validada em PostgreSQL isolado em 31/10/2026. Interface simples
+no shell autenticado, com operações reais, devolução parcial, estados de erro e
+permissão. [Tarefa e aceite](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+
 ## Baseline concluído
 
 - [x] Next.js com App Router, TypeScript, ESLint e Vitest configurados.

@@ -139,6 +139,8 @@ model Usuario {
   fornecedoresCriados                   Fornecedor[]
   comissoesCriadas                      Comissao[]
   emprestimosCriados                    EmprestimoPatrimonio[]
+  devolucoesEmprestimoCriadas           DevolucaoPatrimonio[]
+  idempotenciasEmprestimo               IdempotenciaEmprestimo[]
   inventariosCriados                    Inventario[]
   inventariosIniciados                  Inventario[]                    @relation("InventarioIniciadoPor")
   inventariosFinalizados                Inventario[]                    @relation("InventarioFinalizadoPor")
@@ -326,6 +328,7 @@ model Setor {
   responsavel                        Responsavel               @relation(fields: [responsavelId], references: [id])
   createdBy                          Usuario                   @relation(fields: [createdById], references: [id])
   patrimoniosAtuais                  Patrimonio[]
+  emprestimosVinculados              EmprestimoPatrimonio[]   @relation("SetorVinculoEmprestimo")
   transferenciasComoSetorAntigo      TransferenciaPatrimonio[] @relation("TransferenciaSetorAntigo")
   transferenciasComoSetorAtual       TransferenciaPatrimonio[] @relation("TransferenciaSetorAtual")
   itensInventarioComoSetorEsperado   ItemInventario[]          @relation("ItemInventarioSetorEsperado")
@@ -516,6 +519,8 @@ model EmprestimoPatrimonio {
   finalidade            String?   @db.Text
   observacao            String?   @db.Text
   grupoEmprestimoId     String    @map("grupo_emprestimo_id") @db.Uuid
+  modoAgrupamento       ModoAgrupamentoEmprestimo? @map("modo_agrupamento")
+  setorVinculoId        String?   @map("setor_vinculo_id") @db.Uuid
   comissaoId            String    @map("comissao_id") @db.Uuid
   patrimonioId          String    @map("patrimonio_id") @db.Uuid
 
@@ -524,12 +529,14 @@ model EmprestimoPatrimonio {
 
   comissao                    Comissao             @relation(fields: [comissaoId], references: [id])
   patrimonio                  Patrimonio           @relation(fields: [patrimonioId], references: [id])
+  setorVinculo                Setor?               @relation("SetorVinculoEmprestimo", fields: [setorVinculoId], references: [id])
   createdBy                   Usuario              @relation(fields: [createdById], references: [id])
   devolucao                   DevolucaoPatrimonio?
   itensInventarioJustificados ItemInventario[]
 
   @@unique([id, patrimonioId], map: "emprestimos_patrimonio_id_patrimonio_id_key")
   @@index([comissaoId], map: "emprestimos_patrimoniais_comissao_id_idx")
+  @@index([grupoEmprestimoId, createdAt(sort: Desc), id(sort: Desc)], map: "emprestimos_grupo_created_id_idx")
   @@index([patrimonioId, dataEmprestimo(sort: Desc), id(sort: Desc)], map: "emprestimos_patrimonio_data_id_idx")
   @@map("emprestimos_patrimoniais")
 }
@@ -540,14 +547,34 @@ model DevolucaoPatrimonio {
   observacao    String?  @db.Text
   emprestimoId  String   @unique @map("emprestimo_id") @db.Uuid
   comissaoId    String   @map("comissao_id") @db.Uuid
+  createdById   String?  @map("created_by_id") @db.Uuid
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   emprestimo EmprestimoPatrimonio @relation(fields: [emprestimoId], references: [id])
   comissao   Comissao             @relation(fields: [comissaoId], references: [id])
+  createdBy  Usuario?             @relation(fields: [createdById], references: [id])
 
   @@index([comissaoId], map: "devolucoes_patrimoniais_comissao_id_idx")
   @@map("devolucoes_patrimoniais")
+}
+
+enum ModoAgrupamentoEmprestimo {
+  EM_GRUPO
+  SEPARADAMENTE
+}
+
+model IdempotenciaEmprestimo {
+  usuarioId     String   @map("usuario_id") @db.Uuid
+  chave         String   @db.Uuid
+  tipoOperacao  String   @map("tipo_operacao") @db.VarChar(20)
+  payloadHash   String   @map("payload_hash") @db.Char(64)
+  resultado     Json     @db.JsonB
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@id([usuarioId, chave])
+  @@map("idempotencias_emprestimo")
 }
 
 model Manutencao {

@@ -395,6 +395,21 @@ export class PatrimoniosService {
   bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {
     return this.patrimonios.bloquearParaMovimentacao(ids, tx);
   }
+  atualizarStatusEmprestimo(
+    id: string,
+    esperado: "ATIVO" | "EMPRESTADO",
+    novo: "ATIVO" | "EMPRESTADO",
+    instante: Date,
+    tx: Prisma.TransactionClient,
+  ) {
+    return this.patrimonios.atualizarStatusEmprestimo(
+      id,
+      esperado,
+      novo,
+      instante,
+      tx,
+    );
+  }
   atualizarSetorMovimentacao(
     id: string,
     setorId: string,

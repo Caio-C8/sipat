@@ -171,6 +171,18 @@ export class PatrimoniosRepository {
       ORDER BY id FOR UPDATE
     `;
   }
+  atualizarStatusEmprestimo(
+    id: string,
+    esperado: "ATIVO" | "EMPRESTADO",
+    novo: "ATIVO" | "EMPRESTADO",
+    instante: Date,
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.patrimonio.updateMany({
+      where: { id, status: esperado },
+      data: { status: novo, updatedAt: instante },
+    });
+  }
   atualizarSetorMovimentacao(
     id: string,
     setorAtualId: string,

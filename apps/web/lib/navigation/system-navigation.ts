@@ -109,8 +109,10 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     label: "Empréstimos",
     icon: Landmark,
     grupo: "principal",
-    perfis: APENAS_DIRETOR,
-    implementado: false,
+    perfis: TODOS_PERFIS,
+    implementado: true,
+    href: "/emprestimos",
+    breadcrumb: ["Início", "Empréstimos"],
   },
   {
     id: "manutencao",
@@ -235,6 +237,7 @@ export function encontrarNavegacaoPorCaminho(
     (item) =>
       item.href === pathname ||
       (item.href === "/movimentacoes" &&
-        pathname.startsWith("/movimentacoes/")),
+        pathname.startsWith("/movimentacoes/")) ||
+      (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")),
   );
 }

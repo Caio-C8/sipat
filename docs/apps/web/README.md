@@ -24,6 +24,9 @@ fronteiras entre UI, contratos e integração HTTP.
   prévia e confirmação na API real; o percurso Chromium com PostgreSQL
   isolado está em
   [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md);
+- `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
+  devolução parcial na API real; o percurso com PostgreSQL isolado está em
+  [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md);
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;

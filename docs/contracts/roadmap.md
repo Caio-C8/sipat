@@ -1,5 +1,11 @@
 # Roadmap do `@repo/contracts`
 
+## CONTRACTS-015 — Contratos de empréstimos e devoluções
+
+**Status:** concluído em 31/10/2026. Seis operações RF16, modos de agrupamento, datas civis,
+filtros paginados e respostas públicas, com teto de 50 bens por confirmação.
+[Tarefa e aceite](../tasks/CONTRACTS-015-contratos-emprestimos.md).
+
 Este arquivo registra:
 
 1. o baseline técnico já entregue;

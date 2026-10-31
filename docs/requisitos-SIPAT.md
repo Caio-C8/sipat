@@ -293,6 +293,13 @@ correções está registrada em RF19.
 - Deve ser possível emprestar vários patrimônios e identificar quando fazem parte do mesmo empréstimo.
 - Cada patrimônio deve manter um registro individual que permita rastrear sua situação e sua devolução.
 - Ao emprestar, o patrimônio deve assumir o status EMPRESTADO; após a devolução, deve retornar ao status ATIVO.
+- O Diretor de Patrimônio escolhe explicitamente entre **em grupo** (um identificador UUID de consulta compartilhado e um registro por bem) e **separadamente** (um empréstimo independente por bem), inclusive ao selecionar somente um bem. Os dados da confirmação são copiados para cada registro individual.
+- Destinatário externo em texto livre (pessoa ou instituição), finalidade, data de saída, previsão de devolução e comissão são obrigatórios para novos registros; observação é opcional. Dados nulos legados permanecem legíveis como não informados.
+- Saída e devolução aceitam datas civis passadas ou de hoje, nunca futuras. A previsão não antecede a saída; a devolução não antecede a saída. Cada comissão deve estar vigente na data civil da respectiva operação e pode ser diferente no retorno. O instante de gravação permanece auditável separadamente.
+- A devolução pode selecionar parte dos bens ainda pendentes. Apenas os selecionados voltam a ATIVO; o grupo é concluído quando não resta pendência. Atraso é calculado em America/Sao_Paulo sobre previsão vencida de bem pendente, sem estado persistido.
+- Uma saída retroativa que contradiga evento patrimonial ou conferência de inventário posterior é recusada, inclusive quando os fatos compartilham o mesmo dia civil sem ordem comprovável. Os vínculos e resultados históricos do inventário não são reescritos após devolução.
+- Para saída ou devolução retroativa, outro evento patrimonial ou conferência no mesmo dia civil, sem horário de operação que comprove a ordem, produz conflito. Decisão confirmada em 31/10/2026.
+- Empréstimo e devolução não alteram setor, responsável cadastral nem valor patrimonial. Confirmações são atômicas e idempotentes por usuário e chave UUID; a mesma chave com outro conteúdo é conflito.
 
 ### RF17: Baixa de Patrimônios
 

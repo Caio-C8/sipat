@@ -36,8 +36,9 @@ async function sessao(
     },
   ]);
 }
-function auxiliares(api: ApiMock, contexto = "REGISTRO") {
-  api.expectGet("/movimentacoes/opcoes/setores", ({ url }) => {
+function auxiliares(api: ApiMock, contexto = "REGISTRO", optional = false) {
+  const register = optional ? api.allowGet.bind(api) : api.expectGet.bind(api);
+  register("/movimentacoes/opcoes/setores", ({ url }) => {
     expect(url.searchParams.get("contexto")).toBe(contexto);
     return {
       body: paginada(
@@ -45,7 +46,7 @@ function auxiliares(api: ApiMock, contexto = "REGISTRO") {
       ),
     };
   });
-  api.expectGet("/movimentacoes/opcoes/comissoes", ({ url }) => {
+  register("/movimentacoes/opcoes/comissoes", ({ url }) => {
     expect(url.searchParams.get("contexto")).toBe(contexto);
     return {
       body: paginada(
@@ -109,7 +110,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .selectOption(fixture.comissoes[0]!.id);
     await page.getByLabel("De", { exact: true }).fill("2026-10-28");
     await page.getByLabel("Até", { exact: true }).fill("2026-10-28");
-    auxiliares(apiMock, "FILTRO");
+    auxiliares(apiMock, "FILTRO", true);
     await page
       .getByRole("button", { name: "Aplicar filtros", exact: true })
       .click();

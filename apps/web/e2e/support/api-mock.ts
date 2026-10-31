@@ -22,6 +22,7 @@ type ApiMockHandler = {
   method: string;
   path: string | RegExp;
   remaining: number;
+  optional: boolean;
   responder: ApiMockResponder;
 };
 
@@ -73,6 +74,10 @@ export class ApiMock {
     this.register("GET", path, responder, times);
   }
 
+  allowGet(path: string | RegExp, responder: ApiMockResponder): void {
+    this.register("GET", path, responder, 1, true);
+  }
+
   expectPost(
     path: string | RegExp,
     responder: ApiMockResponder,
@@ -99,7 +104,7 @@ export class ApiMock {
 
   verify(): void {
     const pending = this.handlers
-      .filter((handler) => handler.remaining > 0)
+      .filter((handler) => handler.remaining > 0 && !handler.optional)
       .map(
         (handler) =>
           `${handler.method} ${describePath(handler.path)}: ${
@@ -124,6 +129,7 @@ export class ApiMock {
     path: string | RegExp,
     responder: ApiMockResponder,
     times: number,
+    optional = false,
   ): void {
     if (!Number.isSafeInteger(times) || times <= 0) {
       throw new Error("The expected request count must be a positive integer.");
@@ -134,6 +140,7 @@ export class ApiMock {
       path,
       responder,
       remaining: times,
+      optional,
     });
   }
 
