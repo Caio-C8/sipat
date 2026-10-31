@@ -304,7 +304,13 @@ test.describe("Autenticação Web", () => {
     await expect(
       navigation.getByText("Manutenção", { exact: true }),
     ).toBeVisible();
-    await expect(navigation.getByRole("link")).toHaveCount(5);
+    await expect(navigation.getByRole("link")).toHaveCount(6);
+    await expect(
+      navigation.getByRole("link", {
+        name: "Pesquisar patrimônio",
+        exact: true,
+      }),
+    ).toHaveAttribute("href", "/patrimonios");
     await expect(
       navigation.getByRole("link", { name: "Movimentações", exact: true }),
     ).toHaveAttribute("href", "/movimentacoes");
@@ -338,6 +344,12 @@ test.describe("Autenticação Web", () => {
     await expect(
       navigation.getByText("Cadastrar patrimônio", { exact: true }),
     ).toBeVisible();
+    await expect(
+      navigation.getByRole("link", {
+        name: "Cadastrar patrimônio",
+        exact: true,
+      }),
+    ).toHaveAttribute("href", "/patrimonios/novo");
     await expect(navigation.getByText("Usuários", { exact: true })).toHaveCount(
       0,
     );
