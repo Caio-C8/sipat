@@ -62,7 +62,7 @@ export function passwordRecoveryErrorMessage(error: unknown) {
   if (error.kind === "timeout")
     return "O SIPAT demorou para responder. Tente novamente.";
   if (error.kind === "invalid-response")
-    return "O SIPAT retornou uma resposta incompatível. Tente novamente mais tarde.";
+    return "Não foi possível concluir a solicitação. Tente novamente mais tarde.";
   if (error.status !== undefined && error.status >= 500)
     return "O serviço de recuperação está indisponível. Tente novamente mais tarde.";
   return "Não foi possível enviar a solicitação. Tente novamente.";

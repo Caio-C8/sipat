@@ -37,7 +37,7 @@ describe("erros dos formulários de autenticação", () => {
     );
     expect(
       passwordRecoveryErrorMessage(new ApiError("invalid-response", 202)),
-    ).toContain("resposta incompatível");
+    ).toContain("Não foi possível concluir a solicitação");
     expect(passwordRecoveryErrorMessage(new ApiError("http", 503))).toContain(
       "indisponível",
     );
