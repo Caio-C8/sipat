@@ -1,0 +1,72 @@
+/** Dados ilustrativos das telas de setores; não representam registros da API. */
+export const setoresExemplo = [
+  {
+    id: "administrativo",
+    nome: "Administrativo",
+    codigo: "SET-001",
+    sigla: "ADM",
+    responsavel: "Paulo Caixeta",
+    sala: "Sala 101",
+    andar: "1º andar",
+    edificio: "Sede da Câmara",
+    ramal: "101",
+    bens: 12,
+  },
+  {
+    id: "tecnologia-informacao",
+    nome: "Tecnologia da Informação",
+    codigo: "SET-002",
+    sigla: "TI",
+    responsavel: "Paulo Caixeta",
+    sala: "Sala 102",
+    andar: "1º andar",
+    edificio: "Sede da Câmara",
+    ramal: "102",
+    bens: 6,
+  },
+  {
+    id: "plenario",
+    nome: "Plenário",
+    codigo: "SET-003",
+    sigla: "PLN",
+    responsavel: "Paulo Caixeta",
+    sala: "Salão do Plenário",
+    andar: "Térreo",
+    edificio: "Sede da Câmara",
+    ramal: "",
+    bens: 8,
+  },
+  {
+    id: "gabinete-01",
+    nome: "Gabinete 01",
+    codigo: "SET-004",
+    sigla: "GAB01",
+    responsavel: "Paulo Caixeta",
+    sala: "Sala 201",
+    andar: "2º andar",
+    edificio: "Sede da Câmara",
+    ramal: "221",
+    bens: 0,
+  },
+  {
+    id: "gabinete-02",
+    nome: "Gabinete 02",
+    codigo: "SET-005",
+    sigla: "GAB02",
+    responsavel: "Paulo Caixeta",
+    sala: "Sala 202",
+    andar: "2º andar",
+    edificio: "Sede da Câmara",
+    ramal: "222",
+    bens: 4,
+  },
+] as const;
+
+export type SetorExemplo = (typeof setoresExemplo)[number];
+
+export const bensGabineteExemplo = [
+  { numero: "000001911", descricao: "Cadeira de escritório" },
+  { numero: "000001912", descricao: "Mesa de trabalho" },
+  { numero: "000002190", descricao: "Telefone de mesa" },
+  { numero: "000002198", descricao: "Armário baixo" },
+] as const;

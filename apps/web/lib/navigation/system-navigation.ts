@@ -84,11 +84,13 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
   },
   {
     id: "processos-compra-documentos-fiscais",
-    label: "Processos de compra e documentos fiscais",
+    label: "Processos de compra",
     icon: FileText,
-    grupo: "principal",
+    grupo: "administracao",
     perfis: TODOS_PERFIS,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros",
+    breadcrumb: ["Cadastros", "Processos de compra"],
   },
   {
     id: "movimentacoes",
@@ -184,7 +186,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: UsersRound,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros/responsaveis",
+    breadcrumb: ["Cadastros", "Responsáveis"],
   },
   {
     id: "setores",
@@ -192,7 +196,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Building2,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros/setores",
+    breadcrumb: ["Cadastros", "Setores"],
   },
   {
     id: "comissoes",
@@ -200,7 +206,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Scale,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros/comissoes",
+    breadcrumb: ["Cadastros", "Comissões"],
   },
   {
     id: "naturezas",
@@ -208,7 +216,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Shapes,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros/naturezas",
+    breadcrumb: ["Cadastros", "Naturezas"],
   },
   {
     id: "especies",
@@ -216,7 +226,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: PackageSearch,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros/especies",
+    breadcrumb: ["Cadastros", "Espécies"],
   },
   {
     id: "fornecedores",
@@ -242,6 +254,8 @@ export function encontrarNavegacaoPorCaminho(
       item.href === pathname ||
       (item.href === "/movimentacoes" &&
         pathname.startsWith("/movimentacoes/")) ||
-      (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")),
+      (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")) ||
+      (item.href === "/cadastros/setores" &&
+        pathname.startsWith("/cadastros/setores/")),
   );
 }

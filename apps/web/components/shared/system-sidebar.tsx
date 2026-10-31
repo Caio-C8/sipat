@@ -98,7 +98,9 @@ export function SystemSidebar({ perfil }: Readonly<{ perfil: PerfilUsuario }>) {
                   const ativo =
                     item.href === pathname ||
                     (item.href === "/movimentacoes" &&
-                      pathname.startsWith("/movimentacoes/"));
+                      pathname.startsWith("/movimentacoes/")) ||
+                    (item.href === "/cadastros/setores" &&
+                      pathname.startsWith("/cadastros/setores/"));
 
                   return (
                     <li key={item.id}>
