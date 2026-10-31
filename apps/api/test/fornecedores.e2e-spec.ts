@@ -299,6 +299,7 @@ describe("gestão de fornecedores", () => {
     const resposta = await requisicaoAdministrador()
       .post("/api/fornecedores")
       .send({
+        chaveIdempotencia: randomUUID(),
         razaoSocial: " Novo Fornecedor Ltda. ",
         cnpj: "11.444.777/0001-61",
         email: " CONTATO@EXAMPLE.COM ",
@@ -320,10 +321,18 @@ describe("gestão de fornecedores", () => {
   it("rejeita CNPJ inválido e duplicado", async () => {
     const invalido = await requisicaoAdministrador()
       .post("/api/fornecedores")
-      .send({ razaoSocial: "Inválido", cnpj: "12.345.678/0001-00" });
+      .send({
+        chaveIdempotencia: randomUUID(),
+        razaoSocial: "Inválido",
+        cnpj: "12.345.678/0001-00",
+      });
     const duplicado = await requisicaoAdministrador()
       .post("/api/fornecedores")
-      .send({ razaoSocial: "Duplicado", cnpj: "11.222.333/0001-81" });
+      .send({
+        chaveIdempotencia: randomUUID(),
+        razaoSocial: "Duplicado",
+        cnpj: "11.222.333/0001-81",
+      });
 
     expect(invalido.status).toBe(400);
     expect(duplicado.status).toBe(409);
@@ -370,3 +379,4 @@ describe("gestão de fornecedores", () => {
     esperarCodigo(inexistente, "FORNECEDOR_NAO_ENCONTRADO");
   });
 });
+import { randomUUID } from "node:crypto";

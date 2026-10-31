@@ -85,6 +85,7 @@ describe("ProcessosCompraService", () => {
     return {
       body: {
         dados: JSON.stringify({
+          chaveIdempotencia: randomUUID(),
           numeroProcesso: "123/2026",
           anoProcesso: 2026,
           valorTotal: "100.5",
@@ -220,3 +221,4 @@ describe("ProcessosCompraService", () => {
     expect(repository.criar).not.toHaveBeenCalled();
   });
 });
+import { randomUUID } from "node:crypto";

@@ -315,13 +315,19 @@ describe("inventários", () => {
       .post("/api/inventarios")
       .set("Cookie", cookie(tokenDiretor))
       .set("Origin", ORIGEM)
-      .send({ nome: "Inventário anual", comissaoId: COMISSAO_ID });
+      .send({
+        chaveIdempotencia: randomUUID(),
+        nome: "Inventário anual",
+        comissaoId: COMISSAO_ID,
+      });
     const invalido = await postDiretor("/api/inventarios").send({
+      chaveIdempotencia: randomUUID(),
       nome: "Inventário anual",
       comissaoId: COMISSAO_ID,
       status: "FINALIZADO",
     });
     const criado = await postDiretor("/api/inventarios").send({
+      chaveIdempotencia: randomUUID(),
       nome: "Inventário anual",
       comissaoId: COMISSAO_ID,
     });
@@ -333,7 +339,11 @@ describe("inventários", () => {
       true,
     );
     expect(service.criar).toHaveBeenCalledWith(
-      { nome: "Inventário anual", comissaoId: COMISSAO_ID },
+      expect.objectContaining({
+        chaveIdempotencia: expect.any(String),
+        nome: "Inventário anual",
+        comissaoId: COMISSAO_ID,
+      }),
       expect.objectContaining({ id: DIRETOR_ID, perfil: "DIRETOR_PATRIMONIO" }),
     );
   });
@@ -376,6 +386,7 @@ describe("inventários", () => {
     const rotaSetor = `/api/inventarios/${INVENTARIO_ID}/setores/${SETOR_INVENTARIO_ID}`;
     const respostas = await Promise.all([
       postAdministrador("/api/inventarios").send({
+        chaveIdempotencia: randomUUID(),
         nome: "Inventário anual",
         comissaoId: COMISSAO_ID,
       }),
@@ -474,3 +485,4 @@ describe("inventários", () => {
     ).toBe(true);
   });
 });
+import { randomUUID } from "node:crypto";

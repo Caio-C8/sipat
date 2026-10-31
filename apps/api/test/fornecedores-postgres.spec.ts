@@ -50,8 +50,14 @@ describeComPostgres("fornecedores no PostgreSQL", () => {
 
   it("permite somente um CNPJ sob criações concorrentes", async () => {
     const resultados = await Promise.allSettled([
-      service.criar({ razaoSocial: "Fornecedor Um", cnpj: CNPJ }, identidade),
-      service.criar({ razaoSocial: "Fornecedor Dois", cnpj: CNPJ }, identidade),
+      service.criar(
+        { chaveIdempotencia: randomUUID(), razaoSocial: "Fornecedor Um", cnpj: CNPJ },
+        identidade,
+      ),
+      service.criar(
+        { chaveIdempotencia: randomUUID(), razaoSocial: "Fornecedor Dois", cnpj: CNPJ },
+        identidade,
+      ),
     ]);
 
     expect(
@@ -70,7 +76,11 @@ describeComPostgres("fornecedores no PostgreSQL", () => {
 
   it("inativa sem excluir nem romper vínculos históricos", async () => {
     const fornecedor = await service.criar(
-      { razaoSocial: "Fornecedor Histórico", cnpj: CNPJ },
+      {
+        chaveIdempotencia: randomUUID(),
+        razaoSocial: "Fornecedor Histórico",
+        cnpj: CNPJ,
+      },
       identidade,
     );
     const processo = await database.processoCompra.create({
@@ -102,3 +112,4 @@ describeComPostgres("fornecedores no PostgreSQL", () => {
     expect(await database.fornecedor.count()).toBe(1);
   });
 });
+import { randomUUID } from "node:crypto";

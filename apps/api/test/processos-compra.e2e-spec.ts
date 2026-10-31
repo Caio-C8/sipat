@@ -169,6 +169,7 @@ describe("processos de compra", () => {
 
   function dados(anexoIndice: number | null = 0) {
     return JSON.stringify({
+      chaveIdempotencia: randomUUID(),
       numeroProcesso: "123/2026",
       anoProcesso: 2026,
       numeroEmpenho: "456",
@@ -276,3 +277,4 @@ describe("processos de compra", () => {
     expect(alterar.body.dados.observacao).toBeNull();
   });
 });
+import { randomUUID } from "node:crypto";

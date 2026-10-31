@@ -25,6 +25,12 @@ describeComPostgres("inventários no PostgreSQL", () => {
   let setorAtivoId: string;
   let setorInativoId: string;
 
+  const dadosInventario = (nome: string) => ({
+    chaveIdempotencia: randomUUID(),
+    nome,
+    comissaoId,
+  });
+
   jest.setTimeout(60_000);
 
   beforeAll(async () => {
@@ -154,7 +160,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("materializa somente setores ativos e patrimônios ATIVO", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário anual", comissaoId },
+      dadosInventario("Inventário anual"),
       identidade,
     );
     const setores = await database.setorInventario.findMany({
@@ -207,7 +213,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
     });
 
     await expect(
-      service.criar({ nome: "Inventário inválido", comissaoId }, identidade),
+      service.criar(dadosInventario("Inventário inválido"), identidade),
     ).rejects.toMatchObject({
       response: { codigo: "PATRIMONIO_ATIVO_EM_SETOR_INATIVO" },
     });
@@ -218,8 +224,8 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("mantém cada snapshot íntegro sob criações concorrentes", async () => {
     const resultados = await Promise.all([
-      service.criar({ nome: "Inventário A", comissaoId }, identidade),
-      service.criar({ nome: "Inventário B", comissaoId }, identidade),
+      service.criar(dadosInventario("Inventário A"), identidade),
+      service.criar(dadosInventario("Inventário B"), identidade),
     ]);
 
     expect(resultados).toHaveLength(2);
@@ -239,7 +245,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("executa conferência idempotente, conclusão e finalização", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário operacional", comissaoId },
+      dadosInventario("Inventário operacional"),
       identidade,
     );
     const setores = await database.setorInventario.findMany({
@@ -294,7 +300,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("corrige divergência com transferência atômica", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário com divergência", comissaoId },
+      dadosInventario("Inventário com divergência"),
       identidade,
     );
     const setores = await database.setorInventario.findMany({
@@ -394,7 +400,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("registra e corrige localização posterior sem duplicar o item", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário com localização posterior", comissaoId },
+      dadosInventario("Inventário com localização posterior"),
       identidade,
     );
     const setores = await database.setorInventario.findMany({
@@ -495,7 +501,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("preserva empréstimo vigente ao encerrar item não localizado", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário com empréstimo", comissaoId },
+      dadosInventario("Inventário com empréstimo"),
       identidade,
     );
     const setor = await database.setorInventario.findFirstOrThrow({
@@ -534,7 +540,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("preserva manutenção vigente ao encerrar item não localizado", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário com manutenção", comissaoId },
+      dadosInventario("Inventário com manutenção"),
       identidade,
     );
     const setor = await database.setorInventario.findFirstOrThrow({
@@ -573,7 +579,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("bloqueia inativação de setor participante até finalizar o inventário", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário que bloqueia setor", comissaoId },
+      dadosInventario("Inventário que bloqueia setor"),
       identidade,
     );
 
@@ -629,7 +635,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("consolida somente uma escrita em leituras concorrentes", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário concorrente", comissaoId },
+      dadosInventario("Inventário concorrente"),
       identidade,
     );
     const setor = await database.setorInventario.findFirstOrThrow({
@@ -670,7 +676,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("mantém somente um setor em andamento sob inícios concorrentes", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário com início concorrente", comissaoId },
+      dadosInventario("Inventário com início concorrente"),
       identidade,
     );
     const setores = await database.setorInventario.findMany({
@@ -698,7 +704,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("não perde leitura confirmada nem aceita escrita após conclusão concorrente", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário conclusão versus leitura", comissaoId },
+      dadosInventario("Inventário conclusão versus leitura"),
       identidade,
     );
     const setor = await database.setorInventario.findFirstOrThrow({
@@ -744,7 +750,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("não aceita correção depois da finalização concorrente", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário finalização versus correção", comissaoId },
+      dadosInventario("Inventário finalização versus correção"),
       identidade,
     );
     const setores = await database.setorInventario.findMany({
@@ -800,8 +806,8 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("impede dois setores em andamento no inventário e o mesmo setor físico em inventários distintos", async () => {
     const [inventarioA, inventarioB] = await Promise.all([
-      service.criar({ nome: "Inventário A", comissaoId }, identidade),
-      service.criar({ nome: "Inventário B", comissaoId }, identidade),
+      service.criar(dadosInventario("Inventário A"), identidade),
+      service.criar(dadosInventario("Inventário B"), identidade),
     ]);
     const setoresA = await database.setorInventario.findMany({
       where: { inventarioId: inventarioA.id },
@@ -840,7 +846,7 @@ describeComPostgres("inventários no PostgreSQL", () => {
 
   it("impede justificar uma ausência com operação de outro patrimônio", async () => {
     const inventario = await service.criar(
-      { nome: "Inventário com ausência", comissaoId },
+      dadosInventario("Inventário com ausência"),
       identidade,
     );
     const item = await database.itemInventario.findFirstOrThrow({
@@ -874,3 +880,4 @@ describeComPostgres("inventários no PostgreSQL", () => {
     ).rejects.toMatchObject({ code: "P2003" });
   });
 });
+import { randomUUID } from "node:crypto";

@@ -8,6 +8,7 @@ import type { FornecedorDetalhePayload } from "../types";
 const ADMIN_ID = "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0";
 const FORNECEDOR_ID = "6c167f7a-0e4b-46bb-8c78-bc33585c91fa";
 const CNPJ = "11222333000181";
+const CHAVE_IDEMPOTENCIA = "00000000-0000-4000-8000-000000000009";
 
 const identidade: IdentidadeAutenticada = {
   id: ADMIN_ID,
@@ -63,7 +64,11 @@ describe("FornecedoresService", () => {
     repository.criar.mockResolvedValue(fornecedor());
 
     await service.criar(
-      { razaoSocial: "Fornecedor de Teste Ltda.", cnpj: CNPJ },
+      {
+        chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+        razaoSocial: "Fornecedor de Teste Ltda.",
+        cnpj: CNPJ,
+      },
       identidade,
     );
 
@@ -91,7 +96,14 @@ describe("FornecedoresService", () => {
     );
 
     await expect(
-      service.criar({ razaoSocial: "Fornecedor", cnpj: CNPJ }, identidade),
+      service.criar(
+        {
+          chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+          razaoSocial: "Fornecedor",
+          cnpj: CNPJ,
+        },
+        identidade,
+      ),
     ).rejects.toMatchObject({
       response: { codigo: "CNPJ_FORNECEDOR_JA_EXISTENTE" },
     });

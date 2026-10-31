@@ -97,6 +97,7 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     semNumeroOficial = false,
   ): CriarPatrimonioBodyData {
     return {
+      chaveIdempotencia: randomUUID(),
       semNumeroOficial,
       dataTombamento: "2026-10-18",
       tipoIncorporacao: "AQUISICAO",
@@ -391,3 +392,4 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     expect(plano[0]).toBeDefined();
   });
 });
+import { randomUUID } from "node:crypto";

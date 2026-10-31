@@ -74,7 +74,11 @@ suite("movimentações HTTP + PostgreSQL real", () => {
       .set("Cookie", cookie ?? f.cookieDiretor);
   async function criarInventario() {
     return inventarios.criar(
-      { nome: "Inventário de teste", comissaoId: f.comissao.id },
+      {
+        chaveIdempotencia: randomUUID(),
+        nome: "Inventário de teste",
+        comissaoId: f.comissao.id,
+      },
       f.identidade,
     );
   }
