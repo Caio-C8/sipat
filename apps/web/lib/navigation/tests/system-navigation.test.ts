@@ -11,6 +11,8 @@ describe("catálogo de navegação do sistema", () => {
       catalogoNavegacao.filter((item) => item.href).map((item) => item.href),
     ).toEqual([
       "/dashboard",
+      "/patrimonios",
+      "/patrimonios/novo",
       "/movimentacoes",
       "/emprestimos",
       "/manutencoes",
