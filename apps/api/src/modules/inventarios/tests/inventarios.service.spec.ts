@@ -17,6 +17,7 @@ const SETOR_INVENTARIO_ID = "00000000-0000-4000-8000-000000000005";
 const PATRIMONIO_ID = "00000000-0000-4000-8000-000000000006";
 const ITEM_ID = "00000000-0000-4000-8000-000000000007";
 const SETOR_ENCONTRADO_ID = "00000000-0000-4000-8000-000000000008";
+const CHAVE_IDEMPOTENCIA = "00000000-0000-4000-8000-000000000009";
 
 function progressoVazio() {
   return {
@@ -155,7 +156,11 @@ describe("InventariosService", () => {
 
   it("materializa setores e patrimônios ativos na mesma transação", async () => {
     const resultado = await service.criar(
-      { nome: "Inventário anual", comissaoId: COMISSAO_ID },
+      {
+        chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+        nome: "Inventário anual",
+        comissaoId: COMISSAO_ID,
+      },
       IDENTIDADE,
     );
 
@@ -177,7 +182,11 @@ describe("InventariosService", () => {
 
     await expect(
       service.criar(
-        { nome: "Inventário anual", comissaoId: COMISSAO_ID },
+        {
+          chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+          nome: "Inventário anual",
+          comissaoId: COMISSAO_ID,
+        },
         IDENTIDADE,
       ),
     ).rejects.toMatchObject({
@@ -196,7 +205,11 @@ describe("InventariosService", () => {
 
     await expect(
       service.criar(
-        { nome: "Inventário anual", comissaoId: COMISSAO_ID },
+        {
+          chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+          nome: "Inventário anual",
+          comissaoId: COMISSAO_ID,
+        },
         IDENTIDADE,
       ),
     ).rejects.toMatchObject({

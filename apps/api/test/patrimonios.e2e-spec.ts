@@ -229,6 +229,7 @@ describe("patrimônios", () => {
 
   function body(semNumeroOficial = false) {
     return {
+      chaveIdempotencia: randomUUID(),
       semNumeroOficial,
       dataTombamento: "2026-10-18",
       tipoIncorporacao: "AQUISICAO",
@@ -560,3 +561,4 @@ describe("patrimônios", () => {
     expect(database.patrimonio.updateMany).not.toHaveBeenCalled();
   });
 });
+import { randomUUID } from "node:crypto";

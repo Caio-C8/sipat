@@ -45,6 +45,7 @@ const nota = (anexoIndice?: number) => ({
 
 const dadosProcesso = (notas: unknown[] = []) =>
   JSON.stringify({
+    chaveIdempotencia: uuids.processo,
     numeroProcesso: "123/2026",
     anoProcesso: 2026,
     numeroEmpenho: "456",
@@ -146,6 +147,7 @@ describe("contratos JSON de processos e notas fiscais", () => {
     assert.equal(
       parseValido(CriarNotaFiscalMultipartSchema, {
         dados: JSON.stringify({
+          chaveIdempotencia: uuids.nota,
           processoCompraId: uuids.processo,
           ...nota(),
         }),

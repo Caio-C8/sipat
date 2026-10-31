@@ -138,6 +138,21 @@ deve ser convertida antes da chamada HTTP. O body JSON da API não deve passar a
 coagir qualquer string apenas para acomodar o formulário, pois isso altera e
 torna ambíguo o contrato externo.
 
+## Conflitos de idempotência
+
+Operações protegidas usam somente estes conflitos HTTP `409`:
+
+| Código                           | Mensagem pública estável                                                   |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| `OPERACAO_JA_PROCESSADA`         | A operação anterior foi concluída. Nenhuma nova alteração foi feita.       |
+| `CHAVE_IDEMPOTENCIA_REUTILIZADA` | A chave de idempotência já foi utilizada com outra operação ou conteúdo.   |
+| `OPERACAO_EM_PROCESSAMENTO`      | A operação ainda está em processamento. Tente novamente com a mesma chave. |
+
+Quando o conflito inclui erro de campo, `erros[].campo` deve ser
+`chaveIdempotencia`, com o mesmo código e a mesma mensagem do envelope. A
+resposta não inclui o resultado anterior, IDs técnicos ou outro envelope. O
+consumidor decide a experiência pelo `codigo`, sem interpretar a mensagem.
+
 ## Logs e dados sensíveis
 
 Não registre indiscriminadamente o payload inválido. Por padrão, o Zod não inclui

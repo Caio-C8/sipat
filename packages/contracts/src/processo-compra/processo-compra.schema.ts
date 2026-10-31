@@ -1,5 +1,6 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -38,6 +39,7 @@ const CamposProcessoCompraSchema = {
 };
 
 export const CriarProcessoCompraDadosSchema = z.strictObject({
+  chaveIdempotencia: ChaveIdempotenciaSchema,
   ...CamposProcessoCompraSchema,
   notas: z
     .array(CriarNotaFiscalProcessoCompraSchema)

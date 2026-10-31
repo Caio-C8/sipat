@@ -1,5 +1,11 @@
 # Roadmap do `@repo/contracts`
 
+## CONTRACTS-016 — Idempotência de operações críticas
+
+**Status:** planejado. Padroniza a chave no body, os conflitos explícitos e as
+criações que precisam da proteção, sem alterar rotas ou responses de sucesso.
+[Tarefa e aceite](../tasks/CONTRACTS-016-idempotencia-operacoes-criticas.md).
+
 ## CONTRACTS-015 — Contratos de empréstimos e devoluções
 
 **Status:** concluído em 31/10/2026. Seis operações RF16, modos de agrupamento, datas civis,

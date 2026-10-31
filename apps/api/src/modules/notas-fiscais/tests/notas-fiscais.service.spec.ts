@@ -101,6 +101,7 @@ describe("NotasFiscaisService", () => {
     return {
       body: {
         dados: JSON.stringify({
+          chaveIdempotencia: randomUUID(),
           processoCompraId: PROCESSO_ID,
           numeroNotaFiscal: "NF-1",
           anoNotaFiscal: 2026,
@@ -205,3 +206,4 @@ describe("NotasFiscaisService", () => {
     expect(armazenamento.abrir).toHaveBeenCalledWith(CHAVE_ANTIGA);
   });
 });
+import { randomUUID } from "node:crypto";

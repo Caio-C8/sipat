@@ -372,6 +372,7 @@ describe("gestão de setores", () => {
   it("nega ao diretor todas as mutações de setores", async () => {
     const [criacao, alteracao, situacao] = await Promise.all([
       diretor().post("/api/setores").send({
+        chaveIdempotencia: randomUUID(),
         nome: "Arquivo",
         responsavelId: RESPONSAVEL_ID,
       }),
@@ -413,6 +414,7 @@ describe("gestão de setores", () => {
 
   it("cria ativo com responsável ativo e auditoria derivada", async () => {
     const resposta = await administrador().post("/api/setores").send({
+      chaveIdempotencia: randomUUID(),
       nome: "Arquivo",
       sala: "20",
       responsavelId: RESPONSAVEL_ID,
@@ -432,6 +434,7 @@ describe("gestão de setores", () => {
 
   it("rejeita responsável inativo na criação e na troca", async () => {
     const criacao = await administrador().post("/api/setores").send({
+      chaveIdempotencia: randomUUID(),
       nome: "Arquivo",
       responsavelId: RESPONSAVEL_INATIVO_ID,
     });
@@ -480,3 +483,4 @@ describe("gestão de setores", () => {
     esperarCodigo(inexistente, "SETOR_NAO_ENCONTRADO");
   });
 });
+import { randomUUID } from "node:crypto";

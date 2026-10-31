@@ -26,6 +26,7 @@ function dados(
   sobrescritas: Partial<CriarPatrimonioBodyData> = {},
 ): CriarPatrimonioBodyData {
   return {
+    chaveIdempotencia: "00000000-0000-4000-8000-000000000009",
     semNumeroOficial: false,
     dataTombamento: "2026-10-18",
     tipoIncorporacao: "AQUISICAO",

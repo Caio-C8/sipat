@@ -7,6 +7,7 @@ const COMISSAO_ID = "6c167f7a-0e4b-46bb-8c78-bc33585c91fa";
 const MEMBRO_ID = "24df3a43-5c02-47fb-ab92-03757a058f9f";
 const RESPONSAVEL_ID = "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0";
 const USUARIO_ID = "c5c3cc23-a215-4bba-9ae0-671596433a36";
+const CHAVE_IDEMPOTENCIA = "00000000-0000-4000-8000-000000000009";
 
 const identidade: IdentidadeAutenticada = {
   id: USUARIO_ID,
@@ -103,6 +104,7 @@ describe("ComissoesService", () => {
   it("cria comissão e integrantes atomicamente com auditoria da sessão", async () => {
     await service.criar(
       {
+        chaveIdempotencia: CHAVE_IDEMPOTENCIA,
         nome: "Comissão de inventário",
         numeroAto: "Portaria 10/2026",
         dataVigenciaInicio: "2026-01-01",
@@ -136,6 +138,7 @@ describe("ComissoesService", () => {
     await expect(
       service.criar(
         {
+          chaveIdempotencia: CHAVE_IDEMPOTENCIA,
           nome: "Comissão",
           dataVigenciaInicio: "2026-01-01",
           dataVigenciaFim: "2026-12-31",

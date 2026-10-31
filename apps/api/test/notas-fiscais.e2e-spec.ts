@@ -279,6 +279,7 @@ describe("notas fiscais", () => {
 
   function dadosCriacao(): string {
     return JSON.stringify({
+      chaveIdempotencia: randomUUID(),
       processoCompraId: PROCESSO_ID,
       numeroNotaFiscal: "NF-2",
       anoNotaFiscal: 2026,
@@ -459,3 +460,4 @@ describe("notas fiscais", () => {
     expect(semReferencia.status).toBe(404);
   });
 });
+import { randomUUID } from "node:crypto";

@@ -6,6 +6,7 @@ import type {
   TipoIncorporacao,
 } from "@repo/contracts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as Crypto from "expo-crypto";
 import { useRouter, type Href } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -101,6 +102,12 @@ export function createPatrimonioErrorMessage(error: unknown) {
   if (error.status === 401) return "Sua sessão expirou. Entre novamente.";
   if (error.status === 403)
     return "Seu perfil não tem permissão para cadastrar patrimônios.";
+  if (error.code === "OPERACAO_JA_PROCESSADA")
+    return "O cadastro anterior foi concluído. Nenhum novo patrimônio foi criado.";
+  if (error.code === "CHAVE_IDEMPOTENCIA_REUTILIZADA")
+    return "Não foi possível reutilizar esta confirmação. Confira os dados e tente novamente.";
+  if (error.code === "OPERACAO_EM_PROCESSAMENTO")
+    return "O cadastro ainda está em processamento. Tente novamente com os mesmos dados.";
   if (error.code === "NUMERO_SERIE_JA_EXISTENTE")
     return "Já existe um patrimônio com este número de série.";
   if (error.code === "SETOR_INATIVO")
@@ -533,6 +540,7 @@ function DirectorFlow({
   const [feedback, setFeedback] = useState<string>();
   const [created, setCreated] = useState<PatrimonioDetalhe>();
   const posting = useRef(false);
+  const creationKey = useRef<string | undefined>(undefined);
   const [catalog, setCatalog] = useState<Catalog>();
   const queries = useCreatePatrimonioQueries(
     manager,
@@ -574,6 +582,7 @@ function DirectorFlow({
   );
 
   const update = (patch: Partial<CreatePatrimonioForm>) => {
+    creationKey.current = undefined;
     setForm((current) => ({ ...current, ...patch }));
     setErrors({});
     setFeedback(undefined);
@@ -592,11 +601,17 @@ function DirectorFlow({
     setFeedback(undefined);
     creation.reset();
     try {
-      const body = mapCreatePatrimonioForm(form);
+      creationKey.current ??= Crypto.randomUUID();
+      const body = mapCreatePatrimonioForm(form, creationKey.current);
       const identityId = currentSessionIdentity(manager);
       const result = await creation.mutateAsync({ body, identityId });
       if (isCurrentSession(manager, identityId)) setCreated(result);
+      creationKey.current = undefined;
     } catch (error) {
+      if (isApiError(error) && error.code === "CHAVE_IDEMPOTENCIA_REUTILIZADA")
+        creationKey.current = undefined;
+      if (isApiError(error) && error.code === "OPERACAO_JA_PROCESSADA")
+        await invalidatePatrimonioCreation(queryClient);
       const fieldFeedback = fieldErrorsFromApi(error);
       if (fieldFeedback) {
         setErrors(fieldFeedback.errors);
@@ -614,6 +629,7 @@ function DirectorFlow({
       <Success
         item={created}
         onAnother={() => {
+          creationKey.current = undefined;
           setCreated(undefined);
           setForm(EMPTY_CREATE_PATRIMONIO_FORM);
           setStep(1);

@@ -29,6 +29,7 @@ const uuids = {
 } as const;
 
 const comissaoMinima = {
+  chaveIdempotencia: uuids.comissao,
   nome: "Comissão de inventário",
   dataVigenciaInicio: "2026-01-01",
   dataVigenciaFim: "2026-12-31",

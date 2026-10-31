@@ -10,6 +10,7 @@ const SPECIES = "22222222-2222-4222-8222-222222222222";
 const RESPONSIBLE = "33333333-3333-4333-8333-333333333333";
 const ITEM = "44444444-4444-4444-8444-444444444444";
 const NATURE = "55555555-5555-4555-8555-555555555555";
+const IDEMPOTENCY_KEY = "66666666-6666-4666-8666-666666666666";
 
 function response(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -131,11 +132,14 @@ describe("operações do cadastro patrimonial", () => {
     vi.stubGlobal("fetch", fetchMock);
     await expect(
       createCreatePatrimonioOperations("https://api.test").create(
-        mapCreatePatrimonioForm(form),
+        mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY),
         { accessToken: "token" },
       ),
     ).resolves.toMatchObject({ id: ITEM });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(
+      JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string),
+    ).toMatchObject({ chaveIdempotencia: IDEMPOTENCY_KEY });
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.test/api/patrimonios",
       expect.objectContaining({ method: "POST" }),
@@ -164,12 +168,12 @@ describe("operações do cadastro patrimonial", () => {
     );
     const operations = createCreatePatrimonioOperations("https://api.test");
     await expect(
-      operations.create(mapCreatePatrimonioForm(form), {
+      operations.create(mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY), {
         accessToken: "token",
       }),
     ).rejects.toMatchObject({ status: 403 });
     await expect(
-      operations.create(mapCreatePatrimonioForm(form), {
+      operations.create(mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY), {
         accessToken: "token",
       }),
     ).rejects.toMatchObject({ kind: "invalid-response" });

@@ -12,6 +12,8 @@ import {
   type CreatePatrimonioForm,
 } from "./create-patrimonio-form";
 
+const IDEMPOTENCY_KEY = "33333333-3333-4333-8333-333333333333";
+
 const form: CreatePatrimonioForm = {
   description: " Notebook corporativo ",
   brand: " ",
@@ -59,7 +61,8 @@ describe("formulário de criação patrimonial", () => {
   });
 
   it("converte moeda, omite vazios e valida o contrato público", () => {
-    expect(mapCreatePatrimonioForm(form)).toEqual({
+    expect(mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY)).toEqual({
+      chaveIdempotencia: IDEMPOTENCY_KEY,
       semNumeroOficial: false,
       dataTombamento: "2026-09-27",
       tipoIncorporacao: "AQUISICAO",
@@ -87,7 +90,8 @@ describe("formulário de criação patrimonial", () => {
     expect(effectiveResidual(percentage)).toBe("600");
     expect(monthlyDepreciationPreview(percentage)).toBe("90");
     expect(
-      mapCreatePatrimonioForm(percentage).parametrosDepreciacao,
+      mapCreatePatrimonioForm(percentage, IDEMPOTENCY_KEY)
+        .parametrosDepreciacao,
     ).toMatchObject({
       percentualResidual: "10",
       valorResidual: "600",
@@ -95,7 +99,7 @@ describe("formulário de criação patrimonial", () => {
   });
 
   it("preserva ausência de processo e valida campos por etapa", () => {
-    expect(mapCreatePatrimonioForm(form)).not.toHaveProperty(
+    expect(mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY)).not.toHaveProperty(
       "processoCompraId",
     );
     expect(

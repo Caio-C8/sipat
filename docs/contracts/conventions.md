@@ -182,6 +182,17 @@ const Schema = z.strictObject({
 Não torne todos os objetos strict automaticamente; compatibilidade e evolução
 do contrato também importam.
 
+## Chaves de idempotência
+
+Mutações protegidas usam `ChaveIdempotenciaSchema`, com UUID normalizado para
+minúsculas, no body estrito da operação. Em multipart, a chave permanece no
+objeto JSON do campo `dados`; não crie parte multipart separada, header ou
+middleware transversal para transportá-la.
+
+A mesma chave identifica somente uma tentativa lógica por usuário e tipo de
+operação. Reutilizá-la não transforma um conflito em sucesso e não substitui
+locks, constraints ou validações do domínio.
+
 ## Enums
 
 No Zod 4, use:

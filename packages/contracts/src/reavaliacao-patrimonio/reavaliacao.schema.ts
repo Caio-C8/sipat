@@ -1,5 +1,7 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
+  CODIGOS_CONFLITO_IDEMPOTENCIA,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -68,7 +70,7 @@ export const PreviaReavaliacaoBodySchema =
   PedidoBaseSchema.superRefine(rejeitarDuplicatas);
 export const CriarReavaliacaoBodySchema = PedidoBaseSchema.extend({
   versaoPrevia: z.string().regex(/^[a-f0-9]{64}$/),
-  chaveIdempotencia: UuidSchema,
+  chaveIdempotencia: ChaveIdempotenciaSchema,
 }).superRefine(rejeitarDuplicatas);
 
 export const ReavaliacaoParamsSchema = z.strictObject({
@@ -212,7 +214,7 @@ export const CODIGOS_ERRO_REAVALIACAO = [
   "ESTADO_REAVALIACAO_ALTERADO",
   "REAVALIACAO_IMPEDIDA",
   "VALOR_RESIDUAL_INVALIDO",
-  "CHAVE_IDEMPOTENCIA_REUTILIZADA",
+  ...CODIGOS_CONFLITO_IDEMPOTENCIA,
   "CONFLITO_CONCORRENTE_REAVALIACAO",
 ] as const;
 export const CodigoErroReavaliacaoSchema = z.enum(CODIGOS_ERRO_REAVALIACAO);

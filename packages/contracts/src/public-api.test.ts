@@ -159,6 +159,9 @@ import {
   ExecutarDepreciacaoPatrimonioResponseSchema,
   ExecutarDepreciacoesEmMassaBodySchema,
   ExecutarDepreciacoesEmMassaResponseSchema,
+  ChaveIdempotenciaSchema,
+  CodigoConflitoIdempotenciaSchema,
+  RespostaConflitoIdempotenciaSchema,
   ItemDepreciacaoPendenteSchema,
   ListarDepreciacoesPendentesQuerySchema,
   ListarDepreciacoesPendentesResponseSchema,
@@ -174,6 +177,9 @@ describe("@repo/contracts — API pública", () => {
       ErroCampoSchema,
       RespostaErroSchema,
       PaginacaoQuerySchema,
+      ChaveIdempotenciaSchema,
+      CodigoConflitoIdempotenciaSchema,
+      RespostaConflitoIdempotenciaSchema,
     ];
 
     for (const schema of schemas) {

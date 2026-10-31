@@ -1,5 +1,7 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
+  CODIGOS_CONFLITO_IDEMPOTENCIA,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -33,8 +35,7 @@ export const CODIGOS_ERRO_EMPRESTIMO = [
   "COMISSAO_FORA_DA_VIGENCIA",
   "SETOR_EM_INVENTARIO_EM_ANDAMENTO",
   "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
-  "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-  "EMPRESTIMO_EM_PROCESSAMENTO",
+  ...CODIGOS_CONFLITO_IDEMPOTENCIA,
   "CONFLITO_CONCORRENTE_EMPRESTIMO",
 ] as const;
 export const CodigoErroEmprestimoSchema = z.enum(CODIGOS_ERRO_EMPRESTIMO);
@@ -73,7 +74,7 @@ export const ListarOpcoesComissoesEmprestimoQuerySchema =
 
 export const CriarEmprestimoBodySchema = z
   .strictObject({
-    chaveIdempotencia: UuidSchema,
+    chaveIdempotencia: ChaveIdempotenciaSchema,
     modoAgrupamento: ModoAgrupamentoEmprestimoSchema,
     patrimonioIds: z.array(UuidSchema).min(1).max(LIMITE_ITENS_EMPRESTIMO),
     destinatario: z.string().trim().min(1).max(200),
@@ -103,7 +104,7 @@ export const CriarEmprestimoBodySchema = z
   });
 export const RegistrarDevolucaoEmprestimoBodySchema = z
   .strictObject({
-    chaveIdempotencia: UuidSchema,
+    chaveIdempotencia: ChaveIdempotenciaSchema,
     emprestimoIds: z.array(UuidSchema).min(1).max(LIMITE_ITENS_EMPRESTIMO),
     dataDevolucao: DataCivilSchema,
     comissaoId: UuidSchema,

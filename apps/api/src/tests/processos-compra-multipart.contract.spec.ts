@@ -12,6 +12,7 @@ describe("contrato multipart de processos de compra", () => {
     const parteArquivo = { caminhoTemporario: "opaco-para-o-contrato" };
     const multipart = {
       [CAMPO_DADOS_CRIAR_PROCESSO_COMPRA]: JSON.stringify({
+        chaveIdempotencia: randomUUID(),
         numeroProcesso: "123/2026",
         notas: [
           {
@@ -46,3 +47,4 @@ describe("contrato multipart de processos de compra", () => {
     ).toThrow();
   });
 });
+import { randomUUID } from "node:crypto";

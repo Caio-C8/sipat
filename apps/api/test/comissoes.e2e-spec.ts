@@ -218,6 +218,7 @@ describe("gestão de comissões", () => {
       .set("Cookie", cookie(tokenAdministrador))
       .set("Origin", ORIGEM)
       .send({
+        chaveIdempotencia: randomUUID(),
         nome: "Comissão",
         dataVigenciaInicio: "2026-01-01",
         dataVigenciaFim: "2026-12-31",
@@ -225,6 +226,7 @@ describe("gestão de comissões", () => {
     const invalido = await requisicaoAdministrador()
       .post("/api/comissoes")
       .send({
+        chaveIdempotencia: randomUUID(),
         nome: "Comissão",
         dataVigenciaInicio: "2026-12-31",
         dataVigenciaFim: "2026-01-01",
@@ -232,6 +234,7 @@ describe("gestão de comissões", () => {
     const criado = await requisicaoAdministrador()
       .post("/api/comissoes")
       .send({
+        chaveIdempotencia: randomUUID(),
         nome: "Comissão de inventário",
         numeroAto: "Portaria 10/2026",
         dataVigenciaInicio: "2026-01-01",
@@ -297,3 +300,4 @@ describe("gestão de comissões", () => {
     esperarCodigo(resposta, "PRESIDENTE_COMISSAO_JA_EXISTENTE");
   });
 });
+import { randomUUID } from "node:crypto";

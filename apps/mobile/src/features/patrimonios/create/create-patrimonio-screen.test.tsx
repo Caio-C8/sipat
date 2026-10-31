@@ -13,6 +13,9 @@ const authorizedRequest = vi.fn();
 vi.mock("@react-native-vector-icons/lucide", () => ({
   Lucide: ({ name }: { name: string }) => <span data-icon={name} />,
 }));
+vi.mock("expo-crypto", () => ({
+  randomUUID: () => "66666666-6666-4666-8666-666666666666",
+}));
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock("../../../config/public-app-config", () => ({
   publicAppConfig: { apiBaseUrl: "https://api.test" },
@@ -58,6 +61,15 @@ describe("cadastro restrito", () => {
     [new ApiError("invalid-response"), "Não foi possível confirmar"],
     [new ApiError("http", 401), "sessão expirou"],
     [new ApiError("http", 403), "não tem permissão"],
+    [
+      new ApiError("http", 409, "OPERACAO_JA_PROCESSADA"),
+      "Nenhum novo patrimônio",
+    ],
+    [new ApiError("http", 409, "CHAVE_IDEMPOTENCIA_REUTILIZADA"), "reutilizar"],
+    [
+      new ApiError("http", 409, "OPERACAO_EM_PROCESSAMENTO"),
+      "ainda está em processamento",
+    ],
     [new ApiError("http", 409, "NUMERO_SERIE_JA_EXISTENTE"), "número de série"],
     [new ApiError("http", 400, "SETOR_INATIVO"), "foi inativado"],
   ])("distingue erros recuperáveis e de autorização", (error, message) => {

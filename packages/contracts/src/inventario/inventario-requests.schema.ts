@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { PaginacaoQuerySchema } from "../common";
+import { ChaveIdempotenciaSchema, PaginacaoQuerySchema } from "../common";
 import { NumeroPatrimonialSchema } from "../patrimonio";
 import {
   NomeInventarioSchema,
@@ -42,6 +42,7 @@ export const ItemInventarioParamsSchema = z.strictObject({
 });
 
 export const CriarInventarioBodySchema = z.strictObject({
+  chaveIdempotencia: ChaveIdempotenciaSchema,
   nome: NomeInventarioSchema,
   descricao: TextoLongoInventarioSchema.optional(),
   observacao: TextoLongoInventarioSchema.optional(),

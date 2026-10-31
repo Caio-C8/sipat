@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { ChaveIdempotenciaSchema } from "../common";
 import {
   DataCivilSchema,
   Decimal19_7PositivoSchema,
@@ -42,6 +43,7 @@ const ParametrosDepreciacaoIniciaisSchema = z.strictObject(
 );
 
 export const CriarPatrimonioBodySchema = z.strictObject({
+  chaveIdempotencia: ChaveIdempotenciaSchema,
   semNumeroOficial: z.boolean(),
   dataTombamento: DataCivilSchema,
   tipoIncorporacao: TipoIncorporacaoSchema,

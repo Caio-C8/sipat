@@ -9,6 +9,7 @@ import type { SetorDetalhePayload } from "../types";
 const ADMIN_ID = "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0";
 const SETOR_ID = "6c167f7a-0e4b-46bb-8c78-bc33585c91fa";
 const RESPONSAVEL_ID = "24df3a43-5c02-47fb-ab92-03757a058f9f";
+const CHAVE_IDEMPOTENCIA = "00000000-0000-4000-8000-000000000009";
 
 const identidade: IdentidadeAutenticada = {
   id: ADMIN_ID,
@@ -72,6 +73,7 @@ describe("SetoresService", () => {
 
     await service.criar(
       {
+        chaveIdempotencia: CHAVE_IDEMPOTENCIA,
         nome: "Almoxarifado",
         sala: "12",
         ramal: "123",
@@ -101,7 +103,11 @@ describe("SetoresService", () => {
 
     await expect(
       service.criar(
-        { nome: "Almoxarifado", responsavelId: RESPONSAVEL_ID },
+        {
+          chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+          nome: "Almoxarifado",
+          responsavelId: RESPONSAVEL_ID,
+        },
         identidade,
       ),
     ).rejects.toMatchObject({

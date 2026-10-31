@@ -1,5 +1,14 @@
 # Roadmap da aplicação Web
 
+## WEB-IDEMPOTENCIA-001 — Adaptar conflitos de operações
+
+**Status:** planejado. Movimentações, manutenções, reavaliações e empréstimos
+deixarão de interpretar reenvio confirmado como replay de sucesso. As telas
+existentes preservarão chave e formulário em resultado incerto e mostrarão o
+`409 OPERACAO_JA_PROCESSADA` como aviso explícito de que nada foi duplicado,
+sem novas rotas ou redesign.
+[Tarefa e aceite](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
+
 ## WEB-EMPRESTIMOS-001 — Consulta, saída e devolução
 
 **Status:** implementada e validada em PostgreSQL isolado em 31/10/2026. Interface simples

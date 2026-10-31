@@ -78,6 +78,7 @@ describeComPostgres("comissões no PostgreSQL", () => {
 
   function dadosCriacao() {
     return {
+      chaveIdempotencia: randomUUID(),
       nome: "Comissão de inventário",
       numeroAto: "Portaria 10/2026",
       dataVigenciaInicio: "2026-01-01",
@@ -175,3 +176,4 @@ describeComPostgres("comissões no PostgreSQL", () => {
     });
   });
 });
+import { randomUUID } from "node:crypto";

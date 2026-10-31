@@ -107,6 +107,7 @@ describe("contratos de inventários", () => {
 
   it("aceita criação mínima e completa sem campos derivados pelo servidor", () => {
     const entrada: CriarInventarioBodyInput = {
+      chaveIdempotencia: ids.inventario,
       nome: "  Inventário anual  ",
       comissaoId: ids.comissao,
     };
@@ -116,17 +117,20 @@ describe("contratos de inventários", () => {
     );
 
     assert.deepEqual(resultado, {
+      chaveIdempotencia: ids.inventario,
       nome: "Inventário anual",
       comissaoId: ids.comissao,
     });
     assert.deepEqual(
       parseValido(CriarInventarioBodySchema, {
+        chaveIdempotencia: ids.inventario,
         nome: "Inventário anual",
         descricao: "  Conferência de 2026.  ",
         observacao: "  Realizar por setor.  ",
         comissaoId: ids.comissao,
       }),
       {
+        chaveIdempotencia: ids.inventario,
         nome: "Inventário anual",
         descricao: "Conferência de 2026.",
         observacao: "Realizar por setor.",

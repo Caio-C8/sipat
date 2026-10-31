@@ -110,6 +110,7 @@ describeComPostgres("setores no PostgreSQL", () => {
 
   function dadosPatrimonio(setorAtualId: string): CriarPatrimonioBodyData {
     return {
+      chaveIdempotencia: randomUUID(),
       semNumeroOficial: false,
       dataTombamento: "2026-10-19",
       tipoIncorporacao: "AQUISICAO",
@@ -132,7 +133,11 @@ describeComPostgres("setores no PostgreSQL", () => {
   it("exige responsável ativo na criação e na troca", async () => {
     await expect(
       setores.criar(
-        { nome: "Arquivo", responsavelId: responsavelInativoId },
+        {
+          chaveIdempotencia: randomUUID(),
+          nome: "Arquivo",
+          responsavelId: responsavelInativoId,
+        },
         identidade,
       ),
     ).rejects.toMatchObject({
@@ -140,7 +145,11 @@ describeComPostgres("setores no PostgreSQL", () => {
     });
 
     const setor = await setores.criar(
-      { nome: "Almoxarifado", responsavelId: responsavelAtivoId },
+      {
+        chaveIdempotencia: randomUUID(),
+        nome: "Almoxarifado",
+        responsavelId: responsavelAtivoId,
+      },
       identidade,
     );
     await expect(
@@ -166,7 +175,11 @@ describeComPostgres("setores no PostgreSQL", () => {
 
   it("inativa sem apagar patrimônio e impede novos vínculos", async () => {
     const setor = await setores.criar(
-      { nome: "Almoxarifado", responsavelId: responsavelAtivoId },
+      {
+        chaveIdempotencia: randomUUID(),
+        nome: "Almoxarifado",
+        responsavelId: responsavelAtivoId,
+      },
       identidade,
     );
     const patrimonio = await patrimonios.criar(
@@ -190,7 +203,11 @@ describeComPostgres("setores no PostgreSQL", () => {
 
   it("serializa criação patrimonial concorrente com a inativação", async () => {
     const setor = await setores.criar(
-      { nome: "Almoxarifado", responsavelId: responsavelAtivoId },
+      {
+        chaveIdempotencia: randomUUID(),
+        nome: "Almoxarifado",
+        responsavelId: responsavelAtivoId,
+      },
       identidade,
     );
     const resultados = await Promise.allSettled([
@@ -211,3 +228,4 @@ describeComPostgres("setores no PostgreSQL", () => {
     expect(await database.patrimonio.count()).toBeLessThanOrEqual(1);
   });
 });
+import { randomUUID } from "node:crypto";
