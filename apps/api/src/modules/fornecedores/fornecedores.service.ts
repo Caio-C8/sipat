@@ -11,6 +11,10 @@ import type {
   ListarFornecedoresQueryData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { FornecedoresRepository } from "./fornecedores.repository";
 import { FornecedorPersistenceMapper } from "./mappers";
 import type {
@@ -29,11 +33,33 @@ export class FornecedoresService {
     if (dados.cnpj !== undefined) {
       await this.verificarCnpjDisponivel(dados.cnpj);
     }
+    const { chaveIdempotencia, ...conteudo } = dados;
+    const hashCriacao = calcularHashIdempotencia(conteudo);
 
     try {
-      return await this.fornecedores.criar(
-        FornecedorPersistenceMapper.paraCriacao(dados, identidade.id),
-      );
+      return await this.fornecedores.executarTransacao(async (repository) => {
+        if (
+          !(await repository.tentarBloquearChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          ))
+        )
+          throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+        const anterior = await repository.buscarPorChaveCriacao(
+          identidade.id,
+          chaveIdempotencia,
+        );
+        if (anterior) {
+          if (anterior.hashCriacao !== hashCriacao)
+            throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+          throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+        }
+        return repository.criar({
+          ...FornecedorPersistenceMapper.paraCriacao(dados, identidade.id),
+          chaveCriacao: chaveIdempotencia,
+          hashCriacao,
+        });
+      });
     } catch (erro: unknown) {
       this.traduzirErroPersistencia(erro);
     }
@@ -166,5 +192,14 @@ export class FornecedoresService {
       mensagem: "O fornecedor informado não foi encontrado.",
       erros: [],
     });
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 }

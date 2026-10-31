@@ -195,8 +195,8 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       (await post(adminCookie, body).expect(201)).body,
     ).dados;
     const item = criado.itens[0]!;
-    expect((await post(adminCookie, body).expect(201)).body.dados.id).toBe(
-      criado.id,
+    expect((await post(adminCookie, body).expect(409)).body.codigo).toBe(
+      "OPERACAO_JA_PROCESSADA",
     );
     ListarManutencoesResponseSchema.parse(
       (await get("?busca=" + bem.numeroPatrimonio, diretorCookie).expect(200))
@@ -270,8 +270,8 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1")
       .send(retorno)
-      .expect(200);
-    expect(repetido.body.dados.item.id).toBe(item.id);
+      .expect(409);
+    expect(repetido.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
     const invalido = await request(app.getHttpServer())
       .post(`/api/manutencoes/${criado.id}/documentos`)
       .set("Cookie", adminCookie)

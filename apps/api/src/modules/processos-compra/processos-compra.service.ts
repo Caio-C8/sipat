@@ -11,6 +11,7 @@ import type {
 } from "@repo/contracts";
 import { CriarProcessoCompraMultipartSchema } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { ZodValidationException } from "nestjs-zod";
 import { CoordenadorDocumentosService } from "../../common/storage/coordenador-documentos.service";
@@ -18,6 +19,10 @@ import {
   criarChaveAnexoNotaFiscal,
   validarAnexoNotaFiscal,
 } from "../../common/utils/anexo-nota-fiscal";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { FornecedoresService } from "../fornecedores/fornecedores.service";
 import { ProcessosCompraRepository } from "./processos-compra.repository";
 import type {
@@ -48,6 +53,18 @@ export class ProcessosCompraService {
     const dados = resultado.data.dados;
     const arquivos = resultado.data.anexos as ArquivoMultipart[];
     await this.validarArquivos(arquivos);
+    const hashesArquivos = await Promise.all(
+      arquivos.map((arquivo) => this.calcularHashArquivo(arquivo.path)),
+    );
+    const { chaveIdempotencia, ...conteudo } = dados;
+    const hashCriacao = calcularHashIdempotencia({
+      ...conteudo,
+      hashesAnexos: dados.notas.map((nota) =>
+        nota.anexoIndice === undefined
+          ? null
+          : hashesArquivos[nota.anexoIndice],
+      ),
+    });
 
     const fornecedorIds = [
       ...new Set(dados.notas.map((nota) => nota.fornecedorId)),
@@ -82,6 +99,22 @@ export class ProcessosCompraService {
     try {
       await this.documentos.criarMuitos(documentos, async () => {
         criado = await this.processos.executarTransacao(async (transacao) => {
+          if (
+            !(await transacao.tentarBloquearChaveCriacao(
+              identidade.id,
+              chaveIdempotencia,
+            ))
+          )
+            throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+          const anterior = await transacao.buscarPorChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          );
+          if (anterior) {
+            if (anterior.hashCriacao !== hashCriacao)
+              throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+            throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+          }
           const ativos =
             await transacao.bloquearFornecedoresAtivos(fornecedorIds);
           if (fornecedorIds.some((id) => !ativos.has(id))) {
@@ -93,9 +126,11 @@ export class ProcessosCompraService {
             });
           }
 
-          return transacao.criar(
-            this.paraCriacao(dados, identidade.id, chaves),
-          );
+          return transacao.criar({
+            ...this.paraCriacao(dados, identidade.id, chaves),
+            chaveCriacao: chaveIdempotencia,
+            hashCriacao,
+          });
         });
       });
     } finally {
@@ -210,6 +245,21 @@ export class ProcessosCompraService {
     for (const [indice, arquivo] of arquivos.entries()) {
       await validarAnexoNotaFiscal(arquivo, `anexos.${indice}`);
     }
+  }
+
+  private async calcularHashArquivo(caminho: string): Promise<string> {
+    const hash = createHash("sha256");
+    for await (const bloco of createReadStream(caminho)) hash.update(bloco);
+    return hash.digest("hex");
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   private ehErroPrisma(erro: unknown, codigo: string): boolean {

@@ -32,6 +32,14 @@ a resposta e a observabilidade; não são revisões executadas somente ao final.
 
 No estado atual:
 
+- `IDEMPOTENCIA-001` protege as operações críticas conforme a matriz aprovada:
+  quatro tabelas técnicas persistem somente chave, hash e referências mínimas;
+  sete criações gravam `chaveCriacao` e `hashCriacao` no agregado raiz; reenvio
+  confirmado, chave reutilizada e execução concorrente retornam conflitos `409`
+  distintos, sem reproduzir responses antigas. A migration e os fluxos foram
+  verificados em PostgreSQL descartável; ver
+  [IDEMPOTENCIA-001](../../tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md).
+
 - `SEED-GERAL-001` fornece um comando Nest standalone opt-in para development e
   staging, cria a massa sintética pelos services da API, grava PDFs pelo storage
   privado e audita o estado final; production, test, migrations incompatíveis e

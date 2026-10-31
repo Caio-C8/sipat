@@ -14,6 +14,10 @@ import type {
   VerificarItemInventarioBodyData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { ComissoesService } from "../comissoes/comissoes.service";
 import { InventarioPersistenceMapper } from "./mappers";
 import { InventariosRepository } from "./inventarios.repository";
@@ -408,10 +412,28 @@ export class InventariosService {
   > {
     const dataOperacao = new Date().toISOString().slice(0, 10);
     await this.comissoes.consultarVigente(dados.comissaoId, dataOperacao);
+    const { chaveIdempotencia, ...conteudo } = dados;
+    const hashCriacao = calcularHashIdempotencia(conteudo);
 
     for (let tentativa = 1; tentativa <= 3; tentativa += 1) {
       try {
         return await this.inventarios.executarTransacao(async (repository) => {
+          if (
+            !(await repository.tentarBloquearChaveCriacao(
+              identidade.id,
+              chaveIdempotencia,
+            ))
+          )
+            throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+          const anterior = await repository.buscarPorChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          );
+          if (anterior) {
+            if (anterior.hashCriacao !== hashCriacao)
+              throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+            throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+          }
           const comissao = await repository.bloquearComissao(dados.comissaoId);
           const data = new Date(`${dataOperacao}T00:00:00.000Z`);
           if (
@@ -451,9 +473,11 @@ export class InventariosService {
             });
           }
 
-          const inventario = await repository.criarInventario(
-            InventarioPersistenceMapper.paraCriacao(dados, identidade.id),
-          );
+          const inventario = await repository.criarInventario({
+            ...InventarioPersistenceMapper.paraCriacao(dados, identidade.id),
+            chaveCriacao: chaveIdempotencia,
+            hashCriacao,
+          });
           const setoresCriados = await repository.criarSetores(
             inventario.id,
             setores,
@@ -726,6 +750,15 @@ export class InventariosService {
 
   private conflitoEstado(codigo: string, mensagem: string): ConflictException {
     return new ConflictException({ codigo, mensagem, erros: [] });
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   private conflitoConcorrente(): ConflictException {

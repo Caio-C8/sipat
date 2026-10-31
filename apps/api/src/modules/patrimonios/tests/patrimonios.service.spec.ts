@@ -52,6 +52,8 @@ function dados(
 describe("PatrimoniosService", () => {
   const repository = {
     executarTransacao: jest.fn(),
+    tentarBloquearChaveCriacao: jest.fn(),
+    buscarPorChaveCriacao: jest.fn(),
     buscarSetor: jest.fn(),
     especieExiste: jest.fn(),
     processoCompraExiste: jest.fn(),
@@ -74,6 +76,8 @@ describe("PatrimoniosService", () => {
       (operacao: (repo: PatrimoniosRepository) => Promise<unknown>) =>
         operacao(repository as unknown as PatrimoniosRepository),
     );
+    repository.tentarBloquearChaveCriacao.mockResolvedValue(true);
+    repository.buscarPorChaveCriacao.mockResolvedValue(null);
     repository.buscarSetor.mockResolvedValue({ ativo: true });
     repository.especieExiste.mockResolvedValue(true);
     repository.processoCompraExiste.mockResolvedValue(true);

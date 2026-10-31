@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   BadRequestException,
   ConflictException,
@@ -17,12 +17,12 @@ import type {
   RegistrarDevolucaoEmprestimoBodyData,
   RegistrarDevolucaoEmprestimoResponse,
 } from "@repo/contracts";
-import {
-  CriarEmprestimoResponseSchema,
-  RegistrarDevolucaoEmprestimoResponseSchema,
-} from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { diaSaoPaulo } from "../../common/utils/datas-institucionais";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { ComissoesService } from "../comissoes/comissoes.service";
 import { InventariosPolicyService } from "../inventarios/inventarios-policy.service";
 import { PatrimoniosService } from "../patrimonios/patrimonios.service";
@@ -98,7 +98,7 @@ export class EmprestimosService {
   ): Promise<CriarEmprestimoResponse> {
     this.exigirDiretor(identidade);
     this.exigirNaoFutura(dados.dataEmprestimo, "dataEmprestimo");
-    const hash = this.hash({
+    const hash = calcularHashIdempotencia({
       tipo: "SAIDA",
       ...dados,
       chaveIdempotencia: undefined,
@@ -243,7 +243,6 @@ export class EmprestimosService {
               chave: dados.chaveIdempotencia,
               tipoOperacao: "SAIDA",
               payloadHash: hash,
-              resultado: resposta,
             });
             return resposta;
           },
@@ -258,7 +257,6 @@ export class EmprestimosService {
           tentativa,
         );
         if (resultado === "REPETIR") continue;
-        if (resultado) return CriarEmprestimoResponseSchema.parse(resultado);
         throw erro;
       }
     }
@@ -276,7 +274,7 @@ export class EmprestimosService {
   ): Promise<RegistrarDevolucaoEmprestimoResponse> {
     this.exigirDiretor(identidade);
     this.exigirNaoFutura(dados.dataDevolucao, "dataDevolucao");
-    const hash = this.hash({
+    const hash = calcularHashIdempotencia({
       tipo: "DEVOLUCAO",
       grupoId,
       ...dados,
@@ -424,7 +422,6 @@ export class EmprestimosService {
               chave: dados.chaveIdempotencia,
               tipoOperacao: "DEVOLUCAO",
               payloadHash: hash,
-              resultado: resposta,
             });
             return resposta;
           },
@@ -439,8 +436,6 @@ export class EmprestimosService {
           tentativa,
         );
         if (resultado === "REPETIR") continue;
-        if (resultado)
-          return RegistrarDevolucaoEmprestimoResponseSchema.parse(resultado);
         throw erro;
       }
     }
@@ -483,33 +478,27 @@ export class EmprestimosService {
     chave: string,
   ) {
     if (!(await repository.tentarBloquearChave(usuarioId, chave)))
-      throw this.conflito(
-        "EMPRESTIMO_EM_PROCESSAMENTO",
-        "Esta confirmação está em processamento. Reenvie o mesmo pedido.",
-        "chaveIdempotencia",
-      );
+      throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
   }
   private recuperarCriacao(
     anterior: {
       tipoOperacao: string;
       payloadHash: string;
-      resultado: Prisma.JsonValue;
     },
     hash: string,
-  ) {
+  ): never {
     this.exigirHash(anterior, "SAIDA", hash);
-    return CriarEmprestimoResponseSchema.parse(anterior.resultado);
+    throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
   }
   private recuperarDevolucao(
     anterior: {
       tipoOperacao: string;
       payloadHash: string;
-      resultado: Prisma.JsonValue;
     },
     hash: string,
-  ) {
+  ): never {
     this.exigirHash(anterior, "DEVOLUCAO", hash);
-    return RegistrarDevolucaoEmprestimoResponseSchema.parse(anterior.resultado);
+    throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
   }
   private exigirHash(
     anterior: { tipoOperacao: string; payloadHash: string },
@@ -517,11 +506,7 @@ export class EmprestimosService {
     hash: string,
   ) {
     if (anterior.tipoOperacao !== tipo || anterior.payloadHash !== hash)
-      throw this.conflito(
-        "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-        "Esta chave já foi utilizada com outro conteúdo.",
-        "chaveIdempotencia",
-      );
+      throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
   }
   private async tratarConcorrencia(
     erro: unknown,
@@ -530,7 +515,7 @@ export class EmprestimosService {
     hash: string,
     tipo: string,
     tentativa: number,
-  ): Promise<"REPETIR" | Prisma.JsonValue | null> {
+  ): Promise<"REPETIR" | null> {
     if (
       !(erro instanceof Prisma.PrismaClientKnownRequestError) ||
       !(
@@ -550,7 +535,7 @@ export class EmprestimosService {
     );
     if (anterior) {
       this.exigirHash(anterior, tipo, hash);
-      return anterior.resultado;
+      throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
     }
     if (tentativa < 2 && erro.code !== "P2002") return "REPETIR";
     throw this.conflito(
@@ -559,15 +544,20 @@ export class EmprestimosService {
       "chaveIdempotencia",
     );
   }
-  private hash(valor: unknown) {
-    return createHash("sha256").update(JSON.stringify(valor)).digest("hex");
-  }
   private conflito(codigo: string, mensagem: string, campo: string) {
     return new ConflictException({
       codigo,
       mensagem,
       erros: [{ campo, codigo, mensagem }],
     });
+  }
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ) {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
   private entradaInvalida(mensagem: string, campo: string) {
     return new BadRequestException({

@@ -14,6 +14,10 @@ import type {
 } from "@repo/contracts";
 import { LIMITE_MEMBROS_COMISSAO } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { ComissaoPersistenceMapper } from "./mappers";
 import { ComissoesRepository } from "./comissoes.repository";
 import type {
@@ -30,16 +34,36 @@ export class ComissoesService {
     dados: CriarComissaoBodyData,
     identidade: IdentidadeAutenticada,
   ): Promise<ComissaoDetalhePayload> {
+    const { chaveIdempotencia, ...conteudo } = dados;
+    const hashCriacao = calcularHashIdempotencia(conteudo);
     try {
       return await this.comissoes.executarTransacao(async (repository) => {
+        if (
+          !(await repository.tentarBloquearChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          ))
+        )
+          throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+        const anterior = await repository.buscarPorChaveCriacao(
+          identidade.id,
+          chaveIdempotencia,
+        );
+        if (anterior) {
+          if (anterior.hashCriacao !== hashCriacao)
+            throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+          throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+        }
         await this.validarResponsaveisAtivos(
           repository,
           dados.membros.map(({ responsavelId }) => responsavelId),
         );
 
-        return repository.criar(
-          ComissaoPersistenceMapper.paraCriacao(dados, identidade.id),
-        );
+        return repository.criar({
+          ...ComissaoPersistenceMapper.paraCriacao(dados, identidade.id),
+          chaveCriacao: chaveIdempotencia,
+          hashCriacao,
+        });
       });
     } catch (erro: unknown) {
       this.traduzirErroPersistencia(erro);
@@ -346,6 +370,15 @@ export class ComissoesService {
       mensagem: "A comissão informada não foi encontrada.",
       erros: [],
     });
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   private membroNaoEncontrado(): NotFoundException {

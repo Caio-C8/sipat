@@ -37,6 +37,28 @@ export class NotasFiscaisRepository {
     );
   }
 
+  async tentarBloquearChaveCriacao(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${`nota-fiscal:${usuarioId}:${chave}`}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarPorChaveCriacao(usuarioId: string, chave: string) {
+    return this.database.notaFiscal.findUnique({
+      where: {
+        createdById_chaveCriacao: {
+          createdById: usuarioId,
+          chaveCriacao: chave,
+        },
+      },
+      select: { id: true, hashCriacao: true },
+    });
+  }
+
   async bloquearFornecedorAtivo(fornecedorId: string): Promise<boolean> {
     const encontrados = await this.database.$queryRaw<
       readonly { id: string; ativo: boolean }[]

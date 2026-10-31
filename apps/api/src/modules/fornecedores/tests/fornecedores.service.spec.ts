@@ -40,6 +40,9 @@ function fornecedor(
 
 function criarDependencias() {
   const repository = {
+    executarTransacao: jest.fn(),
+    tentarBloquearChaveCriacao: jest.fn().mockResolvedValue(true),
+    buscarPorChaveCriacao: jest.fn().mockResolvedValue(null),
     criar: jest.fn(),
     listar: jest.fn(),
     contar: jest.fn(),
@@ -48,6 +51,10 @@ function criarDependencias() {
     alterar: jest.fn(),
     alterarSituacao: jest.fn(),
   };
+  repository.executarTransacao.mockImplementation(
+    (operacao: (repo: FornecedoresRepository) => Promise<unknown>) =>
+      operacao(repository as unknown as FornecedoresRepository),
+  );
 
   return {
     repository,
@@ -73,6 +80,8 @@ describe("FornecedoresService", () => {
     );
 
     expect(repository.criar).toHaveBeenCalledWith({
+      chaveCriacao: CHAVE_IDEMPOTENCIA,
+      hashCriacao: expect.any(String),
       razaoSocial: "Fornecedor de Teste Ltda.",
       nomeFantasia: undefined,
       nomeRepresentante: undefined,

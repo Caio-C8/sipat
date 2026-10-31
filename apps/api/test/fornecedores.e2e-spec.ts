@@ -65,6 +65,8 @@ describe("gestão de fornecedores", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    $transaction: jest.fn(),
+    $queryRaw: jest.fn(),
     notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     sessaoUsuario: {
       findUnique: jest.fn(),
@@ -80,6 +82,11 @@ describe("gestão de fornecedores", () => {
   };
 
   beforeAll(async () => {
+    database.$transaction.mockImplementation(
+      async (operacao: (cliente: typeof database) => Promise<unknown>) =>
+        operacao(database),
+    );
+    database.$queryRaw.mockResolvedValue([{ obtido: true }]);
     database.sessaoUsuario.findUnique.mockImplementation(
       ({ where }: { where: { tokenHash: string } }) => {
         const hashAdministrador = calcularHashTokenSessao(tokenAdministrador);
@@ -113,12 +120,22 @@ describe("gestão de fornecedores", () => {
       },
     );
     database.fornecedor.findUnique.mockImplementation(
-      ({ where }: { where: { id?: string; cnpj?: string } }) =>
-        fornecedores.find(
-          (fornecedor) =>
-            (where.id !== undefined && fornecedor.id === where.id) ||
-            (where.cnpj !== undefined && fornecedor.cnpj === where.cnpj),
-        ) ?? null,
+      ({
+        where,
+      }: {
+        where: {
+          id?: string;
+          cnpj?: string;
+          createdById_chaveCriacao?: unknown;
+        };
+      }) =>
+        where.createdById_chaveCriacao
+          ? null
+          : (fornecedores.find(
+              (fornecedor) =>
+                (where.id !== undefined && fornecedor.id === where.id) ||
+                (where.cnpj !== undefined && fornecedor.cnpj === where.cnpj),
+            ) ?? null),
     );
     database.fornecedor.findMany.mockImplementation(
       ({

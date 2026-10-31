@@ -11,6 +11,10 @@ import type {
   SubstituirNumeroPatrimonialBodyData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { PatrimonioPersistenceMapper } from "./mappers";
 import { PatrimoniosRepository } from "./patrimonios.repository";
 import type {
@@ -35,22 +39,42 @@ export class PatrimoniosService {
     };
 
     this.validarParametrosDepreciacao(normalizados);
+    const { chaveIdempotencia, ...conteudo } = normalizados;
+    const hashCriacao = calcularHashIdempotencia(conteudo);
 
     try {
       return await this.patrimonios.executarTransacao(async (transacao) => {
+        if (
+          !(await transacao.tentarBloquearChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          ))
+        )
+          throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+        const anterior = await transacao.buscarPorChaveCriacao(
+          identidade.id,
+          chaveIdempotencia,
+        );
+        if (anterior) {
+          if (anterior.hashCriacao !== hashCriacao)
+            throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+          throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+        }
         await this.validarRelacoes(transacao, normalizados);
         const tipo = normalizados.semNumeroOficial
           ? "SEM_NUMERO_OFICIAL"
           : "OFICIAL";
         const numero = await transacao.gerarProximoNumero(tipo);
 
-        return transacao.criar(
-          PatrimonioPersistenceMapper.paraCriacao(
+        return transacao.criar({
+          ...PatrimonioPersistenceMapper.paraCriacao(
             normalizados,
             numero,
             identidade.id,
           ),
-        );
+          chaveCriacao: chaveIdempotencia,
+          hashCriacao,
+        });
       });
     } catch (erro: unknown) {
       this.traduzirErroPersistencia(erro);
@@ -390,6 +414,15 @@ export class PatrimoniosService {
       mensagem: "Os parâmetros iniciais de depreciação são inválidos.",
       erros: [{ campo, codigo: "REGRA_DE_NEGOCIO_INVALIDA", mensagem }],
     });
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {

@@ -26,8 +26,9 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Idempotência de operações críticas
 
-**Status:** planejado em 31/10/2026; nenhuma alteração funcional ou migration
-nova foi implementada por este planejamento.
+**Status:** em andamento em 31/10/2026; contratos, banco e API foram concluídos
+e verificados em PostgreSQL isolado. As adaptações Web e mobile permanecem
+planejadas.
 
 O objetivo é impedir duplicação causada por duplo envio, timeout ou
 concorrência com o mecanismo mais barato adequado a cada entidade. A sequência
@@ -35,8 +36,8 @@ aprovada é:
 
 | Ordem | Objetivo                                                                                                                   | Status    | Dependências                           |
 | ----- | -------------------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------------- |
-| 1     | [`CONTRACTS-016`](./tasks/CONTRACTS-016-idempotencia-operacoes-criticas.md) — chave e conflitos públicos                   | planejado | contratos atuais                       |
-| 2     | [`IDEMPOTENCIA-001`](./tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md) — persistência mínima e API          | planejado | objetivo anterior e banco sincronizado |
+| 1     | [`CONTRACTS-016`](./tasks/CONTRACTS-016-idempotencia-operacoes-criticas.md) — chave e conflitos públicos                   | concluído | contratos atuais                       |
+| 2     | [`IDEMPOTENCIA-001`](./tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md) — persistência mínima e API          | concluído | objetivo anterior e banco sincronizado |
 | 3     | [`WEB-IDEMPOTENCIA-001`](./tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md) — consumidores Web existentes        | planejado | dois objetivos anteriores              |
 | 4     | [`MOBILE-IDEMPOTENCIA-001`](./tasks/MOBILE-IDEMPOTENCIA-001-proteger-cadastro-patrimonio.md) — cadastro patrimonial mobile | planejado | dois primeiros objetivos               |
 
@@ -53,10 +54,11 @@ apagar uma chave isoladamente reabriria a duplicação. Qualquer política futur
 de limpeza deve acompanhar a retenção dos próprios fatos de domínio e declarar
 explicitamente a redução da garantia.
 
-Antes deste planejamento, o banco de desenvolvimento configurado foi verificado
-em `localhost:5432/sipat_db_development`: 24 migrations aplicadas e nenhum diff
-entre o banco e `packages/database/prisma/schema.prisma`. O implementador deve
-repetir a verificação antes de criar a migration da etapa 2.
+A etapa 2 adicionou a migration
+`20261031150000_adiciona_idempotencia_operacoes_criticas`. As 25 migrations e o
+schema foram verificados sem diff em PostgreSQL descartável; o banco de
+desenvolvimento em `localhost:5432` estava indisponível e não recebeu a
+migration. Staging e produção também não foram migrados.
 
 ## Estado atual
 

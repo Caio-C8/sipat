@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { DatabaseClient, Prisma } from "@repo/database";
+import { Prisma, type DatabaseClient } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
 import {
   fornecedorDetalheArgs,
@@ -7,6 +7,8 @@ import {
   fornecedorResumoArgs,
   type FornecedorResumoPayload,
 } from "./types";
+
+type ClienteFornecedores = DatabaseClient | Prisma.TransactionClient;
 
 type ListarFornecedoresParametros = {
   where: Prisma.FornecedorWhereInput;
@@ -18,8 +20,40 @@ type ListarFornecedoresParametros = {
 export class FornecedoresRepository {
   constructor(
     @Inject(DATABASE_CLIENT)
-    private readonly database: DatabaseClient,
+    private readonly database: ClienteFornecedores,
   ) {}
+
+  executarTransacao<T>(
+    operacao: (repository: FornecedoresRepository) => Promise<T>,
+  ): Promise<T> {
+    if (!("$transaction" in this.database))
+      throw new Error("Uma transação não pode ser iniciada dentro de outra.");
+    return this.database.$transaction((tx) =>
+      operacao(new FornecedoresRepository(tx)),
+    );
+  }
+
+  async tentarBloquearChaveCriacao(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${`fornecedor:${usuarioId}:${chave}`}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarPorChaveCriacao(usuarioId: string, chave: string) {
+    return this.database.fornecedor.findUnique({
+      where: {
+        createdById_chaveCriacao: {
+          createdById: usuarioId,
+          chaveCriacao: chave,
+        },
+      },
+      select: { id: true, hashCriacao: true },
+    });
+  }
 
   criar(data: Prisma.FornecedorCreateInput): Promise<FornecedorDetalhePayload> {
     return this.database.fornecedor.create({

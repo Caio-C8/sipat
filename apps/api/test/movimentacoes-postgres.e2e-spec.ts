@@ -15,7 +15,6 @@ import { AppModule } from "../src/app.module";
 import { DATABASE_CLIENT } from "../src/common/database/database.constants";
 import { InventariosService } from "../src/modules/inventarios/inventarios.service";
 import { MovimentacoesService } from "../src/modules/movimentacoes/movimentacoes.service";
-import { MovimentacaoResponseMapper } from "../src/modules/movimentacoes/mappers/movimentacao-response.mapper";
 import { diaSaoPaulo } from "../src/modules/movimentacoes/datas-movimentacao";
 import {
   exigirBancoMovimentacoes,
@@ -220,20 +219,20 @@ suite("movimentações HTTP + PostgreSQL real", () => {
     });
     await post(body()).expect(201);
   });
-  it("recupera reenvio, inclusive por nova instância, e rejeita chave com outro conteúdo", async () => {
+  it("rejeita reenvio, inclusive por nova instância, e chave com outro conteúdo", async () => {
     const dados = body(2);
-    const primeira = (await post(dados).expect(201)).body;
-    expect((await post(dados).expect(201)).body).toEqual(primeira);
+    await post(dados).expect(201);
+    expect((await post(dados).expect(409)).body.codigo).toBe(
+      "OPERACAO_JA_PROCESSADA",
+    );
     const outroModulo = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DATABASE_CLIENT)
       .useValue(db)
       .compile();
     const novaInstancia = outroModulo.get(MovimentacoesService);
-    expect(
-      (await novaInstancia.criar(dados, f.identidade)).map((x) =>
-        MovimentacaoResponseMapper.paraDetalhe(x),
-      ),
-    ).toEqual(primeira.dados);
+    await expect(
+      novaInstancia.criar(dados, f.identidade),
+    ).rejects.toMatchObject({ response: { codigo: "OPERACAO_JA_PROCESSADA" } });
     await outroModulo.close();
     expect(
       (await post({ ...dados, observacao: "Outro motivo" }).expect(409)).body
@@ -246,12 +245,10 @@ suite("movimentações HTTP + PostgreSQL real", () => {
     const respostas = await Promise.all([post(dados), post(dados)]);
     expect(respostas.some((x) => x.status === 201)).toBe(true);
     for (const r of respostas) expect([201, 409]).toContain(r.status);
-    const replay = await post(dados).expect(201);
+    const replay = await post(dados).expect(409);
     expect(await db.transferenciaPatrimonio.count()).toBe(10);
     expect(await db.idempotenciaMovimentacao.count()).toBe(1);
-    expect(replay.body.dados).toEqual(
-      respostas.find((x) => x.status === 201)!.body.dados,
-    );
+    expect(replay.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
   });
   it("duas confirmações distintas com a mesma origem obsoleta não sobrescrevem localização", async () => {
     const a = body(),
