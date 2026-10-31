@@ -140,6 +140,9 @@ describe("patrimônios", () => {
     database.processoCompra.findUnique.mockResolvedValue(null);
     database.$queryRaw.mockImplementation((strings: TemplateStringsArray) => {
       const sql = strings.join("");
+      if (sql.includes("pg_try_advisory_xact_lock")) {
+        return [{ obtido: true }];
+      }
       if (sql.includes('FROM "setores"')) {
         return [{ ativo: true }];
       }
@@ -163,8 +166,13 @@ describe("patrimônios", () => {
     );
     database.patrimonio.findMany.mockResolvedValue([patrimonioPersistido()]);
     database.patrimonio.count.mockResolvedValue(1);
-    database.patrimonio.findUnique.mockImplementation(() =>
-      Promise.resolve(patrimonioPersistido(numeroAtual)),
+    database.patrimonio.findUnique.mockImplementation(
+      ({ where }: { where: Record<string, unknown> }) =>
+        Promise.resolve(
+          where.createdById_chaveCriacao
+            ? null
+            : patrimonioPersistido(numeroAtual),
+        ),
     );
     database.patrimonio.updateMany.mockImplementation(
       ({

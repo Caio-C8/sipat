@@ -128,7 +128,11 @@ describe("notas fiscais", () => {
       async (operacao: (cliente: typeof database) => Promise<unknown>) =>
         operacao(database),
     );
-    database.$queryRaw.mockResolvedValue([{ id: FORNECEDOR_ID, ativo: true }]);
+    database.$queryRaw.mockImplementation((strings: TemplateStringsArray) =>
+      strings.join("").includes("pg_try_advisory_xact_lock")
+        ? [{ obtido: true }]
+        : [{ id: FORNECEDOR_ID, ativo: true }],
+    );
     database.sessaoUsuario.findUnique.mockImplementation(
       ({ where }: { where: { tokenHash: string } }) => {
         const perfil =
@@ -190,7 +194,10 @@ describe("notas fiscais", () => {
           : [nota],
     );
     database.notaFiscal.count.mockResolvedValue(1);
-    database.notaFiscal.findUnique.mockImplementation(() => nota ?? null);
+    database.notaFiscal.findUnique.mockImplementation(
+      ({ where }: { where: Record<string, unknown> } = { where: {} }) =>
+        where.createdById_chaveCriacao ? null : (nota ?? null),
+    );
     database.notaFiscal.update.mockImplementation(
       ({ data }: { data: Record<string, unknown> }) => {
         const fornecedor = data.fornecedor as

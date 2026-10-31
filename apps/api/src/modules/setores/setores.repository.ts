@@ -8,6 +8,8 @@ import {
   type SetorResumoPayload,
 } from "./types";
 
+type ClienteSetores = DatabaseClient | Prisma.TransactionClient;
+
 type ListarSetoresParametros = {
   where: Prisma.SetorWhereInput;
   skip: number;
@@ -18,8 +20,49 @@ type ListarSetoresParametros = {
 export class SetoresRepository {
   constructor(
     @Inject(DATABASE_CLIENT)
-    private readonly database: DatabaseClient,
+    private readonly database: ClienteSetores,
   ) {}
+
+  executarTransacao<T>(
+    operacao: (repository: SetoresRepository) => Promise<T>,
+  ): Promise<T> {
+    if (!("$transaction" in this.database))
+      throw new Error("Uma transação não pode ser iniciada dentro de outra.");
+    return this.database.$transaction((tx) =>
+      operacao(new SetoresRepository(tx)),
+    );
+  }
+
+  async tentarBloquearChaveCriacao(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${`setor:${usuarioId}:${chave}`}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarPorChaveCriacao(usuarioId: string, chave: string) {
+    return this.database.setor.findUnique({
+      where: {
+        createdById_chaveCriacao: {
+          createdById: usuarioId,
+          chaveCriacao: chave,
+        },
+      },
+      select: { id: true, hashCriacao: true },
+    });
+  }
+
+  async bloquearResponsavel(
+    responsavelId: string,
+  ): Promise<{ ativo: boolean } | null> {
+    const [linha] = await this.database.$queryRaw<{ ativo: boolean }[]>`
+      SELECT ativo FROM responsaveis WHERE id = ${responsavelId}::uuid FOR SHARE
+    `;
+    return linha ?? null;
+  }
 
   criar(data: Prisma.SetorCreateInput): Promise<SetorDetalhePayload> {
     return this.database.setor.create({ data, ...setorDetalheArgs });

@@ -39,6 +39,28 @@ export class ComissoesRepository {
     );
   }
 
+  async tentarBloquearChaveCriacao(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${`comissao:${usuarioId}:${chave}`}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarPorChaveCriacao(usuarioId: string, chave: string) {
+    return this.database.comissao.findUnique({
+      where: {
+        createdById_chaveCriacao: {
+          createdById: usuarioId,
+          chaveCriacao: chave,
+        },
+      },
+      select: { id: true, hashCriacao: true },
+    });
+  }
+
   async bloquearComissao(comissaoId: string): Promise<boolean> {
     const registros = await this.database.$queryRaw<readonly { id: string }[]>`
       SELECT "id"

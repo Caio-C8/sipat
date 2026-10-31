@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   ConflictException,
   ForbiddenException,
@@ -13,6 +12,10 @@ import type {
   ListarOpcoesMovimentacaoQueryData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { PatrimoniosService } from "../patrimonios/patrimonios.service";
 import { SetoresService } from "../setores/setores.service";
 import { ComissoesService } from "../comissoes/comissoes.service";
@@ -88,19 +91,15 @@ export class MovimentacoesService {
   ): Promise<MovimentacaoPayload[]> {
     if (identidade.perfil !== "DIRETOR_PATRIMONIO")
       throw new ForbiddenException();
-    const hash = createHash("sha256")
-      .update(
-        JSON.stringify({
-          comissaoId: dados.comissaoId,
-          observacao: dados.observacao,
-          itens: dados.itens.map((item) => ({
-            patrimonioId: item.patrimonioId,
-            setorOrigemEsperadoId: item.setorOrigemEsperadoId,
-            setorDestinoId: item.setorDestinoId,
-          })),
-        }),
-      )
-      .digest("hex");
+    const hash = calcularHashIdempotencia({
+      comissaoId: dados.comissaoId,
+      observacao: dados.observacao,
+      itens: dados.itens.map((item) => ({
+        patrimonioId: item.patrimonioId,
+        setorOrigemEsperadoId: item.setorOrigemEsperadoId,
+        setorDestinoId: item.setorDestinoId,
+      })),
+    });
     for (let tentativa = 0; tentativa < 3; tentativa++) {
       try {
         return await this.movimentacoes.executarTransacao(
@@ -111,10 +110,7 @@ export class MovimentacoesService {
                 dados.chaveIdempotencia,
               ))
             )
-              throw this.conflito(
-                "MOVIMENTACAO_EM_PROCESSAMENTO",
-                "Esta confirmação está em processamento. Reenvie o mesmo pedido.",
-              );
+              throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
             const anterior = await repository.buscarIdempotencia(
               identidade.id,
               dados.chaveIdempotencia,
@@ -238,7 +234,6 @@ export class MovimentacoesService {
               usuarioId: identidade.id,
               chave: dados.chaveIdempotencia,
               payloadHash: hash,
-              resultado: MovimentacaoPersistenceMapper.paraSnapshot(registros),
             });
             return registros;
           },
@@ -272,16 +267,10 @@ export class MovimentacoesService {
       "Não foi possível confirmar agora. Reenvie o mesmo pedido.",
     );
   }
-  private recuperar(
-    anterior: { payloadHash: string; resultado: Prisma.JsonValue },
-    hash: string,
-  ) {
+  private recuperar(anterior: { payloadHash: string }, hash: string): never {
     if (anterior.payloadHash !== hash)
-      throw this.conflito(
-        "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-        "Esta chave já foi utilizada com outro conteúdo.",
-      );
-    return MovimentacaoPersistenceMapper.doSnapshot(anterior.resultado);
+      throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+    throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
   }
   private autorizarContexto(
     query: ListarOpcoesMovimentacaoQueryData,
@@ -299,6 +288,14 @@ export class MovimentacoesService {
       mensagem,
       erros: [{ campo: "chaveIdempotencia", codigo, mensagem }],
     });
+  }
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ) {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
   private pagina<T>(
     items: T[],

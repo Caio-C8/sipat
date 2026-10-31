@@ -58,6 +58,28 @@ export class InventariosRepository {
     );
   }
 
+  async tentarBloquearChaveCriacao(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${`inventario:${usuarioId}:${chave}`}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarPorChaveCriacao(usuarioId: string, chave: string) {
+    return this.database.inventario.findUnique({
+      where: {
+        createdById_chaveCriacao: {
+          createdById: usuarioId,
+          chaveCriacao: chave,
+        },
+      },
+      select: { id: true, hashCriacao: true },
+    });
+  }
+
   async bloquearComissao(
     comissaoId: string,
   ): Promise<ComissaoBloqueada | null> {

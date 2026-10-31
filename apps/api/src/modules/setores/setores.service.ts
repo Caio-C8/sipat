@@ -11,6 +11,10 @@ import type {
   ListarSetoresQueryData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { ResponsaveisService } from "../responsaveis/responsaveis.service";
 import { InventariosPolicyService } from "../inventarios/inventarios-policy.service";
 import { SetorPersistenceMapper } from "./mappers";
@@ -30,11 +34,44 @@ export class SetoresService {
     identidade: IdentidadeAutenticada,
   ): Promise<SetorDetalhePayload> {
     await this.validarResponsavelAtivo(dados.responsavelId);
+    const { chaveIdempotencia, ...conteudo } = dados;
+    const hashCriacao = calcularHashIdempotencia(conteudo);
 
     try {
-      return await this.setores.criar(
-        SetorPersistenceMapper.paraCriacao(dados, identidade.id),
-      );
+      return await this.setores.executarTransacao(async (repository) => {
+        if (
+          !(await repository.tentarBloquearChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          ))
+        )
+          throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+        const anterior = await repository.buscarPorChaveCriacao(
+          identidade.id,
+          chaveIdempotencia,
+        );
+        if (anterior) {
+          if (anterior.hashCriacao !== hashCriacao)
+            throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+          throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+        }
+        const responsavel = await repository.bloquearResponsavel(
+          dados.responsavelId,
+        );
+        if (responsavel === null) {
+          throw new NotFoundException({
+            codigo: "RESPONSAVEL_NAO_ENCONTRADO",
+            mensagem: "O responsável informado não foi encontrado.",
+            erros: [],
+          });
+        }
+        if (!responsavel.ativo) throw this.responsavelInativo();
+        return repository.criar({
+          ...SetorPersistenceMapper.paraCriacao(dados, identidade.id),
+          chaveCriacao: chaveIdempotencia,
+          hashCriacao,
+        });
+      });
     } catch (erro: unknown) {
       this.traduzirErroPersistencia(erro);
     }
@@ -105,19 +142,7 @@ export class SetoresService {
 
   private async validarResponsavelAtivo(responsavelId: string): Promise<void> {
     const responsavel = await this.responsaveis.consultar(responsavelId);
-    if (!responsavel.ativo) {
-      throw new ConflictException({
-        codigo: "RESPONSAVEL_INATIVO",
-        mensagem: "O responsável informado está inativo.",
-        erros: [
-          {
-            campo: "responsavelId",
-            codigo: "RELACAO_INATIVA",
-            mensagem: "Um responsável inativo não pode receber novos setores.",
-          },
-        ],
-      });
-    }
+    if (!responsavel.ativo) throw this.responsavelInativo();
   }
 
   private traduzirErroPersistencia(erro: unknown): never {
@@ -160,6 +185,29 @@ export class SetoresService {
       mensagem: "O setor informado não foi encontrado.",
       erros: [],
     });
+  }
+
+  private responsavelInativo(): ConflictException {
+    return new ConflictException({
+      codigo: "RESPONSAVEL_INATIVO",
+      mensagem: "O responsável informado está inativo.",
+      erros: [
+        {
+          campo: "responsavelId",
+          codigo: "RELACAO_INATIVA",
+          mensagem: "Um responsável inativo não pode receber novos setores.",
+        },
+      ],
+    });
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   bloquearParaMovimentacao(ids: string[], tx: Prisma.TransactionClient) {

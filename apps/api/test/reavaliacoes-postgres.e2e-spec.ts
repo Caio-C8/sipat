@@ -274,7 +274,7 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
     });
   });
 
-  it("reavalia dois bens atomicamente, preserva histórico e permite replay", async () => {
+  it("reavalia dois bens atomicamente, preserva histórico e rejeita repetição", async () => {
     const previaHttp = await post("/previa", body()).expect(200);
     const previa = PreviaReavaliacaoResponseSchema.parse(previaHttp.body);
     expect(previa.dados.versaoPrevia).toMatch(/^[a-f0-9]{64}$/);
@@ -288,8 +288,8 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
     expect(criada.dados).toHaveLength(2);
     expect(criada.dados[0]?.anterior?.valorLiquidoAnterior).toBe("990.0000000");
     expect(criada.dados[0]?.novo?.valorResidualNovo).toBe("150.0000000");
-    expect((await post("", confirmacao).expect(201)).body).toEqual(
-      criadaHttp.body,
+    expect((await post("", confirmacao).expect(409)).body.codigo).toBe(
+      "OPERACAO_JA_PROCESSADA",
     );
     await post("", { ...confirmacao, dataReferencia: "2000-01-01" }).expect(
       409,

@@ -83,6 +83,8 @@ describe("gestão de setores", () => {
   const database = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
+    $transaction: jest.fn(),
+    $queryRaw: jest.fn(),
     notaFiscal: { findMany: jest.fn().mockResolvedValue([]) },
     setorInventario: { count: jest.fn().mockResolvedValue(0) },
     sessaoUsuario: {
@@ -100,6 +102,15 @@ describe("gestão de setores", () => {
   };
 
   beforeAll(async () => {
+    database.$transaction.mockImplementation(
+      async (operacao: (cliente: typeof database) => Promise<unknown>) =>
+        operacao(database),
+    );
+    database.$queryRaw.mockImplementation((strings: TemplateStringsArray) =>
+      strings.join("").includes("pg_try_advisory_xact_lock")
+        ? [{ obtido: true }]
+        : [{ ativo: true }],
+    );
     database.sessaoUsuario.findUnique.mockImplementation(
       ({ where }: { where: { tokenHash: string } }) => {
         const hashAdministrador = calcularHashTokenSessao(tokenAdministrador);

@@ -43,6 +43,10 @@ function setor(
 
 function criarDependencias() {
   const repository = {
+    executarTransacao: jest.fn(),
+    tentarBloquearChaveCriacao: jest.fn().mockResolvedValue(true),
+    buscarPorChaveCriacao: jest.fn().mockResolvedValue(null),
+    bloquearResponsavel: jest.fn().mockResolvedValue({ ativo: true }),
     criar: jest.fn(),
     listar: jest.fn(),
     contar: jest.fn(),
@@ -52,6 +56,10 @@ function criarDependencias() {
   };
   const responsaveis = { consultar: jest.fn() };
   const inventariosPolicy = { exigirSetorPodeSerInativado: jest.fn() };
+  repository.executarTransacao.mockImplementation(
+    (operacao: (repo: SetoresRepository) => Promise<unknown>) =>
+      operacao(repository as unknown as SetoresRepository),
+  );
 
   return {
     repository,
@@ -84,6 +92,8 @@ describe("SetoresService", () => {
 
     expect(responsaveis.consultar).toHaveBeenCalledWith(RESPONSAVEL_ID);
     expect(repository.criar).toHaveBeenCalledWith({
+      chaveCriacao: CHAVE_IDEMPOTENCIA,
+      hashCriacao: expect.any(String),
       nome: "Almoxarifado",
       sala: "12",
       ramal: "123",

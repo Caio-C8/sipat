@@ -127,8 +127,8 @@ model Usuario {
   updatedAt     DateTime? @map("updated_at") @db.Timestamp(6)
   createdById   String?   @map("created_by_id") @db.Uuid
 
-  createdBy                             Usuario?                        @relation("UsuarioCriadoPor", fields: [createdById], references: [id])
-  usuariosCriados                       Usuario[]                       @relation("UsuarioCriadoPor")
+  createdBy                             Usuario?                         @relation("UsuarioCriadoPor", fields: [createdById], references: [id])
+  usuariosCriados                       Usuario[]                        @relation("UsuarioCriadoPor")
   responsaveisCriados                   Responsavel[]
   naturezasCriadas                      Natureza[]
   especiesCriadas                       Especie[]
@@ -142,12 +142,12 @@ model Usuario {
   devolucoesEmprestimoCriadas           DevolucaoPatrimonio[]
   idempotenciasEmprestimo               IdempotenciaEmprestimo[]
   inventariosCriados                    Inventario[]
-  inventariosIniciados                  Inventario[]                    @relation("InventarioIniciadoPor")
-  inventariosFinalizados                Inventario[]                    @relation("InventarioFinalizadoPor")
-  setoresInventarioIniciados            SetorInventario[]               @relation("SetorInventarioIniciadoPor")
-  setoresInventarioConcluidos           SetorInventario[]               @relation("SetorInventarioConcluidoPor")
-  itensInventarioVerificados            ItemInventario[]                @relation("ItemInventarioVerificadoPor")
-  itensInventarioCorrigidos             ItemInventario[]                @relation("ItemInventarioCorrigidoPor")
+  inventariosIniciados                  Inventario[]                     @relation("InventarioIniciadoPor")
+  inventariosFinalizados                Inventario[]                     @relation("InventarioFinalizadoPor")
+  setoresInventarioIniciados            SetorInventario[]                @relation("SetorInventarioIniciadoPor")
+  setoresInventarioConcluidos           SetorInventario[]                @relation("SetorInventarioConcluidoPor")
+  itensInventarioVerificados            ItemInventario[]                 @relation("ItemInventarioVerificadoPor")
+  itensInventarioCorrigidos             ItemInventario[]                 @relation("ItemInventarioCorrigidoPor")
   localizacoesPosterioresRegistradas    LocalizacaoPosteriorInventario[] @relation("LocalizacaoPosteriorRegistradaPor")
   localizacoesPosterioresCorrigidas     LocalizacaoPosteriorInventario[] @relation("LocalizacaoPosteriorCorrigidaPor")
   baixasCriadas                         BaixaPatrimonio[]
@@ -160,10 +160,10 @@ model Usuario {
   redefinicaoSenha                      RedefinicaoSenha?
   idempotenciasMovimentacao             IdempotenciaMovimentacao[]
   idempotenciasReavaliacao              IdempotenciaReavaliacao[]
-  itensManutencaoRecebidos              ItemManutencao[]               @relation("ItemManutencaoRecebidoPor")
-  revisoesOrcamentoManutencao            RevisaoOrcamentoManutencao[]
-  documentosManutencao                   DocumentoManutencao[]
-  idempotenciasManutencao                IdempotenciaManutencao[]
+  itensManutencaoRecebidos              ItemManutencao[]                 @relation("ItemManutencaoRecebidoPor")
+  revisoesOrcamentoManutencao           RevisaoOrcamentoManutencao[]
+  documentosManutencao                  DocumentoManutencao[]
+  idempotenciasManutencao               IdempotenciaManutencao[]
 
   @@map("usuarios")
 }
@@ -299,14 +299,17 @@ model ProcessoCompra {
   valorTotal     Decimal? @map("valor_total") @db.Decimal(19, 7)
   observacao     String?  @db.Text
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
   createdBy    Usuario      @relation(fields: [createdById], references: [id])
   notasFiscais NotaFiscal[]
   patrimonios  Patrimonio[]
 
+  @@unique([createdById, chaveCriacao], map: "processos_compra_created_by_chave_criacao_key")
   @@index([createdAt(sort: Desc), id(sort: Desc)], map: "processos_compra_created_at_id_idx")
   @@index([anoProcesso], map: "processos_compra_ano_processo_idx")
   @@index([anoEmpenho], map: "processos_compra_ano_empenho_idx")
@@ -321,20 +324,23 @@ model Setor {
   responsavelId String  @map("responsavel_id") @db.Uuid
   ativo         Boolean @default(true)
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
   responsavel                        Responsavel               @relation(fields: [responsavelId], references: [id])
   createdBy                          Usuario                   @relation(fields: [createdById], references: [id])
   patrimoniosAtuais                  Patrimonio[]
-  emprestimosVinculados              EmprestimoPatrimonio[]   @relation("SetorVinculoEmprestimo")
+  emprestimosVinculados              EmprestimoPatrimonio[]    @relation("SetorVinculoEmprestimo")
   transferenciasComoSetorAntigo      TransferenciaPatrimonio[] @relation("TransferenciaSetorAntigo")
   transferenciasComoSetorAtual       TransferenciaPatrimonio[] @relation("TransferenciaSetorAtual")
   itensInventarioComoSetorEsperado   ItemInventario[]          @relation("ItemInventarioSetorEsperado")
   itensInventarioComoSetorEncontrado ItemInventario[]          @relation("ItemInventarioSetorEncontrado")
   setoresInventario                  SetorInventario[]
 
+  @@unique([createdById, chaveCriacao], map: "setores_created_by_chave_criacao_key")
   @@map("setores")
 }
 
@@ -349,16 +355,19 @@ model Fornecedor {
   endereco          String? @db.Text
   ativo             Boolean @default(true)
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
-  createdBy    Usuario      @relation(fields: [createdById], references: [id])
-  notasFiscais NotaFiscal[]
-  manutencoes  Manutencao[]
-  itensManutencao ItemManutencao[]
+  createdBy                   Usuario                      @relation(fields: [createdById], references: [id])
+  notasFiscais                NotaFiscal[]
+  manutencoes                 Manutencao[]
+  itensManutencao             ItemManutencao[]
   revisoesOrcamentoManutencao RevisaoOrcamentoManutencao[]
 
+  @@unique([createdById, chaveCriacao], map: "fornecedores_created_by_chave_criacao_key")
   @@map("fornecedores")
 }
 
@@ -370,9 +379,11 @@ model Comissao {
   dataVigenciaInicio DateTime @map("data_vigencia_inicio") @db.Date
   dataVigenciaFim    DateTime @map("data_vigencia_fim") @db.Date
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
   createdBy      Usuario                   @relation(fields: [createdById], references: [id])
   membros        MembroComissao[]
@@ -385,6 +396,7 @@ model Comissao {
   depreciacoes   DepreciacaoPatrimonio[]
   reavaliacoes   ReavaliacaoPatrimonio[]
 
+  @@unique([createdById, chaveCriacao], map: "comissoes_created_by_chave_criacao_key")
   @@index([createdAt, id], map: "comissoes_created_at_id_idx")
   @@map("comissoes")
 }
@@ -415,14 +427,17 @@ model NotaFiscal {
   processoCompraId       String   @map("processo_compra_id") @db.Uuid
   fornecedorId           String   @map("fornecedor_id") @db.Uuid
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
   processoCompra ProcessoCompra @relation(fields: [processoCompraId], references: [id])
   fornecedor     Fornecedor     @relation(fields: [fornecedorId], references: [id])
   createdBy      Usuario        @relation(fields: [createdById], references: [id])
 
+  @@unique([createdById, chaveCriacao], map: "notas_fiscais_created_by_chave_criacao_key")
   @@index([processoCompraId, createdAt, id], map: "notas_fiscais_processo_compra_created_at_id_idx")
   @@index([fornecedorId, processoCompraId], map: "notas_fiscais_fornecedor_processo_compra_idx")
   @@map("notas_fiscais")
@@ -445,9 +460,11 @@ model Patrimonio {
   setorAtualId          String                @map("setor_atual_id") @db.Uuid
   processoCompraId      String?               @map("processo_compra_id") @db.Uuid
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
   especie               Especie                         @relation(fields: [especieId], references: [id])
   setorAtual            Setor                           @relation(fields: [setorAtualId], references: [id])
@@ -464,6 +481,7 @@ model Patrimonio {
   baixas                BaixaPatrimonio[]
   substituicoesNumero   SubstituicaoNumeroPatrimonial[]
 
+  @@unique([createdById, chaveCriacao], map: "patrimonios_created_by_chave_criacao_key")
   @@map("patrimonios")
 }
 
@@ -494,12 +512,12 @@ model TransferenciaPatrimonio {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   createdById String   @map("created_by_id") @db.Uuid
 
-  setorAntigo            Setor           @relation("TransferenciaSetorAntigo", fields: [setorAntigoId], references: [id])
-  setorAtual             Setor           @relation("TransferenciaSetorAtual", fields: [setorAtualId], references: [id])
-  patrimonio             Patrimonio      @relation(fields: [patrimonioId], references: [id])
-  comissao               Comissao        @relation(fields: [comissaoId], references: [id])
-  createdBy              Usuario         @relation(fields: [createdById], references: [id])
-  itemInventarioCorrecao ItemInventario?
+  setorAntigo                  Setor                           @relation("TransferenciaSetorAntigo", fields: [setorAntigoId], references: [id])
+  setorAtual                   Setor                           @relation("TransferenciaSetorAtual", fields: [setorAtualId], references: [id])
+  patrimonio                   Patrimonio                      @relation(fields: [patrimonioId], references: [id])
+  comissao                     Comissao                        @relation(fields: [comissaoId], references: [id])
+  createdBy                    Usuario                         @relation(fields: [createdById], references: [id])
+  itemInventarioCorrecao       ItemInventario?
   localizacaoPosteriorCorrecao LocalizacaoPosteriorInventario?
 
   @@index([comissaoId], map: "transferencias_patrimoniais_comissao_id_idx")
@@ -512,17 +530,17 @@ model TransferenciaPatrimonio {
 }
 
 model EmprestimoPatrimonio {
-  id                    String    @id @default(uuid()) @db.Uuid
-  dataEmprestimo        DateTime  @map("data_emprestimo") @db.Timestamp(6)
-  dataPrevistaDevolucao DateTime? @map("data_prevista_devolucao") @db.Timestamp(6)
-  destinatario          String?   @db.VarChar(200)
-  finalidade            String?   @db.Text
-  observacao            String?   @db.Text
-  grupoEmprestimoId     String    @map("grupo_emprestimo_id") @db.Uuid
+  id                    String                     @id @default(uuid()) @db.Uuid
+  dataEmprestimo        DateTime                   @map("data_emprestimo") @db.Timestamp(6)
+  dataPrevistaDevolucao DateTime?                  @map("data_prevista_devolucao") @db.Timestamp(6)
+  destinatario          String?                    @db.VarChar(200)
+  finalidade            String?                    @db.Text
+  observacao            String?                    @db.Text
+  grupoEmprestimoId     String                     @map("grupo_emprestimo_id") @db.Uuid
   modoAgrupamento       ModoAgrupamentoEmprestimo? @map("modo_agrupamento")
-  setorVinculoId        String?   @map("setor_vinculo_id") @db.Uuid
-  comissaoId            String    @map("comissao_id") @db.Uuid
-  patrimonioId          String    @map("patrimonio_id") @db.Uuid
+  setorVinculoId        String?                    @map("setor_vinculo_id") @db.Uuid
+  comissaoId            String                     @map("comissao_id") @db.Uuid
+  patrimonioId          String                     @map("patrimonio_id") @db.Uuid
 
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   createdById String   @map("created_by_id") @db.Uuid
@@ -565,12 +583,11 @@ enum ModoAgrupamentoEmprestimo {
 }
 
 model IdempotenciaEmprestimo {
-  usuarioId     String   @map("usuario_id") @db.Uuid
-  chave         String   @db.Uuid
-  tipoOperacao  String   @map("tipo_operacao") @db.VarChar(20)
-  payloadHash   String   @map("payload_hash") @db.Char(64)
-  resultado     Json     @db.JsonB
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuarioId    String   @map("usuario_id") @db.Uuid
+  chave        String   @db.Uuid
+  tipoOperacao String   @map("tipo_operacao") @db.VarChar(20)
+  payloadHash  String   @map("payload_hash") @db.Char(64)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   usuario      Usuario  @relation(fields: [usuarioId], references: [id])
 
   @@id([usuarioId, chave])
@@ -598,11 +615,11 @@ model Manutencao {
   updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
   createdById String    @map("created_by_id") @db.Uuid
 
-  fornecedor Fornecedor?      @relation(fields: [fornecedorId], references: [id])
-  comissao   Comissao         @relation(fields: [comissaoId], references: [id])
-  createdBy  Usuario          @relation(fields: [createdById], references: [id])
-  itens      ItemManutencao[]
-  documentos DocumentoManutencao[]
+  fornecedor    Fornecedor?              @relation(fields: [fornecedorId], references: [id])
+  comissao      Comissao                 @relation(fields: [comissaoId], references: [id])
+  createdBy     Usuario                  @relation(fields: [createdById], references: [id])
+  itens         ItemManutencao[]
+  documentos    DocumentoManutencao[]
   idempotencias IdempotenciaManutencao[]
 
   @@index([comissaoId], map: "manutencoes_comissao_id_idx")
@@ -612,34 +629,34 @@ model Manutencao {
 }
 
 model ItemManutencao {
-  id                        String    @id @default(uuid()) @db.Uuid
+  id                        String         @id @default(uuid()) @db.Uuid
   tipo                      TipoManutencao
-  fornecedorId              String?   @map("fornecedor_id") @db.Uuid
-  previsaoRetorno           DateTime? @map("previsao_retorno") @db.Date
-  versaoOrcamento           Int       @default(0) @map("versao_orcamento")
-  descricaoGarantia         String?   @map("descricao_garantia") @db.Text
-  dataFimGarantia           DateTime? @map("data_fim_garantia") @db.Date
-  recebidoPorId             String?   @map("recebido_por_id") @db.Uuid
-  recebidoEm               DateTime? @map("recebido_em") @db.Timestamp(6)
-  descricaoProblema         String?   @map("descricao_problema") @db.Text
-  dataOrcamento             DateTime? @map("data_orcamento") @db.Date
-  descricaoOrcamento        String?   @map("descricao_orcamento") @db.Text
-  valorOrcamento            Decimal?  @map("valor_orcamento") @db.Decimal(19, 7)
-  descricaoServicoRealizado String?   @map("descricao_servico_realizado") @db.Text
-  valorRealizado            Decimal?  @map("valor_realizado") @db.Decimal(19, 7)
-  dataRetorno               DateTime? @map("data_retorno") @db.Date
-  observacao                String?   @db.Text
-  caminhoAnexoObservacao    String?   @map("caminho_anexo_observacao") @db.VarChar(500)
-  manutencaoId              String    @map("manutencao_id") @db.Uuid
-  patrimonioId              String    @map("patrimonio_id") @db.Uuid
+  fornecedorId              String?        @map("fornecedor_id") @db.Uuid
+  previsaoRetorno           DateTime?      @map("previsao_retorno") @db.Date
+  versaoOrcamento           Int            @default(0) @map("versao_orcamento")
+  descricaoGarantia         String?        @map("descricao_garantia") @db.Text
+  dataFimGarantia           DateTime?      @map("data_fim_garantia") @db.Date
+  recebidoPorId             String?        @map("recebido_por_id") @db.Uuid
+  recebidoEm                DateTime?      @map("recebido_em") @db.Timestamp(6)
+  descricaoProblema         String?        @map("descricao_problema") @db.Text
+  dataOrcamento             DateTime?      @map("data_orcamento") @db.Date
+  descricaoOrcamento        String?        @map("descricao_orcamento") @db.Text
+  valorOrcamento            Decimal?       @map("valor_orcamento") @db.Decimal(19, 7)
+  descricaoServicoRealizado String?        @map("descricao_servico_realizado") @db.Text
+  valorRealizado            Decimal?       @map("valor_realizado") @db.Decimal(19, 7)
+  dataRetorno               DateTime?      @map("data_retorno") @db.Date
+  observacao                String?        @db.Text
+  caminhoAnexoObservacao    String?        @map("caminho_anexo_observacao") @db.VarChar(500)
+  manutencaoId              String         @map("manutencao_id") @db.Uuid
+  patrimonioId              String         @map("patrimonio_id") @db.Uuid
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
-  manutencao                  Manutencao       @relation(fields: [manutencaoId], references: [id])
-  patrimonio                  Patrimonio       @relation(fields: [patrimonioId], references: [id])
-  fornecedor                  Fornecedor?      @relation(fields: [fornecedorId], references: [id])
-  recebidoPor                 Usuario?         @relation("ItemManutencaoRecebidoPor", fields: [recebidoPorId], references: [id])
+  manutencao                  Manutencao                   @relation(fields: [manutencaoId], references: [id])
+  patrimonio                  Patrimonio                   @relation(fields: [patrimonioId], references: [id])
+  fornecedor                  Fornecedor?                  @relation(fields: [fornecedorId], references: [id])
+  recebidoPor                 Usuario?                     @relation("ItemManutencaoRecebidoPor", fields: [recebidoPorId], references: [id])
   revisoesOrcamento           RevisaoOrcamentoManutencao[]
   documentos                  DocumentoManutencao[]
   idempotencias               IdempotenciaManutencao[]
@@ -653,39 +670,39 @@ model ItemManutencao {
 }
 
 model RevisaoOrcamentoManutencao {
-  id                   String   @id @default(uuid()) @db.Uuid
-  itemId               String   @map("item_id") @db.Uuid
-  versao               Int
-  dataOrcamento        DateTime @map("data_orcamento") @db.Date
-  descricaoOrcamento   String   @map("descricao_orcamento") @db.Text
-  valorOrcamento       Decimal  @map("valor_orcamento") @db.Decimal(19, 7)
-  fornecedorId         String?  @map("fornecedor_id") @db.Uuid
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  createdById          String   @map("created_by_id") @db.Uuid
+  id                 String   @id @default(uuid()) @db.Uuid
+  itemId             String   @map("item_id") @db.Uuid
+  versao             Int
+  dataOrcamento      DateTime @map("data_orcamento") @db.Date
+  descricaoOrcamento String   @map("descricao_orcamento") @db.Text
+  valorOrcamento     Decimal  @map("valor_orcamento") @db.Decimal(19, 7)
+  fornecedorId       String?  @map("fornecedor_id") @db.Uuid
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById        String   @map("created_by_id") @db.Uuid
 
-  item        ItemManutencao @relation(fields: [itemId], references: [id])
-  fornecedor  Fornecedor?     @relation(fields: [fornecedorId], references: [id])
-  createdBy   Usuario        @relation(fields: [createdById], references: [id])
+  item       ItemManutencao @relation(fields: [itemId], references: [id])
+  fornecedor Fornecedor?    @relation(fields: [fornecedorId], references: [id])
+  createdBy  Usuario        @relation(fields: [createdById], references: [id])
 
   @@unique([itemId, versao], map: "revisoes_orcamento_item_versao_key")
   @@map("revisoes_orcamento_manutencao")
 }
 
 model DocumentoManutencao {
-  id            String                   @id @default(uuid()) @db.Uuid
-  manutencaoId  String                   @map("manutencao_id") @db.Uuid
-  itemId        String?                  @map("item_id") @db.Uuid
-  fase          FaseDocumentoManutencao
-  chave         String                   @db.VarChar(500)
-  nome          String                   @db.VarChar(255)
-  tamanhoBytes  Int?                     @map("tamanho_bytes")
-  hashSha256    String?                  @map("hash_sha256") @db.Char(64)
-  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamp(6)
-  createdById   String?                  @map("created_by_id") @db.Uuid
+  id           String                  @id @default(uuid()) @db.Uuid
+  manutencaoId String                  @map("manutencao_id") @db.Uuid
+  itemId       String?                 @map("item_id") @db.Uuid
+  fase         FaseDocumentoManutencao
+  chave        String                  @db.VarChar(500)
+  nome         String                  @db.VarChar(255)
+  tamanhoBytes Int?                    @map("tamanho_bytes")
+  hashSha256   String?                 @map("hash_sha256") @db.Char(64)
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById  String?                 @map("created_by_id") @db.Uuid
 
-  manutencao  Manutencao     @relation(fields: [manutencaoId], references: [id])
-  item        ItemManutencao? @relation(fields: [itemId], references: [id])
-  createdBy   Usuario?       @relation(fields: [createdById], references: [id])
+  manutencao Manutencao      @relation(fields: [manutencaoId], references: [id])
+  item       ItemManutencao? @relation(fields: [itemId], references: [id])
+  createdBy  Usuario?        @relation(fields: [createdById], references: [id])
 
   @@index([manutencaoId, createdAt, id], map: "documentos_manutencao_pedido_data_idx")
   @@index([itemId, createdAt, id], map: "documentos_manutencao_item_data_idx")
@@ -693,19 +710,18 @@ model DocumentoManutencao {
 }
 
 model IdempotenciaManutencao {
-  id            String   @id @default(uuid()) @db.Uuid
-  usuarioId     String   @map("usuario_id") @db.Uuid
-  chave         String   @db.Uuid
-  tipo          String   @db.VarChar(20)
-  hashPayload   String   @map("hash_payload") @db.Char(64)
-  resultado     Json
-  manutencaoId  String   @map("manutencao_id") @db.Uuid
-  itemId        String?  @map("item_id") @db.Uuid
-  documentoId   String?  @map("documento_id") @db.Uuid
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  id           String   @id @default(uuid()) @db.Uuid
+  usuarioId    String   @map("usuario_id") @db.Uuid
+  chave        String   @db.Uuid
+  tipo         String   @db.VarChar(20)
+  hashPayload  String   @map("hash_payload") @db.Char(64)
+  manutencaoId String   @map("manutencao_id") @db.Uuid
+  itemId       String?  @map("item_id") @db.Uuid
+  documentoId  String?  @map("documento_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuario    Usuario      @relation(fields: [usuarioId], references: [id])
-  manutencao Manutencao   @relation(fields: [manutencaoId], references: [id])
+  usuario    Usuario         @relation(fields: [usuarioId], references: [id])
+  manutencao Manutencao      @relation(fields: [manutencaoId], references: [id])
   item       ItemManutencao? @relation(fields: [itemId], references: [id])
 
   @@unique([usuarioId, chave], map: "idempotencias_manutencao_usuario_chave_key")
@@ -724,18 +740,21 @@ model Inventario {
   iniciadoPorId   String?          @map("iniciado_por_id") @db.Uuid
   finalizadoPorId String?          @map("finalizado_por_id") @db.Uuid
 
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6)
-  createdById String    @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime? @map("updated_at") @db.Timestamp(6)
+  createdById  String    @map("created_by_id") @db.Uuid
+  chaveCriacao String?   @map("chave_criacao") @db.Uuid
+  hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
-  comissao      Comissao          @relation(fields: [comissaoId], references: [id])
-  createdBy     Usuario           @relation(fields: [createdById], references: [id])
-  iniciadoPor   Usuario?          @relation("InventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
-  finalizadoPor Usuario?          @relation("InventarioFinalizadoPor", fields: [finalizadoPorId], references: [id])
-  setores       SetorInventario[]
-  itens         ItemInventario[]
+  comissao                Comissao                         @relation(fields: [comissaoId], references: [id])
+  createdBy               Usuario                          @relation(fields: [createdById], references: [id])
+  iniciadoPor             Usuario?                         @relation("InventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
+  finalizadoPor           Usuario?                         @relation("InventarioFinalizadoPor", fields: [finalizadoPorId], references: [id])
+  setores                 SetorInventario[]
+  itens                   ItemInventario[]
   localizacoesPosteriores LocalizacaoPosteriorInventario[]
 
+  @@unique([createdById, chaveCriacao], map: "inventarios_created_by_chave_criacao_key")
   @@index([comissaoId], map: "inventarios_comissao_id_idx")
   @@index([status, createdAt(sort: Desc), id(sort: Desc)], map: "inventarios_status_created_at_id_idx")
   @@map("inventarios")
@@ -754,11 +773,11 @@ model SetorInventario {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
-  inventario   Inventario       @relation(fields: [inventarioId], references: [id])
-  setor        Setor            @relation(fields: [setorId], references: [id])
-  iniciadoPor  Usuario?         @relation("SetorInventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
-  concluidoPor Usuario?         @relation("SetorInventarioConcluidoPor", fields: [concluidoPorId], references: [id])
-  itens        ItemInventario[]
+  inventario                         Inventario                       @relation(fields: [inventarioId], references: [id])
+  setor                              Setor                            @relation(fields: [setorId], references: [id])
+  iniciadoPor                        Usuario?                         @relation("SetorInventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
+  concluidoPor                       Usuario?                         @relation("SetorInventarioConcluidoPor", fields: [concluidoPorId], references: [id])
+  itens                              ItemInventario[]
   localizacoesPosterioresEncontradas LocalizacaoPosteriorInventario[]
 
   @@unique([inventarioId, setorId])
@@ -795,16 +814,16 @@ model ItemInventario {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
-  setorEsperado         Setor                    @relation("ItemInventarioSetorEsperado", fields: [setorEsperadoId], references: [id])
-  setorEncontrado       Setor?                   @relation("ItemInventarioSetorEncontrado", fields: [setorEncontradoId], references: [id])
-  patrimonio            Patrimonio               @relation(fields: [patrimonioId], references: [id])
-  setorInventario       SetorInventario          @relation(fields: [setorInventarioId, inventarioId, setorEsperadoId], references: [id, inventarioId, setorId], map: "itens_inventario_setor_inventario_vinculo_fkey")
-  inventario            Inventario               @relation(fields: [inventarioId], references: [id])
-  transferenciaCorrecao TransferenciaPatrimonio? @relation(fields: [transferenciaCorrecaoId], references: [id])
-  verificadoPor         Usuario?                 @relation("ItemInventarioVerificadoPor", fields: [verificadoPorId], references: [id])
-  corrigidoPor          Usuario?                 @relation("ItemInventarioCorrigidoPor", fields: [corrigidoPorId], references: [id])
-  emprestimoPatrimonio  EmprestimoPatrimonio?    @relation(fields: [emprestimoPatrimonioId, patrimonioId], references: [id, patrimonioId], map: "itens_inventario_emprestimo_patrimonio_fkey")
-  itemManutencao        ItemManutencao?          @relation(fields: [itemManutencaoId, patrimonioId], references: [id, patrimonioId], map: "itens_inventario_item_manutencao_fkey")
+  setorEsperado           Setor                            @relation("ItemInventarioSetorEsperado", fields: [setorEsperadoId], references: [id])
+  setorEncontrado         Setor?                           @relation("ItemInventarioSetorEncontrado", fields: [setorEncontradoId], references: [id])
+  patrimonio              Patrimonio                       @relation(fields: [patrimonioId], references: [id])
+  setorInventario         SetorInventario                  @relation(fields: [setorInventarioId, inventarioId, setorEsperadoId], references: [id, inventarioId, setorId], map: "itens_inventario_setor_inventario_vinculo_fkey")
+  inventario              Inventario                       @relation(fields: [inventarioId], references: [id])
+  transferenciaCorrecao   TransferenciaPatrimonio?         @relation(fields: [transferenciaCorrecaoId], references: [id])
+  verificadoPor           Usuario?                         @relation("ItemInventarioVerificadoPor", fields: [verificadoPorId], references: [id])
+  corrigidoPor            Usuario?                         @relation("ItemInventarioCorrigidoPor", fields: [corrigidoPorId], references: [id])
+  emprestimoPatrimonio    EmprestimoPatrimonio?            @relation(fields: [emprestimoPatrimonioId, patrimonioId], references: [id, patrimonioId], map: "itens_inventario_emprestimo_patrimonio_fkey")
+  itemManutencao          ItemManutencao?                  @relation(fields: [itemManutencaoId, patrimonioId], references: [id, patrimonioId], map: "itens_inventario_item_manutencao_fkey")
   localizacoesPosteriores LocalizacaoPosteriorInventario[]
 
   @@unique([inventarioId, patrimonioId])
@@ -893,10 +912,10 @@ model ParametroDepreciacao {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
-  reavaliacao  ReavaliacaoPatrimonio?  @relation(fields: [reavaliacaoId], references: [id])
+  reavaliacao            ReavaliacaoPatrimonio?  @relation(fields: [reavaliacaoId], references: [id])
   reavaliacoesAnteriores ReavaliacaoPatrimonio[] @relation("ReavaliacaoParametroAnterior")
-  patrimonio   Patrimonio              @relation(fields: [patrimonioId], references: [id])
-  depreciacoes DepreciacaoPatrimonio[]
+  patrimonio             Patrimonio              @relation(fields: [patrimonioId], references: [id])
+  depreciacoes           DepreciacaoPatrimonio[]
 
   @@unique([patrimonioId], map: "parametros_depreciacao_patrimonio_vigente_uidx", where: { dataFim: null })
   @@map("parametros_depreciacao")
@@ -928,33 +947,33 @@ model DepreciacaoPatrimonio {
 }
 
 model ReavaliacaoPatrimonio {
-  id                            String   @id @default(uuid()) @db.Uuid
-  dataReavaliacao               DateTime @map("data_reavaliacao") @db.Timestamp(6)
-  dataReferencia                DateTime? @map("data_referencia") @db.Date
-  valorLiquidoAnterior          Decimal  @map("valor_liquido_anterior") @db.Decimal(19, 7)
-  valorBrutoAnterior            Decimal? @map("valor_bruto_anterior") @db.Decimal(19, 7)
-  depreciacaoAcumuladaAnterior  Decimal? @map("depreciacao_acumulada_anterior") @db.Decimal(19, 7)
-  valorBaseAnterior             Decimal? @map("valor_base_anterior") @db.Decimal(19, 7)
-  percentualResidualAnterior    Decimal? @map("percentual_residual_anterior") @db.Decimal(5, 2)
-  vidaUtilInicialAnteriorMeses  Int? @map("vida_util_inicial_anterior_meses")
-  quantidadeDepreciacoesAnteriores Int? @map("quantidade_depreciacoes_anteriores")
-  dataInicioAnterior            DateTime? @map("data_inicio_anterior") @db.Date
-  parametroAnteriorId           String? @map("parametro_anterior_id") @db.Uuid
-  valorReavaliado               Decimal  @map("valor_reavaliado") @db.Decimal(19, 7)
-  valorBaseNovo                 Decimal? @map("valor_base_novo") @db.Decimal(19, 7)
-  percentualResidualNovo        Decimal? @map("percentual_residual_novo") @db.Decimal(5, 2)
-  valorResidualAnterior         Decimal? @map("valor_residual_anterior") @db.Decimal(19, 7)
-  valorResidualNovo             Decimal  @map("valor_residual_novo") @db.Decimal(19, 7)
-  vidaUtilRestanteAnteriorMeses Int?     @map("vida_util_restante_anterior_meses")
-  vidaUtilNovaMeses             Int      @map("vida_util_nova_meses")
-  laudoTecnico                  String?  @map("laudo_tecnico") @db.Text
-  observacao                    String?  @db.Text
-  numeroPatrimonioSnapshot      String? @map("numero_patrimonio_snapshot") @db.VarChar(50)
-  descricaoPatrimonioSnapshot   String? @map("descricao_patrimonio_snapshot") @db.VarChar(1000)
-  nomeComissaoSnapshot          String? @map("nome_comissao_snapshot") @db.VarChar(150)
-  nomeAutorSnapshot             String? @map("nome_autor_snapshot") @db.VarChar(150)
-  patrimonioId                  String   @map("patrimonio_id") @db.Uuid
-  comissaoId                    String   @map("comissao_id") @db.Uuid
+  id                               String    @id @default(uuid()) @db.Uuid
+  dataReavaliacao                  DateTime  @map("data_reavaliacao") @db.Timestamp(6)
+  dataReferencia                   DateTime? @map("data_referencia") @db.Date
+  valorLiquidoAnterior             Decimal   @map("valor_liquido_anterior") @db.Decimal(19, 7)
+  valorBrutoAnterior               Decimal?  @map("valor_bruto_anterior") @db.Decimal(19, 7)
+  depreciacaoAcumuladaAnterior     Decimal?  @map("depreciacao_acumulada_anterior") @db.Decimal(19, 7)
+  valorBaseAnterior                Decimal?  @map("valor_base_anterior") @db.Decimal(19, 7)
+  percentualResidualAnterior       Decimal?  @map("percentual_residual_anterior") @db.Decimal(5, 2)
+  vidaUtilInicialAnteriorMeses     Int?      @map("vida_util_inicial_anterior_meses")
+  quantidadeDepreciacoesAnteriores Int?      @map("quantidade_depreciacoes_anteriores")
+  dataInicioAnterior               DateTime? @map("data_inicio_anterior") @db.Date
+  parametroAnteriorId              String?   @map("parametro_anterior_id") @db.Uuid
+  valorReavaliado                  Decimal   @map("valor_reavaliado") @db.Decimal(19, 7)
+  valorBaseNovo                    Decimal?  @map("valor_base_novo") @db.Decimal(19, 7)
+  percentualResidualNovo           Decimal?  @map("percentual_residual_novo") @db.Decimal(5, 2)
+  valorResidualAnterior            Decimal?  @map("valor_residual_anterior") @db.Decimal(19, 7)
+  valorResidualNovo                Decimal   @map("valor_residual_novo") @db.Decimal(19, 7)
+  vidaUtilRestanteAnteriorMeses    Int?      @map("vida_util_restante_anterior_meses")
+  vidaUtilNovaMeses                Int       @map("vida_util_nova_meses")
+  laudoTecnico                     String?   @map("laudo_tecnico") @db.Text
+  observacao                       String?   @db.Text
+  numeroPatrimonioSnapshot         String?   @map("numero_patrimonio_snapshot") @db.VarChar(50)
+  descricaoPatrimonioSnapshot      String?   @map("descricao_patrimonio_snapshot") @db.VarChar(1000)
+  nomeComissaoSnapshot             String?   @map("nome_comissao_snapshot") @db.VarChar(150)
+  nomeAutorSnapshot                String?   @map("nome_autor_snapshot") @db.VarChar(150)
+  patrimonioId                     String    @map("patrimonio_id") @db.Uuid
+  comissaoId                       String    @map("comissao_id") @db.Uuid
 
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   createdById String   @map("created_by_id") @db.Uuid
@@ -973,12 +992,11 @@ model ReavaliacaoPatrimonio {
 
 // Registro técnico do pedido atômico; cada bem continua com histórico próprio.
 model IdempotenciaReavaliacao {
-  usuarioId String @map("usuario_id") @db.Uuid
-  chave String @db.Uuid
-  payloadHash String @map("payload_hash") @db.Char(64)
-  resultado Json @db.JsonB
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId   String   @map("usuario_id") @db.Uuid
+  chave       String   @db.Uuid
+  payloadHash String   @map("payload_hash") @db.Char(64)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
 
   @@id([usuarioId, chave])
   @@map("idempotencias_reavaliacao")
@@ -986,12 +1004,11 @@ model IdempotenciaReavaliacao {
 
 // Registro técnico de um pedido confirmado; não representa um lote patrimonial.
 model IdempotenciaMovimentacao {
-  usuarioId String @map("usuario_id") @db.Uuid
-  chave String @db.Uuid
-  payloadHash String @map("payload_hash") @db.Char(64)
-  resultado Json @db.JsonB
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId   String   @map("usuario_id") @db.Uuid
+  chave       String   @db.Uuid
+  payloadHash String   @map("payload_hash") @db.Char(64)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
 
   @@id([usuarioId, chave])
   @@map("idempotencias_movimentacao")

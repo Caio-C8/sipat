@@ -53,6 +53,8 @@ describe("ProcessosCompraService", () => {
 
     repository = {
       executarTransacao: jest.fn(),
+      tentarBloquearChaveCriacao: jest.fn().mockResolvedValue(true),
+      buscarPorChaveCriacao: jest.fn().mockResolvedValue(null),
       bloquearFornecedoresAtivos: jest.fn(),
       criar: jest.fn(),
       listar: jest.fn(),

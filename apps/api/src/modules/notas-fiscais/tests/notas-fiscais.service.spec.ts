@@ -49,6 +49,8 @@ describe("NotasFiscaisService", () => {
 
     repository = {
       executarTransacao: jest.fn(),
+      tentarBloquearChaveCriacao: jest.fn().mockResolvedValue(true),
+      buscarPorChaveCriacao: jest.fn().mockResolvedValue(null),
       bloquearFornecedorAtivo: jest.fn().mockResolvedValue(true),
       processoExiste: jest.fn().mockResolvedValue({ id: PROCESSO_ID }),
       criar: jest.fn().mockResolvedValue(detalhe()),

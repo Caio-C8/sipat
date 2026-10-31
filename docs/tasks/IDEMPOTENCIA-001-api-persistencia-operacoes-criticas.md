@@ -1,6 +1,6 @@
 # IDEMPOTENCIA-001 — API e persistência de operações críticas
 
-**Status:** aprovada
+**Status:** concluída e verificada em PostgreSQL isolado em 31/10/2026
 
 ## Objetivo
 
@@ -119,20 +119,20 @@ opções ambíguas para operações futuras.
 
 ## Critérios de aceite
 
-- [ ] Banco e migrations são reconfirmados antes da alteração; a migration
+- [x] Banco e migrations são reconfirmados antes da alteração; a migration
       proposta corresponde somente ao diff aprovado.
-- [ ] Reenvio sequencial, simultâneo e após reinício cria no máximo um efeito e
+- [x] Reenvio sequencial, simultâneo e após reinício cria no máximo um efeito e
       retorna o conflito explícito correto.
-- [ ] Chave igual com payload diferente nunca executa o segundo pedido.
-- [ ] Falha e rollback não deixam chave, recurso, histórico ou arquivo parcial.
-- [ ] Nenhuma tabela nova armazena body, response ou erro em JSON.
-- [ ] Operações da matriz sem persistência adicional continuam protegidas pelos
+- [x] Chave igual com payload diferente nunca executa o segundo pedido.
+- [x] Falha e rollback não deixam chave, recurso, histórico ou arquivo parcial.
+- [x] Nenhuma tabela nova armazena body, response ou erro em JSON.
+- [x] Operações da matriz sem persistência adicional continuam protegidas pelos
       invariantes reais, com testes que comprovam a decisão.
-- [ ] Seeds geram chave quando chamarem contratos novos, sem transformar a
+- [x] Seeds geram chave quando chamarem contratos novos, sem transformar a
       migration em carga inicial.
-- [ ] PostgreSQL isolado comprova unicidade, concorrência, rollback e plano dos
+- [x] PostgreSQL isolado comprova unicidade, concorrência, rollback e plano dos
       índices; banco de desenvolvimento não é usado para testes destrutivos.
-- [ ] Documentos antigos que descrevem replay permanecem como evidência
+- [x] Documentos antigos que descrevem replay permanecem como evidência
       histórica, mas roadmaps e documentação de estado apontam para a nova
       política após a implementação.
 
@@ -182,3 +182,26 @@ opções ambíguas para operações futuras.
 ## Pendências ou decisões bloqueantes
 
 - Nenhuma.
+
+## Resultado verificado
+
+- A migration
+  `20261031150000_adiciona_idempotencia_operacoes_criticas` remove os quatro
+  snapshots `resultado`, adiciona chave e hash às sete raízes aprovadas e não
+  cria tabela genérica, TTL ou carga inicial.
+- O schema foi formatado, validado e regenerado; após aplicar as 25 migrations
+  em PostgreSQL descartável, `prisma migrate status` e `prisma migrate diff`
+  confirmaram histórico atual e ausência de diferença para o schema.
+- As quatro famílias históricas de integração passaram com 44 testes em banco
+  real. A suíte transversal comprova ausência de JSON técnico, unicidade das
+  sete raízes, rollback, lock concorrente, os três conflitos públicos e uso do
+  índice composto.
+- Lint, typecheck, testes e build executados constam no handoff da entrega; os
+  testes destrutivos usaram somente bancos descartáveis.
+
+### Limites da validação
+
+O PostgreSQL de desenvolvimento configurado em `localhost:5432` não estava
+disponível durante a execução. A pré-condição e a migration foram reconfirmadas
+em instância descartável criada a partir das 24 migrations anteriores; nenhuma
+migration foi aplicada em desenvolvimento, staging ou produção.

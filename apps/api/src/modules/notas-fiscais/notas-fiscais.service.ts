@@ -15,6 +15,7 @@ import {
   SubstituirAnexoNotaFiscalMultipartSchema,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { ZodValidationException } from "nestjs-zod";
 import {
@@ -27,6 +28,10 @@ import {
   criarChaveAnexoNotaFiscal,
   validarAnexoNotaFiscal,
 } from "../../common/utils/anexo-nota-fiscal";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { FornecedoresService } from "../fornecedores/fornecedores.service";
 import { NotasFiscaisRepository } from "./notas-fiscais.repository";
 import type {
@@ -61,17 +66,41 @@ export class NotasFiscaisService {
     const anexo = resultado.data.anexo as
       ArquivoNotaFiscalMultipart | undefined;
     if (anexo) await validarAnexoNotaFiscal(anexo, "anexo");
+    const hashAnexo = anexo ? await this.calcularHashArquivo(anexo.path) : null;
+    const { chaveIdempotencia, ...conteudoHash } = dados;
+    const hashCriacao = calcularHashIdempotencia({
+      ...conteudoHash,
+      hashAnexo,
+    });
 
     await this.validarRelacoesParaCriacao(dados);
     const persistir = (caminhoAnexoNotaFiscal?: string) =>
       this.notas.executarTransacao(async (transacao) => {
+        if (
+          !(await transacao.tentarBloquearChaveCriacao(
+            identidade.id,
+            chaveIdempotencia,
+          ))
+        )
+          throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+        const anterior = await transacao.buscarPorChaveCriacao(
+          identidade.id,
+          chaveIdempotencia,
+        );
+        if (anterior) {
+          if (anterior.hashCriacao !== hashCriacao)
+            throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+          throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+        }
         if ((await transacao.processoExiste(dados.processoCompraId)) === null) {
           throw this.processoNaoEncontrado();
         }
         await this.garantirFornecedorAtivo(transacao, dados.fornecedorId);
-        return transacao.criar(
-          this.paraCriacao(dados, identidade.id, caminhoAnexoNotaFiscal),
-        );
+        return transacao.criar({
+          ...this.paraCriacao(dados, identidade.id, caminhoAnexoNotaFiscal),
+          chaveCriacao: chaveIdempotencia,
+          hashCriacao,
+        });
       });
 
     if (!anexo) return persistir();
@@ -295,6 +324,21 @@ export class NotasFiscaisService {
       erro instanceof Prisma.PrismaClientKnownRequestError &&
       erro.code === codigo
     );
+  }
+
+  private async calcularHashArquivo(caminho: string): Promise<string> {
+    const hash = createHash("sha256");
+    for await (const bloco of createReadStream(caminho)) hash.update(bloco);
+    return hash.digest("hex");
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   private notaNaoEncontrada(): NotFoundException {

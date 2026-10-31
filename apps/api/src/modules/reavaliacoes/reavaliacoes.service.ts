@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   BadRequestException,
   ConflictException,
@@ -7,7 +6,6 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import {
-  ReavaliacaoDetalheSchema,
   type ComissaoOpcaoReavaliacao,
   type CriarReavaliacaoBodyData,
   type ErroCampo,
@@ -19,6 +17,10 @@ import {
   type ReavaliacaoDetalhe,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { diaSaoPaulo } from "../../common/utils/datas-institucionais";
 import { ComissoesService } from "../comissoes/comissoes.service";
 import { ReavaliacaoResponseMapper } from "./mappers/reavaliacao-response.mapper";
@@ -157,7 +159,7 @@ export class ReavaliacoesService {
       comissaoId: dados.comissaoId,
       itens: dados.itens,
     };
-    const hash = this.hash(conteudo);
+    const hash = calcularHashIdempotencia(conteudo);
     for (let tentativa = 0; tentativa < 3; tentativa++) {
       try {
         return await this.reavaliacoes.executarTransacao(async (repository) => {
@@ -167,10 +169,7 @@ export class ReavaliacoesService {
               dados.chaveIdempotencia,
             ))
           ) {
-            throw this.conflito(
-              "CONFLITO_CONCORRENTE_REAVALIACAO",
-              "Esta confirmação está em processamento; reenvie o mesmo pedido.",
-            );
+            throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
           }
           const anterior = await repository.buscarIdempotencia(
             identidade.id,
@@ -178,12 +177,9 @@ export class ReavaliacoesService {
           );
           if (anterior) {
             if (anterior.payloadHash !== hash) {
-              throw this.conflito(
-                "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-                "A chave já foi usada em outro pedido.",
-              );
+              throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
             }
-            return ReavaliacaoDetalheSchema.array().parse(anterior.resultado);
+            throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
           }
           this.validarDataReferencia(dados.dataReferencia);
           const comissao = await repository.bloquearComissao(dados.comissaoId);
@@ -301,7 +297,6 @@ export class ReavaliacoesService {
             usuarioId: identidade.id,
             chave: dados.chaveIdempotencia,
             payloadHash: hash,
-            resultado: detalhes as unknown as Prisma.InputJsonValue,
           });
           return detalhes;
         });
@@ -511,7 +506,7 @@ export class ReavaliacoesService {
     const valido = itens.every((item) => item.elegivel);
     return {
       versaoPrevia: valido
-        ? this.hash({
+        ? calcularHashIdempotencia({
             dados,
             comissao,
             linhas: [...linhas].sort((a, b) =>
@@ -572,18 +567,17 @@ export class ReavaliacoesService {
       throw new ForbiddenException();
   }
 
-  private hash(valor: unknown): string {
-    return createHash("sha256")
-      .update(
-        JSON.stringify(valor, (_, item: unknown) =>
-          typeof item === "bigint" ? item.toString() : item,
-        ),
-      )
-      .digest("hex");
-  }
-
   private conflito(codigo: string, mensagem: string): ConflictException {
     return new ConflictException({ codigo, mensagem, erros: [] });
+  }
+
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ): ConflictException {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
 
   private erroPrisma(erro: unknown, codigo: string): boolean {

@@ -67,6 +67,8 @@ describe("ComissoesService", () => {
   beforeEach(() => {
     repository = {
       executarTransacao: jest.fn(),
+      tentarBloquearChaveCriacao: jest.fn().mockResolvedValue(true),
+      buscarPorChaveCriacao: jest.fn().mockResolvedValue(null),
       bloquearComissao: jest.fn(),
       bloquearResponsaveis: jest.fn(),
       criar: jest.fn(),

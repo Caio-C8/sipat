@@ -206,7 +206,7 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
     };
   }
 
-  it("registra grupo, reenvia sem duplicar, devolve parcialmente e conclui", async () => {
+  it("registra grupo, rejeita repetição, devolve parcialmente e conclui", async () => {
     const primeiro = await bem();
     const segundo = await bem();
     const dados = saida([primeiro.id, segundo.id]);
@@ -215,7 +215,9 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
     if (Array.isArray(resposta.dados)) throw new Error("Grupo esperado.");
     const grupo = resposta.dados;
     expect(grupo.pendentes).toBe(2);
-    expect((await service.criar(dados, diretor)).dados).toEqual(grupo);
+    await expect(service.criar(dados, diretor)).rejects.toMatchObject({
+      response: { codigo: "OPERACAO_JA_PROCESSADA" },
+    });
     expect(
       await db.emprestimoPatrimonio.count({
         where: { grupoEmprestimoId: grupo.id },
@@ -250,9 +252,11 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
     };
     const devolvido = await service.devolver(grupo.id, parcial, diretor);
     expect(devolvido.dados.emprestimo.pendentes).toBe(1);
-    expect((await service.devolver(grupo.id, parcial, diretor)).dados).toEqual(
-      devolvido.dados,
-    );
+    await expect(
+      service.devolver(grupo.id, parcial, diretor),
+    ).rejects.toMatchObject({
+      response: { codigo: "OPERACAO_JA_PROCESSADA" },
+    });
     expect(
       (await db.patrimonio.findUniqueOrThrow({ where: { id: primeiro.id } }))
         .status,

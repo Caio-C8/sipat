@@ -150,7 +150,9 @@ describeComBanco("manutenção no PostgreSQL descartável", () => {
     };
     const pedido = await service.criar(pedidoDados, identidade);
     expect(pedido.itens).toHaveLength(2);
-    expect((await service.criar(pedidoDados, identidade)).id).toBe(pedido.id);
+    await expect(service.criar(pedidoDados, identidade)).rejects.toMatchObject({
+      response: { codigo: "OPERACAO_JA_PROCESSADA" },
+    });
     expect(
       (await db.patrimonio.findUniqueOrThrow({ where: { id: primeiro.id } }))
         .status,
@@ -208,16 +210,11 @@ describeComBanco("manutenção no PostgreSQL descartável", () => {
       (await db.patrimonio.findUniqueOrThrow({ where: { id: segundo.id } }))
         .status,
     ).toBe("EM_MANUTENCAO");
-    expect(
-      (
-        await service.registrarRetorno(
-          pedido.id,
-          item1.id,
-          retorno1,
-          identidade,
-        )
-      ).item.id,
-    ).toBe(item1.id);
+    await expect(
+      service.registrarRetorno(pedido.id, item1.id, retorno1, identidade),
+    ).rejects.toMatchObject({
+      response: { codigo: "OPERACAO_JA_PROCESSADA" },
+    });
     await expect(
       service.atualizarOrcamento(
         pedido.id,

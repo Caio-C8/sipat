@@ -22,10 +22,7 @@ import type {
 } from "@repo/contracts";
 import {
   CampoDadosDocumentoManutencaoSchema,
-  DocumentoManutencaoSchema,
   LIMITE_DOCUMENTOS_ITEM_MANUTENCAO,
-  ManutencaoDetalheSchema,
-  RetornoManutencaoSchema,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { ZodValidationException } from "nestjs-zod";
@@ -39,6 +36,10 @@ import {
   type ArquivoPdfTemporario,
   validarArquivoPdf,
 } from "../../common/utils/arquivo-pdf";
+import {
+  calcularHashIdempotencia,
+  construirConflitoIdempotencia,
+} from "../../common/utils/idempotencia";
 import { ComissoesService } from "../comissoes/comissoes.service";
 import { InventariosPolicyService } from "../inventarios/inventarios-policy.service";
 import { PatrimoniosService } from "../patrimonios/patrimonios.service";
@@ -54,9 +55,6 @@ const hojeSaoPaulo = () =>
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-const hash = (valor: unknown) =>
-  createHash("sha256").update(JSON.stringify(valor)).digest("hex");
-
 @Injectable()
 export class ManutencoesService {
   constructor(
@@ -222,7 +220,7 @@ export class ManutencoesService {
         "DATA_ENVIO_FUTURA",
         "A data de envio não pode ser futura.",
       );
-    const payloadHash = hash({
+    const payloadHash = calcularHashIdempotencia({
       dataEnvio: dados.dataEnvio,
       comissaoId: dados.comissaoId,
       justificativa: dados.justificativa ?? null,
@@ -236,12 +234,7 @@ export class ManutencoesService {
           dados.chaveIdempotencia,
         );
         if (anterior)
-          return this.recuperarResultado(
-            anterior,
-            payloadHash,
-            "CRIACAO",
-            ManutencaoDetalheSchema,
-          );
+          return this.recuperarResultado(anterior, payloadHash, "CRIACAO");
 
         const dataEnvio = dia(dados.dataEnvio);
         const comissao = await this.comissoes.bloquearParaMovimentacao(
@@ -333,7 +326,6 @@ export class ManutencoesService {
           chave: dados.chaveIdempotencia,
           tipo: "CRIACAO",
           hashPayload: payloadHash,
-          resultado: resultado as Prisma.InputJsonValue,
           manutencaoId: pedido.id,
         });
         return resultado;
@@ -410,7 +402,7 @@ export class ManutencoesService {
     dados: RegistrarRetornoManutencaoBodyData,
     identidade: IdentidadeAutenticada,
   ): Promise<RetornoManutencao> {
-    const payloadHash = hash({
+    const payloadHash = calcularHashIdempotencia({
       pedidoId,
       itemId,
       dataRetorno: dados.dataRetorno,
@@ -427,16 +419,8 @@ export class ManutencoesService {
         );
         if (anterior) {
           if (anterior.itemId !== itemId || anterior.manutencaoId !== pedidoId)
-            throw this.conflito(
-              "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-              "A chave foi usada em outra operação.",
-            );
-          return this.recuperarResultado(
-            anterior,
-            payloadHash,
-            "RETORNO",
-            RetornoManutencaoSchema,
-          );
+            throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+          return this.recuperarResultado(anterior, payloadHash, "RETORNO");
         }
         const pedidoAntes = await repo.consultar(pedidoId);
         const itemAntes = pedidoAntes?.itens.find(
@@ -532,7 +516,6 @@ export class ManutencoesService {
           chave: dados.chaveIdempotencia,
           tipo: "RETORNO",
           hashPayload: payloadHash,
-          resultado: resultado as Prisma.InputJsonValue,
           manutencaoId: pedidoId,
           itemId,
         });
@@ -566,7 +549,11 @@ export class ManutencoesService {
     for await (const bloco of createReadStream(arquivo.path))
       arquivoHash.update(bloco);
     const hashArquivo = arquivoHash.digest("hex");
-    const payloadHash = hash({ pedidoId, dados, hashArquivo });
+    const payloadHash = calcularHashIdempotencia({
+      pedidoId,
+      dados,
+      hashArquivo,
+    });
     const anterior = await this.manutencoes.buscarIdempotencia(
       identidade.id,
       dados.chaveIdempotencia,
@@ -630,7 +617,6 @@ export class ManutencoesService {
               chave: dados.chaveIdempotencia,
               tipo: "DOCUMENTO",
               hashPayload: payloadHash,
-              resultado: resultado as Prisma.InputJsonValue,
               manutencaoId: pedidoId,
               itemId: dados.itemId ?? null,
               documentoId: doc.id,
@@ -701,40 +687,31 @@ export class ManutencoesService {
       hashPayload: string;
       manutencaoId: string;
       documentoId: string | null;
-      resultado: Prisma.JsonValue;
     },
     pedidoId: string,
     payloadHash: string,
-  ) {
+  ): never {
     if (
       registro.tipo !== "DOCUMENTO" ||
       registro.hashPayload !== payloadHash ||
       registro.manutencaoId !== pedidoId ||
       !registro.documentoId
     )
-      throw this.conflito(
-        "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-        "A chave foi usada com outros dados.",
-      );
-    return DocumentoManutencaoSchema.parse(registro.resultado);
+      throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+    throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
   }
 
-  private recuperarResultado<T>(
+  private recuperarResultado(
     registro: {
       tipo: string;
       hashPayload: string;
-      resultado: Prisma.JsonValue;
     },
     payloadHash: string,
     tipo: string,
-    schema: { parse(valor: unknown): T },
-  ) {
+  ): never {
     if (registro.tipo !== tipo || registro.hashPayload !== payloadHash)
-      throw this.conflito(
-        "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-        "A chave foi usada com outros dados.",
-      );
-    return schema.parse(registro.resultado);
+      throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
+    throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
   }
 
   private async bloquearChave(
@@ -743,10 +720,7 @@ export class ManutencoesService {
     chave: string,
   ) {
     if (!(await repo.tentarBloquearChave(usuarioId, chave)))
-      throw this.conflito(
-        "MANUTENCAO_EM_PROCESSAMENTO",
-        "A operação está em processamento. Consulte o estado antes de reenviar.",
-      );
+      throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
   }
   private exigirFornecedorAtivo(
     id: string,
@@ -784,6 +758,14 @@ export class ManutencoesService {
   }
   private conflito(codigo: string, mensagem: string) {
     return new ConflictException({ codigo, mensagem, erros: [] });
+  }
+  private conflitoIdempotencia(
+    codigo:
+      | "OPERACAO_JA_PROCESSADA"
+      | "CHAVE_IDEMPOTENCIA_REUTILIZADA"
+      | "OPERACAO_EM_PROCESSAMENTO",
+  ) {
+    return new ConflictException(construirConflitoIdempotencia(codigo));
   }
   private entradaInvalida(codigo: string, mensagem: string) {
     return new BadRequestException({ codigo, mensagem, erros: [] });
@@ -827,7 +809,6 @@ class DocumentoRepetido extends Error {
       hashPayload: string;
       manutencaoId: string;
       documentoId: string | null;
-      resultado: Prisma.JsonValue;
     },
   ) {
     super("Documento já registrado.");

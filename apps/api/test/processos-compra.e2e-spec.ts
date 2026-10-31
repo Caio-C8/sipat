@@ -93,7 +93,11 @@ describe("processos de compra", () => {
       async (operacao: (cliente: typeof database) => Promise<unknown>) =>
         operacao(database),
     );
-    database.$queryRaw.mockResolvedValue([{ id: FORNECEDOR_ID, ativo: true }]);
+    database.$queryRaw.mockImplementation((strings: TemplateStringsArray) =>
+      strings.join("").includes("pg_try_advisory_xact_lock")
+        ? [{ obtido: true }]
+        : [{ id: FORNECEDOR_ID, ativo: true }],
+    );
     database.sessaoUsuario.findUnique.mockImplementation(
       ({ where }: { where: { tokenHash: string } }) => {
         const perfil =
@@ -137,7 +141,10 @@ describe("processos de compra", () => {
     database.processoCompra.create.mockImplementation(() => processo);
     database.processoCompra.findMany.mockImplementation(() => [processo]);
     database.processoCompra.count.mockResolvedValue(1);
-    database.processoCompra.findUnique.mockImplementation(() => processo);
+    database.processoCompra.findUnique.mockImplementation(
+      ({ where }: { where: Record<string, unknown> }) =>
+        where.createdById_chaveCriacao ? null : processo,
+    );
     database.processoCompra.update.mockImplementation(
       ({ data }: { data: { observacao?: string | null; updatedAt: Date } }) => {
         processo = { ...processo, ...data };

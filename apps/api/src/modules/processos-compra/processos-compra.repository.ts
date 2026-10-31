@@ -37,6 +37,28 @@ export class ProcessosCompraRepository {
     );
   }
 
+  async tentarBloquearChaveCriacao(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${`processo-compra:${usuarioId}:${chave}`}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarPorChaveCriacao(usuarioId: string, chave: string) {
+    return this.database.processoCompra.findUnique({
+      where: {
+        createdById_chaveCriacao: {
+          createdById: usuarioId,
+          chaveCriacao: chave,
+        },
+      },
+      select: { id: true, hashCriacao: true },
+    });
+  }
+
   async bloquearFornecedoresAtivos(
     fornecedorIds: readonly string[],
   ): Promise<ReadonlySet<string>> {

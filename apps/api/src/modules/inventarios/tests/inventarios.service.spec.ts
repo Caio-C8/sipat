@@ -39,6 +39,8 @@ function progressoVazio() {
 describe("InventariosService", () => {
   const repository = {
     executarTransacao: jest.fn(),
+    tentarBloquearChaveCriacao: jest.fn(),
+    buscarPorChaveCriacao: jest.fn(),
     bloquearComissao: jest.fn(),
     bloquearSetoresAtivos: jest.fn(),
     bloquearPatrimoniosAtivos: jest.fn(),
@@ -83,6 +85,8 @@ describe("InventariosService", () => {
       (operacao: (repo: InventariosRepository) => Promise<unknown>) =>
         operacao(repository as unknown as InventariosRepository),
     );
+    repository.tentarBloquearChaveCriacao.mockResolvedValue(true);
+    repository.buscarPorChaveCriacao.mockResolvedValue(null);
     comissoes.consultarVigente.mockResolvedValue({ id: COMISSAO_ID });
     repository.bloquearComissao.mockResolvedValue({
       id: COMISSAO_ID,
