@@ -24,6 +24,40 @@ depende de autenticação, comissões, patrimônios e inventários existentes.
 
 Documentação de intenção não muda o status de uma capacidade para concluído.
 
+## Idempotência de operações críticas
+
+**Status:** planejado em 31/10/2026; nenhuma alteração funcional ou migration
+nova foi implementada por este planejamento.
+
+O objetivo é impedir duplicação causada por duplo envio, timeout ou
+concorrência com o mecanismo mais barato adequado a cada entidade. A sequência
+aprovada é:
+
+| Ordem | Objetivo                                                                                                                   | Status    | Dependências                           |
+| ----- | -------------------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------------- |
+| 1     | [`CONTRACTS-016`](./tasks/CONTRACTS-016-idempotencia-operacoes-criticas.md) — chave e conflitos públicos                   | planejado | contratos atuais                       |
+| 2     | [`IDEMPOTENCIA-001`](./tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md) — persistência mínima e API          | planejado | objetivo anterior e banco sincronizado |
+| 3     | [`WEB-IDEMPOTENCIA-001`](./tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md) — consumidores Web existentes        | planejado | dois objetivos anteriores              |
+| 4     | [`MOBILE-IDEMPOTENCIA-001`](./tasks/MOBILE-IDEMPOTENCIA-001-proteger-cadastro-patrimonio.md) — cadastro patrimonial mobile | planejado | dois primeiros objetivos               |
+
+As rotas não mudam. Repetir a mesma chave e conteúdo depois do commit passa a
+retornar `409 OPERACAO_JA_PROCESSADA`, informando que a execução anterior foi
+concluída e nenhuma nova alteração ocorreu. A API não reproduz a response
+antiga.
+
+Constraints, estados e precondições continuam sendo a primeira escolha. Chaves
+persistentes entram somente nas operações listadas em `IDEMPOTENCIA-001` que
+podem criar agregados, snapshots, documentos ou históricos duplicados. Os
+registros técnicos existentes deixam de armazenar JSON e não expiram por TTL;
+apagar uma chave isoladamente reabriria a duplicação. Qualquer política futura
+de limpeza deve acompanhar a retenção dos próprios fatos de domínio e declarar
+explicitamente a redução da garantia.
+
+Antes deste planejamento, o banco de desenvolvimento configurado foi verificado
+em `localhost:5432/sipat_db_development`: 24 migrations aplicadas e nenhum diff
+entre o banco e `packages/database/prisma/schema.prisma`. O implementador deve
+repetir a verificação antes de criar a migration da etapa 2.
+
 ## Estado atual
 
 O `SEC-001`, o backend do `USERS-001`, o backend do `AUTH-001` e as entregas

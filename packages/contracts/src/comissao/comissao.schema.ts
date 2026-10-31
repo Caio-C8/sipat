@@ -1,5 +1,6 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -78,6 +79,7 @@ export const MembroInicialComissaoSchema = z.strictObject({
 
 export const CriarComissaoBodySchema = z
   .strictObject({
+    chaveIdempotencia: ChaveIdempotenciaSchema,
     nome: NomeComissaoSchema,
     descricao: DescricaoComissaoSchema.optional(),
     numeroAto: NumeroAtoComissaoSchema.optional(),

@@ -1,5 +1,6 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -65,6 +66,7 @@ export const FornecedorParamsSchema = z.strictObject({
 });
 
 export const CriarFornecedorSchema = z.strictObject({
+  chaveIdempotencia: ChaveIdempotenciaSchema,
   razaoSocial: RazaoSocialFornecedorSchema,
   nomeFantasia: NomeOpcionalFornecedorSchema.optional(),
   nomeRepresentante: NomeOpcionalFornecedorSchema.optional(),

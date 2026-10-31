@@ -81,6 +81,7 @@ const patrimonioDetalhe = {
 
 function criarBodyValido() {
   return {
+    chaveIdempotencia: uuids.patrimonio,
     semNumeroOficial: false,
     dataTombamento: "2026-10-18",
     tipoIncorporacao: "AQUISICAO",

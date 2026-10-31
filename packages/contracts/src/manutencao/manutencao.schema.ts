@@ -1,5 +1,7 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
+  CODIGOS_CONFLITO_IDEMPOTENCIA,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -48,8 +50,7 @@ export const CODIGOS_ERRO_MANUTENCAO = [
   "SETOR_EM_INVENTARIO_EM_ANDAMENTO",
   "ITEM_JA_RECEBIDO",
   "ORCAMENTO_VERSAO_DIVERGENTE",
-  "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-  "MANUTENCAO_EM_PROCESSAMENTO",
+  ...CODIGOS_CONFLITO_IDEMPOTENCIA,
   "CONFLITO_CONCORRENTE_MANUTENCAO",
   "LIMITE_DOCUMENTOS_MANUTENCAO",
   "DOCUMENTO_MANUTENCAO_INVALIDO",
@@ -107,7 +108,7 @@ export const ItemCriacaoManutencaoSchema = z.strictObject({
 });
 export const CriarManutencaoBodySchema = z
   .strictObject({
-    chaveIdempotencia: UuidSchema,
+    chaveIdempotencia: ChaveIdempotenciaSchema,
     dataEnvio: DataCivilSchema,
     comissaoId: UuidSchema,
     justificativa: TextoLongoSchema.nullable().optional(),
@@ -140,7 +141,7 @@ export const GarantiaManutencaoSchema = z.strictObject({
   dataFim: DataCivilSchema.optional(),
 });
 export const RegistrarRetornoManutencaoBodySchema = z.strictObject({
-  chaveIdempotencia: UuidSchema,
+  chaveIdempotencia: ChaveIdempotenciaSchema,
   dataRetorno: DataCivilSchema,
   descricaoServicoRealizado: TextoLongoSchema,
   valorRealizado: Decimal19_7Schema,
@@ -148,7 +149,7 @@ export const RegistrarRetornoManutencaoBodySchema = z.strictObject({
 });
 export const DadosDocumentoManutencaoSchema = z
   .strictObject({
-    chaveIdempotencia: UuidSchema,
+    chaveIdempotencia: ChaveIdempotenciaSchema,
     fase: z.enum(["PEDIDO", "ENVIO", "RECEBIMENTO"]),
     itemId: UuidSchema.optional(),
   })

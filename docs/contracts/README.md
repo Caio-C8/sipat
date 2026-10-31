@@ -28,7 +28,8 @@ executados por `tsx` e entrega o baseline genérico de respostas, erros,
 paginação e health check, além dos contratos já concluídos de identidade,
 usuários, autenticação Web e mobile, senha, patrimônios, seus cadastros relacionados,
 processos de compra, notas fiscais, comissões, inventários, primeiro acesso e
-reavaliações patrimoniais.
+reavaliações patrimoniais. O baseline também publica a chave UUID e os três
+conflitos `409` compartilhados das operações protegidas por idempotência.
 Novos contratos do SIPAT devem ser adicionados por entrega, depois de confirmar
 sua semântica nos [requisitos](../requisitos-SIPAT.md) e registrar o objetivo
 correspondente no roadmap.

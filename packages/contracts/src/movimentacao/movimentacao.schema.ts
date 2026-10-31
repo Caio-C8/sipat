@@ -1,5 +1,7 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
+  CODIGOS_CONFLITO_IDEMPOTENCIA,
   PaginacaoQuerySchema,
   criarRespostaSucessoSchema,
   criarRespostaSucessoPaginadaSchema,
@@ -31,8 +33,7 @@ export const CODIGOS_ERRO_MOVIMENTACAO = [
   "DESTINO_FORA_INVENTARIO_ABERTO",
   "COMISSAO_NAO_ENCONTRADA",
   "COMISSAO_FORA_DA_VIGENCIA",
-  "CHAVE_IDEMPOTENCIA_REUTILIZADA",
-  "MOVIMENTACAO_EM_PROCESSAMENTO",
+  ...CODIGOS_CONFLITO_IDEMPOTENCIA,
   "CONFLITO_CONCORRENTE_MOVIMENTACAO",
 ] as const;
 export const CodigoErroMovimentacaoSchema = z.enum(CODIGOS_ERRO_MOVIMENTACAO);
@@ -46,7 +47,7 @@ export const ItemMovimentacaoBodySchema = z.strictObject({
 });
 export const CriarMovimentacaoBodySchema = z
   .strictObject({
-    chaveIdempotencia: UuidMovimentacaoSchema,
+    chaveIdempotencia: ChaveIdempotenciaSchema,
     comissaoId: UuidMovimentacaoSchema,
     observacao: z
       .string()

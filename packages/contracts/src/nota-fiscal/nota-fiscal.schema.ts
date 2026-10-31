@@ -1,5 +1,6 @@
 import * as z from "zod";
 import {
+  ChaveIdempotenciaSchema,
   PaginacaoQuerySchema,
   criarRespostaSucessoPaginadaSchema,
   criarRespostaSucessoSchema,
@@ -15,6 +16,7 @@ export const NotaFiscalParamsSchema = z.strictObject({
 });
 
 export const CriarNotaFiscalDadosSchema = z.strictObject({
+  chaveIdempotencia: ChaveIdempotenciaSchema,
   processoCompraId: z.uuid(),
   numeroNotaFiscal: NumeroNotaFiscalSchema,
   anoNotaFiscal: AnoSchema,
