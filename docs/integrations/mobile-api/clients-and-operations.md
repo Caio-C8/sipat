@@ -90,6 +90,14 @@ Não implemente cache/deduplicação complexos com vários `useEffect` apenas pa
 evitar escolher uma biblioteca quando o requisito realmente exigir essas
 capacidades.
 
+A adoção de TanStack Query v5 foi aprovada em
+[`MOBILE-QUERY-001/002/003`](../../apps/mobile/roadmap.md#cache-de-dados-com-tanstack-query).
+As operações HTTP existentes permanecem inalteradas; as tarefas introduzem o
+provider, factories de keys, hooks de query/mutation e invalidações em etapas.
+Consulte a
+[política central](./errors-cache-testing.md#política-aprovada-para-o-cache-em-memória)
+em vez de definir tempos ou retries dentro de cada componente.
+
 ## Operações de autenticação implementadas
 
 `MOBILE-AUTH-001` definiu contratos públicos específicos para o transporte

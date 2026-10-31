@@ -205,6 +205,27 @@ são referência visual obrigatória, com dois desvios semânticos aprovados:
 `Finalizar inventário` deve concluir somente o setor, e `Enviar Ocorrências`
 deve navegar às divergências já persistidas, sem novo envio.
 
+### Cache de dados no mobile
+
+O aplicativo adotará TanStack Query v5 somente no cliente, sem mudança de API,
+contratos ou banco:
+
+| Ordem | Objetivo                                            | Status    | Dependências                         |
+| ----- | --------------------------------------------------- | --------- | ------------------------------------ |
+| 1     | `MOBILE-QUERY-001` — fundação, lifecycle e sessão   | concluída | sessão mobile e operações existentes |
+| 2     | `MOBILE-QUERY-002` — cachear leituras de domínio    | aprovada  | `MOBILE-QUERY-001`                   |
+| 3     | `MOBILE-QUERY-003` — invalidar cache após mutations | aprovada  | `MOBILE-QUERY-002`                   |
+
+Especificações:
+[MOBILE-QUERY-001](./tasks/MOBILE-QUERY-001-fundacao-tanstack-query.md),
+[MOBILE-QUERY-002](./tasks/MOBILE-QUERY-002-cachear-leituras.md) e
+[MOBILE-QUERY-003](./tasks/MOBILE-QUERY-003-invalidar-apos-mutations.md).
+
+A política é exclusivamente em memória e privada por sessão. Leituras
+operacionais permanecem frescas por 30 segundos, catálogos por cinco minutos,
+refetch manual sempre consulta a API e mutations não recebem retry automático.
+Persistência, offline e fila de sincronização não fazem parte destes objetivos.
+
 ## Ordem das entregas básicas de patrimônios
 
 | Ordem | Objetivo                                      | Status    | Dependências                         |

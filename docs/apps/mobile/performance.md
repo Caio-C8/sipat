@@ -2,10 +2,10 @@
 
 ## Estado atual
 
-A home possui uma árvore pequena, uma requisição sem cache e nenhuma lista de
-domínio. Não há observabilidade mobile nem metas numéricas definidas. O timeout
-de oito segundos do health check é um limite operacional dessa verificação,
-não uma meta de latência para todas as operações.
+Home, patrimônios e inventários já executam leituras de domínio, ainda sem
+cache remoto. Não há observabilidade mobile nem metas numéricas definidas. O
+timeout de oito segundos do health check é um limite operacional dessa
+verificação, não uma meta de latência para todas as operações.
 
 ## Princípios
 
@@ -66,6 +66,12 @@ limpeza, especialmente se representar documento ou patrimônio.
 - defina tamanho máximo, paginação e compressão junto da API;
 - cache precisa de escopo de usuário, validade, invalidação e limpeza;
 - fila offline precisa de ordenação, conflito, deduplicação e feedback.
+
+O cache em memória aprovado para `MOBILE-QUERY-001/002/003` usa 30 segundos
+para dados operacionais, cinco minutos para catálogos e limpeza no encerramento
+ou troca da sessão. A entrega deve comparar contagem de requests nos cenários de
+remontagem, navegação de volta, foco e mutation antes/depois; reduzir chamadas
+não autoriza esconder dado vencido nem omitir invalidação.
 
 Não prometa modo offline porque a tela permaneceu aberta sem rede. Uma política
 offline inclui persistência, sincronização e resolução de conflito testadas.

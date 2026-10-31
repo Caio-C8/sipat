@@ -61,6 +61,30 @@ Cache de domínio, operação offline, biometria, attestation, pinning de
 certificado, observabilidade externa e E2E nativo continuam fora desta primeira
 entrega até que um objetivo próprio defina seus critérios.
 
+## Cache de dados com TanStack Query
+
+O cache de domínio será introduzido sem alterar API, contratos ou banco. A
+sequência separa a infraestrutura global, a migração das leituras e a
+reconciliação depois de mutations:
+
+| Ordem | Objetivo                                                                                                       | Status    | Dependências                                     |
+| ----- | -------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------ |
+| 1     | [`MOBILE-QUERY-001`](../../tasks/MOBILE-QUERY-001-fundacao-tanstack-query.md) — provider, lifecycle e sessão   | concluída | sessão mobile e operações existentes             |
+| 2     | [`MOBILE-QUERY-002`](../../tasks/MOBILE-QUERY-002-cachear-leituras.md) — cachear leituras de domínio           | aprovada  | `MOBILE-QUERY-001`                               |
+| 3     | [`MOBILE-QUERY-003`](../../tasks/MOBILE-QUERY-003-invalidar-apos-mutations.md) — invalidar depois de mutations | aprovada  | `MOBILE-QUERY-002` e mutations mobile existentes |
+
+O cache aprovado existe somente em memória, é cancelado e limpo quando a
+identidade muda ou a sessão termina e nunca recebe token ou dado pessoal nas
+keys. Home, listas, detalhes e inventários ficam frescos por 30 segundos;
+catálogos e detalhes de referência, por cinco minutos. Atualização manual força
+refetch e retorno ao app revalida apenas dado vencido.
+
+Health check e autenticação não entram no cache. Persistência, modo offline,
+fila, mutation otimista, retry automático e integração de conectividade
+continuam fora desta sequência. `MOBILE-QUERY-001` entregou o provider e os
+boundaries; até `MOBILE-QUERY-002`, as leituras de domínio permanecem nos hooks
+manuais e não populam o cache.
+
 ## Recuperação de senha iniciada no mobile
 
 | Ordem | Objetivo                                                                                                       | Status       | Dependências                            |

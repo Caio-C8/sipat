@@ -10,6 +10,8 @@ import {
 import { publicAppConfig } from "../config/public-app-config";
 import { SessionGate } from "../features/auth/session/session-gate";
 import { SessionProvider } from "../features/auth/session/session-context";
+import { MobileQueryProvider } from "../lib/query/mobile-query-provider";
+import { SessionQueryBoundary } from "../lib/query/session-query-boundary";
 import { colors, mobileShell } from "../theme/tokens";
 
 export default function RootLayout() {
@@ -17,27 +19,31 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <View style={styles.root}>
         <StatusBar style="light" />
-        <SessionProvider>
-          <SafeAreaView
-            edges={["top", "right", "left"]}
-            style={styles.headerSafeArea}
-          >
-            {shouldShowDevelopmentCheckBanner(publicAppConfig.environment) ? (
-              <DevelopmentCheckBanner />
-            ) : null}
-            <AppTopbar />
-          </SafeAreaView>
-          <SafeAreaView
-            edges={["right", "bottom", "left"]}
-            style={styles.contentSafeArea}
-          >
-            <View style={styles.content}>
-              <SessionGate>
-                <Stack screenOptions={{ headerShown: false }} />
-              </SessionGate>
-            </View>
-          </SafeAreaView>
-        </SessionProvider>
+        <MobileQueryProvider>
+          <SessionProvider>
+            <SafeAreaView
+              edges={["top", "right", "left"]}
+              style={styles.headerSafeArea}
+            >
+              {shouldShowDevelopmentCheckBanner(publicAppConfig.environment) ? (
+                <DevelopmentCheckBanner />
+              ) : null}
+              <AppTopbar />
+            </SafeAreaView>
+            <SafeAreaView
+              edges={["right", "bottom", "left"]}
+              style={styles.contentSafeArea}
+            >
+              <View style={styles.content}>
+                <SessionQueryBoundary>
+                  <SessionGate>
+                    <Stack screenOptions={{ headerShown: false }} />
+                  </SessionGate>
+                </SessionQueryBoundary>
+              </View>
+            </SafeAreaView>
+          </SessionProvider>
+        </MobileQueryProvider>
       </View>
     </SafeAreaProvider>
   );
