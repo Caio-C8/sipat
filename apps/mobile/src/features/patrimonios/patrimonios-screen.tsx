@@ -20,7 +20,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobilePatrimonios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import { formatPatrimonioNumber, formatStatus } from "./patrimonio-formatters";
@@ -353,13 +352,12 @@ export function PatrimoniosScreen() {
   const [filters, setFilters] = useState<PatrimonioFilters>({});
   const [page, setPage] = useState(1);
   const [filtersVisible, setFiltersVisible] = useState(false);
-  const { state, reload } = usePatrimonios(
+  const { state, isFetching, reload } = usePatrimonios(
     manager,
     submittedSearch,
     filters,
     page,
   );
-  useReloadOnReturn(reload);
   const catalogs = usePatrimonioCatalogs(manager);
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
@@ -428,9 +426,11 @@ export function PatrimoniosScreen() {
         <View>
           <Text style={styles.sectionTitle}>Todos os bens</Text>
           <Text style={styles.resultCount}>
-            {state.status === "success"
-              ? `${state.data.meta.total.toLocaleString("pt-BR")} ${state.data.meta.total === 1 ? "bem encontrado" : "bens encontrados"}`
-              : "Consultando bens…"}
+            {state.status === "success" && isFetching
+              ? "Atualizando bens…"
+              : state.status === "success"
+                ? `${state.data.meta.total.toLocaleString("pt-BR")} ${state.data.meta.total === 1 ? "bem encontrado" : "bens encontrados"}`
+                : "Consultando bens…"}
           </Text>
         </View>
         <Pressable

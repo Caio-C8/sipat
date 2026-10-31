@@ -54,8 +54,7 @@ persistido em armazenamento não criptografado apenas para acelerar a tela.
 
 `MOBILE-QUERY-001/002/003` adota TanStack Query v5 somente para dados de domínio
 autenticados. A fundação e o isolamento por sessão foram implementados em
-`MOBILE-QUERY-001`; as famílias abaixo passam a usar o cache somente quando os
-hooks forem migrados por `MOBILE-QUERY-002`.
+`MOBILE-QUERY-001`, e as famílias abaixo foram migradas por `MOBILE-QUERY-002`.
 
 | Família de dados                                       | `staleTime` | Invalidação adicional                                |
 | ------------------------------------------------------ | ----------- | ---------------------------------------------------- |

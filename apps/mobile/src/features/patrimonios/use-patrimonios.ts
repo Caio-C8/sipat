@@ -1,16 +1,26 @@
+import { useQuery } from "@tanstack/react-query";
 import type {
   ListarPatrimoniosResponse,
   PatrimonioDetalhe,
 } from "@repo/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { publicAppConfig } from "../../config/public-app-config";
-import { ApiError, isApiError } from "../../lib/api/api-error";
+import { ApiError } from "../../lib/api/api-error";
+import {
+  DOMAIN_STALE_TIME_MS,
+  REFERENCE_STALE_TIME_MS,
+} from "../../lib/query/query-policy";
+import {
+  remoteQueryState,
+  type RemoteQueryState,
+} from "../../lib/query/remote-query-state";
 import type { SessionManager } from "../auth/session/session-manager";
 import {
   createPatrimoniosOperations,
   type PatrimonioCatalogs,
   type PatrimoniosOperations,
 } from "./api/patrimonios-operations";
+import { patrimonioQueryKeys } from "./patrimonio-query-keys";
 
 export type PatrimonioFilters = Readonly<{
   status?: "ATIVO" | "BAIXADO" | "EMPRESTADO" | "EM_MANUTENCAO";
@@ -20,12 +30,7 @@ export type PatrimonioFilters = Readonly<{
   tipoNumeroPatrimonial?: "OFICIAL" | "SEM_NUMERO_OFICIAL";
 }>;
 
-type RemoteState<T> =
-  | Readonly<{ status: "loading" }>
-  | Readonly<{ status: "success"; data: T }>
-  | Readonly<{ status: "error"; error: ApiError }>;
-
-const loading = Object.freeze({ status: "loading" }) as RemoteState<never>;
+export type PatrimonioRemoteState<T> = RemoteQueryState<T>;
 
 function unavailableOperations(): PatrimoniosOperations {
   const fail = async () => {
@@ -36,10 +41,6 @@ function unavailableOperations(): PatrimoniosOperations {
     consultar: fail,
     listarCatalogos: fail,
   } as PatrimoniosOperations;
-}
-
-function normalizeError(error: unknown) {
-  return isApiError(error) ? error : new ApiError("invalid-response");
 }
 
 export function patrimonioErrorMessage(error: ApiError, detail = false) {
@@ -77,106 +78,53 @@ export function usePatrimonios(
   pagina: number,
 ) {
   const operations = useOperations();
-  const [state, setState] =
-    useState<RemoteState<ListarPatrimoniosResponse>>(loading);
-  const generation = useRef(0);
-  const controller = useRef<AbortController | null>(null);
-
-  const load = useCallback(async () => {
-    controller.current?.abort();
-    const currentController = new AbortController();
-    controller.current = currentController;
-    const currentGeneration = generation.current + 1;
-    generation.current = currentGeneration;
-    await Promise.resolve();
-    setState(loading);
-
-    try {
-      const data = await manager.authorizedRequest(
+  const query = useQuery<ListarPatrimoniosResponse>({
+    queryKey: patrimonioQueryKeys.list(busca, filters, pagina),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
         (accessToken) =>
           operations.listar(
             {
               pagina: String(pagina),
               limite: "20",
-              busca,
+              busca: busca?.trim() || undefined,
               ...filters,
             },
-            { accessToken, signal: currentController.signal },
+            { accessToken, signal },
           ),
         true,
-      );
-      if (
-        currentController.signal.aborted ||
-        generation.current !== currentGeneration
-      )
-        return;
-      setState({ status: "success", data });
-    } catch (error) {
-      if (
-        currentController.signal.aborted ||
-        generation.current !== currentGeneration
-      )
-        return;
-      setState({ status: "error", error: normalizeError(error) });
-    }
-  }, [busca, filters, manager, operations, pagina]);
+      ),
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
 
-  const refresh = useCallback(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    const timer = setTimeout(refresh, 0);
-    return () => {
-      clearTimeout(timer);
-      controller.current?.abort();
-    };
-  }, [refresh]);
-
-  return { state, reload: load };
+  return {
+    state: remoteQueryState(query),
+    isFetching: query.isFetching,
+    reload,
+  };
 }
 
 export function usePatrimonioCatalogs(manager: SessionManager) {
   const operations = useOperations();
-  const [state, setState] = useState<RemoteState<PatrimonioCatalogs>>(loading);
-  const controller = useRef<AbortController | null>(null);
-
-  const load = useCallback(async () => {
-    controller.current?.abort();
-    const currentController = new AbortController();
-    controller.current = currentController;
-    await Promise.resolve();
-    setState(loading);
-    try {
-      const data = await manager.authorizedRequest(
-        (accessToken) =>
-          operations.listarCatalogos({
-            accessToken,
-            signal: currentController.signal,
-          }),
+  const query = useQuery<PatrimonioCatalogs>({
+    queryKey: patrimonioQueryKeys.filterCatalogs(),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
+        (accessToken) => operations.listarCatalogos({ accessToken, signal }),
         true,
-      );
-      if (!currentController.signal.aborted)
-        setState({ status: "success", data });
-    } catch (error) {
-      if (!currentController.signal.aborted)
-        setState({ status: "error", error: normalizeError(error) });
-    }
-  }, [manager, operations]);
+      ),
+    staleTime: REFERENCE_STALE_TIME_MS,
+  });
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
 
-  const refresh = useCallback(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    const timer = setTimeout(refresh, 0);
-    return () => {
-      clearTimeout(timer);
-      controller.current?.abort();
-    };
-  }, [refresh]);
-
-  return { state, reload: load };
+  return {
+    state: remoteQueryState(query),
+    isFetching: query.isFetching,
+    reload,
+  };
 }
 
 export function usePatrimonioDetail(
@@ -185,47 +133,25 @@ export function usePatrimonioDetail(
   validId: boolean,
 ) {
   const operations = useOperations();
-  const [state, setState] = useState<RemoteState<PatrimonioDetalhe>>(loading);
-  const controller = useRef<AbortController | null>(null);
-
-  const load = useCallback(async () => {
-    await Promise.resolve();
-    if (!validId) {
-      setState({ status: "error", error: new ApiError("invalid-response") });
-      return;
-    }
-    controller.current?.abort();
-    const currentController = new AbortController();
-    controller.current = currentController;
-    setState(loading);
-    try {
-      const data = await manager.authorizedRequest(
+  const query = useQuery<PatrimonioDetalhe>({
+    queryKey: patrimonioQueryKeys.detail(patrimonioId),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
         (accessToken) =>
-          operations.consultar(patrimonioId, {
-            accessToken,
-            signal: currentController.signal,
-          }),
+          operations.consultar(patrimonioId, { accessToken, signal }),
         true,
-      );
-      if (!currentController.signal.aborted)
-        setState({ status: "success", data });
-    } catch (error) {
-      if (!currentController.signal.aborted)
-        setState({ status: "error", error: normalizeError(error) });
-    }
-  }, [manager, operations, patrimonioId, validId]);
+      ),
+    enabled: validId,
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
+  const state = validId
+    ? remoteQueryState(query)
+    : ({
+        status: "error",
+        error: new ApiError("invalid-response"),
+      } as const);
 
-  const refresh = useCallback(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    const timer = setTimeout(refresh, 0);
-    return () => {
-      clearTimeout(timer);
-      controller.current?.abort();
-    };
-  }, [refresh]);
-
-  return { state, reload: load };
+  return { state, isFetching: query.isFetching, reload };
 }

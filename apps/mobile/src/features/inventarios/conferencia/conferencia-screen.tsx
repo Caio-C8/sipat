@@ -19,7 +19,6 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { useReloadOnReturn } from "../../../lib/navigation/use-reload-on-return";
 import {
   layout,
   mobileInventarios,
@@ -60,7 +59,6 @@ export function ConferenciaScreen({
     setorInventarioId,
     validIds,
   );
-  useReloadOnReturn(conference.detail.reload);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraAvailable, setCameraAvailable] = useState<boolean | null>(() =>
     Platform.OS === "web" ? null : true,

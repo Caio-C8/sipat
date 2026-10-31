@@ -1,36 +1,29 @@
+import { useQuery } from "@tanstack/react-query";
 import type { PerfilUsuario } from "@repo/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { publicAppConfig } from "../../config/public-app-config";
-import { ApiError, isApiError } from "../../lib/api/api-error";
+import { ApiError } from "../../lib/api/api-error";
+import { DOMAIN_STALE_TIME_MS } from "../../lib/query/query-policy";
+import {
+  remoteQueryState,
+  type RemoteQueryState,
+} from "../../lib/query/remote-query-state";
 import type { SessionManager } from "../auth/session/session-manager";
 import {
   createHomeOperations,
   type HomeOperations,
   type InventariosHome,
 } from "./api/home-operations";
+import { homeQueryKeys } from "./home-query-keys";
 
 export type HomeBlockName = "setores" | "patrimonios" | "inventarios";
-
-export type HomeBlock<T> =
-  | Readonly<{ status: "loading" }>
-  | Readonly<{ status: "success"; data: T }>
-  | Readonly<{ status: "error"; error: ApiError }>;
+export type HomeBlock<T> = RemoteQueryState<T>;
 
 export type HomeDashboardState = Readonly<{
   setores: HomeBlock<number> | null;
   patrimonios: HomeBlock<number>;
   inventarios: HomeBlock<InventariosHome>;
 }>;
-
-const loading = Object.freeze({ status: "loading" }) as HomeBlock<never>;
-
-function initialState(profile: PerfilUsuario): HomeDashboardState {
-  return {
-    setores: profile === "ADMINISTRADOR" ? loading : null,
-    patrimonios: loading,
-    inventarios: loading,
-  };
-}
 
 function unavailableOperations(): HomeOperations {
   const fail = async () => {
@@ -41,10 +34,6 @@ function unavailableOperations(): HomeOperations {
     contarPatrimonios: fail,
     obterInventarios: fail,
   } as HomeOperations;
-}
-
-function normalizeError(error: unknown) {
-  return isApiError(error) ? error : new ApiError("invalid-response");
 }
 
 export function homeErrorMessage(error: ApiError) {
@@ -72,107 +61,61 @@ export function useHomeDashboard(
         : unavailableOperations(),
     [],
   );
-  const [state, setState] = useState<HomeDashboardState>(() =>
-    initialState(profile),
-  );
-  const controllers = useRef(new Map<HomeBlockName, AbortController>());
-  const generations = useRef(new Map<HomeBlockName, number>());
+  const setores = useQuery({
+    queryKey: homeQueryKeys.setores(),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
+        (accessToken) => operations.contarSetores({ accessToken, signal }),
+        true,
+      ),
+    enabled: profile === "ADMINISTRADOR",
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const patrimonios = useQuery({
+    queryKey: homeQueryKeys.patrimonios(),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
+        (accessToken) => operations.contarPatrimonios({ accessToken, signal }),
+        true,
+      ),
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const inventarios = useQuery({
+    queryKey: homeQueryKeys.inventarios(),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
+        (accessToken) => operations.obterInventarios({ accessToken, signal }),
+        true,
+      ),
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const refetchSetores = setores.refetch;
+  const refetchPatrimonios = patrimonios.refetch;
+  const refetchInventarios = inventarios.refetch;
 
-  const loadBlock = useCallback(
-    async (block: HomeBlockName) => {
-      if (block === "setores" && profile !== "ADMINISTRADOR") return;
-
-      controllers.current.get(block)?.abort();
-      const controller = new AbortController();
-      controllers.current.set(block, controller);
-      const generation = (generations.current.get(block) ?? 0) + 1;
-      generations.current.set(block, generation);
-      setState((current) => ({ ...current, [block]: loading }));
-
-      try {
-        let data: number | InventariosHome;
-        if (block === "setores") {
-          data = await manager.authorizedRequest(
-            (accessToken) =>
-              operations.contarSetores({
-                accessToken,
-                signal: controller.signal,
-              }),
-            true,
-          );
-        } else if (block === "patrimonios") {
-          data = await manager.authorizedRequest(
-            (accessToken) =>
-              operations.contarPatrimonios({
-                accessToken,
-                signal: controller.signal,
-              }),
-            true,
-          );
-        } else {
-          data = await manager.authorizedRequest(
-            (accessToken) =>
-              operations.obterInventarios({
-                accessToken,
-                signal: controller.signal,
-              }),
-            true,
-          );
-        }
-        if (
-          controller.signal.aborted ||
-          generations.current.get(block) !== generation
-        )
-          return;
-        setState((current) => {
-          if (block === "setores")
-            return {
-              ...current,
-              setores: { status: "success", data: data as number },
-            };
-          if (block === "patrimonios")
-            return {
-              ...current,
-              patrimonios: { status: "success", data: data as number },
-            };
-          return {
-            ...current,
-            inventarios: {
-              status: "success",
-              data: data as InventariosHome,
-            },
-          };
-        });
-      } catch (error) {
-        if (
-          controller.signal.aborted ||
-          generations.current.get(block) !== generation
-        )
-          return;
-        setState((current) => ({
-          ...current,
-          [block]: { status: "error", error: normalizeError(error) },
-        }));
-      }
+  const retry = useCallback(
+    (block: HomeBlockName) => {
+      if (block === "setores") return refetchSetores();
+      if (block === "patrimonios") return refetchPatrimonios();
+      return refetchInventarios();
     },
-    [manager, operations, profile],
+    [refetchInventarios, refetchPatrimonios, refetchSetores],
   );
-
   const refresh = useCallback(() => {
-    if (profile === "ADMINISTRADOR") void loadBlock("setores");
-    void loadBlock("patrimonios");
-    void loadBlock("inventarios");
-  }, [loadBlock, profile]);
+    if (profile === "ADMINISTRADOR") void refetchSetores();
+    void refetchPatrimonios();
+    void refetchInventarios();
+  }, [profile, refetchInventarios, refetchPatrimonios, refetchSetores]);
 
-  useEffect(() => {
-    setState(initialState(profile));
-    refresh();
-    const activeControllers = controllers.current;
-    return () => {
-      for (const controller of activeControllers.values()) controller.abort();
-      activeControllers.clear();
-    };
-  }, [profile, refresh]);
-
-  return { state, refresh, retry: loadBlock };
+  return {
+    state: {
+      setores: profile === "ADMINISTRADOR" ? remoteQueryState(setores) : null,
+      patrimonios: remoteQueryState(patrimonios),
+      inventarios: remoteQueryState(inventarios),
+    } satisfies HomeDashboardState,
+    isFetching:
+      setores.isFetching || patrimonios.isFetching || inventarios.isFetching,
+    refresh,
+    retry,
+  };
 }

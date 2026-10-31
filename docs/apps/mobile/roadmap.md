@@ -70,7 +70,7 @@ reconciliação depois de mutations:
 | Ordem | Objetivo                                                                                                       | Status    | Dependências                                     |
 | ----- | -------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------ |
 | 1     | [`MOBILE-QUERY-001`](../../tasks/MOBILE-QUERY-001-fundacao-tanstack-query.md) — provider, lifecycle e sessão   | concluída | sessão mobile e operações existentes             |
-| 2     | [`MOBILE-QUERY-002`](../../tasks/MOBILE-QUERY-002-cachear-leituras.md) — cachear leituras de domínio           | aprovada  | `MOBILE-QUERY-001`                               |
+| 2     | [`MOBILE-QUERY-002`](../../tasks/MOBILE-QUERY-002-cachear-leituras.md) — cachear leituras de domínio           | concluída | `MOBILE-QUERY-001`                               |
 | 3     | [`MOBILE-QUERY-003`](../../tasks/MOBILE-QUERY-003-invalidar-apos-mutations.md) — invalidar depois de mutations | aprovada  | `MOBILE-QUERY-002` e mutations mobile existentes |
 
 O cache aprovado existe somente em memória, é cancelado e limpo quando a
@@ -82,8 +82,8 @@ refetch e retorno ao app revalida apenas dado vencido.
 Health check e autenticação não entram no cache. Persistência, modo offline,
 fila, mutation otimista, retry automático e integração de conectividade
 continuam fora desta sequência. `MOBILE-QUERY-001` entregou o provider e os
-boundaries; até `MOBILE-QUERY-002`, as leituras de domínio permanecem nos hooks
-manuais e não populam o cache.
+boundaries; `MOBILE-QUERY-002` migrou as leituras de domínio. As invalidações
+depois de mutations permanecem em `MOBILE-QUERY-003`.
 
 ## Recuperação de senha iniciada no mobile
 

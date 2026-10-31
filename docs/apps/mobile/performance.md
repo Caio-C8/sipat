@@ -2,8 +2,8 @@
 
 ## Estado atual
 
-Home, patrimônios e inventários já executam leituras de domínio, ainda sem
-cache remoto. Não há observabilidade mobile nem metas numéricas definidas. O
+Home, patrimônios e inventários executam leituras de domínio com cache privado
+somente em memória. Não há observabilidade mobile nem metas numéricas definidas. O
 timeout de oito segundos do health check é um limite operacional dessa
 verificação, não uma meta de latência para todas as operações.
 

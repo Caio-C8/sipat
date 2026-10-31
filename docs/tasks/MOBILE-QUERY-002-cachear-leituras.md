@@ -1,6 +1,6 @@
 # `MOBILE-QUERY-002` — Cachear leituras de domínio no mobile
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -73,17 +73,17 @@ preservando os contratos e estados públicos atuais.
 
 ## Critérios de aceite
 
-- [ ] remontar ou voltar a uma tela dentro do `staleTime` reutiliza a cache sem
+- [x] remontar ou voltar a uma tela dentro do `staleTime` reutiliza a cache sem
       nova chamada;
-- [ ] keys diferentes separam busca, filtros, páginas e IDs sem colisão;
-- [ ] duas montagens concorrentes da mesma key deduplicam a operação;
-- [ ] troca de filtro ou saída da tela cancela a request quando a operação
+- [x] keys diferentes separam busca, filtros, páginas e IDs sem colisão;
+- [x] duas montagens concorrentes da mesma key deduplicam a operação;
+- [x] troca de filtro ou saída da tela cancela a request quando a operação
       consome o signal;
-- [ ] atualização manual ignora a janela de frescor e refaz somente a consulta
+- [x] atualização manual ignora a janela de frescor e refaz somente a consulta
       solicitada;
-- [ ] a Home mantém falhas independentes por bloco;
-- [ ] respostas continuam validadas por `@repo/contracts` nas operações;
-- [ ] nenhuma leitura de autenticação ou health entra no cache.
+- [x] a Home mantém falhas independentes por bloco;
+- [x] respostas continuam validadas por `@repo/contracts` nas operações;
+- [x] nenhuma leitura de autenticação ou health entra no cache.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -111,4 +111,5 @@ preservando os contratos e estados públicos atuais.
 
 ## Pendências ou decisões bloqueantes
 
-- Iniciar somente depois de `MOBILE-QUERY-001` estar implementada e verificada.
+- Nenhuma para esta entrega. Invalidações depois de mutations permanecem em
+  `MOBILE-QUERY-003`; persistência e modo offline continuam fora do escopo.

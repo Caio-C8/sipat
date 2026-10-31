@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   InventarioDetalhe,
   ListarInventariosResponse,
@@ -7,21 +8,22 @@ import type {
   StatusInventario,
   StatusSetorInventario,
 } from "@repo/contracts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { publicAppConfig } from "../../config/public-app-config";
 import { ApiError, isApiError } from "../../lib/api/api-error";
+import { DOMAIN_STALE_TIME_MS } from "../../lib/query/query-policy";
+import {
+  remoteQueryState,
+  type RemoteQueryState,
+} from "../../lib/query/remote-query-state";
 import type { SessionManager } from "../auth/session/session-manager";
 import {
   createInventariosOperations,
   type InventariosOperations,
 } from "./api/inventarios-operations";
+import { inventarioQueryKeys } from "./inventario-query-keys";
 
-export type RemoteState<T> =
-  | Readonly<{ status: "loading" }>
-  | Readonly<{ status: "success"; data: T }>
-  | Readonly<{ status: "error"; error: ApiError }>;
-
-const loading = Object.freeze({ status: "loading" }) as RemoteState<never>;
+export type RemoteState<T> = RemoteQueryState<T>;
 
 function unavailableOperations(): InventariosOperations {
   const fail = async () => {
@@ -84,49 +86,13 @@ export function useInventariosOperations() {
   );
 }
 
-export function useCancelableLoad<T>(
-  loadData: (signal: AbortSignal) => Promise<T>,
-) {
-  const [state, setState] = useState<RemoteState<T>>(loading);
-  const controller = useRef<AbortController | null>(null);
-  const generation = useRef(0);
-
-  const load = useCallback(async () => {
-    controller.current?.abort();
-    const currentController = new AbortController();
-    controller.current = currentController;
-    const currentGeneration = generation.current + 1;
-    generation.current = currentGeneration;
-    await Promise.resolve();
-    setState(loading);
-    try {
-      const data = await loadData(currentController.signal);
-      if (
-        !currentController.signal.aborted &&
-        currentGeneration === generation.current
-      ) {
-        setState({ status: "success", data });
-      }
-    } catch (error) {
-      if (
-        !currentController.signal.aborted &&
-        currentGeneration === generation.current
-      ) {
-        setState({ status: "error", error: normalizeError(error) });
-      }
-    }
-  }, [loadData]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => {
-      clearTimeout(timer);
-      controller.current?.abort();
-    };
-  }, [load]);
-
-  return { state, reload: load, setState };
-}
+const disabledInventarios: ListarInventariosResponse = {
+  status: 200,
+  sucesso: true,
+  mensagem: "Consulta desabilitada para este perfil.",
+  dados: [],
+  meta: { total: 0, pagina: 1, ultimaPagina: 1, limite: 10 },
+};
 
 export function useInventarios(
   manager: SessionManager,
@@ -136,40 +102,35 @@ export function useInventarios(
   enabled = true,
 ) {
   const operations = useInventariosOperations();
-  return useCancelableLoad(
-    useCallback(
-      (signal: AbortSignal) => {
-        if (!enabled) {
-          return Promise.resolve({
-            status: 200 as const,
-            sucesso: true as const,
-            mensagem: "Consulta desabilitada para este perfil.",
-            dados: [],
-            meta: {
-              total: 0,
-              pagina: 1,
-              ultimaPagina: 1,
-              limite: 10,
+  const query = useQuery<ListarInventariosResponse>({
+    queryKey: inventarioQueryKeys.list(status, busca, pagina),
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(
+        (accessToken) =>
+          operations.listar(
+            {
+              pagina: String(pagina),
+              limite: "10",
+              busca: busca?.trim() || undefined,
+              status,
             },
-          } satisfies ListarInventariosResponse);
-        }
-        return manager.authorizedRequest(
-          (accessToken) =>
-            operations.listar(
-              {
-                pagina: String(pagina),
-                limite: "10",
-                busca,
-                status,
-              },
-              { accessToken, signal },
-            ),
-          true,
-        );
-      },
-      [busca, enabled, manager, operations, pagina, status],
-    ),
-  );
+            { accessToken, signal },
+          ),
+        true,
+      ),
+    enabled,
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
+
+  return {
+    state: enabled
+      ? remoteQueryState(query)
+      : ({ status: "success", data: disabledInventarios } as const),
+    isFetching: query.isFetching,
+    reload,
+  };
 }
 
 export type InventarioSetoresData = Readonly<{
@@ -186,31 +147,44 @@ export function useInventarioSetores(
   pagina: number,
 ) {
   const operations = useInventariosOperations();
-  return useCancelableLoad(
-    useCallback(
-      async (signal: AbortSignal) => {
-        if (!validId) throw new ApiError("invalid-response");
-        return manager.authorizedRequest(async (accessToken) => {
-          const options = { accessToken, signal };
-          const [inventario, setores] = await Promise.all([
-            operations.consultar(inventarioId, options),
-            operations.listarSetores(
-              inventarioId,
-              {
-                pagina: String(pagina),
-                limite: "20",
-                busca,
-                status,
-              },
-              options,
-            ),
-          ]);
-          return { inventario, setores };
-        }, true);
-      },
-      [busca, inventarioId, manager, operations, pagina, status, validId],
+  const query = useQuery<InventarioSetoresData>({
+    queryKey: inventarioQueryKeys.sectorList(
+      inventarioId,
+      busca,
+      status,
+      pagina,
     ),
-  );
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(async (accessToken) => {
+        const options = { accessToken, signal };
+        const [inventario, setores] = await Promise.all([
+          operations.consultar(inventarioId, options),
+          operations.listarSetores(
+            inventarioId,
+            {
+              pagina: String(pagina),
+              limite: "20",
+              busca: busca?.trim() || undefined,
+              status,
+            },
+            options,
+          ),
+        ]);
+        return { inventario, setores };
+      }, true),
+    enabled: validId,
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
+
+  return {
+    state: validId
+      ? remoteQueryState(query)
+      : ({ status: "error", error: new ApiError("invalid-response") } as const),
+    isFetching: query.isFetching,
+    reload,
+  };
 }
 
 export type SetorDetailData = Readonly<{
@@ -235,10 +209,28 @@ export function useSetorInventarioDetail(
   contextoRegistros: ContextoRegistrosSetor = "PREVISTO",
 ) {
   const operations = useInventariosOperations();
-  const loadData = useCallback(
-    async (signal: AbortSignal): Promise<SetorDetailData> => {
-      if (!validIds) throw new ApiError("invalid-response");
-      return manager.authorizedRequest(async (accessToken) => {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(
+    () =>
+      inventarioQueryKeys.sectorDetail(
+        inventarioId,
+        setorInventarioId,
+        paginaPendencias,
+        paginaRegistros,
+        contextoRegistros,
+      ),
+    [
+      contextoRegistros,
+      inventarioId,
+      paginaPendencias,
+      paginaRegistros,
+      setorInventarioId,
+    ],
+  );
+  const query = useQuery<SetorDetailData>({
+    queryKey,
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(async (accessToken) => {
         const options = { accessToken, signal };
         const carregarRegistros = (
           contextoSetor: Exclude<ContextoRegistrosSetor, "TODOS"> | undefined,
@@ -310,25 +302,17 @@ export function useSetorInventarioDetail(
             encontradosAqui: registrosEncontrados.meta.total,
           },
         };
-      }, true);
-    },
-    [
-      inventarioId,
-      contextoRegistros,
-      manager,
-      operations,
-      paginaPendencias,
-      paginaRegistros,
-      setorInventarioId,
-      validIds,
-    ],
-  );
-  const remote = useCancelableLoad(loadData);
+      }, true),
+    enabled: validIds,
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
   const [starting, setStarting] = useState(false);
   const startingRef = useRef(false);
   const [concluding, setConcluding] = useState(false);
   const concludingRef = useRef(false);
   const [mutationError, setMutationError] = useState<ApiError | null>(null);
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
 
   const start = useCallback(async () => {
     if (startingRef.current || !validIds) return false;
@@ -343,25 +327,29 @@ export function useSetorInventarioDetail(
           }),
         false,
       );
-      remote.setState((current) =>
-        current.status === "success"
-          ? {
-              status: "success",
-              data: { ...current.data, setor, setorEmAndamento: setor },
-            }
-          : current,
+      queryClient.setQueryData<SetorDetailData>(queryKey, (current) =>
+        current ? { ...current, setor, setorEmAndamento: setor } : current,
       );
       return true;
     } catch (error) {
       const normalized = normalizeError(error);
       setMutationError(normalized);
-      if (normalized.status === 409) await remote.reload();
+      if (normalized.status === 409) await reload();
       return false;
     } finally {
       startingRef.current = false;
       setStarting(false);
     }
-  }, [inventarioId, manager, operations, remote, setorInventarioId, validIds]);
+  }, [
+    inventarioId,
+    manager,
+    operations,
+    queryClient,
+    queryKey,
+    reload,
+    setorInventarioId,
+    validIds,
+  ]);
 
   const conclude = useCallback(async () => {
     if (concludingRef.current || !validIds) return false;
@@ -376,21 +364,25 @@ export function useSetorInventarioDetail(
           }),
         false,
       );
-      await remote.reload();
+      await reload();
       return true;
     } catch (error) {
       const normalized = normalizeError(error);
       setMutationError(normalized);
-      if (normalized.status === 409) await remote.reload();
+      if (normalized.status === 409) await reload();
       return false;
     } finally {
       concludingRef.current = false;
       setConcluding(false);
     }
-  }, [inventarioId, manager, operations, remote, setorInventarioId, validIds]);
+  }, [inventarioId, manager, operations, reload, setorInventarioId, validIds]);
 
   return {
-    ...remote,
+    state: validIds
+      ? remoteQueryState(query)
+      : ({ status: "error", error: new ApiError("invalid-response") } as const),
+    isFetching: query.isFetching,
+    reload,
     conclude,
     concluding,
     start,

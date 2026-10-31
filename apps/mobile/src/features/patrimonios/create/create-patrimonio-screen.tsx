@@ -1,15 +1,12 @@
 import { Lucide } from "@react-native-vector-icons/lucide";
 import type {
-  EspecieResumo,
   MetaPaginacao,
   PatrimonioDetalhe,
-  ProcessoCompraDetalhe,
   ProcessoCompraResumo,
-  SetorResumo,
   TipoIncorporacao,
 } from "@repo/contracts";
 import { useRouter, type Href } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -39,6 +36,7 @@ import {
   createCreatePatrimonioOperations,
   type CreatePatrimonioOperations,
 } from "./create-patrimonio-operations";
+import { useCreatePatrimonioQueries } from "./use-create-patrimonio-queries";
 import {
   EMPTY_CREATE_PATRIMONIO_FORM,
   currencyInputToDecimal,
@@ -530,124 +528,26 @@ function DirectorFlow({
   const [created, setCreated] = useState<PatrimonioDetalhe>();
   const posting = useRef(false);
   const [catalog, setCatalog] = useState<Catalog>();
-  const [loading, setLoading] = useState(false);
-  const [catalogErrors, setCatalogErrors] = useState<
-    Partial<Record<Catalog, string>>
-  >({});
-  const [species, setSpecies] = useState<EspecieResumo[]>([]);
-  const [sectors, setSectors] = useState<SetorResumo[]>([]);
-  const [processes, setProcesses] = useState<ProcessoCompraResumo[]>([]);
-  const [speciesMeta, setSpeciesMeta] = useState<MetaPaginacao>();
-  const [sectorsMeta, setSectorsMeta] = useState<MetaPaginacao>();
-  const [processesMeta, setProcessesMeta] = useState<MetaPaginacao>();
-  const [processDetail, setProcessDetail] = useState<ProcessoCompraDetalhe>();
+  const queries = useCreatePatrimonioQueries(
+    manager,
+    operations,
+    form.purchaseProcessId,
+  );
+  const species =
+    queries.species.data?.pages.flatMap((page) => page.dados) ?? [];
+  const sectors =
+    queries.sectors.data?.pages.flatMap((page) => page.dados) ?? [];
+  const processes =
+    queries.processes.data?.pages.flatMap((page) => page.dados) ?? [];
+  const speciesMeta = queries.species.data?.pages.at(-1)?.meta;
+  const sectorsMeta = queries.sectors.data?.pages.at(-1)?.meta;
+  const processesMeta = queries.processes.data?.pages.at(-1)?.meta;
+  const processDetail = queries.processDetail.data;
   const selectedSpecies = species.find((item) => item.id === form.speciesId);
   const selectedSector = sectors.find((item) => item.id === form.sectorId);
   const selectedProcess = processes.find(
     (item) => item.id === form.purchaseProcessId,
   );
-
-  const clearCatalogError = (kind: Catalog) =>
-    setCatalogErrors((current) => ({ ...current, [kind]: undefined }));
-
-  const recordCatalogError = (kind: Catalog, error: unknown) =>
-    setCatalogErrors((current) => ({
-      ...current,
-      [kind]: createPatrimonioCatalogErrorMessage(kind, error),
-    }));
-
-  const load = async (kind: Catalog, page = 1) => {
-    setLoading(true);
-    clearCatalogError(kind);
-    try {
-      if (kind === "species") {
-        const response = await manager.authorizedRequest(
-          (token) => operations.listSpecies({ page }, { accessToken: token }),
-          true,
-        );
-        setSpecies((current) =>
-          page === 1 ? response.dados : [...current, ...response.dados],
-        );
-        setSpeciesMeta(response.meta);
-      } else if (kind === "sectors") {
-        const response = await manager.authorizedRequest(
-          (token) => operations.listSectors({ page }, { accessToken: token }),
-          true,
-        );
-        setSectors((current) =>
-          page === 1 ? response.dados : [...current, ...response.dados],
-        );
-        setSectorsMeta(response.meta);
-      } else {
-        const response = await manager.authorizedRequest(
-          (token) =>
-            operations.listPurchaseProcesses({ page }, { accessToken: token }),
-          true,
-        );
-        setProcesses((current) =>
-          page === 1 ? response.dados : [...current, ...response.dados],
-        );
-        setProcessesMeta(response.meta);
-      }
-    } catch (error) {
-      recordCatalogError(kind, error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const recordInitialError = (kind: Catalog, error: unknown) =>
-      setCatalogErrors((current) => ({
-        ...current,
-        [kind]: createPatrimonioCatalogErrorMessage(kind, error),
-      }));
-    void Promise.allSettled([
-      manager.authorizedRequest(
-        (token) =>
-          operations.listSpecies(
-            { page: 1 },
-            { accessToken: token, signal: controller.signal },
-          ),
-        true,
-      ),
-      manager.authorizedRequest(
-        (token) =>
-          operations.listSectors(
-            { page: 1 },
-            { accessToken: token, signal: controller.signal },
-          ),
-        true,
-      ),
-      manager.authorizedRequest(
-        (token) =>
-          operations.listPurchaseProcesses(
-            { page: 1 },
-            { accessToken: token, signal: controller.signal },
-          ),
-        true,
-      ),
-    ]).then(([speciesResult, sectorsResult, processesResult]) => {
-      if (controller.signal.aborted) return;
-
-      if (speciesResult.status === "fulfilled") {
-        setSpecies(speciesResult.value.dados);
-        setSpeciesMeta(speciesResult.value.meta);
-      } else recordInitialError("species", speciesResult.reason);
-
-      if (sectorsResult.status === "fulfilled") {
-        setSectors(sectorsResult.value.dados);
-        setSectorsMeta(sectorsResult.value.meta);
-      } else recordInitialError("sectors", sectorsResult.reason);
-
-      if (processesResult.status === "fulfilled") {
-        setProcesses(processesResult.value.dados);
-        setProcessesMeta(processesResult.value.meta);
-      } else recordInitialError("processes", processesResult.reason);
-    });
-    return () => controller.abort();
-  }, [manager, operations]);
 
   const update = (patch: Partial<CreatePatrimonioForm>) => {
     setForm((current) => ({ ...current, ...patch }));
@@ -702,6 +602,23 @@ function DirectorFlow({
       />
     );
 
+  const activeCatalogQuery =
+    catalog === "species"
+      ? queries.species
+      : catalog === "sectors"
+        ? queries.sectors
+        : catalog === "processes"
+          ? queries.processes
+          : undefined;
+  const catalogError =
+    catalog && activeCatalogQuery?.error
+      ? createPatrimonioCatalogErrorMessage(catalog, activeCatalogQuery.error)
+      : catalog === "processes" && queries.processDetail.error
+        ? createPatrimonioCatalogErrorMessage(
+            "processes",
+            queries.processDetail.error,
+          )
+        : undefined;
   const modal =
     catalog === "species"
       ? {
@@ -743,14 +660,6 @@ function DirectorFlow({
     if (catalog === "sectors") update({ sectorId: id });
     if (catalog === "processes") {
       update({ purchaseProcessId: id });
-      setProcessDetail(undefined);
-      void manager
-        .authorizedRequest(
-          (token) => operations.getPurchaseProcess(id, { accessToken: token }),
-          true,
-        )
-        .then(setProcessDetail)
-        .catch((error: unknown) => recordCatalogError("processes", error));
     }
     setCatalog(undefined);
   };
@@ -895,7 +804,6 @@ function DirectorFlow({
             accessibilityRole="button"
             onPress={() => {
               update({ purchaseProcessId: "" });
-              setProcessDetail(undefined);
             }}
             style={styles.removeProcess}
           >
@@ -1192,16 +1100,17 @@ function DirectorFlow({
         </Pressable>
       </View>
       <CatalogModal
-        error={catalog ? catalogErrors[catalog] : undefined}
+        error={catalogError}
         items={modal.items}
-        loading={loading}
+        loading={activeCatalogQuery?.isFetching ?? false}
         meta={modal.meta}
         onClose={() => setCatalog(undefined)}
         onMore={() => {
-          if (catalog && modal.meta) void load(catalog, modal.meta.pagina + 1);
+          if (activeCatalogQuery?.hasNextPage)
+            void activeCatalogQuery.fetchNextPage();
         }}
         onRetry={() => {
-          if (catalog) void load(catalog);
+          void activeCatalogQuery?.refetch();
         }}
         onSelect={selectCatalog}
         selected={modal.selected}
