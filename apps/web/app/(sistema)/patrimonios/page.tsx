@@ -10,5 +10,9 @@ export const metadata: Metadata = {
 export default async function PatrimoniosPage() {
   const identidade = await obterIdentidadeAtual();
   if (!identidade) return null;
-  return <PatrimonioTelas podeCadastrar={identidade.perfil === "DIRETOR_PATRIMONIO"} />;
+  return (
+    <PatrimonioTelas
+      podeCadastrar={identidade.perfil === "DIRETOR_PATRIMONIO"}
+    />
+  );
 }

@@ -64,7 +64,13 @@ function CabecalhoSecao({
   );
 }
 
-function Consulta({ abrirFicha, podeCadastrar }: { abrirFicha: () => void; podeCadastrar: boolean }) {
+function Consulta({
+  abrirFicha,
+  podeCadastrar,
+}: {
+  abrirFicha: () => void;
+  podeCadastrar: boolean;
+}) {
   const [termo, setTermo] = useState("");
   const [pesquisa, setPesquisa] = useState("");
   const [situacao, setSituacao] = useState("todas");
@@ -86,7 +92,11 @@ function Consulta({ abrirFicha, podeCadastrar }: { abrirFicha: () => void; podeC
             só lugar.
           </p>
         </div>
-        {podeCadastrar ? <Link className={principal} href="/patrimonios/novo">+ Novo patrimônio</Link> : null}
+        {podeCadastrar ? (
+          <Link className={principal} href="/patrimonios/novo">
+            + Novo patrimônio
+          </Link>
+        ) : null}
       </header>
       <section className={cartao} aria-labelledby="pesquisa-title">
         <CabecalhoSecao icon={Search}>
@@ -677,13 +687,20 @@ function Relatorio({ voltar }: { voltar: () => void }) {
 }
 
 /** Prévia visual de consulta, ficha e relatório patrimonial. */
-export function PatrimonioTelas({ podeCadastrar = false }: { podeCadastrar?: boolean }) {
+export function PatrimonioTelas({
+  podeCadastrar = false,
+}: {
+  podeCadastrar?: boolean;
+}) {
   const [tela, setTela] = useState<Tela>("consulta");
   const [modal, setModal] = useState<AcaoPatrimonio | null>(null);
   return (
     <>
       {tela === "consulta" ? (
-        <Consulta abrirFicha={() => setTela("ficha")} podeCadastrar={podeCadastrar} />
+        <Consulta
+          abrirFicha={() => setTela("ficha")}
+          podeCadastrar={podeCadastrar}
+        />
       ) : tela === "ficha" ? (
         <Ficha
           novaPesquisa={() => setTela("consulta")}
