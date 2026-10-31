@@ -40,8 +40,8 @@ objetivos backend seguintes.
 - `PatrimonioParamsSchema` com UUID;
 - `CriarPatrimonioBodySchema` estrito, contendo `semNumeroOficial` e os dados
   cadastrais e vínculos de RF10, sem campos controlados pelo servidor;
-- bloco opcional e explícito de parâmetros iniciais de depreciação; ausência do
-  bloco significa que nenhum parâmetro inicial será criado;
+- bloco obrigatório e explícito de parâmetros iniciais de depreciação; a
+  ausência do bloco invalida o cadastro;
 - datas civis como strings ISO `YYYY-MM-DD`, validadas sem conversão dependente
   do fuso local;
 - valores `Decimal(19,7)` representados como strings decimais canônicas no JSON,
@@ -77,6 +77,8 @@ objetivos backend seguintes.
 - O novo número, status inicial, texto de busca e auditoria são sempre derivados
   pelo servidor.
 - O package de contratos permanece independente do Prisma.
+- Por decisão posterior de produto, os parâmetros iniciais deixaram de ser
+  opcionais: alterações futuras pertencem exclusivamente à reavaliação.
 
 ## Critérios de aceite
 

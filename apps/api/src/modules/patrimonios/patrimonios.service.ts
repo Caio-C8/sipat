@@ -245,8 +245,6 @@ export class PatrimoniosService {
 
   private validarParametrosDepreciacao(dados: CriarPatrimonioBodyData): void {
     const parametros = dados.parametrosDepreciacao;
-    if (parametros === undefined) return;
-
     const valorIncorporacao = new Prisma.Decimal(dados.valorIncorporacao);
     const base = new Prisma.Decimal(parametros.valorBaseInicial);
     const residual = new Prisma.Decimal(parametros.valorResidual);

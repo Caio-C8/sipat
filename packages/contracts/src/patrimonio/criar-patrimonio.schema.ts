@@ -16,22 +16,30 @@ const TextoOpcionalSchema = (nome: string, limite: number) =>
     })
     .optional();
 
-const ParametrosDepreciacaoIniciaisSchema = z.strictObject({
-  metodo: z.literal("LINEAR"),
-  vidaUtilInicialMeses: z.number().int().min(1).max(1_200, {
-    error: "A vida útil inicial deve possuir no máximo 1200 meses.",
-  }),
-  percentualResidual: z
-    .string()
-    .regex(/^(?:0|[1-9]\d{0,2})(?:\.\d{1,2})?$/, {
-      error:
-        "O percentual residual deve ser uma string decimal com até 3 dígitos inteiros e 2 casas decimais.",
-    })
-    .optional(),
-  valorResidual: Decimal19_7Schema,
-  valorBaseInicial: Decimal19_7PositivoSchema,
-  dataInicio: DataCivilSchema,
-});
+const ParametrosDepreciacaoIniciaisSchema = z.strictObject(
+  {
+    metodo: z.literal("LINEAR"),
+    vidaUtilInicialMeses: z.number().int().min(1).max(1_200, {
+      error: "A vida útil inicial deve possuir no máximo 1200 meses.",
+    }),
+    percentualResidual: z
+      .string()
+      .regex(/^(?:0|[1-9]\d{0,2})(?:\.\d{1,2})?$/, {
+        error:
+          "O percentual residual deve ser uma string decimal com até 3 dígitos inteiros e 2 casas decimais.",
+      })
+      .optional(),
+    valorResidual: Decimal19_7Schema,
+    valorBaseInicial: Decimal19_7PositivoSchema,
+    dataInicio: DataCivilSchema,
+  },
+  {
+    error: (issue) =>
+      issue.input === undefined
+        ? "Os parâmetros iniciais de depreciação são obrigatórios."
+        : undefined,
+  },
+);
 
 export const CriarPatrimonioBodySchema = z.strictObject({
   semNumeroOficial: z.boolean(),
@@ -51,7 +59,7 @@ export const CriarPatrimonioBodySchema = z.strictObject({
   especieId: z.uuid(),
   setorAtualId: z.uuid(),
   processoCompraId: z.uuid().optional(),
-  parametrosDepreciacao: ParametrosDepreciacaoIniciaisSchema.optional(),
+  parametrosDepreciacao: ParametrosDepreciacaoIniciaisSchema,
 });
 
 export type CriarPatrimonioBodyInput = z.input<

@@ -57,8 +57,8 @@ persistência atômica, vínculos válidos, normalização e auditoria da sessã
   de série, e construção consistente de `textoBusca`;
 - status `ATIVO`, `createdById` e timestamps definidos pelo servidor;
 - situação contábil inicial baseada no valor de incorporação;
-- quando o bloco opcional existir, criação do parâmetro inicial de depreciação
-  na mesma transação e validação de vida útil, base e residual;
+- criação obrigatória do parâmetro inicial de depreciação na mesma transação e
+  validação de vida útil, base e residual;
 - resposta detalhada pelo mapper e schema aprovados;
 - erros públicos previsíveis para relação ausente/inativa, série duplicada e
   conflito inesperado de identificador.
@@ -83,6 +83,8 @@ persistência atômica, vínculos válidos, normalização e auditoria da sessã
   represente etiqueta oficial.
 - Criação do patrimônio, situação contábil e parâmetro inicial informado é
   atômica; a sequence permanece não transacional conforme o PostgreSQL.
+- Por decisão posterior de produto, toda criação deve informar o parâmetro
+  inicial; alterações futuras continuam restritas à reavaliação.
 
 ## Critérios de aceite
 

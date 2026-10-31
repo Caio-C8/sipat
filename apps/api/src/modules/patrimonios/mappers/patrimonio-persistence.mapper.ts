@@ -49,24 +49,19 @@ export class PatrimonioPersistenceMapper {
           depreciacaoAcumuladaAtual: "0",
         },
       },
-      ...(dados.parametrosDepreciacao === undefined
-        ? {}
-        : {
-            parametrosDepreciacao: {
-              create: {
-                metodo: dados.parametrosDepreciacao.metodo,
-                vidaUtilInicialMeses:
-                  dados.parametrosDepreciacao.vidaUtilInicialMeses,
-                percentualResidual:
-                  dados.parametrosDepreciacao.percentualResidual,
-                valorResidual: dados.parametrosDepreciacao.valorResidual,
-                valorBaseInicial: dados.parametrosDepreciacao.valorBaseInicial,
-                dataInicio: this.paraDataCivil(
-                  dados.parametrosDepreciacao.dataInicio,
-                ),
-              },
-            },
-          }),
+      parametrosDepreciacao: {
+        create: {
+          metodo: dados.parametrosDepreciacao.metodo,
+          vidaUtilInicialMeses:
+            dados.parametrosDepreciacao.vidaUtilInicialMeses,
+          percentualResidual: dados.parametrosDepreciacao.percentualResidual,
+          valorResidual: dados.parametrosDepreciacao.valorResidual,
+          valorBaseInicial: dados.parametrosDepreciacao.valorBaseInicial,
+          dataInicio: this.paraDataCivil(
+            dados.parametrosDepreciacao.dataInicio,
+          ),
+        },
+      },
     };
   }
 

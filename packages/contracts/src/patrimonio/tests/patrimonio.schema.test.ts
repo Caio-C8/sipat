@@ -112,13 +112,20 @@ describe("contratos de patrimônios", () => {
     assert.equal(resultado.valorIncorporacao, "12345.6700000");
   });
 
-  it("torna o bloco inicial de depreciação realmente opcional", () => {
+  it("exige o bloco inicial de depreciação", () => {
     const entrada: Partial<ReturnType<typeof criarBodyValido>> =
       criarBodyValido();
     delete entrada.parametrosDepreciacao;
 
-    const resultado = parseValido(CriarPatrimonioBodySchema, entrada);
-    assert.equal(resultado.parametrosDepreciacao, undefined);
+    esperaInvalido(CriarPatrimonioBodySchema, entrada, "parametrosDepreciacao");
+    const resultado = CriarPatrimonioBodySchema.safeParse(entrada);
+    assert.equal(resultado.success, false);
+    if (!resultado.success) {
+      assert.equal(
+        resultado.error.issues[0]?.message,
+        "Os parâmetros iniciais de depreciação são obrigatórios.",
+      );
+    }
   });
 
   it("rejeita campos controlados pelo servidor e propriedades extras", () => {

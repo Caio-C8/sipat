@@ -394,21 +394,17 @@ export class SeedGeralService {
             especieId: especies[i % especies.length]!.id,
             setorAtualId: setores[Math.floor(i / 5)]!.id,
             processoCompraId: processos[Math.floor(i / 5)]!.id,
-            ...(i % 3 === 0
-              ? {
-                  parametrosDepreciacao: {
-                    metodo: "LINEAR",
-                    vidaUtilInicialMeses: 60,
-                    percentualResidual: "10.00",
-                    valorResidual: (Number(valor) * 0.1).toFixed(7),
-                    valorBaseInicial: valor,
-                    dataInicio: deslocarDataCivil(
-                      this.dataBase,
-                      -90 + Math.floor(i / 5),
-                    ),
-                  },
-                }
-              : {}),
+            parametrosDepreciacao: {
+              metodo: "LINEAR",
+              vidaUtilInicialMeses: 60,
+              percentualResidual: "10.00",
+              valorResidual: (Number(valor) * 0.1).toFixed(7),
+              valorBaseInicial: valor,
+              dataInicio: deslocarDataCivil(
+                this.dataBase,
+                -90 + Math.floor(i / 5),
+              ),
+            },
           }),
           this.diretor,
         ),
@@ -649,6 +645,7 @@ export class SeedGeralService {
       processos,
       notas,
       patrimonios,
+      parametrosDepreciacao,
       oficiais,
       provisoria,
       ativos,
@@ -675,6 +672,7 @@ export class SeedGeralService {
       this.db.processoCompra.count(),
       this.db.notaFiscal.count(),
       this.db.patrimonio.count(),
+      this.db.parametroDepreciacao.count(),
       this.db.patrimonio.count({ where: { tipoNumeroPatrimonial: "OFICIAL" } }),
       this.db.patrimonio.count({
         where: { tipoNumeroPatrimonial: "SEM_NUMERO_OFICIAL" },
@@ -693,8 +691,8 @@ export class SeedGeralService {
       this.db.reavaliacaoPatrimonio.count(),
     ]);
     const esperado = [
-      2, 10, 10, 5, 10, 5, 3, 9, 10, 20, 50, 40, 10, 47, 3, 1, 50, 40, 7, 3, 2,
-      0, 0, 0, 0,
+      2, 10, 10, 5, 10, 5, 3, 9, 10, 20, 50, 50, 40, 10, 47, 3, 1, 50, 40, 7, 3,
+      2, 0, 0, 0, 0,
     ];
     const obtido = [
       usuarios,
@@ -708,6 +706,7 @@ export class SeedGeralService {
       processos,
       notas,
       patrimonios,
+      parametrosDepreciacao,
       oficiais,
       provisoria,
       ativos,
