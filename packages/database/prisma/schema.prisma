@@ -963,7 +963,7 @@ model ReavaliacaoPatrimonio {
   comissao             Comissao              @relation(fields: [comissaoId], references: [id])
   createdBy            Usuario               @relation(fields: [createdById], references: [id])
   parametroDepreciacao ParametroDepreciacao?
-  parametroAnterior    ParametroDepreciacao? @relation("ReavaliacaoParametroAnterior", fields: [parametroAnteriorId], references: [id], onDelete: Restrict)
+  parametroAnterior    ParametroDepreciacao? @relation("ReavaliacaoParametroAnterior", fields: [parametroAnteriorId], references: [id], onDelete: Restrict, map: "reavaliacoes_parametro_anterior_id_fkey")
 
   @@index([comissaoId], map: "reavaliacoes_patrimoniais_comissao_id_idx")
   @@index([dataReferencia(sort: Desc), dataReavaliacao(sort: Desc), id(sort: Desc)], map: "reavaliacoes_data_id_idx")
