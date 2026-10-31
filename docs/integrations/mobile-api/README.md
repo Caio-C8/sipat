@@ -32,7 +32,7 @@ sessão em memória + refresh no storage nativo
 - as leituras de domínio usam cache somente em memória e offline não existe;
 - `MOBILE-QUERY-001` entregou TanStack Query v5, provider, foco nativo e limpeza
   do cache em memória por sessão; `MOBILE-QUERY-002` migrou as leituras e
-  `MOBILE-QUERY-003` ainda deve conectar invalidações;
+  `MOBILE-QUERY-003` conectou as mutations às invalidações seletivas;
 - o health check público não envia credencial.
 
 ## Diferença entre Web e nativo
@@ -70,7 +70,6 @@ política diferente para credenciais persistidas.
 
 ## Decisões pendentes
 
-- implementar as invalidações aprovadas em `MOBILE-QUERY-003`;
 - persistência, criptografia e operação offline, que não fazem parte da política
   em memória aprovada;
 - retry e idempotência por operação;
@@ -80,8 +79,7 @@ política diferente para credenciais persistidas.
 
 O mecanismo de sessão nativa, a rotação e o SecureStore foram implementados em
 [Autenticação e armazenamento](./auth-storage.md). Renovação periódica em
-background, persistência do cache e fila offline continuam fora desta entrega;
-as invalidações depois de mutations seguem pendentes em `MOBILE-QUERY-003`.
+background, persistência do cache e fila offline continuam fora desta entrega.
 
 Não escolha essas políticas silenciosamente apenas para completar estrutura.
 

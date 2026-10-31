@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   InventarioDetalhe,
   ListarInventariosResponse,
@@ -8,10 +8,14 @@ import type {
   StatusInventario,
   StatusSetorInventario,
 } from "@repo/contracts";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { publicAppConfig } from "../../config/public-app-config";
 import { ApiError, isApiError } from "../../lib/api/api-error";
 import { DOMAIN_STALE_TIME_MS } from "../../lib/query/query-policy";
+import {
+  currentSessionIdentity,
+  isCurrentSession,
+} from "../../lib/query/session-mutation";
 import {
   remoteQueryState,
   type RemoteQueryState,
@@ -22,6 +26,10 @@ import {
   type InventariosOperations,
 } from "./api/inventarios-operations";
 import { inventarioQueryKeys } from "./inventario-query-keys";
+import {
+  invalidateInventarioConclusion,
+  invalidateInventarioStart,
+} from "./inventario-mutation-invalidation";
 
 export type RemoteState<T> = RemoteQueryState<T>;
 
@@ -306,76 +314,106 @@ export function useSetorInventarioDetail(
     enabled: validIds,
     staleTime: DOMAIN_STALE_TIME_MS,
   });
-  const [starting, setStarting] = useState(false);
   const startingRef = useRef(false);
-  const [concluding, setConcluding] = useState(false);
   const concludingRef = useRef(false);
-  const [mutationError, setMutationError] = useState<ApiError | null>(null);
   const refetch = query.refetch;
   const reload = useCallback(() => refetch(), [refetch]);
+  const startMutation = useMutation<
+    SetorInventarioResumo,
+    ApiError,
+    Readonly<{ identityId: string | null }>
+  >({
+    mutationFn: async ({
+      identityId: _identityId,
+    }: Readonly<{ identityId: string | null }>) => {
+      try {
+        return await manager.authorizedRequest(
+          (accessToken) =>
+            operations.iniciarSetor(inventarioId, setorInventarioId, {
+              accessToken,
+            }),
+          false,
+        );
+      } catch (error) {
+        throw normalizeError(error);
+      }
+    },
+    onSuccess: (_setor, variables) =>
+      isCurrentSession(manager, variables.identityId)
+        ? invalidateInventarioStart(queryClient, inventarioId)
+        : undefined,
+    onError: (error) =>
+      error.status === 409
+        ? queryClient.refetchQueries({ queryKey, exact: true })
+        : undefined,
+    retry: false,
+  });
+  const concludeMutation = useMutation<
+    SetorInventarioResumo,
+    ApiError,
+    Readonly<{ identityId: string | null }>
+  >({
+    mutationFn: async ({
+      identityId: _identityId,
+    }: Readonly<{ identityId: string | null }>) => {
+      try {
+        return await manager.authorizedRequest(
+          (accessToken) =>
+            operations.concluirSetor(inventarioId, setorInventarioId, {
+              accessToken,
+            }),
+          false,
+        );
+      } catch (error) {
+        throw normalizeError(error);
+      }
+    },
+    onSuccess: (_setor, variables) =>
+      isCurrentSession(manager, variables.identityId)
+        ? invalidateInventarioConclusion(queryClient, inventarioId)
+        : undefined,
+    onError: (error) =>
+      error.status === 409
+        ? queryClient.refetchQueries({ queryKey, exact: true })
+        : undefined,
+    retry: false,
+  });
 
   const start = useCallback(async () => {
     if (startingRef.current || !validIds) return false;
     startingRef.current = true;
-    setStarting(true);
-    setMutationError(null);
+    startMutation.reset();
+    concludeMutation.reset();
     try {
-      const setor = await manager.authorizedRequest(
-        (accessToken) =>
-          operations.iniciarSetor(inventarioId, setorInventarioId, {
-            accessToken,
-          }),
-        false,
-      );
-      queryClient.setQueryData<SetorDetailData>(queryKey, (current) =>
-        current ? { ...current, setor, setorEmAndamento: setor } : current,
-      );
+      await startMutation.mutateAsync({
+        identityId: currentSessionIdentity(manager),
+      });
       return true;
-    } catch (error) {
-      const normalized = normalizeError(error);
-      setMutationError(normalized);
-      if (normalized.status === 409) await reload();
+    } catch {
       return false;
     } finally {
       startingRef.current = false;
-      setStarting(false);
     }
-  }, [
-    inventarioId,
-    manager,
-    operations,
-    queryClient,
-    queryKey,
-    reload,
-    setorInventarioId,
-    validIds,
-  ]);
+  }, [concludeMutation, manager, startMutation, validIds]);
 
   const conclude = useCallback(async () => {
     if (concludingRef.current || !validIds) return false;
     concludingRef.current = true;
-    setConcluding(true);
-    setMutationError(null);
+    startMutation.reset();
+    concludeMutation.reset();
     try {
-      await manager.authorizedRequest(
-        (accessToken) =>
-          operations.concluirSetor(inventarioId, setorInventarioId, {
-            accessToken,
-          }),
-        false,
-      );
-      await reload();
+      await concludeMutation.mutateAsync({
+        identityId: currentSessionIdentity(manager),
+      });
       return true;
-    } catch (error) {
-      const normalized = normalizeError(error);
-      setMutationError(normalized);
-      if (normalized.status === 409) await reload();
+    } catch {
       return false;
     } finally {
       concludingRef.current = false;
-      setConcluding(false);
     }
-  }, [inventarioId, manager, operations, reload, setorInventarioId, validIds]);
+  }, [concludeMutation, manager, startMutation, validIds]);
+
+  const mutationError = startMutation.error ?? concludeMutation.error;
 
   return {
     state: validIds
@@ -384,9 +422,9 @@ export function useSetorInventarioDetail(
     isFetching: query.isFetching,
     reload,
     conclude,
-    concluding,
+    concluding: concludeMutation.isPending,
     start,
-    starting,
+    starting: startMutation.isPending,
     mutationError,
   };
 }

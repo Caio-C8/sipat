@@ -1,11 +1,17 @@
 import type { VerificarItemInventarioResultado } from "@repo/contracts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import { ApiError, isApiError } from "../../../lib/api/api-error";
+import {
+  currentSessionIdentity,
+  isCurrentSession,
+} from "../../../lib/query/session-mutation";
 import type { SessionManager } from "../../auth/session/session-manager";
 import {
   useInventariosOperations,
   useSetorInventarioDetail,
 } from "../use-inventarios";
+import { invalidateInventarioVerification } from "../inventario-mutation-invalidation";
 import {
   parseNumeroPatrimonial,
   releaseSubmission,
@@ -29,14 +35,53 @@ export function useConferencia(
     validIds,
   );
   const operations = useInventariosOperations();
+  const queryClient = useQueryClient();
   const lock = useRef(false);
-  const [submitting, setSubmitting] = useState(false);
   const [inputError, setInputError] = useState<string | null>(null);
-  const [mutationError, setMutationError] = useState<ApiError | null>(null);
   const [lastResult, setLastResult] =
     useState<VerificarItemInventarioResultado | null>(null);
   const [divergenceOpen, setDivergenceOpen] = useState(false);
   const dismissLastResult = useCallback(() => setLastResult(null), []);
+  const verification = useMutation<
+    VerificarItemInventarioResultado,
+    ApiError,
+    Readonly<{
+      numeroPatrimonial: string;
+      identityId: string | null;
+    }>
+  >({
+    mutationFn: async ({
+      numeroPatrimonial,
+    }: Readonly<{
+      numeroPatrimonial: string;
+      identityId: string | null;
+    }>) => {
+      try {
+        return await manager.authorizedRequest(
+          (accessToken) =>
+            operations.verificarItem(
+              inventarioId,
+              setorInventarioId,
+              numeroPatrimonial,
+              { accessToken },
+            ),
+          false,
+        );
+      } catch (error) {
+        throw normalizeError(error);
+      }
+    },
+    onSuccess: (_result, variables) =>
+      isCurrentSession(manager, variables.identityId)
+        ? invalidateInventarioVerification(
+            queryClient,
+            inventarioId,
+            setorInventarioId,
+          )
+        : undefined,
+    onError: (error) => (error.status === 409 ? detail.reload() : undefined),
+    retry: false,
+  });
 
   const submit = useCallback(
     async (rawValue: string) => {
@@ -48,40 +93,28 @@ export function useConferencia(
         return false;
       }
 
-      setSubmitting(true);
       setInputError(null);
-      setMutationError(null);
+      verification.reset();
       setLastResult(null);
       setDivergenceOpen(false);
       try {
-        const result = await manager.authorizedRequest(
-          (accessToken) =>
-            operations.verificarItem(
-              inventarioId,
-              setorInventarioId,
-              parsed.data,
-              { accessToken },
-            ),
-          false,
-        );
-        await detail.reload();
+        const result = await verification.mutateAsync({
+          numeroPatrimonial: parsed.data,
+          identityId: currentSessionIdentity(manager),
+        });
         setLastResult(result);
         setDivergenceOpen(
           result.item.situacao === "DIVERGENCIA" ||
             result.tipo === "LOCALIZACAO_POSTERIOR_REGISTRADA",
         );
         return true;
-      } catch (error) {
-        const normalized = normalizeError(error);
-        setMutationError(normalized);
-        if (normalized.status === 409) await detail.reload();
+      } catch {
         return false;
       } finally {
-        setSubmitting(false);
         releaseSubmission(lock);
       }
     },
-    [detail, inventarioId, manager, operations, setorInventarioId],
+    [manager, verification],
   );
 
   return {
@@ -90,9 +123,9 @@ export function useConferencia(
     divergenceOpen,
     inputError,
     lastResult,
-    mutationError,
+    mutationError: verification.error,
     setDivergenceOpen,
     submit,
-    submitting,
+    submitting: verification.isPending,
   };
 }

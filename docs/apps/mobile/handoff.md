@@ -35,13 +35,19 @@ e revalidação da mesma identidade preservam o cache.
 catálogos, processos e inventários. As keys incluem filtros, paginação e IDs sem
 identidade ou credencial; dados operacionais usam 30 segundos, referências usam
 cinco minutos, e o `AbortSignal` chega às operações HTTP. Refetch manual preserva
-o último dado confirmado durante atualização em background. Invalidações depois
-de mutations permanecem em `MOBILE-QUERY-003`.
+o último dado confirmado durante atualização em background.
 
-A entrega de `MOBILE-QUERY-002` passou em lint, typecheck, 166 testes e exports
+`MOBILE-QUERY-003` migrou cadastro patrimonial, início, verificação, correção e
+conclusão de setor para `useMutation`, sem retry ou atualização otimista. Cada
+sucesso aguarda as invalidações seletivas de listagens, detalhes, setores,
+itens e agregados afetados; conflitos `409` refazem somente o recurso em disputa.
+Uma guarda de identidade impede a mutation concluída depois de logout ou troca
+de usuário de reconciliar o cache da nova sessão.
+
+A entrega de `MOBILE-QUERY-003` passou em lint, typecheck, 176 testes e exports
 Expo Android, iOS e Web, além do smoke estático das rotas materiais. Build EAS,
-aparelho real e integração ao vivo com API/PostgreSQL não foram validados nesta
-execução.
+aparelho real, container `mobile-web` e integração ao vivo com API/PostgreSQL
+não foram validados nesta execução porque o Docker Desktop não estava ativo.
 
 `MOBILE-UI-001` implementou o shell comum observado na página `Telas Mobile`:
 topbar azul-marinho com brasão, safe area coerente e bottom bar somente em
