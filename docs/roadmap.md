@@ -213,7 +213,7 @@ contratos ou banco:
 | Ordem | Objetivo                                            | Status    | Dependências                         |
 | ----- | --------------------------------------------------- | --------- | ------------------------------------ |
 | 1     | `MOBILE-QUERY-001` — fundação, lifecycle e sessão   | concluída | sessão mobile e operações existentes |
-| 2     | `MOBILE-QUERY-002` — cachear leituras de domínio    | aprovada  | `MOBILE-QUERY-001`                   |
+| 2     | `MOBILE-QUERY-002` — cachear leituras de domínio    | concluída | `MOBILE-QUERY-001`                   |
 | 3     | `MOBILE-QUERY-003` — invalidar cache após mutations | aprovada  | `MOBILE-QUERY-002`                   |
 
 Especificações:

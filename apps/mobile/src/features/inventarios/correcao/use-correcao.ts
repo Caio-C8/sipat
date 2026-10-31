@@ -3,13 +3,14 @@ import type {
   ItemInventarioResponse,
   SetorInventarioResumo,
 } from "@repo/contracts";
-import { useCallback, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ApiError, isApiError } from "../../../lib/api/api-error";
+import { DOMAIN_STALE_TIME_MS } from "../../../lib/query/query-policy";
+import { remoteQueryState } from "../../../lib/query/remote-query-state";
 import type { SessionManager } from "../../auth/session/session-manager";
-import {
-  useCancelableLoad,
-  useInventariosOperations,
-} from "../use-inventarios";
+import { inventarioQueryKeys } from "../inventario-query-keys";
+import { useInventariosOperations } from "../use-inventarios";
 import {
   releaseSubmission,
   tryAcquireSubmission,
@@ -33,10 +34,15 @@ export function useCorrecao(
   validIds: boolean,
 ) {
   const operations = useInventariosOperations();
-  const loadData = useCallback(
-    async (signal: AbortSignal): Promise<CorrecaoData> => {
-      if (!validIds) throw new ApiError("invalid-response");
-      return manager.authorizedRequest(async (accessToken) => {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(
+    () => inventarioQueryKeys.item(inventarioId, itemInventarioId),
+    [inventarioId, itemInventarioId],
+  );
+  const query = useQuery<CorrecaoData>({
+    queryKey,
+    queryFn: ({ signal }) =>
+      manager.authorizedRequest(async (accessToken) => {
         const options = { accessToken, signal };
         const [inventario, item] = await Promise.all([
           operations.consultar(inventarioId, options),
@@ -61,11 +67,12 @@ export function useCorrecao(
         } while (!setorInventario && pagina <= ultimaPagina);
         if (!setorInventario) throw new ApiError("invalid-response");
         return { inventario, item, setorInventario };
-      }, true);
-    },
-    [inventarioId, itemInventarioId, manager, operations, validIds],
-  );
-  const remote = useCancelableLoad(loadData);
+      }, true),
+    enabled: validIds,
+    staleTime: DOMAIN_STALE_TIME_MS,
+  });
+  const refetch = query.refetch;
+  const reload = useCallback(() => refetch(), [refetch]);
   const lock = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [mutationError, setMutationError] = useState<ApiError | null>(null);
@@ -84,27 +91,40 @@ export function useCorrecao(
             }),
           false,
         );
-        remote.setState((current) =>
-          current.status === "success"
-            ? {
-                status: "success",
-                data: { ...current.data, item },
-              }
-            : current,
+        queryClient.setQueryData<CorrecaoData>(queryKey, (current) =>
+          current ? { ...current, item } : current,
         );
         return true;
       } catch (error) {
         const normalized = normalizeError(error);
         setMutationError(normalized);
-        if (normalized.status === 409) await remote.reload();
+        if (normalized.status === 409) await reload();
         return false;
       } finally {
         releaseSubmission(lock);
         setSubmitting(false);
       }
     },
-    [inventarioId, itemInventarioId, manager, operations, remote, validIds],
+    [
+      inventarioId,
+      itemInventarioId,
+      manager,
+      operations,
+      queryClient,
+      queryKey,
+      reload,
+      validIds,
+    ],
   );
 
-  return { ...remote, mutationError, submit, submitting };
+  return {
+    state: validIds
+      ? remoteQueryState(query)
+      : ({ status: "error", error: new ApiError("invalid-response") } as const),
+    isFetching: query.isFetching,
+    reload,
+    mutationError,
+    submit,
+    submitting,
+  };
 }

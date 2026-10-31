@@ -10,7 +10,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobileInventarios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import { Notice, ProgressLine, StatusBadge } from "./inventario-components";
@@ -46,7 +45,6 @@ export function SetorInventarioScreen({
     recordsPage,
     recordsContext,
   );
-  useReloadOnReturn(remote.reload);
   const [confirmation, setConfirmation] = useState<"start" | "conclude" | null>(
     null,
   );

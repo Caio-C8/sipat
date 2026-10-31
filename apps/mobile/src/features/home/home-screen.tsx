@@ -10,7 +10,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobileHome, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import type { SessionManager } from "../auth/session/session-manager";
@@ -27,6 +26,7 @@ type HomeContentProps = Readonly<{
   name: string;
   profile: PerfilUsuario;
   state: HomeDashboardState;
+  isRefreshing?: boolean;
   onRefresh(): void;
   onRetry(block: HomeBlockName): void;
   onOpenInventories(): void;
@@ -484,6 +484,7 @@ export function HomeContent({
   name,
   profile,
   state,
+  isRefreshing = false,
   onRefresh,
   onRetry,
   onOpenInventories,
@@ -539,17 +540,24 @@ export function HomeContent({
         <FutureReportAction />
 
         <Pressable
+          accessibilityState={{ busy: isRefreshing }}
           accessibilityRole="button"
           onPress={onRefresh}
           style={styles.refreshButton}
         >
-          <Lucide
-            accessible={false}
-            color={mobileHome.action}
-            name="refresh-cw"
-            size={17}
-          />
-          <Text style={styles.refreshText}>Atualizar dados</Text>
+          {isRefreshing ? (
+            <ActivityIndicator color={mobileHome.action} size="small" />
+          ) : (
+            <Lucide
+              accessible={false}
+              color={mobileHome.action}
+              name="refresh-cw"
+              size={17}
+            />
+          )}
+          <Text style={styles.refreshText}>
+            {isRefreshing ? "Atualizando dados…" : "Atualizar dados"}
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -571,10 +579,10 @@ function AuthenticatedHome({
 }>) {
   const router = useRouter();
   const dashboard = useHomeDashboard(manager, identity.perfil);
-  useReloadOnReturn(dashboard.refresh);
 
   return (
     <HomeContent
+      isRefreshing={dashboard.isFetching}
       name={identity.nome}
       onOpenInventories={() => router.push("/inventarios" as Href)}
       onOpenInventory={(inventoryId) =>

@@ -154,7 +154,8 @@ Os filtros carregam setores ativos e espécies pelas rotas gerais em páginas de
 até 50 itens. Naturezas são deduplicadas da relação pública presente nas
 espécies, evitando chamar uma rota que não pertence à matriz de leitura do
 Diretor. Esse catálogo vive somente em memória durante a tela; não foi criado
-cache ou armazenamento offline.
+cache persistente ou armazenamento offline; `MOBILE-QUERY-002` adicionou o
+cache em memória de cinco minutos.
 
 ## Cadastro patrimonial implementado
 

@@ -3,8 +3,8 @@ import type {
   ListarInventariosResponse,
   StatusInventario,
 } from "@repo/contracts";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -150,33 +150,6 @@ export function InventariosScreen() {
     submittedSearch,
     finishedPage,
   );
-  const reloadsRef = useRef({
-    pending: pending.reload,
-    ongoing: ongoing.reload,
-    finished: finished.reload,
-  });
-  const focusedOnce = useRef(false);
-
-  useEffect(() => {
-    reloadsRef.current = {
-      pending: pending.reload,
-      ongoing: ongoing.reload,
-      finished: finished.reload,
-    };
-  }, [finished.reload, ongoing.reload, pending.reload]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (focusedOnce.current) {
-        if (!isAdmin) void reloadsRef.current.pending();
-        void reloadsRef.current.ongoing();
-        void reloadsRef.current.finished();
-      } else {
-        focusedOnce.current = true;
-      }
-    }, [isAdmin]),
-  );
-
   const submitSearch = () => {
     setPendingPage(1);
     setOngoingPage(1);

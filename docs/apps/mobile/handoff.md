@@ -21,17 +21,27 @@ cliente contra API e PostgreSQL reais para login, refresh, primeiro acesso e
 logout. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
 raiz protegida e `/check` servem HTML sem expor o conteúdo de development.
-As primeiras páginas de domínio são `/bens` e `/bens/[patrimonioId]`; ainda não
-existem leituras de domínio cacheadas, offline ou E2E em dispositivos.
+As páginas de domínio usam cache privado somente em memória; ainda não existem
+persistência offline ou E2E em dispositivos.
 
 `MOBILE-QUERY-001` instalou `@tanstack/react-query@5.105.0` e adicionou um único
 provider global somente em memória. O lifecycle nativo publica foco por
 `AppState`, enquanto Web mantém o comportamento do navegador. Um boundary
 serializa `cancelQueries()` e a limpeza dos caches de queries e mutations antes
 de liberar consumidores após logout, expiração ou troca de identidade; refresh
-e revalidação da mesma identidade preservam o cache. Nenhuma leitura de domínio
-foi migrada nesta tarefa. A entrega passou em lint, typecheck, 141 testes e
-exports Expo Android, iOS e Web; build EAS e aparelho real não foram validados.
+e revalidação da mesma identidade preservam o cache.
+
+`MOBILE-QUERY-002` migrou as leituras autenticadas de Home, patrimônios,
+catálogos, processos e inventários. As keys incluem filtros, paginação e IDs sem
+identidade ou credencial; dados operacionais usam 30 segundos, referências usam
+cinco minutos, e o `AbortSignal` chega às operações HTTP. Refetch manual preserva
+o último dado confirmado durante atualização em background. Invalidações depois
+de mutations permanecem em `MOBILE-QUERY-003`.
+
+A entrega de `MOBILE-QUERY-002` passou em lint, typecheck, 166 testes e exports
+Expo Android, iOS e Web, além do smoke estático das rotas materiais. Build EAS,
+aparelho real e integração ao vivo com API/PostgreSQL não foram validados nesta
+execução.
 
 `MOBILE-UI-001` implementou o shell comum observado na página `Telas Mobile`:
 topbar azul-marinho com brasão, safe area coerente e bottom bar somente em

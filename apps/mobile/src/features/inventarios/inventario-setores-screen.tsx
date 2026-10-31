@@ -12,7 +12,6 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobileInventarios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import {
@@ -56,7 +55,6 @@ export function InventarioSetoresScreen({
   const isAdmin =
     session.status === "authenticated" &&
     session.identity.perfil === "ADMINISTRADOR";
-  useReloadOnReturn(reload);
 
   const submitSearch = () => {
     setPage(1);
