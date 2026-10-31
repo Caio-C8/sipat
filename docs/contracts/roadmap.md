@@ -552,6 +552,15 @@ Schemas e tipos de consulta, criação, orçamento, retorno e documentos de
 manutenção, com limite de itens, versões e respostas públicas. API e Web
 consomem os mesmos contratos. [Resultado](../tasks/CONTRACTS-013-contratos-manutencoes.md).
 
+## CONTRACTS-014 — Contratos de reavaliação
+
+**Status:** implementado e verificado em 29/10/2026 (132 testes do pacote, lint e tipos dos consumidores).
+
+Prévia, confirmação idempotente, consulta, filtros e opções de comissão usam
+schemas estritos compartilhados pela API e Web. O alcance de datas é uma
+política de mês corrente até hoje aplicada pela API.
+[Resultado](../tasks/CONTRACTS-014-contratos-reavaliacoes.md).
+
 ## CONTRACTS-012 — Contratos de movimentações
 
 **Status:** implementado e verificado em 28/10/2026 (123 testes do package; consumidores verificados).

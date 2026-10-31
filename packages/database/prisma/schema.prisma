@@ -157,6 +157,7 @@ model Usuario {
   sessoes                               SessaoUsuario[]
   redefinicaoSenha                      RedefinicaoSenha?
   idempotenciasMovimentacao             IdempotenciaMovimentacao[]
+  idempotenciasReavaliacao              IdempotenciaReavaliacao[]
   itensManutencaoRecebidos              ItemManutencao[]               @relation("ItemManutencaoRecebidoPor")
   revisoesOrcamentoManutencao            RevisaoOrcamentoManutencao[]
   documentosManutencao                   DocumentoManutencao[]
@@ -866,6 +867,7 @@ model ParametroDepreciacao {
   updatedAt DateTime? @map("updated_at") @db.Timestamp(6)
 
   reavaliacao  ReavaliacaoPatrimonio?  @relation(fields: [reavaliacaoId], references: [id])
+  reavaliacoesAnteriores ReavaliacaoPatrimonio[] @relation("ReavaliacaoParametroAnterior")
   patrimonio   Patrimonio              @relation(fields: [patrimonioId], references: [id])
   depreciacoes DepreciacaoPatrimonio[]
 
@@ -901,14 +903,29 @@ model DepreciacaoPatrimonio {
 model ReavaliacaoPatrimonio {
   id                            String   @id @default(uuid()) @db.Uuid
   dataReavaliacao               DateTime @map("data_reavaliacao") @db.Timestamp(6)
+  dataReferencia                DateTime? @map("data_referencia") @db.Date
   valorLiquidoAnterior          Decimal  @map("valor_liquido_anterior") @db.Decimal(19, 7)
+  valorBrutoAnterior            Decimal? @map("valor_bruto_anterior") @db.Decimal(19, 7)
+  depreciacaoAcumuladaAnterior  Decimal? @map("depreciacao_acumulada_anterior") @db.Decimal(19, 7)
+  valorBaseAnterior             Decimal? @map("valor_base_anterior") @db.Decimal(19, 7)
+  percentualResidualAnterior    Decimal? @map("percentual_residual_anterior") @db.Decimal(5, 2)
+  vidaUtilInicialAnteriorMeses  Int? @map("vida_util_inicial_anterior_meses")
+  quantidadeDepreciacoesAnteriores Int? @map("quantidade_depreciacoes_anteriores")
+  dataInicioAnterior            DateTime? @map("data_inicio_anterior") @db.Date
+  parametroAnteriorId           String? @map("parametro_anterior_id") @db.Uuid
   valorReavaliado               Decimal  @map("valor_reavaliado") @db.Decimal(19, 7)
-  valorResidualAnterior         Decimal  @map("valor_residual_anterior") @db.Decimal(19, 7)
+  valorBaseNovo                 Decimal? @map("valor_base_novo") @db.Decimal(19, 7)
+  percentualResidualNovo        Decimal? @map("percentual_residual_novo") @db.Decimal(5, 2)
+  valorResidualAnterior         Decimal? @map("valor_residual_anterior") @db.Decimal(19, 7)
   valorResidualNovo             Decimal  @map("valor_residual_novo") @db.Decimal(19, 7)
-  vidaUtilRestanteAnteriorMeses Int      @map("vida_util_restante_anterior_meses")
+  vidaUtilRestanteAnteriorMeses Int?     @map("vida_util_restante_anterior_meses")
   vidaUtilNovaMeses             Int      @map("vida_util_nova_meses")
   laudoTecnico                  String?  @map("laudo_tecnico") @db.Text
   observacao                    String?  @db.Text
+  numeroPatrimonioSnapshot      String? @map("numero_patrimonio_snapshot") @db.VarChar(50)
+  descricaoPatrimonioSnapshot   String? @map("descricao_patrimonio_snapshot") @db.VarChar(1000)
+  nomeComissaoSnapshot          String? @map("nome_comissao_snapshot") @db.VarChar(150)
+  nomeAutorSnapshot             String? @map("nome_autor_snapshot") @db.VarChar(150)
   patrimonioId                  String   @map("patrimonio_id") @db.Uuid
   comissaoId                    String   @map("comissao_id") @db.Uuid
 
@@ -919,9 +936,25 @@ model ReavaliacaoPatrimonio {
   comissao             Comissao              @relation(fields: [comissaoId], references: [id])
   createdBy            Usuario               @relation(fields: [createdById], references: [id])
   parametroDepreciacao ParametroDepreciacao?
+  parametroAnterior    ParametroDepreciacao? @relation("ReavaliacaoParametroAnterior", fields: [parametroAnteriorId], references: [id], onDelete: Restrict)
 
   @@index([comissaoId], map: "reavaliacoes_patrimoniais_comissao_id_idx")
+  @@index([dataReferencia(sort: Desc), dataReavaliacao(sort: Desc), id(sort: Desc)], map: "reavaliacoes_data_id_idx")
+  @@index([patrimonioId, dataReferencia(sort: Desc), id(sort: Desc)], map: "reavaliacoes_patrimonio_data_idx")
   @@map("reavaliacoes_patrimoniais")
+}
+
+// Registro técnico do pedido atômico; cada bem continua com histórico próprio.
+model IdempotenciaReavaliacao {
+  usuarioId String @map("usuario_id") @db.Uuid
+  chave String @db.Uuid
+  payloadHash String @map("payload_hash") @db.Char(64)
+  resultado Json @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@id([usuarioId, chave])
+  @@map("idempotencias_reavaliacao")
 }
 
 // Registro técnico de um pedido confirmado; não representa um lote patrimonial.

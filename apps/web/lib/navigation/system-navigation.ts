@@ -127,8 +127,10 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     label: "Reavaliação",
     icon: TrendingUp,
     grupo: "principal",
-    perfis: APENAS_DIRETOR,
-    implementado: false,
+    perfis: TODOS_PERFIS,
+    implementado: true,
+    href: "/reavaliacoes",
+    breadcrumb: ["Início", "Reavaliações"],
   },
   {
     id: "depreciacao",

@@ -125,7 +125,7 @@ async function main() {
           descricao: "Notebook de teste para movimentação",
           marca: "DEMO",
           modelo: "Teste local",
-          textoBusca: "notebook de teste para movimentacao demo teste local",
+          textoBusca: "NOTEBOOK DE TESTE PARA MOVIMENTACAO DEMO TESTE LOCAL",
           status: "ATIVO",
           tipoIncorporacao: "AQUISICAO",
           dataTombamento: new Date("2026-10-28T00:00:00.000Z"),

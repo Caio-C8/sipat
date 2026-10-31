@@ -81,6 +81,32 @@ describe("DepreciacoesService", () => {
     confirmarIgnorarValorResidual,
   });
 
+  it("usa a competência de São Paulo na virada do mês", async () => {
+    repository.listarPendentes.mockResolvedValue([]);
+    repository.obterResumoPendentes.mockResolvedValue({
+      totalPendentes: 0,
+      totalNoValorResidual: 0,
+    });
+    jest.setSystemTime(new Date("2026-11-01T02:30:00.000Z"));
+    await expect(
+      service.listarPendentes({
+        competencia: "2026-10",
+        pagina: 1,
+        limite: 20,
+      }),
+    ).resolves.toMatchObject({ total: 0 });
+    jest.setSystemTime(new Date("2026-11-01T03:30:00.000Z"));
+    await expect(
+      service.listarPendentes({
+        competencia: "2026-10",
+        pagina: 1,
+        limite: 20,
+      }),
+    ).rejects.toMatchObject({
+      response: { codigo: "COMPETENCIA_NAO_CORRENTE" },
+    });
+  });
+
   it("rejeita competência passada antes da transação", async () => {
     await expect(
       service.executarEmMassa(

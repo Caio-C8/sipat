@@ -13,6 +13,7 @@ import type {
   ResultadoDepreciacoesEmMassa,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import { diaSaoPaulo } from "../../common/utils/datas-institucionais";
 import { ComissoesService } from "../comissoes/comissoes.service";
 import {
   calcularDepreciacao,
@@ -256,25 +257,15 @@ export class DepreciacoesService {
   }
 
   private competenciaAtual(data: Date): string {
-    return `${data.getFullYear().toString().padStart(4, "0")}-${(
-      data.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}`;
+    return diaSaoPaulo(data).slice(0, 7);
   }
 
   private dataCivilTexto(data: Date): string {
-    return `${data.getFullYear().toString().padStart(4, "0")}-${(
-      data.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}-${data.getDate().toString().padStart(2, "0")}`;
+    return diaSaoPaulo(data);
   }
 
   private dataCivilAtual(data: Date): Date {
-    return new Date(
-      Date.UTC(data.getFullYear(), data.getMonth(), data.getDate()),
-    );
+    return new Date(`${diaSaoPaulo(data)}T00:00:00.000Z`);
   }
 
   private contagensVazias(): ContagensInelegiveis {
