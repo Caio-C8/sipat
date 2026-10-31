@@ -225,6 +225,7 @@ function optional(value: string) {
 
 export function mapCreatePatrimonioForm(
   form: CreatePatrimonioForm,
+  chaveIdempotencia: string,
 ): CriarPatrimonioBodyData {
   for (const step of [1, 2, 3, 4] as const) {
     if (Object.keys(validateCreatePatrimonioStep(form, step)).length)
@@ -240,6 +241,7 @@ export function mapCreatePatrimonioForm(
       ? (currencyInputToDecimal(form.residualPercentage) ?? undefined)
       : undefined;
   return CriarPatrimonioBodySchema.parse({
+    chaveIdempotencia,
     semNumeroOficial: form.withoutOfficialNumber,
     dataTombamento: dateInputToIso(form.registryDate)!,
     tipoIncorporacao: form.incorporationType,
