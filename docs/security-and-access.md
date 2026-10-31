@@ -54,6 +54,15 @@ Os dois perfis públicos são exatamente `ADMINISTRADOR` e
 representar “usuário do sistema”; essa expressão dos requisitos descreve a
 identidade autenticada, não um perfil adicional.
 
+## Empréstimos e devoluções patrimoniais
+
+As seis rotas de `/api/emprestimos` exigem sessão válida. Lista e detalhe
+aceitam `ADMINISTRADOR` e `DIRETOR_PATRIMONIO`; opções de bens e comissões,
+saída e devolução aceitam somente `DIRETOR_PATRIMONIO`. As duas mutações Web
+exigem Origin permitido e `X-SIPAT-CSRF: 1`. O servidor identifica a autoria
+pela sessão e revalida vínculos, estado do patrimônio, pendência, inventário e
+vigência da comissão na transação. Ver [EMPRESTIMOS-001](./tasks/EMPRESTIMOS-001-api-persistencia-emprestimos.md).
+
 ## Manutenção patrimonial
 
 As rotas de `/api/manutencoes` exigem sessão válida e aceitam

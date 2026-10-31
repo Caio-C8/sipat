@@ -6,12 +6,13 @@ import {
 } from "../system-navigation";
 
 describe("catálogo de navegação do sistema", () => {
-  it("oferece movimentações, manutenções e reavaliações para ambos os perfis", () => {
+  it("oferece movimentações, empréstimos, manutenções e reavaliações para ambos os perfis", () => {
     expect(
       catalogoNavegacao.filter((item) => item.href).map((item) => item.href),
     ).toEqual([
       "/dashboard",
       "/movimentacoes",
+      "/emprestimos",
       "/manutencoes",
       "/reavaliacoes",
     ]);
@@ -29,6 +30,12 @@ describe("catálogo de navegação do sistema", () => {
         (item) => item.href === "/movimentacoes",
       ),
     ).toBe(true);
+    for (const perfil of ["ADMINISTRADOR", "DIRETOR_PATRIMONIO"] as const)
+      expect(
+        listarNavegacaoPorPerfil(perfil).some(
+          (item) => item.href === "/emprestimos",
+        ),
+      ).toBe(true);
     for (const perfil of ["ADMINISTRADOR", "DIRETOR_PATRIMONIO"] as const)
       expect(
         listarNavegacaoPorPerfil(perfil).some(
@@ -68,6 +75,9 @@ describe("catálogo de navegação do sistema", () => {
       "Início",
       "Movimentações",
     ]);
+    expect(
+      encontrarNavegacaoPorCaminho("/emprestimos/nova")?.breadcrumb,
+    ).toEqual(["Início", "Empréstimos"]);
     expect(encontrarNavegacaoPorCaminho("/rota-inexistente")).toBeUndefined();
   });
 });

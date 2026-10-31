@@ -28,6 +28,13 @@ comandos de reprodução e a pendência de homologação manual com leitor de te
 A suíte real também comprovou cookie/Guards nesse fluxo, sem substituir as
 pendências históricas específicas da tela de login.
 
+`/emprestimos`, `/emprestimos/nova` e `/emprestimos/[emprestimoId]` foram
+validados com saída agrupada, retorno parcial e conclusão sobre API e banco
+isolados, inclusive por Playwright reproduzível. O detalhe permaneceu legível
+em 390 px, axe passou e a navegação por Tab até a busca de bens foi verificada. A homologação com leitor de tela continua
+pendente. Evidências, migration e comandos de reprodução estão em
+[WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+
 `WEB-DASHBOARD-001` está implementado como Server Component. Cinco consultas
 finitas e paralelas a `GET /patrimonios`, sempre com `pagina=1` e `limite=1`,
 alimentam o total geral e os quatro status. Pendências, setores e atividades

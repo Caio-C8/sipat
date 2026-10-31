@@ -61,6 +61,13 @@ API. Nenhuma mutação recebe retry automático. O percurso Web → API →
 PostgreSQL descartável está registrado em
 [WEB-MANUTENCOES-001](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
 
+Em empréstimos, lista e detalhe usam operações Server; opções e mutações usam
+as operações tipadas do navegador. As confirmações enviam CSRF e conservam a
+chave de idempotência no reenvio do mesmo formulário. Após saída, a seleção
+de bens é atualizada; após devolução, o detalhe recebe o resultado real e
+atualiza a leitura Server. O percurso Web → API → PostgreSQL isolado está em
+[WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+
 ## Transporte HTTP
 
 Os clientes centrais usam o `fetch` nativo dos runtimes atuais do Next.js. A

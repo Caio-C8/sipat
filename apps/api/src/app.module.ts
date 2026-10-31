@@ -30,6 +30,7 @@ import { BaixasModule } from "./modules/baixas/baixas.module";
 import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
 import { ManutencoesModule } from "./modules/manutencoes/manutencoes.module";
 import { ReavaliacoesModule } from "./modules/reavaliacoes/reavaliacoes.module";
+import { EmprestimosModule } from "./modules/emprestimos/emprestimos.module";
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ReavaliacoesModule } from "./modules/reavaliacoes/reavaliacoes.module";
     ComissoesModule,
     DepreciacoesModule,
     EspeciesModule,
+    EmprestimosModule,
     FornecedoresModule,
     InventariosModule,
     ManutencoesModule,

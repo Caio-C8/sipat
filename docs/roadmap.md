@@ -4,6 +4,16 @@ Este roadmap coordena entregas que atravessam contratos, banco, API, Web e
 testes. Os roadmaps de cada área detalham seus próprios artefatos; este arquivo
 define a ordem, as dependências e os critérios comuns do produto.
 
+## Empréstimos e devoluções — RF16
+
+**Status:** implementado e validado em banco isolado e no ambiente local de desenvolvimento em 31/10/2026; migrations de inventário e RF16 aplicadas somente ao banco local `sipat` em `localhost:5433`. Staging e produção não foram migrados.
+
+Ordem: [CONTRACTS-015](./tasks/CONTRACTS-015-contratos-emprestimos.md) →
+[EMPRESTIMOS-001](./tasks/EMPRESTIMOS-001-api-persistencia-emprestimos.md) →
+[WEB-EMPRESTIMOS-001](./tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+As decisões de produto pertencem a [RF16/UC16](./requisitos-SIPAT.md); a API
+depende de autenticação, comissões, patrimônios e inventários existentes.
+
 ## Convenção de status
 
 - **planejado:** escopo documentado, sem implementação concluída;
