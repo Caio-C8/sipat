@@ -1,11 +1,7 @@
 import { Lucide } from "@react-native-vector-icons/lucide";
 import type { VerificarItemInventarioResultado } from "@repo/contracts";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  mobileInventarios,
-  radii,
-  spacing,
-} from "../../../theme/tokens";
+import { mobileInventarios, radii, spacing } from "../../../theme/tokens";
 
 export const READING_TOAST_DURATION_MS = 6_000;
 

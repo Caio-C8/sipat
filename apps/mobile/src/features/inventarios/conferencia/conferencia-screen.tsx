@@ -311,7 +311,6 @@ export function ConferenciaScreen({
             {conference.inputError}
           </Text>
         ) : null}
-
       </ScrollView>
 
       {conference.lastResult && !conference.divergenceOpen ? (
