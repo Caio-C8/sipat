@@ -1,5 +1,6 @@
 import { Lucide, type LucideIconName } from "@react-native-vector-icons/lucide";
 import type { IdentidadeAutenticada, PerfilUsuario } from "@repo/contracts";
+import { useRouter, type Href } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobileHome, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import type { SessionManager } from "../auth/session/session-manager";
@@ -27,6 +29,8 @@ type HomeContentProps = Readonly<{
   state: HomeDashboardState;
   onRefresh(): void;
   onRetry(block: HomeBlockName): void;
+  onOpenInventories(): void;
+  onOpenInventory(inventoryId: string): void;
 }>;
 
 const STATUS_LABELS = {
@@ -139,20 +143,25 @@ function CountBlock({
   return <StatCard hint={hint} icon={icon} label={label} value={block.data} />;
 }
 
-function DisabledAction({
+function Action({
   icon,
   label,
   prominent = false,
+  onPress,
 }: Readonly<{
   icon: LucideIconName;
   label: string;
   prominent?: boolean;
+  onPress?: () => void;
 }>) {
+  const disabled = onPress === undefined;
   return (
     <Pressable
+      accessibilityLabel={label}
       accessibilityRole="button"
-      accessibilityState={{ disabled: true }}
-      disabled
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
       style={[styles.disabledAction, prominent && styles.heroAction]}
     >
       <Lucide
@@ -178,7 +187,13 @@ function DisabledAction({
   );
 }
 
-function Hero({ profile }: Readonly<{ profile: PerfilUsuario }>) {
+function Hero({
+  profile,
+  onOpenInventories,
+}: Readonly<{
+  profile: PerfilUsuario;
+  onOpenInventories(): void;
+}>) {
   const director = profile === "DIRETOR_PATRIMONIO";
   return (
     <View style={styles.hero}>
@@ -204,9 +219,10 @@ function Hero({ profile }: Readonly<{ profile: PerfilUsuario }>) {
           ? "Escolha um setor e confira os bens pela câmera ou pelo código."
           : "Acompanhe setores, bens e o andamento dos inventários do sistema."}
       </Text>
-      <DisabledAction
+      <Action
         icon={director ? "scan-barcode" : "clipboard-list"}
         label={director ? "Iniciar conferência" : "Ver inventários"}
+        onPress={onOpenInventories}
         prominent
       />
     </View>
@@ -239,17 +255,26 @@ function InventoryStatusCards({ data }: Readonly<{ data: InventariosHome }>) {
   );
 }
 
-function ProgressCard({ data }: Readonly<{ data: InventariosHome }>) {
+function ProgressCard({
+  data,
+  includePending,
+  onOpenInventory,
+}: Readonly<{
+  data: InventariosHome;
+  includePending: boolean;
+  onOpenInventory(inventoryId: string): void;
+}>) {
   const inventory =
     data.emAndamentoMaisRecente ??
-    data.maisRecente ??
-    data.finalizadoMaisRecente;
+    (includePending && data.maisRecente?.status === "PENDENTE"
+      ? data.maisRecente
+      : null);
   if (!inventory) {
     return (
       <View style={styles.emptyCard}>
-        <Text style={styles.emptyTitle}>Nenhum inventário disponível</Text>
+        <Text style={styles.emptyTitle}>Nenhum inventário em andamento</Text>
         <Text style={styles.emptyText}>
-          Os dados aparecerão aqui quando um inventário for cadastrado.
+          Consulte a lista para selecionar outro inventário disponível.
         </Text>
       </View>
     );
@@ -262,7 +287,13 @@ function ProgressCard({ data }: Readonly<{ data: InventariosHome }>) {
       : Math.round((progresso.itensVerificados / progresso.totalItens) * 100);
 
   return (
-    <View style={styles.inventoryCard}>
+    <Pressable
+      accessibilityHint="Abre os setores deste inventário"
+      accessibilityLabel={`Abrir ${inventory.nome}`}
+      accessibilityRole="button"
+      onPress={() => onOpenInventory(inventory.id)}
+      style={styles.inventoryCard}
+    >
       <View style={styles.inventoryHeading}>
         <View style={styles.inventoryIcon}>
           <Lucide
@@ -295,29 +326,42 @@ function ProgressCard({ data }: Readonly<{ data: InventariosHome }>) {
       </View>
       <View style={styles.inventoryMetaRow}>
         <Text style={styles.inventoryMeta}>
-          {percent === null ? "Sem bens no snapshot" : `${percent}% concluído`}
+          {percent === null
+            ? "Nenhum bem neste inventário"
+            : `${percent}% concluído`}
         </Text>
         <Text style={styles.inventoryMetaWarning}>
           {progresso.correcoesPendentes.toLocaleString("pt-BR")} ocorrências
           pendentes
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
-function LastConference({ data }: Readonly<{ data: InventariosHome }>) {
+function LastConference({
+  data,
+  onOpenInventory,
+}: Readonly<{
+  data: InventariosHome;
+  onOpenInventory(inventoryId: string): void;
+}>) {
   const inventory = data.finalizadoMaisRecente;
   return (
-    <View>
+    <View style={styles.conferenceSection}>
       <View style={styles.sectionHeading}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>
           Última conferência
         </Text>
-        <Text style={styles.disabledLink}>Ver resumo</Text>
       </View>
       {inventory ? (
-        <View style={styles.inventoryCard}>
+        <Pressable
+          accessibilityHint="Abre os registros deste inventário por setor"
+          accessibilityLabel={`Abrir ${inventory.nome}`}
+          accessibilityRole="button"
+          onPress={() => onOpenInventory(inventory.id)}
+          style={styles.inventoryCard}
+        >
           <View style={styles.inventoryHeading}>
             <View style={styles.inventoryIcon}>
               <Lucide
@@ -347,7 +391,7 @@ function LastConference({ data }: Readonly<{ data: InventariosHome }>) {
               ocorrências registradas
             </Text>
           </View>
-        </View>
+        </Pressable>
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>Nenhuma conferência finalizada</Text>
@@ -364,10 +408,12 @@ function InventoryBlock({
   block,
   profile,
   onRetry,
+  onOpenInventory,
 }: Readonly<{
   block: HomeBlock<InventariosHome>;
   profile: PerfilUsuario;
   onRetry(block: HomeBlockName): void;
+  onOpenInventory(inventoryId: string): void;
 }>) {
   if (block.status === "loading") {
     return (
@@ -393,16 +439,28 @@ function InventoryBlock({
             Inventários
           </Text>
           <InventoryStatusCards data={block.data} />
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            Inventário atual
+          </Text>
+          <ProgressCard
+            data={block.data}
+            includePending={false}
+            onOpenInventory={onOpenInventory}
+          />
         </>
       ) : (
         <>
           <Text accessibilityRole="header" style={styles.sectionTitle}>
             Inventário atual
           </Text>
-          <ProgressCard data={block.data} />
+          <ProgressCard
+            data={block.data}
+            includePending
+            onOpenInventory={onOpenInventory}
+          />
         </>
       )}
-      <LastConference data={block.data} />
+      <LastConference data={block.data} onOpenInventory={onOpenInventory} />
     </View>
   );
 }
@@ -417,7 +475,7 @@ function FutureReportAction() {
           disponível.
         </Text>
       </View>
-      <DisabledAction icon="file-text" label="Gerar relatório" />
+      <Action icon="file-text" label="Gerar relatório" />
     </View>
   );
 }
@@ -428,6 +486,8 @@ export function HomeContent({
   state,
   onRefresh,
   onRetry,
+  onOpenInventories,
+  onOpenInventory,
 }: HomeContentProps) {
   const { width } = useWindowDimensions();
   const wide = width >= 760;
@@ -447,7 +507,7 @@ export function HomeContent({
           </View>
         </View>
 
-        <Hero profile={profile} />
+        <Hero onOpenInventories={onOpenInventories} profile={profile} />
 
         <View style={[styles.primaryGrid, wide && styles.primaryGridWide]}>
           {profile === "ADMINISTRADOR" && state.setores ? (
@@ -472,6 +532,7 @@ export function HomeContent({
 
         <InventoryBlock
           block={state.inventarios}
+          onOpenInventory={onOpenInventory}
           onRetry={onRetry}
           profile={profile}
         />
@@ -508,11 +569,17 @@ function AuthenticatedHome({
   identity: IdentidadeAutenticada;
   manager: SessionManager;
 }>) {
+  const router = useRouter();
   const dashboard = useHomeDashboard(manager, identity.perfil);
+  useReloadOnReturn(dashboard.refresh);
 
   return (
     <HomeContent
       name={identity.nome}
+      onOpenInventories={() => router.push("/inventarios" as Href)}
+      onOpenInventory={(inventoryId) =>
+        router.push(`/inventarios/${inventoryId}` as Href)
+      }
       onRefresh={dashboard.refresh}
       onRetry={(block) => void dashboard.retry(block)}
       profile={identity.perfil}
@@ -662,6 +729,7 @@ const styles = StyleSheet.create({
   },
   statusGrid: { flexDirection: "row", gap: spacing.sm },
   inventorySections: { gap: spacing.md },
+  conferenceSection: { gap: spacing.md },
   sectionHeading: {
     alignItems: "center",
     flexDirection: "row",

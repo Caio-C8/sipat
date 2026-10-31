@@ -54,10 +54,11 @@ export function homeErrorMessage(error: ApiError) {
     return "Sua sessão expirou. Aguarde o redirecionamento para entrar novamente.";
   if (error.kind === "timeout")
     return "A consulta demorou mais que o esperado.";
-  if (error.kind === "network") return "Sem conexão ou API indisponível.";
+  if (error.kind === "network")
+    return "Sem conexão. Verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
-    return "A API retornou dados fora do contrato esperado.";
-  return "Não foi possível carregar este bloco.";
+    return "Não foi possível carregar estas informações. Atualize e tente novamente.";
+  return "Não foi possível carregar estas informações.";
 }
 
 export function useHomeDashboard(

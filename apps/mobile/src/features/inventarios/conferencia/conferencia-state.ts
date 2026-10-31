@@ -6,11 +6,29 @@ import {
 import type { ApiError } from "../../../lib/api/api-error";
 
 export function normalizeNumeroPatrimonial(value: string) {
-  return value.trim().toUpperCase();
+  const normalized = value.trim().toUpperCase();
+  const match = /^(SP-)?(\d+)$/.exec(normalized);
+  if (!match) return normalized;
+  const numericPart = match[2];
+  if (!numericPart) return normalized;
+  const digits = numericPart.replace(/^0+(?=\d)/, "");
+  return `${match[1] ?? ""}${digits}`;
 }
 
 export function parseNumeroPatrimonial(value: string) {
   return NumeroPatrimonialSchema.safeParse(normalizeNumeroPatrimonial(value));
+}
+
+export function numeroPatrimonialDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+export function composeNumeroPatrimonial(
+  digits: string,
+  withoutOfficialNumber: boolean,
+) {
+  const numericPart = numeroPatrimonialDigits(digits);
+  return withoutOfficialNumber ? `SP-${numericPart}` : numericPart;
 }
 
 export function itemJaVerificadoData(
@@ -27,7 +45,7 @@ export function conferenciaErrorMessage(error: ApiError) {
   if (error.status === 403)
     return "Seu perfil não pode registrar conferências.";
   if (error.code === "ITEM_INVENTARIO_NAO_ENCONTRADO")
-    return "Este número não pertence à população fixa do inventário.";
+    return "Este número não faz parte deste inventário.";
   if (error.code === "ITEM_INVENTARIO_JA_VERIFICADO") {
     const data = itemJaVerificadoData(error);
     return data
@@ -41,11 +59,11 @@ export function conferenciaErrorMessage(error: ApiError) {
   if (error.status === 409)
     return "A conferência foi alterada por outra pessoa. Os dados foram atualizados.";
   if (error.kind === "timeout")
-    return "A verificação demorou mais que o esperado. Tente novamente explicitamente.";
+    return "A verificação demorou mais que o esperado. Tente novamente.";
   if (error.kind === "network")
-    return "Sem conexão ou API indisponível. Nenhuma leitura foi salva; tente novamente.";
+    return "Sem conexão. A leitura não foi salva; verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
-    return "A API retornou uma resposta fora do contrato esperado.";
+    return "Não foi possível confirmar a leitura. Atualize os dados e tente novamente.";
   return "Não foi possível verificar este item.";
 }
 

@@ -63,36 +63,94 @@ export class InventarioPersistenceMapper {
     query: ListarItensInventarioQueryData,
   ): Prisma.ItemInventarioWhereInput {
     return {
-      ...(query.setorInventarioId === undefined
-        ? {}
-        : { setorInventarioId: query.setorInventarioId }),
       ...(query.statusVerificacao === undefined
         ? {}
         : { statusVerificacao: query.statusVerificacao }),
       ...(query.situacao === undefined ? {} : { situacao: query.situacao }),
-      ...(query.statusCorrecao === undefined
-        ? {}
-        : { statusCorrecao: query.statusCorrecao }),
-      ...(query.busca === undefined
-        ? {}
-        : {
-            patrimonio: {
-              OR: [
-                {
-                  numeroPatrimonio: {
-                    contains: query.busca,
-                    mode: "insensitive",
+      AND: [
+        ...(query.setorInventarioId === undefined
+          ? []
+          : [
+              query.contextoSetor === "PREVISTO"
+                ? { setorInventarioId: query.setorInventarioId }
+                : query.contextoSetor === "ENCONTRADO_NO_SETOR"
+                  ? {
+                      OR: [
+                        {
+                          setorEncontrado: {
+                            setoresInventario: {
+                              some: { id: query.setorInventarioId },
+                            },
+                          },
+                        },
+                        {
+                          localizacoesPosteriores: {
+                            some: {
+                              setorInventarioEncontradoId:
+                                query.setorInventarioId,
+                            },
+                          },
+                        },
+                      ],
+                    }
+                  : {
+                      OR: [
+                        { setorInventarioId: query.setorInventarioId },
+                        {
+                          setorEncontrado: {
+                            setoresInventario: {
+                              some: { id: query.setorInventarioId },
+                            },
+                          },
+                        },
+                        {
+                          localizacoesPosteriores: {
+                            some: {
+                              setorInventarioEncontradoId:
+                                query.setorInventarioId,
+                            },
+                          },
+                        },
+                      ],
+                    },
+            ]),
+        ...(query.statusCorrecao === undefined
+          ? []
+          : [
+              {
+                OR: [
+                  { statusCorrecao: query.statusCorrecao },
+                  {
+                    localizacoesPosteriores: {
+                      some: { statusCorrecao: query.statusCorrecao },
+                    },
                   },
+                ],
+              },
+            ]),
+        ...(query.busca === undefined
+          ? []
+          : [
+              {
+                patrimonio: {
+                  OR: [
+                    {
+                      numeroPatrimonio: {
+                        contains: query.busca,
+                        mode: "insensitive" as const,
+                      },
+                    },
+                    {
+                      descricao: {
+                        contains: query.busca,
+                        mode: "insensitive" as const,
+                      },
+                    },
+                  ],
                 },
-                {
-                  descricao: {
-                    contains: query.busca,
-                    mode: "insensitive",
-                  },
-                },
-              ],
-            },
-          }),
+              },
+            ]),
+      ],
     };
   }
 }

@@ -22,21 +22,34 @@ export function PendenciasCorrecao({
   return (
     <View style={styles.section}>
       <Text accessibilityRole="header" style={styles.title}>
-        Divergências com correção pendente
+        Ocorrências com correção pendente
       </Text>
       <Text style={styles.subtitle}>
         {items.meta.total.toLocaleString("pt-BR")} ocorrência(s) permanecem
         registradas no inventário.
       </Text>
-      {items.dados.map((item) =>
-        item.situacao === "DIVERGENCIA" ? (
+      {items.dados.map((item) => {
+        const localizacaoPosterior = item.localizacaoPosterior;
+        const pendente =
+          item.situacao === "DIVERGENCIA" ||
+          (item.situacao === "NAO_LOCALIZADO" &&
+            localizacaoPosterior?.statusCorrecao === "PENDENTE");
+        const setorEncontrado =
+          item.situacao === "DIVERGENCIA"
+            ? item.setorEncontrado
+            : localizacaoPosterior?.setorEncontrado;
+        return pendente && setorEncontrado ? (
           <View key={item.id} style={styles.card}>
             <View style={styles.cardBody}>
-              <Text style={styles.badge}>SETOR INCORRETO</Text>
+              <Text style={styles.badge}>
+                {item.situacao === "NAO_LOCALIZADO"
+                  ? "ENCONTRADO POSTERIORMENTE"
+                  : "SETOR INCORRETO"}
+              </Text>
               <Text style={styles.itemTitle}>{item.patrimonio.descricao}</Text>
               <Text style={styles.itemMeta}>
                 {item.patrimonio.numeroPatrimonio} · {item.setorEsperado.nome} →{" "}
-                {item.setorEncontrado.nome}
+                {setorEncontrado.nome}
               </Text>
             </View>
             {mutable ? (
@@ -60,8 +73,8 @@ export function PendenciasCorrecao({
               </Pressable>
             ) : null}
           </View>
-        ) : null,
-      )}
+        ) : null;
+      })}
       <Pagination
         lastPage={items.meta.ultimaPagina}
         onPage={onPage}

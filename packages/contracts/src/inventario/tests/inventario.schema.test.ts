@@ -68,6 +68,7 @@ const itemBase = {
   },
   setorEsperado: { id: ids.setorEsperado, nome: "Contabilidade" },
   observacao: null,
+  localizacaoPosterior: null,
 } as const;
 
 const itemDivergentePendente = {
@@ -188,6 +189,8 @@ describe("contratos de inventários", () => {
       parseValido(ListarItensInventarioQuerySchema, {
         pagina: "2",
         limite: "50",
+        setorInventarioId: ids.setorInventario,
+        contextoSetor: "ENCONTRADO_NO_SETOR",
         statusVerificacao: "VERIFICADO",
         situacao: "DIVERGENCIA",
         statusCorrecao: "PENDENTE",
@@ -195,6 +198,8 @@ describe("contratos de inventários", () => {
       {
         pagina: 2,
         limite: 50,
+        setorInventarioId: ids.setorInventario,
+        contextoSetor: "ENCONTRADO_NO_SETOR",
         statusVerificacao: "VERIFICADO",
         situacao: "DIVERGENCIA",
         statusCorrecao: "PENDENTE",
@@ -203,6 +208,12 @@ describe("contratos de inventários", () => {
     esperaInvalido(ListarInventariosQuerySchema, { limite: "51" }, "limite");
     esperaInvalido(ListarInventariosQuerySchema, { busca: "x".repeat(201) });
     esperaInvalido(ListarItensInventarioQuerySchema, { situacao: "AUSENTE" });
+    esperaInvalido(ListarItensInventarioQuerySchema, {
+      contextoSetor: "TRANSFERIDO",
+    });
+    esperaInvalido(ListarItensInventarioQuerySchema, {
+      contextoSetor: "PREVISTO",
+    });
   });
 
   it("separa identificação, correções e finalização sem aceitar estado derivado", () => {
@@ -405,6 +416,38 @@ describe("contratos de inventários", () => {
     assert.deepEqual(
       parseValido(ItemInventarioResponseSchema, naoLocalizado),
       naoLocalizado,
+    );
+    const encontradoPosteriormente = {
+      ...naoLocalizado,
+      localizacaoPosterior: {
+        id: "f4e0a2b1-02b2-43b2-9acb-5ae1040d1d71",
+        setorEncontrado: {
+          id: ids.setorEncontrado,
+          nome: "Financeiro",
+        },
+        dataLocalizacao: "2026-10-24T13:00:00.000Z",
+        localizadoPorId: ids.usuario,
+        statusCorrecao: "PENDENTE",
+        tipoCorrecao: null,
+        dataCorrecao: null,
+        corrigidoPorId: null,
+        transferenciaCorrecaoId: null,
+        observacao: null,
+      },
+    } as const;
+    assert.deepEqual(
+      parseValido(ItemInventarioResponseSchema, encontradoPosteriormente),
+      encontradoPosteriormente,
+    );
+    assert.deepEqual(
+      parseValido(VerificarItemInventarioResultadoSchema, {
+        tipo: "LOCALIZACAO_POSTERIOR_REGISTRADA",
+        item: encontradoPosteriormente,
+      }),
+      {
+        tipo: "LOCALIZACAO_POSTERIOR_REGISTRADA",
+        item: encontradoPosteriormente,
+      },
     );
     esperaInvalido(
       ItemInventarioResponseSchema,

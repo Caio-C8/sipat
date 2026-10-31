@@ -112,13 +112,18 @@ No estado atual:
   individuais e em massa e atualiza situação e histórico em lote;
 - a conferência preserva o snapshot cadastral, diferencia ausência por
   empréstimo ou manutenção vigente, cria transferência somente na correção
-  cadastral e mantém o fato histórico da divergência;
+  cadastral e mantém o fato histórico da divergência; itens encontrados fora do
+  setor esperado são consultáveis nos dois setores sem duplicação, enquanto
+  bens já consolidados como não localizados geram uma localização posterior
+  separada;
 - `InventariosPolicyService` bloqueia a inativação de setor participante até a
   finalização; triggers de banco fecham a corrida desse bloqueio e impedem a
   baixa de patrimônio incluído em inventário aberto;
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
+  toda criação exige e persiste o parâmetro inicial de depreciação, que somente
+  poderá ser substituído futuramente por reavaliação;
 - `ProcessosCompraModule` permite aos dois perfis criar, listar, consultar e
   alterar processos; a criação recebe até 20 notas e PDFs, valida fornecedores
   ativos, assinatura dos documentos e persiste notas e auditoria na mesma

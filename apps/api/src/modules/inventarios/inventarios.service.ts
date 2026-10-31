@@ -110,6 +110,38 @@ export class InventariosService {
       }
 
       if (item.statusVerificacao === "VERIFICADO") {
+        if (
+          item.situacao === "NAO_LOCALIZADO" &&
+          item.setorEsperadoId !== setor.setorId &&
+          item.patrimonioSetorAtualId === item.setorEsperadoId
+        ) {
+          const ultimaLocalizacao =
+            await repository.bloquearUltimaLocalizacaoPosterior(item.id);
+          if (ultimaLocalizacao?.setorEncontradoId === setor.setorId) {
+            return {
+              tipo: "LOCALIZACAO_POSTERIOR_IDEMPOTENTE",
+              item: await this.exigirItem(repository, item.id),
+            };
+          }
+          if (ultimaLocalizacao !== null) {
+            throw this.conflitoEstado(
+              "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL",
+              "O patrimônio já possui uma localização posterior registrada neste inventário.",
+            );
+          }
+          await repository.criarLocalizacaoPosterior({
+            itemInventarioId: item.id,
+            inventarioId,
+            setorInventarioEncontradoId: setorInventarioId,
+            instante: new Date(),
+            usuarioId: identidade.id,
+          });
+          return {
+            tipo: "LOCALIZACAO_POSTERIOR_REGISTRADA",
+            item: await this.exigirItem(repository, item.id),
+          };
+        }
+
         const setorPrimeiraVerificacaoId =
           item.situacao === "DIVERGENCIA"
             ? item.setorEncontradoId!
@@ -193,6 +225,42 @@ export class InventariosService {
         itemInventarioId,
       );
       if (item === null) throw this.itemInventarioNaoEncontrado();
+      const localizacaoPosterior =
+        item.situacao === "NAO_LOCALIZADO"
+          ? await repository.bloquearUltimaLocalizacaoPosterior(item.id)
+          : null;
+      if (
+        item.situacao === "NAO_LOCALIZADO" &&
+        localizacaoPosterior?.statusCorrecao === "PENDENTE"
+      ) {
+        if (item.patrimonioSetorAtualId !== item.setorEsperadoId) {
+          throw this.conflitoEstado(
+            "CONFLITO_CONCORRENTE_INVENTARIO",
+            "A localização cadastral do patrimônio mudou desde a verificação.",
+          );
+        }
+        const instante = new Date();
+        if (dados.tipoCorrecao === "RETORNO_AO_SETOR_CADASTRADO") {
+          await repository.corrigirLocalizacaoPosteriorRetorno(
+            localizacaoPosterior.id,
+            instante,
+            identidade.id,
+            dados.observacao,
+          );
+        } else {
+          await repository.corrigirLocalizacaoPosteriorComTransferencia({
+            localizacaoPosteriorId: localizacaoPosterior.id,
+            patrimonioId: item.patrimonioId,
+            setorAntigoId: item.setorEsperadoId,
+            setorAtualId: localizacaoPosterior.setorEncontradoId,
+            comissaoId: inventario.comissaoId,
+            usuarioId: identidade.id,
+            instante,
+            observacao: dados.observacao,
+          });
+        }
+        return this.exigirItem(repository, item.id);
+      }
       if (
         item.situacao !== "DIVERGENCIA" ||
         item.statusCorrecao !== "PENDENTE" ||

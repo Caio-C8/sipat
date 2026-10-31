@@ -146,6 +146,8 @@ model Usuario {
   setoresInventarioConcluidos           SetorInventario[]               @relation("SetorInventarioConcluidoPor")
   itensInventarioVerificados            ItemInventario[]                @relation("ItemInventarioVerificadoPor")
   itensInventarioCorrigidos             ItemInventario[]                @relation("ItemInventarioCorrigidoPor")
+  localizacoesPosterioresRegistradas    LocalizacaoPosteriorInventario[] @relation("LocalizacaoPosteriorRegistradaPor")
+  localizacoesPosterioresCorrigidas     LocalizacaoPosteriorInventario[] @relation("LocalizacaoPosteriorCorrigidaPor")
   baixasCriadas                         BaixaPatrimonio[]
   patrimoniosCriados                    Patrimonio[]
   substituicoesNumeroPatrimonialCriadas SubstituicaoNumeroPatrimonial[]
@@ -494,6 +496,7 @@ model TransferenciaPatrimonio {
   comissao               Comissao        @relation(fields: [comissaoId], references: [id])
   createdBy              Usuario         @relation(fields: [createdById], references: [id])
   itemInventarioCorrecao ItemInventario?
+  localizacaoPosteriorCorrecao LocalizacaoPosteriorInventario?
 
   @@index([comissaoId], map: "transferencias_patrimoniais_comissao_id_idx")
   @@index([patrimonioId, dataTransferencia(sort: Desc), id(sort: Desc)], map: "transferencias_patrimonio_data_id_idx")
@@ -703,6 +706,7 @@ model Inventario {
   finalizadoPor Usuario?          @relation("InventarioFinalizadoPor", fields: [finalizadoPorId], references: [id])
   setores       SetorInventario[]
   itens         ItemInventario[]
+  localizacoesPosteriores LocalizacaoPosteriorInventario[]
 
   @@index([comissaoId], map: "inventarios_comissao_id_idx")
   @@index([status, createdAt(sort: Desc), id(sort: Desc)], map: "inventarios_status_created_at_id_idx")
@@ -727,8 +731,10 @@ model SetorInventario {
   iniciadoPor  Usuario?         @relation("SetorInventarioIniciadoPor", fields: [iniciadoPorId], references: [id])
   concluidoPor Usuario?         @relation("SetorInventarioConcluidoPor", fields: [concluidoPorId], references: [id])
   itens        ItemInventario[]
+  localizacoesPosterioresEncontradas LocalizacaoPosteriorInventario[]
 
   @@unique([inventarioId, setorId])
+  @@unique([id, inventarioId], map: "setores_inventario_vinculo_localizacao_key")
   @@unique([id, inventarioId, setorId], map: "setores_inventario_vinculo_item_key")
   @@unique([inventarioId], map: "setores_inventario_um_em_andamento_por_inventario_idx", where: { status: "EM_ANDAMENTO" })
   @@unique([setorId], map: "setores_inventario_setor_fisico_em_andamento_idx", where: { status: "EM_ANDAMENTO" })
@@ -771,11 +777,42 @@ model ItemInventario {
   corrigidoPor          Usuario?                 @relation("ItemInventarioCorrigidoPor", fields: [corrigidoPorId], references: [id])
   emprestimoPatrimonio  EmprestimoPatrimonio?    @relation(fields: [emprestimoPatrimonioId, patrimonioId], references: [id, patrimonioId], map: "itens_inventario_emprestimo_patrimonio_fkey")
   itemManutencao        ItemManutencao?          @relation(fields: [itemManutencaoId, patrimonioId], references: [id, patrimonioId], map: "itens_inventario_item_manutencao_fkey")
+  localizacoesPosteriores LocalizacaoPosteriorInventario[]
 
   @@unique([inventarioId, patrimonioId])
+  @@unique([id, inventarioId], map: "itens_inventario_vinculo_localizacao_key")
   @@index([inventarioId, statusVerificacao, situacao, statusCorrecao], map: "itens_inventario_pendencias_idx")
   @@index([patrimonioId], map: "itens_inventario_patrimonio_id_idx")
   @@map("itens_inventario")
+}
+
+model LocalizacaoPosteriorInventario {
+  id                          String                       @id @default(uuid()) @db.Uuid
+  itemInventarioId            String                       @map("item_inventario_id") @db.Uuid
+  inventarioId                String                       @map("inventario_id") @db.Uuid
+  setorInventarioEncontradoId String                       @map("setor_inventario_encontrado_id") @db.Uuid
+  dataLocalizacao             DateTime                     @map("data_localizacao") @db.Timestamp(6)
+  localizadoPorId             String                       @map("localizado_por_id") @db.Uuid
+  statusCorrecao              StatusCorrecaoItemInventario @default(PENDENTE) @map("status_correcao")
+  tipoCorrecao                TipoCorrecaoItemInventario?  @map("tipo_correcao")
+  dataCorrecao                DateTime?                    @map("data_correcao") @db.Timestamp(6)
+  corrigidoPorId              String?                      @map("corrigido_por_id") @db.Uuid
+  transferenciaCorrecaoId     String?                      @unique(map: "localizacoes_posteriores_transferencia_correcao_id_key") @map("transferencia_correcao_id") @db.Uuid
+  observacao                  String?                      @db.Text
+  createdAt                   DateTime                     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                   DateTime?                    @map("updated_at") @db.Timestamp(6)
+
+  itemInventario            ItemInventario           @relation(fields: [itemInventarioId, inventarioId], references: [id, inventarioId], map: "localizacoes_posteriores_item_inventario_fkey")
+  inventario                Inventario               @relation(fields: [inventarioId], references: [id], map: "localizacoes_posteriores_inventario_id_fkey")
+  setorInventarioEncontrado SetorInventario          @relation(fields: [setorInventarioEncontradoId, inventarioId], references: [id, inventarioId], map: "localizacoes_posteriores_setor_inventario_fkey")
+  localizadoPor             Usuario                  @relation("LocalizacaoPosteriorRegistradaPor", fields: [localizadoPorId], references: [id], map: "localizacoes_posteriores_localizado_por_id_fkey")
+  corrigidoPor              Usuario?                 @relation("LocalizacaoPosteriorCorrigidaPor", fields: [corrigidoPorId], references: [id], map: "localizacoes_posteriores_corrigido_por_id_fkey")
+  transferenciaCorrecao     TransferenciaPatrimonio? @relation(fields: [transferenciaCorrecaoId], references: [id], map: "localizacoes_posteriores_transferencia_correcao_id_fkey")
+
+  @@unique([itemInventarioId], map: "localizacoes_posteriores_item_key")
+  @@index([inventarioId, statusCorrecao, dataLocalizacao(sort: Desc), id(sort: Desc)], map: "localizacoes_posteriores_inventario_status_idx")
+  @@index([setorInventarioEncontradoId, dataLocalizacao(sort: Desc), id(sort: Desc)], map: "localizacoes_posteriores_setor_encontrado_idx")
+  @@map("localizacoes_posteriores_inventario")
 }
 
 model BaixaPatrimonio {

@@ -54,6 +54,11 @@ disabled, offline e falta de permissão quando aplicável. Pull-to-refresh pode
 complementar, mas não substituir, uma ação acessível. Não use toast como único
 local de informação necessária para corrigir o fluxo.
 
+Na conferência patrimonial, resultados informativos de leitura usam um aviso
+flutuante anunciado por live region, dispensável e removido automaticamente
+após seis segundos. Divergências preservam o modal com as ações de continuar e
+corrigir; erros de entrada permanecem próximos ao campo correspondente.
+
 ## TalkBack, VoiceOver e Web
 
 - use `accessibilityRole`, `accessibilityLabel`, descrição, estado e live region

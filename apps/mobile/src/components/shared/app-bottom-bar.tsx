@@ -1,5 +1,4 @@
 import { Lucide, type LucideIconName } from "@react-native-vector-icons/lucide";
-import type { PerfilUsuario } from "@repo/contracts";
 import { usePathname, useRouter, type Href } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { layout, mobileShell, spacing } from "../../theme/tokens";
@@ -24,9 +23,7 @@ export const appBottomBarItems: readonly BottomBarItem[] = [
   { icon: "file-text", label: "Relatórios" },
 ] as const;
 
-export function AppBottomBar({
-  profile,
-}: Readonly<{ profile?: PerfilUsuario }>) {
+export function AppBottomBar() {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -38,9 +35,7 @@ export function AppBottomBar({
     >
       <View style={styles.content}>
         {appBottomBarItems.map((item) => {
-          const inventoryRestricted =
-            item.path === "/inventarios" && profile !== "DIRETOR_PATRIMONIO";
-          const disabled = item.path === undefined || inventoryRestricted;
+          const disabled = item.path === undefined;
           const active =
             item.path === "/bens"
               ? pathname === "/bens" || pathname.startsWith("/bens/")
@@ -60,11 +55,7 @@ export function AppBottomBar({
               accessible
               aria-disabled={disabled}
               aria-selected={active}
-              accessibilityLabel={
-                inventoryRestricted
-                  ? `${item.label}. Conferência disponível somente para o Diretor de Patrimônio`
-                  : item.label
-              }
+              accessibilityLabel={item.label}
               accessibilityRole="tab"
               accessibilityState={{
                 disabled,

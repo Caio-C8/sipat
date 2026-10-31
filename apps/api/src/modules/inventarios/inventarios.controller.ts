@@ -192,10 +192,14 @@ export class InventariosController {
     return {
       status: HttpStatus.OK,
       sucesso: true,
-      mensagem:
-        resultado.tipo === "LEITURA_IDEMPOTENTE"
-          ? "A leitura já havia sido registrada neste setor."
-          : "Conferência registrada com sucesso.",
+      mensagem: {
+        LEITURA_IDEMPOTENTE: "A leitura já havia sido registrada neste setor.",
+        CONFERENCIA_REGISTRADA: "Conferência registrada com sucesso.",
+        LOCALIZACAO_POSTERIOR_REGISTRADA:
+          "O bem não localizado foi encontrado e a divergência foi registrada.",
+        LOCALIZACAO_POSTERIOR_IDEMPOTENTE:
+          "A localização posterior deste bem já havia sido registrada.",
+      }[resultado.tipo],
       dados: {
         tipo: resultado.tipo,
         item: InventarioResponseMapper.paraItem(resultado.item),
@@ -221,7 +225,10 @@ export class InventariosController {
     return {
       status: HttpStatus.OK,
       sucesso: true,
-      mensagem: "Divergência corrigida com sucesso.",
+      mensagem:
+        item.situacao === "NAO_LOCALIZADO"
+          ? "Localização posterior corrigida com sucesso."
+          : "Divergência corrigida com sucesso.",
       dados: InventarioResponseMapper.paraItem(item),
     };
   }

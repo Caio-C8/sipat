@@ -1,6 +1,6 @@
 import { Lucide } from "@react-native-vector-icons/lucide";
 import { useRouter, type Href } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -50,25 +50,19 @@ export function CorrecaoScreen({
   const summaryHref = data
     ? (`/inventarios/${inventarioId}/setores/${data.setorInventario.id}` as Href)
     : null;
-  const incompatible = Boolean(
-    data &&
-    (data.inventario.status === "FINALIZADO" ||
-      !isPendingDivergence(data.item)),
-  );
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace(summaryHref ?? (`/inventarios/${inventarioId}` as Href));
+  };
 
-  useEffect(() => {
-    if (incompatible && summaryHref) router.replace(summaryHref);
-  }, [incompatible, router, summaryHref]);
-
-  if (correction.state.status === "loading" || incompatible) {
+  if (correction.state.status === "loading") {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={mobileInventarios.action} size="large" />
-        <Text style={styles.stateText}>
-          {incompatible
-            ? "Atualizando resumo do setor…"
-            : "Carregando divergência…"}
-        </Text>
+        <Text style={styles.stateText}>Carregando divergência…</Text>
       </View>
     );
   }
@@ -101,18 +95,36 @@ export function CorrecaoScreen({
   const isDirector =
     session.status === "authenticated" &&
     session.identity.perfil === "DIRETOR_PATRIMONIO";
-  if (!isDirector || item.situacao !== "DIVERGENCIA") {
+  if (
+    !isDirector ||
+    inventario.status === "FINALIZADO" ||
+    !isPendingDivergence(item)
+  ) {
     return (
       <View style={styles.center}>
         <Text accessibilityRole="header" style={styles.stateTitle}>
           Correção não disponível
         </Text>
         <Text style={styles.stateText}>
-          Somente o Diretor de Patrimônio pode corrigir divergências pendentes.
+          {!isDirector
+            ? "Somente o Diretor de Patrimônio pode corrigir ocorrências pendentes."
+            : "Esta ocorrência não está mais disponível para correção."}
         </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={goBack}
+          style={styles.primaryButton}
+        >
+          <Text style={styles.primaryButtonText}>Voltar</Text>
+        </Pressable>
       </View>
     );
   }
+
+  const setorEncontrado =
+    item.situacao === "DIVERGENCIA"
+      ? item.setorEncontrado
+      : item.localizacaoPosterior!.setorEncontrado;
 
   const submit = async () => {
     if (observation.trim().length > 2_000) {
@@ -120,7 +132,8 @@ export function CorrecaoScreen({
       return;
     }
     setInputError(null);
-    await correction.submit(choice, observation);
+    const success = await correction.submit(choice, observation);
+    if (success) goBack();
   };
 
   return (
@@ -130,9 +143,7 @@ export function CorrecaoScreen({
     >
       <Pressable
         accessibilityRole="button"
-        onPress={() =>
-          summaryHref ? router.replace(summaryHref) : router.back()
-        }
+        onPress={goBack}
         style={styles.backButton}
       >
         <Lucide
@@ -141,7 +152,7 @@ export function CorrecaoScreen({
           name="arrow-left"
           size={18}
         />
-        <Text style={styles.backText}>Resumo do setor</Text>
+        <Text style={styles.backText}>Voltar</Text>
       </Pressable>
       <Text style={styles.eyebrow}>{inventario.nome}</Text>
       <Text accessibilityRole="header" style={styles.title}>
@@ -168,7 +179,7 @@ export function CorrecaoScreen({
           name="arrow-right"
           size={20}
         />
-        <Location label="Setor encontrado" value={item.setorEncontrado.nome} />
+        <Location label="Setor encontrado" value={setorEncontrado.nome} />
       </View>
 
       <Text style={styles.sectionTitle}>O que fazer com o bem?</Text>
@@ -179,7 +190,7 @@ export function CorrecaoScreen({
         selected={choice === "TRAZER_PARA_CADASTRADO"}
       />
       <Choice
-        description={`A API transferirá o cadastro para ${item.setorEncontrado.nome}.`}
+        description={`O setor cadastrado do bem será alterado para ${setorEncontrado.nome}.`}
         label="Manter no setor onde foi encontrado"
         onPress={() => setChoice("MANTER_ENCONTRADO")}
         selected={choice === "MANTER_ENCONTRADO"}
@@ -219,8 +230,7 @@ export function CorrecaoScreen({
         </Text>
       </Pressable>
       <Text style={styles.hint}>
-        A divergência continuará registrada; somente o status da correção será
-        atualizado.
+        A ocorrência permanecerá no histórico e ficará marcada como corrigida.
       </Text>
     </ScrollView>
   );

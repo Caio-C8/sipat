@@ -64,9 +64,21 @@ export const ListarSetoresInventarioQuerySchema = PaginacaoQuerySchema.extend({
 export const ListarItensInventarioQuerySchema = PaginacaoQuerySchema.extend({
   busca: BuscaInventarioSchema.optional(),
   setorInventarioId: z.uuid().optional(),
+  contextoSetor: z.enum(["PREVISTO", "ENCONTRADO_NO_SETOR"]).optional(),
   statusVerificacao: StatusVerificacaoItemInventarioSchema.optional(),
   situacao: SituacaoItemInventarioSchema.optional(),
   statusCorrecao: StatusCorrecaoItemInventarioSchema.optional(),
+}).superRefine((query, context) => {
+  if (
+    query.contextoSetor !== undefined &&
+    query.setorInventarioId === undefined
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "O contexto do setor exige a identificação do setor.",
+      path: ["contextoSetor"],
+    });
+  }
 });
 
 export const IniciarSetorInventarioBodySchema = z.strictObject({});

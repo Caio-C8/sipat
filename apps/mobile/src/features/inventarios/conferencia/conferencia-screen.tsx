@@ -19,6 +19,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useReloadOnReturn } from "../../../lib/navigation/use-reload-on-return";
 import {
   layout,
   mobileInventarios,
@@ -29,7 +30,13 @@ import { useSession } from "../../auth/session/session-context";
 import { Notice, ProgressLine } from "../inventario-components";
 import { inventarioErrorMessage } from "../use-inventarios";
 import {
+  READING_TOAST_DURATION_MS,
+  ReadingToast,
+} from "./conferencia-feedback";
+import {
+  composeNumeroPatrimonial,
   conferenciaErrorMessage,
+  numeroPatrimonialDigits,
   shouldMountCamera,
 } from "./conferencia-state";
 import { useConferencia } from "./use-conferencia";
@@ -53,16 +60,31 @@ export function ConferenciaScreen({
     setorInventarioId,
     validIds,
   );
+  useReloadOnReturn(conference.detail.reload);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraAvailable, setCameraAvailable] = useState<boolean | null>(() =>
     Platform.OS === "web" ? null : true,
   );
   const [cameraMountError, setCameraMountError] = useState(false);
   const [manualValue, setManualValue] = useState("");
+  const [withoutOfficialNumber, setWithoutOfficialNumber] = useState(false);
 
   const isDirector =
     session.status === "authenticated" &&
     session.identity.perfil === "DIRETOR_PATRIMONIO";
+
+  useEffect(() => {
+    if (!conference.lastResult || conference.divergenceOpen) return;
+    const timeout = setTimeout(
+      conference.dismissLastResult,
+      READING_TOAST_DURATION_MS,
+    );
+    return () => clearTimeout(timeout);
+  }, [
+    conference.dismissLastResult,
+    conference.divergenceOpen,
+    conference.lastResult,
+  ]);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -144,13 +166,16 @@ export function ConferenciaScreen({
     const success = await conference.submit(value);
     if (success) setManualValue("");
   };
+  const submitManual = () =>
+    submit(composeNumeroPatrimonial(manualValue, withoutOfficialNumber));
   const scan = (result: BarcodeScanningResult) => void submit(result.data);
 
   return (
-    <>
+    <View style={styles.screen}>
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        style={styles.scroll}
       >
         <Pressable
           accessibilityRole="button"
@@ -205,26 +230,68 @@ export function ConferenciaScreen({
         />
 
         <Text style={styles.manualLabel}>Ou digite o código manualmente</Text>
+        <Pressable
+          accessibilityLabel="Bem sem número oficial, usar prefixo SP"
+          accessibilityRole="checkbox"
+          accessibilityState={{
+            checked: withoutOfficialNumber,
+            disabled: conference.submitting,
+          }}
+          disabled={conference.submitting}
+          onPress={() => setWithoutOfficialNumber((current) => !current)}
+          style={styles.checkRow}
+        >
+          <View
+            style={[
+              styles.checkbox,
+              withoutOfficialNumber && styles.checkboxChecked,
+            ]}
+          >
+            {withoutOfficialNumber ? (
+              <Lucide
+                accessible={false}
+                color="#ffffff"
+                name="check"
+                size={14}
+              />
+            ) : null}
+          </View>
+          <Text style={styles.checkText}>Bem sem número oficial (SP)</Text>
+        </Pressable>
         <View style={styles.inputRow}>
-          <TextInput
-            accessibilityLabel="Número patrimonial"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            editable={!conference.submitting}
-            onChangeText={setManualValue}
-            onSubmitEditing={() => void submit(manualValue)}
-            placeholder="Número patrimonial ou SP-XXXX"
-            placeholderTextColor={mobileInventarios.textSubtle}
-            returnKeyType="done"
-            style={styles.input}
-            value={manualValue}
-          />
+          <View style={styles.inputShell}>
+            {withoutOfficialNumber ? (
+              <Text accessibilityLabel="Prefixo SP" style={styles.inputPrefix}>
+                SP-
+              </Text>
+            ) : null}
+            <TextInput
+              accessibilityLabel={
+                withoutOfficialNumber
+                  ? "Parte numérica do patrimônio sem número oficial"
+                  : "Número patrimonial oficial"
+              }
+              autoCorrect={false}
+              editable={!conference.submitting}
+              inputMode="numeric"
+              keyboardType="number-pad"
+              onChangeText={(value) =>
+                setManualValue(numeroPatrimonialDigits(value))
+              }
+              onSubmitEditing={() => void submitManual()}
+              placeholder="000001"
+              placeholderTextColor={mobileInventarios.textSubtle}
+              returnKeyType="done"
+              style={styles.input}
+              value={manualValue}
+            />
+          </View>
           <Pressable
             accessibilityLabel="Verificar número patrimonial"
             accessibilityRole="button"
             accessibilityState={{ disabled: conference.submitting }}
             disabled={conference.submitting}
-            onPress={() => void submit(manualValue)}
+            onPress={() => void submitManual()}
             style={styles.inputAction}
           >
             {conference.submitting ? (
@@ -245,36 +312,32 @@ export function ConferenciaScreen({
           </Text>
         ) : null}
 
-        {conference.lastResult ? (
-          <LastReading result={conference.lastResult} />
-        ) : (
-          <View style={styles.emptyReading}>
-            <Text style={styles.readingEyebrow}>ÚLTIMA LEITURA</Text>
-            <Text style={styles.emptyReadingText}>
-              Aponte a câmera para uma etiqueta ou informe o número patrimonial.
-            </Text>
-          </View>
-        )}
       </ScrollView>
+
+      {conference.lastResult && !conference.divergenceOpen ? (
+        <ReadingToast
+          onClose={conference.dismissLastResult}
+          result={conference.lastResult}
+        />
+      ) : null}
 
       <DivergenceModal
         onCorrect={() => {
           const item = conference.lastResult?.item;
-          if (item?.situacao !== "DIVERGENCIA") return;
+          if (
+            item?.situacao !== "DIVERGENCIA" &&
+            item?.localizacaoPosterior?.statusCorrecao !== "PENDENTE"
+          )
+            return;
           conference.setDivergenceOpen(false);
           router.push(
             `/inventarios/${inventarioId}/itens/${item.id}/correcao` as Href,
           );
         }}
         onContinue={() => conference.setDivergenceOpen(false)}
-        result={
-          conference.divergenceOpen &&
-          conference.lastResult?.item.situacao === "DIVERGENCIA"
-            ? conference.lastResult
-            : null
-        }
+        result={conference.divergenceOpen ? conference.lastResult : null}
       />
-    </>
+    </View>
   );
 }
 
@@ -359,36 +422,6 @@ function CameraPanel({
   );
 }
 
-function LastReading({
-  result,
-}: Readonly<{ result: VerificarItemInventarioResultado }>) {
-  const { item } = result;
-  const correct = item.situacao === "CORRETO";
-  return (
-    <View
-      accessibilityLiveRegion="polite"
-      style={[styles.readingCard, !correct && styles.readingCardWarning]}
-    >
-      <Text style={styles.readingEyebrow}>
-        {result.tipo === "LEITURA_IDEMPOTENTE"
-          ? "LEITURA JÁ REGISTRADA"
-          : "ÚLTIMA LEITURA"}
-      </Text>
-      <Text style={styles.readingTitle}>{item.patrimonio.descricao}</Text>
-      <Text style={styles.readingNumber}>
-        {item.patrimonio.numeroPatrimonio}
-      </Text>
-      <Text style={styles.readingText}>
-        {correct
-          ? `${item.setorEsperado.nome} · setor correto.`
-          : item.situacao === "DIVERGENCIA"
-            ? `Cadastrado em ${item.setorEsperado.nome}; encontrado em ${item.setorEncontrado.nome}.`
-            : "Leitura registrada."}
-      </Text>
-    </View>
-  );
-}
-
 function DivergenceModal({
   onCorrect,
   onContinue,
@@ -399,7 +432,15 @@ function DivergenceModal({
   result: VerificarItemInventarioResultado | null;
 }>) {
   const item = result?.item;
-  const visible = item?.situacao === "DIVERGENCIA";
+  const localizacaoPosterior = item?.localizacaoPosterior;
+  const setorEncontrado =
+    item?.situacao === "DIVERGENCIA"
+      ? item.setorEncontrado
+      : localizacaoPosterior?.setorEncontrado;
+  const posterior = result?.tipo.startsWith("LOCALIZACAO_POSTERIOR_") ?? false;
+  const visible =
+    item?.situacao === "DIVERGENCIA" ||
+    (posterior && localizacaoPosterior?.statusCorrecao === "PENDENTE");
   return (
     <Modal
       animationType="slide"
@@ -418,10 +459,10 @@ function DivergenceModal({
               size={24}
             />
             <Text accessibilityRole="header" style={styles.sheetTitle}>
-              Setor incorreto
+              {posterior ? "Bem encontrado" : "Setor incorreto"}
             </Text>
           </View>
-          {item?.situacao === "DIVERGENCIA" ? (
+          {item && setorEncontrado ? (
             <>
               <Text style={styles.sheetItem}>{item.patrimonio.descricao}</Text>
               <Text style={styles.sheetNumber}>
@@ -433,9 +474,7 @@ function DivergenceModal({
                   {item.setorEsperado.nome}
                 </Text>
                 <Text style={styles.locationLabel}>Encontrado em</Text>
-                <Text style={styles.locationValue}>
-                  {item.setorEncontrado.nome}
-                </Text>
+                <Text style={styles.locationValue}>{setorEncontrado.nome}</Text>
               </View>
               <Pressable
                 accessibilityRole="button"
@@ -456,8 +495,9 @@ function DivergenceModal({
                 </Text>
               </Pressable>
               <Text style={styles.correctionHint}>
-                A divergência já foi salva e pode ser corrigida agora ou pelo
-                resumo do setor.
+                {posterior
+                  ? "A localização posterior foi salva e pode ser corrigida agora ou pelo resumo do setor."
+                  : "A divergência já foi salva e pode ser corrigida agora ou pelo resumo do setor."}
               </Text>
             </>
           ) : null}
@@ -468,6 +508,11 @@ function DivergenceModal({
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: mobileInventarios.canvas,
+    flex: 1,
+  },
+  scroll: { flex: 1 },
   content: {
     alignSelf: "center",
     maxWidth: layout.contentMaxWidth,
@@ -590,21 +635,54 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: spacing.lg,
   },
+  checkRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+    minHeight: layout.comfortableTouchTarget,
+  },
+  checkbox: {
+    alignItems: "center",
+    borderColor: mobileInventarios.border,
+    borderRadius: 5,
+    borderWidth: 1,
+    height: 20,
+    justifyContent: "center",
+    width: 20,
+  },
+  checkboxChecked: {
+    backgroundColor: mobileInventarios.action,
+    borderColor: mobileInventarios.action,
+  },
+  checkText: { color: mobileInventarios.text, flex: 1, fontSize: 14 },
   inputRow: {
     alignItems: "stretch",
     flexDirection: "row",
     marginTop: spacing.sm,
   },
-  input: {
+  inputShell: {
+    alignItems: "center",
     backgroundColor: mobileInventarios.surface,
     borderColor: mobileInventarios.border,
     borderRadius: radii.md,
     borderWidth: 1,
+    flex: 1,
+    flexDirection: "row",
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+  },
+  inputPrefix: {
+    color: mobileInventarios.text,
+    fontSize: 14,
+    fontWeight: "700",
+    marginRight: spacing.xs,
+  },
+  input: {
     color: mobileInventarios.text,
     flex: 1,
     fontSize: 14,
-    minHeight: 52,
-    paddingHorizontal: spacing.md,
+    minHeight: 50,
+    paddingHorizontal: 0,
   },
   inputAction: {
     alignItems: "center",
@@ -618,47 +696,6 @@ const styles = StyleSheet.create({
     color: mobileInventarios.danger,
     fontSize: 12,
     marginTop: spacing.sm,
-  },
-  emptyReading: {
-    backgroundColor: mobileInventarios.actionSurface,
-    borderRadius: radii.md,
-    marginTop: spacing.xl,
-    padding: spacing.lg,
-  },
-  emptyReadingText: {
-    color: mobileInventarios.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: spacing.sm,
-  },
-  readingCard: {
-    backgroundColor: mobileInventarios.successSurface,
-    borderRadius: radii.md,
-    marginTop: spacing.xl,
-    padding: spacing.lg,
-  },
-  readingCardWarning: { backgroundColor: mobileInventarios.warningSurface },
-  readingEyebrow: {
-    color: mobileInventarios.textMuted,
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  readingTitle: {
-    color: mobileInventarios.text,
-    fontSize: 16,
-    fontWeight: "800",
-    marginTop: spacing.sm,
-  },
-  readingNumber: {
-    color: mobileInventarios.textMuted,
-    fontSize: 12,
-    marginTop: spacing.xs,
-  },
-  readingText: {
-    color: mobileInventarios.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: spacing.md,
   },
   primaryButton: {
     alignItems: "center",

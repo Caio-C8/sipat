@@ -57,8 +57,12 @@ describe("InventariosService", () => {
     buscarSetorInventario: jest.fn(),
     buscarSetorPorId: jest.fn(),
     buscarTransferenciaPosterior: jest.fn(),
+    bloquearUltimaLocalizacaoPosterior: jest.fn(),
+    criarLocalizacaoPosterior: jest.fn(),
     corrigirRetorno: jest.fn(),
     corrigirComTransferencia: jest.fn(),
+    corrigirLocalizacaoPosteriorRetorno: jest.fn(),
+    corrigirLocalizacaoPosteriorComTransferencia: jest.fn(),
     concluirItensPendentes: jest.fn(),
     contarAusenciasSemJustificativaVigente: jest.fn(),
     concluirSetor: jest.fn(),
@@ -146,6 +150,7 @@ describe("InventariosService", () => {
       ]),
     );
     repository.contarAusenciasSemJustificativaVigente.mockResolvedValue(0);
+    repository.bloquearUltimaLocalizacaoPosterior.mockResolvedValue(null);
   });
 
   it("materializa setores e patrimônios ativos na mesma transação", async () => {
@@ -263,6 +268,113 @@ describe("InventariosService", () => {
         statusPatrimonio: "ATIVO",
       }),
     );
+  });
+
+  it("registra localização posterior sem sobrescrever o item não localizado", async () => {
+    repository.bloquearInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      comissaoId: COMISSAO_ID,
+    });
+    repository.bloquearSetorInventario.mockResolvedValue({
+      id: SETOR_INVENTARIO_ID,
+      inventarioId: INVENTARIO_ID,
+      setorId: SETOR_ENCONTRADO_ID,
+      status: "EM_ANDAMENTO",
+    });
+    repository.bloquearItemPorNumero.mockResolvedValue({
+      id: ITEM_ID,
+      inventarioId: INVENTARIO_ID,
+      patrimonioId: PATRIMONIO_ID,
+      setorEsperadoId: SETOR_ID,
+      setorEncontradoId: null,
+      statusVerificacao: "VERIFICADO",
+      situacao: "NAO_LOCALIZADO",
+      statusCorrecao: null,
+      dataVerificacao: new Date("2026-10-30T12:00:00.000Z"),
+      patrimonioStatus: "ATIVO",
+      patrimonioSetorAtualId: SETOR_ID,
+    });
+    repository.buscarItem.mockResolvedValue({ id: ITEM_ID });
+
+    await expect(
+      service.verificarItem(
+        INVENTARIO_ID,
+        SETOR_INVENTARIO_ID,
+        { numeroPatrimonial: "1001" },
+        IDENTIDADE,
+      ),
+    ).resolves.toMatchObject({ tipo: "LOCALIZACAO_POSTERIOR_REGISTRADA" });
+    expect(repository.verificarItem).not.toHaveBeenCalled();
+    expect(repository.criarLocalizacaoPosterior).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemInventarioId: ITEM_ID,
+        inventarioId: INVENTARIO_ID,
+        setorInventarioEncontradoId: SETOR_INVENTARIO_ID,
+        usuarioId: IDENTIDADE.id,
+      }),
+    );
+  });
+
+  it("corrige localização posterior por retorno ou transferência sem alterar o resultado original", async () => {
+    repository.bloquearInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      comissaoId: COMISSAO_ID,
+    });
+    repository.bloquearItem.mockResolvedValue({
+      id: ITEM_ID,
+      inventarioId: INVENTARIO_ID,
+      patrimonioId: PATRIMONIO_ID,
+      setorEsperadoId: SETOR_ID,
+      setorEncontradoId: null,
+      statusVerificacao: "VERIFICADO",
+      situacao: "NAO_LOCALIZADO",
+      statusCorrecao: null,
+      dataVerificacao: new Date("2026-10-30T12:00:00.000Z"),
+      patrimonioStatus: "ATIVO",
+      patrimonioSetorAtualId: SETOR_ID,
+    });
+    repository.bloquearUltimaLocalizacaoPosterior.mockResolvedValue({
+      id: "00000000-0000-4000-8000-000000000009",
+      itemInventarioId: ITEM_ID,
+      setorInventarioEncontradoId: SETOR_INVENTARIO_ID,
+      setorEncontradoId: SETOR_ENCONTRADO_ID,
+      statusCorrecao: "PENDENTE",
+    });
+    repository.buscarItem.mockResolvedValue({ id: ITEM_ID });
+
+    await service.corrigirItem(
+      INVENTARIO_ID,
+      ITEM_ID,
+      { tipoCorrecao: "TRANSFERENCIA_CADASTRAL" },
+      IDENTIDADE,
+    );
+
+    expect(
+      repository.corrigirLocalizacaoPosteriorComTransferencia,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patrimonioId: PATRIMONIO_ID,
+        setorAntigoId: SETOR_ID,
+        setorAtualId: SETOR_ENCONTRADO_ID,
+      }),
+    );
+    expect(repository.corrigirComTransferencia).not.toHaveBeenCalled();
+
+    await service.corrigirItem(
+      INVENTARIO_ID,
+      ITEM_ID,
+      { tipoCorrecao: "RETORNO_AO_SETOR_CADASTRADO" },
+      IDENTIDADE,
+    );
+    expect(repository.corrigirLocalizacaoPosteriorRetorno).toHaveBeenCalledWith(
+      "00000000-0000-4000-8000-000000000009",
+      expect.any(Date),
+      IDENTIDADE.id,
+      undefined,
+    );
+    expect(repository.corrigirRetorno).not.toHaveBeenCalled();
   });
 
   it("cria transferência e corrige a divergência atomicamente", async () => {

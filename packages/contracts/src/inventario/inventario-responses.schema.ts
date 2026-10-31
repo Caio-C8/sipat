@@ -247,6 +247,47 @@ const PatrimonioItemInventarioResponseSchema = z.strictObject({
   descricao: z.string().trim().min(1).max(1_000),
 });
 
+const localizacaoPosteriorBaseShape = {
+  id: z.uuid(),
+  setorEncontrado: SetorRelacionadoResponseSchema,
+  dataLocalizacao: DateTimeUtcInventarioSchema,
+  localizadoPorId: z.uuid(),
+  observacao: TextoLongoInventarioSchema.nullable(),
+} as const;
+
+const localizacaoPosteriorPendenteSchema = z.strictObject({
+  ...localizacaoPosteriorBaseShape,
+  statusCorrecao: z.literal("PENDENTE"),
+  tipoCorrecao: z.null(),
+  dataCorrecao: z.null(),
+  corrigidoPorId: z.null(),
+  transferenciaCorrecaoId: z.null(),
+});
+
+const localizacaoPosteriorRetornoSchema = z.strictObject({
+  ...localizacaoPosteriorBaseShape,
+  statusCorrecao: z.literal("CORRIGIDO"),
+  tipoCorrecao: z.literal("RETORNO_AO_SETOR_CADASTRADO"),
+  dataCorrecao: DateTimeUtcInventarioSchema,
+  corrigidoPorId: z.uuid(),
+  transferenciaCorrecaoId: z.null(),
+});
+
+const localizacaoPosteriorTransferenciaSchema = z.strictObject({
+  ...localizacaoPosteriorBaseShape,
+  statusCorrecao: z.literal("CORRIGIDO"),
+  tipoCorrecao: z.literal("TRANSFERENCIA_CADASTRAL"),
+  dataCorrecao: DateTimeUtcInventarioSchema,
+  corrigidoPorId: z.uuid(),
+  transferenciaCorrecaoId: z.uuid(),
+});
+
+export const LocalizacaoPosteriorInventarioResponseSchema = z.union([
+  localizacaoPosteriorPendenteSchema,
+  localizacaoPosteriorRetornoSchema,
+  localizacaoPosteriorTransferenciaSchema,
+]);
+
 const itemBaseShape = {
   id: z.uuid(),
   patrimonio: PatrimonioItemInventarioResponseSchema,
@@ -268,6 +309,7 @@ const itemPendenteSchema = z.strictObject({
   dataCorrecao: z.null(),
   corrigidoPorId: z.null(),
   transferenciaCorrecaoId: z.null(),
+  localizacaoPosterior: z.null(),
 });
 
 const itemVerificadoBaseShape = {
@@ -288,6 +330,7 @@ const itemCorretoSchema = z.strictObject({
   dataCorrecao: z.null(),
   corrigidoPorId: z.null(),
   transferenciaCorrecaoId: z.null(),
+  localizacaoPosterior: z.null(),
 });
 
 const itemNaoLocalizadoSchema = z
@@ -301,6 +344,8 @@ const itemNaoLocalizadoSchema = z
     dataCorrecao: z.null(),
     corrigidoPorId: z.null(),
     transferenciaCorrecaoId: z.null(),
+    localizacaoPosterior:
+      LocalizacaoPosteriorInventarioResponseSchema.nullable(),
   })
   .superRefine((item, contexto) => {
     const ausenciaCompativel =
@@ -331,6 +376,7 @@ const itemDivergentePendenteSchema = z.strictObject({
   dataCorrecao: z.null(),
   corrigidoPorId: z.null(),
   transferenciaCorrecaoId: z.null(),
+  localizacaoPosterior: z.null(),
 });
 
 const itemDivergenteRetornoSchema = z.strictObject({
@@ -343,6 +389,7 @@ const itemDivergenteRetornoSchema = z.strictObject({
   dataCorrecao: DateTimeUtcInventarioSchema,
   corrigidoPorId: z.uuid(),
   transferenciaCorrecaoId: z.null(),
+  localizacaoPosterior: z.null(),
 });
 
 const itemDivergenteTransferenciaSchema = z.strictObject({
@@ -355,6 +402,7 @@ const itemDivergenteTransferenciaSchema = z.strictObject({
   dataCorrecao: DateTimeUtcInventarioSchema,
   corrigidoPorId: z.uuid(),
   transferenciaCorrecaoId: z.uuid(),
+  localizacaoPosterior: z.null(),
 });
 
 export const ItemInventarioResponseSchema = z.union([
@@ -375,6 +423,14 @@ export const VerificarItemInventarioResultadoSchema = z.discriminatedUnion(
     }),
     z.strictObject({
       tipo: z.literal("LEITURA_IDEMPOTENTE"),
+      item: ItemInventarioResponseSchema,
+    }),
+    z.strictObject({
+      tipo: z.literal("LOCALIZACAO_POSTERIOR_REGISTRADA"),
+      item: ItemInventarioResponseSchema,
+    }),
+    z.strictObject({
+      tipo: z.literal("LOCALIZACAO_POSTERIOR_IDEMPOTENTE"),
       item: ItemInventarioResponseSchema,
     }),
   ],
@@ -445,6 +501,9 @@ export type SetorInventarioResumo = z.output<
 >;
 export type ItemInventarioResponse = z.output<
   typeof ItemInventarioResponseSchema
+>;
+export type LocalizacaoPosteriorInventarioResponse = z.output<
+  typeof LocalizacaoPosteriorInventarioResponseSchema
 >;
 export type VerificarItemInventarioResultado = z.output<
   typeof VerificarItemInventarioResultadoSchema

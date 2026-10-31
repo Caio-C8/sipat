@@ -105,6 +105,7 @@ function divergentItem(corrected = false) {
     transferenciaCorrecaoId: corrected
       ? "99999999-9999-4999-8999-999999999999"
       : null,
+    localizacaoPosterior: null,
   };
 }
 
@@ -253,6 +254,7 @@ describe("createInventariosOperations", () => {
       dataCorrecao: null,
       corrigidoPorId: null,
       transferenciaCorrecaoId: null,
+      localizacaoPosterior: null,
     };
     const fetchMock = vi
       .fn()
@@ -305,6 +307,7 @@ describe("createInventariosOperations", () => {
         pagina: "2",
         limite: "10",
         setorInventarioId: SETOR_ID,
+        contextoSetor: "ENCONTRADO_NO_SETOR",
         situacao: "DIVERGENCIA",
         statusCorrecao: "PENDENTE",
       },
@@ -312,7 +315,7 @@ describe("createInventariosOperations", () => {
     );
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `https://api.example.test/api/inventarios/${INVENTARIO_ID}/itens?pagina=2&limite=10&setorInventarioId=${SETOR_ID}&situacao=DIVERGENCIA&statusCorrecao=PENDENTE`,
+      `https://api.example.test/api/inventarios/${INVENTARIO_ID}/itens?pagina=2&limite=10&setorInventarioId=${SETOR_ID}&contextoSetor=ENCONTRADO_NO_SETOR&situacao=DIVERGENCIA&statusCorrecao=PENDENTE`,
       expect.objectContaining({ method: "GET" }),
     );
   });

@@ -10,11 +10,14 @@ import {
   Text,
   View,
 } from "react-native";
+import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobileInventarios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import { Notice, ProgressLine, StatusBadge } from "./inventario-components";
 import { PendenciasCorrecao } from "./resumo/pendencias-correcao";
+import { RegistrosConferencia } from "./resumo/registros-conferencia";
 import {
+  type ContextoRegistrosSetor,
   inventarioErrorMessage,
   useSetorInventarioDetail,
 } from "./use-inventarios";
@@ -31,13 +34,19 @@ export function SetorInventarioScreen({
   const router = useRouter();
   const { manager, state: session } = useSession();
   const [pendingPage, setPendingPage] = useState(1);
+  const [recordsPage, setRecordsPage] = useState(1);
+  const [recordsContext, setRecordsContext] =
+    useState<ContextoRegistrosSetor>("PREVISTO");
   const remote = useSetorInventarioDetail(
     manager,
     inventarioId,
     setorInventarioId,
     validIds,
     pendingPage,
+    recordsPage,
+    recordsContext,
   );
+  useReloadOnReturn(remote.reload);
   const [confirmation, setConfirmation] = useState<"start" | "conclude" | null>(
     null,
   );
@@ -92,7 +101,14 @@ export function SetorInventarioScreen({
     );
   }
 
-  const { inventario, pendencias, setor, setorEmAndamento } = remote.state.data;
+  const {
+    inventario,
+    pendencias,
+    registros,
+    setor,
+    setorEmAndamento,
+    totaisRegistros,
+  } = remote.state.data;
   const conflictingSector =
     setorEmAndamento && setorEmAndamento.id !== setor.id
       ? setorEmAndamento
@@ -143,7 +159,7 @@ export function SetorInventarioScreen({
           <Text style={styles.cardEyebrow}>PROGRESSO DO SETOR</Text>
           <ProgressLine
             current={setor.progresso.itensVerificados}
-            label="Itens verificados"
+            label="Itens previstos verificados"
             total={setor.progresso.totalItens}
           />
           <View style={styles.metricsGrid}>
@@ -159,8 +175,8 @@ export function SetorInventarioScreen({
 
         {setor.status === "CONCLUIDO" ? (
           <Notice title="Conferência concluída">
-            O resultado do setor está consolidado. Divergências pendentes ainda
-            podem ser corrigidas enquanto o inventário permanecer aberto.
+            A conferência deste setor foi concluída. Divergências pendentes
+            ainda podem ser corrigidas enquanto o inventário permanecer aberto.
           </Notice>
         ) : null}
 
@@ -227,6 +243,17 @@ export function SetorInventarioScreen({
             </Pressable>
           </View>
         ) : null}
+        <RegistrosConferencia
+          contexto={recordsContext}
+          items={registros}
+          onContexto={(contexto) => {
+            setRecordsPage(1);
+            setRecordsContext(contexto);
+          }}
+          onPage={setRecordsPage}
+          setorId={setor.setor.id}
+          totais={totaisRegistros}
+        />
         <PendenciasCorrecao
           inventarioId={inventarioId}
           items={pendencias}
@@ -263,7 +290,7 @@ export function SetorInventarioScreen({
             </Text>
             <Text style={styles.dialogText}>
               {confirmation === "conclude"
-                ? `${setor.progresso.itensVerificados} item(ns) já foram verificados. ${setor.progresso.itensPendentes} item(ns) ainda pendente(s) serão classificados pela API como não localizados. Há ${pendencias.meta.total} correção(ões) pendente(s) registrada(s).`
+                ? `${setor.progresso.itensVerificados} item(ns) já foram verificados. Ao concluir, ${setor.progresso.itensPendentes} item(ns) ainda pendente(s) serão registrados como não localizados. Há ${pendencias.meta.total} correção(ões) pendente(s) registrada(s).`
                 : `Você iniciará a conferência de ${setor.setor.nome}. Somente um setor pode permanecer em andamento.`}
             </Text>
             <View style={styles.dialogActions}>

@@ -134,7 +134,7 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve permitir que o Diretor de Patrimônio cadastre bens patrimoniais e suas informações de tombamento, localização, classificação e valor.
 
-**Informações:** Indicação de existência de numeração patrimonial oficial, número patrimonial gerado pelo sistema, data de tombamento, tipo de incorporação, descrição, marca, modelo, número de série, valor de incorporação, status, espécie, setor, aquisição vinculada e parâmetros de depreciação quando aplicáveis.
+**Informações:** Indicação de existência de numeração patrimonial oficial, número patrimonial gerado pelo sistema, data de tombamento, tipo de incorporação, descrição, marca, modelo, número de série, valor de incorporação, status, espécie, setor, aquisição vinculada e parâmetros iniciais de depreciação.
 
 **Regras:**
 
@@ -143,6 +143,8 @@ gerenciem a própria senha com segurança.
 - Bens com numeração oficial devem usar a sequência numérica, armazenada sem zeros à esquerda, por exemplo `1`.
 - Descrição, marca, modelo e número de série devem ser armazenados normalizados em letras maiúsculas e sem acentuação.
 - O sistema deve manter um texto de busca composto pelos principais campos textuais do patrimônio para apoiar consultas.
+- Todo novo patrimônio deve receber parâmetros iniciais de depreciação no mesmo cadastro; sua omissão impede a criação do bem.
+- Após o cadastro, os parâmetros de depreciação somente podem ser substituídos pelo fluxo de reavaliação.
 - O status do bem deve admitir, no mínimo: ATIVO, BAIXADO, EMPRESTADO e EM_MANUTENÇÃO.
 - Se o bem não possuir número patrimonial oficial, o sistema deve gerar um identificador em uma sequência própria, armazenado no padrão `SP-1`.
 - As sequências oficial e `SP-` são independentes, crescentes, não reutilizam números já emitidos e podem possuir lacunas causadas por falha ou rollback.
@@ -417,7 +419,20 @@ houver e usuário responsável.
   existência de transferência posterior explica a nova localização; sem esse
   histórico, o caso deve ser sinalizado como movimentação física não registrada.
   Esse conflito não deve sobrescrever o item nem bloquear sozinho a conclusão
-  ou a finalização.
+  ou a finalização. A exceção é o item consolidado como NAO_LOCALIZADO: quando
+  ele for encontrado durante a conferência de outro setor do mesmo inventário,
+  registrar uma localização posterior separada, sem criar outro item nem mudar
+  o resultado original.
+- A localização posterior deve identificar o setor onde o bem foi encontrado,
+  data, usuário e correção. Ela aparece nos registros do setor esperado e do
+  setor encontrado, mas não integra a população nem os totais de conferência do
+  segundo setor. Uma releitura no mesmo setor é idempotente e existe no máximo
+  uma localização posterior por item em cada inventário.
+- A localização posterior pode ser corrigida como
+  RETORNO_AO_SETOR_CADASTRADO, sem transferência, ou como
+  TRANSFERENCIA_CADASTRAL, criando e vinculando a transferência para o setor
+  onde o bem foi encontrado. O item original permanece NAO_LOCALIZADO para
+  preservar o fato consolidado no encerramento do setor.
 - Quando o patrimônio estiver no setor esperado, o item deve ser registrado
   como CORRETO, VERIFICADO e sem correção.
 - Quando for encontrado em outro setor, o item deve preservar o setor esperado,

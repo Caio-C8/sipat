@@ -1,7 +1,7 @@
 import { Lucide } from "@react-native-vector-icons/lucide";
 import type { StatusSetorInventario } from "@repo/contracts";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -12,6 +12,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobileInventarios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import {
@@ -55,19 +56,7 @@ export function InventarioSetoresScreen({
   const isAdmin =
     session.status === "authenticated" &&
     session.identity.perfil === "ADMINISTRADOR";
-  const reloadRef = useRef(reload);
-  const focusedOnce = useRef(false);
-
-  useEffect(() => {
-    reloadRef.current = reload;
-  }, [reload]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (focusedOnce.current) void reloadRef.current();
-      else focusedOnce.current = true;
-    }, []),
-  );
+  useReloadOnReturn(reload);
 
   const submitSearch = () => {
     setPage(1);
