@@ -6,17 +6,23 @@ import {
 } from "../system-navigation";
 
 describe("catálogo de navegação do sistema", () => {
-  it("oferece movimentações, empréstimos, manutenções e reavaliações para ambos os perfis", () => {
+  it("oferece as páginas implementadas nos perfis apropriados", () => {
     expect(
       catalogoNavegacao.filter((item) => item.href).map((item) => item.href),
     ).toEqual([
       "/dashboard",
       "/patrimonios",
       "/patrimonios/novo",
+      "/cadastros",
       "/movimentacoes",
       "/emprestimos",
       "/manutencoes",
       "/reavaliacoes",
+      "/cadastros/responsaveis",
+      "/cadastros/setores",
+      "/cadastros/comissoes",
+      "/cadastros/naturezas",
+      "/cadastros/especies",
     ]);
     expect(
       catalogoNavegacao.find((item) => item.id === "movimentacoes")
@@ -66,6 +72,12 @@ describe("catálogo de navegação do sistema", () => {
     expect(diretor).not.toContain("Usuários");
     expect(administrador).toContain("Manutenção");
     expect(diretor).toContain("Manutenção");
+    expect(administrador).toContain("Processos de compra");
+    expect(diretor).toContain("Processos de compra");
+    expect(administrador).toContain("Espécies");
+    expect(administrador).toContain("Setores");
+    expect(diretor).not.toContain("Espécies");
+    expect(diretor).not.toContain("Setores");
   });
 
   it("resolve o breadcrumb pelo caminho catalogado", () => {
@@ -81,5 +93,9 @@ describe("catálogo de navegação do sistema", () => {
       encontrarNavegacaoPorCaminho("/emprestimos/nova")?.breadcrumb,
     ).toEqual(["Início", "Empréstimos"]);
     expect(encontrarNavegacaoPorCaminho("/rota-inexistente")).toBeUndefined();
+    expect(
+      encontrarNavegacaoPorCaminho("/cadastros/setores/gabinete-02")
+        ?.breadcrumb,
+    ).toEqual(["Cadastros", "Setores"]);
   });
 });
