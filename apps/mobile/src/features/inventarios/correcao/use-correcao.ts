@@ -3,13 +3,18 @@ import type {
   ItemInventarioResponse,
   SetorInventarioResumo,
 } from "@repo/contracts";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef } from "react";
 import { ApiError, isApiError } from "../../../lib/api/api-error";
 import { DOMAIN_STALE_TIME_MS } from "../../../lib/query/query-policy";
 import { remoteQueryState } from "../../../lib/query/remote-query-state";
+import {
+  currentSessionIdentity,
+  isCurrentSession,
+} from "../../../lib/query/session-mutation";
 import type { SessionManager } from "../../auth/session/session-manager";
 import { inventarioQueryKeys } from "../inventario-query-keys";
+import { invalidateInventarioCorrection } from "../inventario-mutation-invalidation";
 import { useInventariosOperations } from "../use-inventarios";
 import {
   releaseSubmission,
@@ -74,47 +79,58 @@ export function useCorrecao(
   const refetch = query.refetch;
   const reload = useCallback(() => refetch(), [refetch]);
   const lock = useRef(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [mutationError, setMutationError] = useState<ApiError | null>(null);
-
-  const submit = useCallback(
-    async (choice: CorrecaoChoice, observation: string) => {
-      if (!validIds || !tryAcquireSubmission(lock)) return false;
-      setSubmitting(true);
-      setMutationError(null);
+  const correction = useMutation<
+    ItemInventarioResponse,
+    ApiError,
+    Readonly<{
+      body: ReturnType<typeof buildCorrecaoBody>;
+      identityId: string | null;
+    }>
+  >({
+    mutationFn: async ({
+      body,
+    }: Readonly<{
+      body: ReturnType<typeof buildCorrecaoBody>;
+      identityId: string | null;
+    }>) => {
       try {
-        const body = buildCorrecaoBody(choice, observation);
-        const item = await manager.authorizedRequest(
+        return await manager.authorizedRequest(
           (accessToken) =>
             operations.corrigirItem(inventarioId, itemInventarioId, body, {
               accessToken,
             }),
           false,
         );
-        queryClient.setQueryData<CorrecaoData>(queryKey, (current) =>
-          current ? { ...current, item } : current,
-        );
-        return true;
       } catch (error) {
-        const normalized = normalizeError(error);
-        setMutationError(normalized);
-        if (normalized.status === 409) await reload();
+        throw normalizeError(error);
+      }
+    },
+    onSuccess: (_item, variables) =>
+      isCurrentSession(manager, variables.identityId)
+        ? invalidateInventarioCorrection(queryClient, inventarioId)
+        : undefined,
+    onError: (error) => (error.status === 409 ? reload() : undefined),
+    retry: false,
+  });
+
+  const submit = useCallback(
+    async (choice: CorrecaoChoice, observation: string) => {
+      if (!validIds || !tryAcquireSubmission(lock)) return false;
+      correction.reset();
+      try {
+        const body = buildCorrecaoBody(choice, observation);
+        await correction.mutateAsync({
+          body,
+          identityId: currentSessionIdentity(manager),
+        });
+        return true;
+      } catch {
         return false;
       } finally {
         releaseSubmission(lock);
-        setSubmitting(false);
       }
     },
-    [
-      inventarioId,
-      itemInventarioId,
-      manager,
-      operations,
-      queryClient,
-      queryKey,
-      reload,
-      validIds,
-    ],
+    [correction, manager, validIds],
   );
 
   return {
@@ -123,8 +139,8 @@ export function useCorrecao(
       : ({ status: "error", error: new ApiError("invalid-response") } as const),
     isFetching: query.isFetching,
     reload,
-    mutationError,
+    mutationError: correction.error,
     submit,
-    submitting,
+    submitting: correction.isPending,
   };
 }

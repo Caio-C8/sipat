@@ -30,7 +30,8 @@ código interno da API.
 - TanStack Query v5 possui um único provider em memória, lifecycle de foco
   nativo e limpeza serializada quando a identidade muda ou deixa de estar
   autenticada; as leituras de domínio usam keys determinísticas e cache privado
-  por sessão;
+  por sessão, e mutations patrimoniais e de inventário invalidam somente as
+  famílias afetadas antes de liberar a navegação dependente;
 - o grupo `(app)` aplica a bottom bar do protótipo; `Início`, `Bens`,
   `Inventário` e `Cadastro` representam rotas existentes; Inventário é
   consultável pelos dois perfis e Relatórios permanece disabled;
@@ -153,7 +154,6 @@ A comunicação HTTP está em
 ## Decisões pendentes do SIPAT
 
 - validação do novo binário responsivo em tablets Android e iPad reais;
-- invalidações depois de mutations aprovadas em `MOBILE-QUERY-003`;
 - persistência do cache e operação offline, explicitamente fora da sequência
   aprovada;
 - observabilidade, crash reporting e analytics;

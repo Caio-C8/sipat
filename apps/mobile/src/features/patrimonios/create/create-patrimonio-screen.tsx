@@ -5,6 +5,7 @@ import type {
   ProcessoCompraResumo,
   TipoIncorporacao,
 } from "@repo/contracts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, type Href } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -21,6 +22,10 @@ import {
 import { publicAppConfig } from "../../../config/public-app-config";
 import { isApiError } from "../../../lib/api/api-error";
 import {
+  currentSessionIdentity,
+  isCurrentSession,
+} from "../../../lib/query/session-mutation";
+import {
   layout,
   mobilePatrimonios,
   radii,
@@ -32,6 +37,7 @@ import {
   formatIncorporation,
   formatPatrimonioNumber,
 } from "../patrimonio-formatters";
+import { invalidatePatrimonioCreation } from "../patrimonio-mutation-invalidation";
 import {
   createCreatePatrimonioOperations,
   type CreatePatrimonioOperations,
@@ -518,13 +524,13 @@ function DirectorFlow({
   operations,
 }: Readonly<{ operations: CreatePatrimonioOperations }>) {
   const { manager } = useSession();
+  const queryClient = useQueryClient();
   const { width } = useWindowDimensions();
   const [form, setForm] = useState(EMPTY_CREATE_PATRIMONIO_FORM);
   const [step, setStep] = useState<Step>(1);
   const [review, setReview] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [feedback, setFeedback] = useState<string>();
-  const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<PatrimonioDetalhe>();
   const posting = useRef(false);
   const [catalog, setCatalog] = useState<Catalog>();
@@ -533,6 +539,24 @@ function DirectorFlow({
     operations,
     form.purchaseProcessId,
   );
+  const creation = useMutation({
+    mutationFn: ({
+      body,
+    }: Readonly<{
+      body: ReturnType<typeof mapCreatePatrimonioForm>;
+      identityId: string | null;
+    }>) =>
+      manager.authorizedRequest(
+        (token) => operations.create(body, { accessToken: token }),
+        false,
+      ),
+    onSuccess: (_created, variables) =>
+      isCurrentSession(manager, variables.identityId)
+        ? invalidatePatrimonioCreation(queryClient)
+        : undefined,
+    retry: false,
+  });
+  const submitting = creation.isPending;
   const species =
     queries.species.data?.pages.flatMap((page) => page.dados) ?? [];
   const sectors =
@@ -565,16 +589,13 @@ function DirectorFlow({
   const submit = async () => {
     if (posting.current) return;
     posting.current = true;
-    setSubmitting(true);
     setFeedback(undefined);
+    creation.reset();
     try {
       const body = mapCreatePatrimonioForm(form);
-      setCreated(
-        await manager.authorizedRequest(
-          (token) => operations.create(body, { accessToken: token }),
-          false,
-        ),
-      );
+      const identityId = currentSessionIdentity(manager);
+      const result = await creation.mutateAsync({ body, identityId });
+      if (isCurrentSession(manager, identityId)) setCreated(result);
     } catch (error) {
       const fieldFeedback = fieldErrorsFromApi(error);
       if (fieldFeedback) {
@@ -585,7 +606,6 @@ function DirectorFlow({
       setFeedback(createPatrimonioErrorMessage(error));
     } finally {
       posting.current = false;
-      setSubmitting(false);
     }
   };
 

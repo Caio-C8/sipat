@@ -1,6 +1,6 @@
 # `MOBILE-QUERY-003` — Invalidar cache após mutations mobile
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -67,14 +67,14 @@ automático, atualização otimista ou mudança no comportamento da API.
 
 ## Critérios de aceite
 
-- [ ] cada mutation é enviada uma única vez e nunca recebe retry automático;
-- [ ] sucesso invalida/refaz somente as famílias documentadas;
-- [ ] listagem, detalhe, Home e progresso deixam de exibir dado fresco obsoleto
+- [x] cada mutation é enviada uma única vez e nunca recebe retry automático;
+- [x] sucesso invalida/refaz somente as famílias documentadas;
+- [x] listagem, detalhe, Home e progresso deixam de exibir dado fresco obsoleto
       após uma mutation relacionada;
-- [ ] mutation em erro preserva o último dado confirmado e expõe feedback
+- [x] mutation em erro preserva o último dado confirmado e expõe feedback
       compatível com o fluxo atual;
-- [ ] navegação que depende do novo estado aguarda a reconciliação necessária;
-- [ ] logout durante mutation cancela/limpa o estado privado sem repovoar o
+- [x] navegação que depende do novo estado aguarda a reconciliação necessária;
+- [x] logout durante mutation cancela/limpa o estado privado sem repovoar o
       cache da sessão encerrada.
 
 ## Arquivos ou módulos potencialmente afetados
@@ -102,4 +102,5 @@ automático, atualização otimista ou mudança no comportamento da API.
 
 ## Pendências ou decisões bloqueantes
 
-- Iniciar somente depois de `MOBILE-QUERY-002` estar implementada e verificada.
+- Nenhuma para esta entrega. Persistência, fila offline e mutation otimista
+  continuam fora do escopo.
