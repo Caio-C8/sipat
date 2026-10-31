@@ -30,17 +30,15 @@ test("administrador navega pelos cadastros visuais", async ({ page }) => {
 test("administrador consulta e abre o cadastro visual de setores", async ({
   page,
 }) => {
-  await page
-    .context()
-    .addCookies([
-      {
-        name: "sipat_session",
-        value: "active",
-        url: "http://localhost:3100",
-        httpOnly: true,
-        sameSite: "Strict",
-      },
-    ]);
+  await page.context().addCookies([
+    {
+      name: "sipat_session",
+      value: "active",
+      url: "http://localhost:3100",
+      httpOnly: true,
+      sameSite: "Strict",
+    },
+  ]);
   await page.goto("/cadastros/setores");
   await expect(
     page.getByRole("heading", { name: "Setores", exact: true }),
