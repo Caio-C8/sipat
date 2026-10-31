@@ -22,7 +22,7 @@ import {
 } from "../lib/navigation/routes";
 import { useSession } from "../features/auth/session/session-context";
 import { protectedRedirect } from "../features/auth/session/session-routing";
-import { layout } from "../theme/tokens";
+import { institutionalPalette, layout } from "../theme/tokens";
 
 const API_TIMEOUT_MS = 8_000;
 
@@ -175,7 +175,7 @@ export default function CheckScreen() {
         <RefreshControl
           refreshing={apiLoading}
           onRefresh={() => void checkApi()}
-          tintColor="#ffffff"
+          tintColor={institutionalPalette.action}
         />
       }
     >
@@ -245,7 +245,10 @@ export default function CheckScreen() {
               </View>
 
               {apiLoading ? (
-                <ActivityIndicator color="#1f6848" size="small" />
+                <ActivityIndicator
+                  color={institutionalPalette.action}
+                  size="small"
+                />
               ) : (
                 <Text
                   style={[
@@ -406,10 +409,10 @@ export default function CheckScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: "#f1f5f2",
+    backgroundColor: institutionalPalette.canvas,
   },
   hero: {
-    backgroundColor: "#123f32",
+    backgroundColor: institutionalPalette.structure,
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: 44,
@@ -423,14 +426,14 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   environmentText: {
-    color: "#d5eadd",
+    color: institutionalPalette.highlightLight,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
   eyebrow: {
-    color: "#8dc6a6",
+    color: institutionalPalette.highlightLight,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.5,
@@ -443,7 +446,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   lead: {
-    color: "#d5eadd",
+    color: "#CBD5E1",
     fontSize: 16,
     lineHeight: 24,
     marginTop: 14,
@@ -460,14 +463,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   sectionTitle: {
-    color: "#173c31",
+    color: institutionalPalette.text,
     fontSize: 20,
     fontWeight: "800",
     marginBottom: 2,
     marginLeft: 4,
   },
   sectionDescription: {
-    color: "#52665c",
+    color: institutionalPalette.textMuted,
     fontSize: 14,
     lineHeight: 21,
     marginLeft: 4,
@@ -481,12 +484,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5de",
+    backgroundColor: institutionalPalette.surface,
+    borderColor: institutionalPalette.border,
     borderRadius: 18,
     borderWidth: 1,
     padding: 20,
-    shadowColor: "#173c31",
+    shadowColor: institutionalPalette.structure,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
@@ -513,13 +516,13 @@ const styles = StyleSheet.create({
     width: 10,
   },
   statusAvailable: {
-    backgroundColor: "#2e8b62",
+    backgroundColor: institutionalPalette.success,
   },
   statusUnavailable: {
-    backgroundColor: "#b75447",
+    backgroundColor: institutionalPalette.danger,
   },
   cardTitle: {
-    color: "#173c31",
+    color: institutionalPalette.text,
     fontSize: 18,
     fontWeight: "800",
   },
@@ -533,15 +536,15 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   statusBadgeSuccess: {
-    backgroundColor: "#e1f2e8",
-    color: "#1f6848",
+    backgroundColor: institutionalPalette.successSurface,
+    color: institutionalPalette.success,
   },
   statusBadgeError: {
-    backgroundColor: "#f9e7e3",
-    color: "#8e3f34",
+    backgroundColor: institutionalPalette.dangerSurface,
+    color: institutionalPalette.danger,
   },
   cardDescription: {
-    color: "#52665c",
+    color: institutionalPalette.textMuted,
     fontSize: 15,
     lineHeight: 22,
     marginTop: 14,
@@ -552,39 +555,39 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   metadataItem: {
-    backgroundColor: "#f3f7f4",
+    backgroundColor: institutionalPalette.neutralSurface,
     borderRadius: 12,
     flex: 1,
     padding: 12,
   },
   metadataLabel: {
-    color: "#728278",
+    color: institutionalPalette.textMuted,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   metadataValue: {
-    color: "#173c31",
+    color: institutionalPalette.text,
     fontSize: 14,
     fontWeight: "700",
     marginTop: 5,
   },
   lastCheck: {
-    color: "#728278",
+    color: institutionalPalette.textMuted,
     fontSize: 12,
     marginTop: 12,
   },
   errorMessage: {
-    color: "#8e3f34",
+    color: institutionalPalette.danger,
     fontSize: 14,
     lineHeight: 21,
     marginTop: 14,
   },
   endpoint: {
-    backgroundColor: "#edf2ef",
+    backgroundColor: institutionalPalette.neutralSurface,
     borderRadius: 10,
-    color: "#40564b",
+    color: institutionalPalette.textSubtle,
     fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }),
     fontSize: 12,
     lineHeight: 17,
@@ -593,7 +596,7 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: "center",
-    backgroundColor: "#1f6848",
+    backgroundColor: institutionalPalette.institutional,
     borderRadius: 12,
     marginTop: 14,
     minHeight: 48,
@@ -605,7 +608,7 @@ const styles = StyleSheet.create({
     opacity: 0.48,
   },
   buttonPressed: {
-    backgroundColor: "#184f38",
+    backgroundColor: institutionalPalette.structure,
     transform: [{ scale: 0.99 }],
   },
   buttonText: {
@@ -625,8 +628,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   routeCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#dbe5de",
+    backgroundColor: institutionalPalette.surface,
+    borderColor: institutionalPalette.border,
     borderRadius: 18,
     borderWidth: 1,
     padding: 20,
@@ -636,10 +639,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   routeCardCurrent: {
-    borderColor: "#1f6848",
+    borderColor: institutionalPalette.action,
   },
   routeCardPressed: {
-    backgroundColor: "#edf2ef",
+    backgroundColor: institutionalPalette.actionSurface,
     transform: [{ scale: 0.995 }],
   },
   routeHeader: {
@@ -648,30 +651,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   routePath: {
-    color: "#1f6848",
+    color: institutionalPalette.action,
     fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }),
     fontSize: 12,
     fontWeight: "700",
   },
   routeArrow: {
-    color: "#1f6848",
+    color: institutionalPalette.action,
     fontSize: 22,
     fontWeight: "800",
   },
   routeTitle: {
-    color: "#173c31",
+    color: institutionalPalette.text,
     fontSize: 18,
     fontWeight: "800",
     marginTop: 12,
   },
   routeDescription: {
-    color: "#52665c",
+    color: institutionalPalette.textMuted,
     fontSize: 14,
     lineHeight: 21,
     marginTop: 6,
   },
   routeMetadata: {
-    borderTopColor: "#dbe5de",
+    borderTopColor: institutionalPalette.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     gap: 8,
     marginTop: 16,
@@ -683,18 +686,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   routeMetadataLabel: {
-    color: "#718077",
+    color: institutionalPalette.textMuted,
     fontSize: 12,
     width: 52,
   },
   routeMetadataValue: {
-    color: "#40564b",
+    color: institutionalPalette.textSubtle,
     flex: 1,
     fontSize: 12,
     fontWeight: "600",
   },
   footer: {
-    color: "#718077",
+    color: institutionalPalette.textMuted,
     fontSize: 12,
     textAlign: "center",
     marginTop: 4,

@@ -76,7 +76,8 @@ copiadas, nem alterar o arquivo de design.
   data de tombamento e valor de incorporação;
 - etapa 4: método `LINEAR` somente leitura, vida útil inicial, residual em valor
   ou percentual como representação do formulário, valor residual efetivo e
-  data de início;
+  data de início; todos são obrigatórios e a tela informa que substituições
+  posteriores pertencem à reavaliação;
 - mapper local converte máscaras, moeda, datas, campos vazios e modo percentual
   para `CriarPatrimonioBodySchema`, sem modificar o contrato público;
 - cálculo/preview de depreciação usa aritmética decimal e a mesma regra linear

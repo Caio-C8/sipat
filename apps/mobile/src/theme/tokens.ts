@@ -138,6 +138,27 @@ export const mobileInventarios = {
   overlay: "rgba(20, 36, 59, 0.45)",
 } as const;
 
+export const institutionalPalette = {
+  canvas: "#F8FAFC",
+  surface: "#FFFFFF",
+  text: "#0F172A",
+  textMuted: "#64748B",
+  textSubtle: "#475569",
+  border: "#E2E8F0",
+  institutional: "#1E3A5F",
+  structure: "#0F2644",
+  support: "#2A4F7A",
+  highlight: "#D4A017",
+  highlightLight: "#F5C842",
+  action: "#2563EB",
+  actionSurface: "#EFF6FF",
+  success: "#047857",
+  successSurface: "#ECFDF5",
+  danger: "#B91C1C",
+  dangerSurface: "#FEF2F2",
+  neutralSurface: "#F1F5F9",
+} as const;
+
 export const mobileAuth = {
   canvas: "#f8fafc",
   card: "#ffffff",

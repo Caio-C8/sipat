@@ -8,7 +8,11 @@ import {
 import { usePathname } from "expo-router";
 import { publicAppConfig } from "../../../config/public-app-config";
 import { shouldBypassSessionGate } from "../../../lib/navigation/check-access";
-import { colors, spacing, typography } from "../../../theme/tokens";
+import {
+  institutionalPalette,
+  spacing,
+  typography,
+} from "../../../theme/tokens";
 import { useSession } from "./session-context";
 
 export function SessionGate({
@@ -24,7 +28,7 @@ export function SessionGate({
   if (state.status === "restoring") {
     return (
       <View accessibilityLabel="Restaurando sessão" style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
+        <ActivityIndicator color={institutionalPalette.action} size="large" />
         <Text style={styles.text}>Restaurando sessão segura…</Text>
       </View>
     );
@@ -34,7 +38,7 @@ export function SessionGate({
     return (
       <View style={styles.center}>
         <Text accessibilityRole="header" style={styles.title}>
-          API indisponível
+          Não foi possível conectar
         </Text>
         <Text style={styles.text}>
           Sua credencial foi preservada. Verifique a conexão e tente novamente.
@@ -76,18 +80,19 @@ export function SessionGate({
 const styles = StyleSheet.create({
   center: {
     alignItems: "center",
+    backgroundColor: institutionalPalette.canvas,
     flex: 1,
     justifyContent: "center",
     padding: spacing.xxl,
   },
   title: {
-    color: colors.text,
+    color: institutionalPalette.text,
     fontSize: 22,
     fontWeight: "800",
     textAlign: "center",
   },
   text: {
-    color: colors.textMuted,
+    color: institutionalPalette.textMuted,
     fontSize: typography.body,
     lineHeight: typography.bodyLineHeight,
     marginTop: spacing.md,
@@ -95,12 +100,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: institutionalPalette.institutional,
     borderRadius: 10,
     marginTop: spacing.xl,
     minHeight: 48,
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
   },
-  buttonText: { color: colors.primaryContrast, fontWeight: "700" },
+  buttonText: { color: institutionalPalette.surface, fontWeight: "700" },
 });

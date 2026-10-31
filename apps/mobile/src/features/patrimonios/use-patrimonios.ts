@@ -51,9 +51,10 @@ export function patrimonioErrorMessage(error: ApiError, detail = false) {
     return "O patrimônio solicitado não foi encontrado.";
   if (error.kind === "timeout")
     return "A consulta demorou mais que o esperado.";
-  if (error.kind === "network") return "Sem conexão ou API indisponível.";
+  if (error.kind === "network")
+    return "Sem conexão. Verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
-    return "A API retornou dados fora do contrato esperado.";
+    return "Não foi possível carregar as informações. Atualize e tente novamente.";
   return detail
     ? "Não foi possível carregar este patrimônio."
     : "Não foi possível carregar os patrimônios.";

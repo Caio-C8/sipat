@@ -66,6 +66,7 @@ export class InventarioResponseMapper {
   }
 
   static paraItem(item: ItemInventarioPayload): ItemInventarioResponse {
+    const localizacao = item.localizacoesPosteriores?.[0];
     return {
       id: item.id,
       patrimonio: item.patrimonio,
@@ -94,6 +95,21 @@ export class InventarioResponseMapper {
       dataCorrecao: item.dataCorrecao?.toISOString() ?? null,
       corrigidoPorId: item.corrigidoPorId,
       transferenciaCorrecaoId: item.transferenciaCorrecaoId,
+      localizacaoPosterior:
+        localizacao === undefined
+          ? null
+          : {
+              id: localizacao.id,
+              setorEncontrado: localizacao.setorInventarioEncontrado.setor,
+              dataLocalizacao: localizacao.dataLocalizacao.toISOString(),
+              localizadoPorId: localizacao.localizadoPorId,
+              statusCorrecao: localizacao.statusCorrecao,
+              tipoCorrecao: localizacao.tipoCorrecao,
+              dataCorrecao: localizacao.dataCorrecao?.toISOString() ?? null,
+              corrigidoPorId: localizacao.corrigidoPorId,
+              transferenciaCorrecaoId: localizacao.transferenciaCorrecaoId,
+              observacao: localizacao.observacao,
+            },
     } as ItemInventarioResponse;
   }
 }

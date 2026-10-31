@@ -42,13 +42,13 @@ const form: CreatePatrimonioForm = {
   sectorId: SECTOR,
   incorporationType: "AQUISICAO",
   purchaseProcessId: "",
-  registryDate: "2026-09-27",
+  registryDate: "27/09/2026",
   incorporationValue: "6000",
   usefulLifeMonths: "60",
   residualMode: "value",
   residualValue: "600",
   residualPercentage: "",
-  depreciationStartDate: "2026-10-01",
+  depreciationStartDate: "01/10/2026",
 };
 
 function created() {

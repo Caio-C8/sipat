@@ -1,5 +1,6 @@
 import type {
   InventarioDetalhe,
+  ListarInventariosResponse,
   ListarItensInventarioResponse,
   ListarSetoresInventarioResponse,
   SetorInventarioResumo,
@@ -57,16 +58,17 @@ export function inventarioErrorMessage(error: ApiError, detail = false) {
     if (error.code === "OUTRO_SETOR_INVENTARIO_EM_ANDAMENTO")
       return "Outro setor já está em conferência. Os dados foram atualizados.";
     if (error.code === "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL")
-      return "Há um vínculo operacional incompatível ou o setor mudou de estado. Os dados foram atualizados.";
+      return "Este item não pode mais ser corrigido porque sua situação mudou. Os dados foram atualizados.";
     if (error.code === "INVENTARIO_FINALIZADO")
       return "O inventário foi finalizado e não aceita novas alterações.";
     return "O inventário foi alterado por outra pessoa. Os dados foram atualizados.";
   }
   if (error.kind === "timeout")
     return "A consulta demorou mais que o esperado.";
-  if (error.kind === "network") return "Sem conexão ou API indisponível.";
+  if (error.kind === "network")
+    return "Sem conexão. Verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
-    return "A API retornou dados fora do contrato esperado.";
+    return "Não foi possível carregar as informações. Atualize e tente novamente.";
   return detail
     ? "Não foi possível carregar este inventário."
     : "Não foi possível carregar os inventários.";
@@ -128,15 +130,30 @@ export function useCancelableLoad<T>(
 
 export function useInventarios(
   manager: SessionManager,
-  status: Extract<StatusInventario, "PENDENTE" | "EM_ANDAMENTO">,
+  status: StatusInventario,
   busca: string | undefined,
   pagina: number,
+  enabled = true,
 ) {
   const operations = useInventariosOperations();
   return useCancelableLoad(
     useCallback(
-      (signal: AbortSignal) =>
-        manager.authorizedRequest(
+      (signal: AbortSignal) => {
+        if (!enabled) {
+          return Promise.resolve({
+            status: 200 as const,
+            sucesso: true as const,
+            mensagem: "Consulta desabilitada para este perfil.",
+            dados: [],
+            meta: {
+              total: 0,
+              pagina: 1,
+              ultimaPagina: 1,
+              limite: 10,
+            },
+          } satisfies ListarInventariosResponse);
+        }
+        return manager.authorizedRequest(
           (accessToken) =>
             operations.listar(
               {
@@ -148,8 +165,9 @@ export function useInventarios(
               { accessToken, signal },
             ),
           true,
-        ),
-      [busca, manager, operations, pagina, status],
+        );
+      },
+      [busca, enabled, manager, operations, pagina, status],
     ),
   );
 }
@@ -200,7 +218,12 @@ export type SetorDetailData = Readonly<{
   setor: SetorInventarioResumo;
   setorEmAndamento: SetorInventarioResumo | null;
   pendencias: ListarItensInventarioResponse;
+  registros: ListarItensInventarioResponse;
+  totaisRegistros: Readonly<{ previstos: number; encontradosAqui: number }>;
 }>;
+
+export type ContextoRegistrosSetor =
+  "TODOS" | "PREVISTO" | "ENCONTRADO_NO_SETOR";
 
 export function useSetorInventarioDetail(
   manager: SessionManager,
@@ -208,6 +231,8 @@ export function useSetorInventarioDetail(
   setorInventarioId: string,
   validIds: boolean,
   paginaPendencias = 1,
+  paginaRegistros = 1,
+  contextoRegistros: ContextoRegistrosSetor = "PREVISTO",
 ) {
   const operations = useInventariosOperations();
   const loadData = useCallback(
@@ -215,7 +240,43 @@ export function useSetorInventarioDetail(
       if (!validIds) throw new ApiError("invalid-response");
       return manager.authorizedRequest(async (accessToken) => {
         const options = { accessToken, signal };
-        const [inventario, setor, pendencias] = await Promise.all([
+        const carregarRegistros = (
+          contextoSetor: Exclude<ContextoRegistrosSetor, "TODOS"> | undefined,
+          pagina: number,
+          limite: string,
+        ) =>
+          operations.listarItens(
+            inventarioId,
+            {
+              pagina: String(pagina),
+              limite,
+              setorInventarioId,
+              contextoSetor,
+              statusVerificacao: "VERIFICADO",
+            },
+            options,
+          );
+        const registrosPromise = carregarRegistros(
+          contextoRegistros === "TODOS" ? undefined : contextoRegistros,
+          paginaRegistros,
+          "10",
+        );
+        const previstosPromise =
+          contextoRegistros === "PREVISTO"
+            ? registrosPromise
+            : carregarRegistros("PREVISTO", 1, "1");
+        const encontradosPromise =
+          contextoRegistros === "ENCONTRADO_NO_SETOR"
+            ? registrosPromise
+            : carregarRegistros("ENCONTRADO_NO_SETOR", 1, "1");
+        const [
+          inventario,
+          setor,
+          pendencias,
+          registros,
+          registrosPrevistos,
+          registrosEncontrados,
+        ] = await Promise.all([
           operations.consultar(inventarioId, options),
           operations.consultarSetor(inventarioId, setorInventarioId, options),
           operations.listarItens(
@@ -224,11 +285,13 @@ export function useSetorInventarioDetail(
               pagina: String(paginaPendencias),
               limite: "10",
               setorInventarioId,
-              situacao: "DIVERGENCIA",
               statusCorrecao: "PENDENTE",
             },
             options,
           ),
+          registrosPromise,
+          previstosPromise,
+          encontradosPromise,
         ]);
         if (!setor) throw new ApiError("http", 404);
         const setoresEmAndamento = await operations.listarSetores(
@@ -241,14 +304,21 @@ export function useSetorInventarioDetail(
           setor,
           setorEmAndamento: setoresEmAndamento.dados[0] ?? null,
           pendencias,
+          registros,
+          totaisRegistros: {
+            previstos: registrosPrevistos.meta.total,
+            encontradosAqui: registrosEncontrados.meta.total,
+          },
         };
       }, true);
     },
     [
       inventarioId,
+      contextoRegistros,
       manager,
       operations,
       paginaPendencias,
+      paginaRegistros,
       setorInventarioId,
       validIds,
     ],

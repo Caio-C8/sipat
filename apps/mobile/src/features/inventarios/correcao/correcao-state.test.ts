@@ -35,6 +35,7 @@ function pendingItem() {
     dataCorrecao: null,
     corrigidoPorId: null,
     transferenciaCorrecaoId: null,
+    localizacaoPosterior: null,
   });
 }
 
@@ -74,14 +75,41 @@ describe("estado da correção de inventário", () => {
     expect(isPendingDivergence(corrected)).toBe(false);
   });
 
+  it("permite corrigir localização posterior pendente de item não localizado", () => {
+    const divergente = pendingItem();
+    const item = ItemInventarioResponseSchema.parse({
+      ...divergente,
+      situacao: "NAO_LOCALIZADO",
+      setorEncontrado: null,
+      statusCorrecao: null,
+      ausenciaJustificada: null,
+      localizacaoPosterior: {
+        id: "66666666-6666-4666-8666-666666666666",
+        setorEncontrado: {
+          id: "44444444-4444-4444-8444-444444444444",
+          nome: "Gabinete 01",
+        },
+        dataLocalizacao: "2026-10-29T13:00:00.000Z",
+        localizadoPorId: "55555555-5555-4555-8555-555555555555",
+        statusCorrecao: "PENDENTE",
+        tipoCorrecao: null,
+        dataCorrecao: null,
+        corrigidoPorId: null,
+        transferenciaCorrecaoId: null,
+        observacao: null,
+      },
+    });
+    expect(isPendingDivergence(item)).toBe(true);
+  });
+
   it.each([
-    [new ApiError("network"), "Nenhuma correção foi simulada"],
-    [new ApiError("timeout"), "Tente novamente explicitamente"],
+    [new ApiError("network"), "A correção não foi salva"],
+    [new ApiError("timeout"), "Tente novamente"],
     [
       new ApiError("http", 409, "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL"),
       "não está mais pendente",
     ],
-    [new ApiError("invalid-response"), "fora do contrato"],
+    [new ApiError("invalid-response"), "Não foi possível confirmar a correção"],
   ])("distingue falhas sem simular sucesso", (error, message) => {
     expect(correcaoErrorMessage(error)).toContain(message);
   });

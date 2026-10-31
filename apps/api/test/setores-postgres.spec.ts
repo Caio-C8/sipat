@@ -118,6 +118,14 @@ describeComPostgres("setores no PostgreSQL", () => {
       valorIncorporacao: "1000",
       especieId,
       setorAtualId,
+      parametrosDepreciacao: {
+        metodo: "LINEAR",
+        vidaUtilInicialMeses: 60,
+        percentualResidual: "10",
+        valorResidual: "100",
+        valorBaseInicial: "1000",
+        dataInicio: "2026-10-19",
+      },
     };
   }
 

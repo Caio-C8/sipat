@@ -36,15 +36,14 @@ export function useConferencia(
   const [lastResult, setLastResult] =
     useState<VerificarItemInventarioResultado | null>(null);
   const [divergenceOpen, setDivergenceOpen] = useState(false);
+  const dismissLastResult = useCallback(() => setLastResult(null), []);
 
   const submit = useCallback(
     async (rawValue: string) => {
       if (!tryAcquireSubmission(lock)) return false;
       const parsed = parseNumeroPatrimonial(rawValue);
       if (!parsed.success) {
-        setInputError(
-          "Informe um número positivo sem zeros à esquerda ou use SP- seguido do número.",
-        );
+        setInputError("Informe um número patrimonial positivo.");
         releaseSubmission(lock);
         return false;
       }
@@ -52,6 +51,8 @@ export function useConferencia(
       setSubmitting(true);
       setInputError(null);
       setMutationError(null);
+      setLastResult(null);
+      setDivergenceOpen(false);
       try {
         const result = await manager.authorizedRequest(
           (accessToken) =>
@@ -65,7 +66,10 @@ export function useConferencia(
         );
         await detail.reload();
         setLastResult(result);
-        setDivergenceOpen(result.item.situacao === "DIVERGENCIA");
+        setDivergenceOpen(
+          result.item.situacao === "DIVERGENCIA" ||
+            result.tipo === "LOCALIZACAO_POSTERIOR_REGISTRADA",
+        );
         return true;
       } catch (error) {
         const normalized = normalizeError(error);
@@ -82,6 +86,7 @@ export function useConferencia(
 
   return {
     detail,
+    dismissLastResult,
     divergenceOpen,
     inputError,
     lastResult,

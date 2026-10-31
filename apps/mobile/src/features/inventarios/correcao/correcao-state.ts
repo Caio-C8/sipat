@@ -22,26 +22,30 @@ export function buildCorrecaoBody(
 }
 
 export function isPendingDivergence(item: ItemInventarioResponse) {
-  return item.situacao === "DIVERGENCIA" && item.statusCorrecao === "PENDENTE";
+  return (
+    (item.situacao === "DIVERGENCIA" && item.statusCorrecao === "PENDENTE") ||
+    (item.situacao === "NAO_LOCALIZADO" &&
+      item.localizacaoPosterior?.statusCorrecao === "PENDENTE")
+  );
 }
 
 export function correcaoErrorMessage(error: ApiError) {
   if (error.status === 401)
     return "Sua sessão expirou. Entre novamente para continuar.";
-  if (error.status === 403) return "Seu perfil não pode corrigir divergências.";
+  if (error.status === 403) return "Seu perfil não pode corrigir ocorrências.";
   if (error.status === 404 || error.code === "ITEM_INVENTARIO_NAO_ENCONTRADO")
     return "O item do inventário não foi encontrado.";
   if (error.code === "INVENTARIO_FINALIZADO")
     return "O inventário foi finalizado e não aceita novas correções.";
   if (error.code === "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL")
-    return "Esta divergência não está mais pendente. O resumo será atualizado.";
+    return "Esta ocorrência não está mais pendente. O resumo será atualizado.";
   if (error.status === 409)
     return "O item foi alterado por outra pessoa. Os dados foram atualizados.";
   if (error.kind === "timeout")
-    return "A correção demorou mais que o esperado. Tente novamente explicitamente.";
+    return "A correção demorou mais que o esperado. Tente novamente.";
   if (error.kind === "network")
-    return "Sem conexão ou API indisponível. Nenhuma correção foi simulada.";
+    return "Sem conexão. A correção não foi salva; verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
-    return "A API retornou uma resposta fora do contrato esperado.";
+    return "Não foi possível confirmar a correção. Atualize os dados e tente novamente.";
   return "Não foi possível registrar a correção.";
 }

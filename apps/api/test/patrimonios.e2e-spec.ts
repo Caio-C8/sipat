@@ -239,6 +239,14 @@ describe("patrimônios", () => {
       valorIncorporacao: "1000.00",
       especieId: ESPECIE_ID,
       setorAtualId: SETOR_ID,
+      parametrosDepreciacao: {
+        metodo: "LINEAR",
+        vidaUtilInicialMeses: 60,
+        percentualResidual: "10",
+        valorResidual: "100",
+        valorBaseInicial: "1000",
+        dataInicio: "2026-10-18",
+      },
     };
   }
 
@@ -404,6 +412,13 @@ describe("patrimônios", () => {
         data: expect.objectContaining({
           createdBy: { connect: { id: DIRETOR_ID } },
           textoBusca: "CAMERA FOTOGRAFICA SAO JOSE OPTICO SERIE-1",
+          parametrosDepreciacao: {
+            create: expect.objectContaining({
+              vidaUtilInicialMeses: 60,
+              valorBaseInicial: "1000",
+              valorResidual: "100",
+            }),
+          },
         }),
       }),
     );
@@ -438,6 +453,19 @@ describe("patrimônios", () => {
 
     expect(response.status).toBe(400);
     expect(RespostaErroSchema.safeParse(response.body).success).toBe(true);
+    expect(database.patrimonio.create).not.toHaveBeenCalled();
+  });
+
+  it("rejeita cadastro sem parâmetros iniciais de depreciação", async () => {
+    const semParametros = { ...body(), parametrosDepreciacao: undefined };
+    const response = await postAutenticado(tokenDiretor).send(semParametros);
+
+    expect(response.status).toBe(400);
+    expect(response.body.erros).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ campo: "parametrosDepreciacao" }),
+      ]),
+    );
     expect(database.patrimonio.create).not.toHaveBeenCalled();
   });
 

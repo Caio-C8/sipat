@@ -45,6 +45,79 @@ export const EMPTY_CREATE_PATRIMONIO_FORM: CreatePatrimonioForm = {
 
 export type FormErrors = Readonly<Record<string, string>>;
 
+export function formatDateInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
+    .filter(Boolean)
+    .join("/");
+}
+
+export function dateInputToIso(value: string): string | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+  const [, dayText, monthText, yearText] = match;
+  const day = Number(dayText);
+  const month = Number(monthText);
+  const year = Number(yearText);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [
+    31,
+    leap ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth[month - 1]!
+  )
+    return null;
+  return `${yearText}-${monthText}-${dayText}`;
+}
+
+export function formatCurrencyInput(value: string, previousValue = "") {
+  const previousDigits = previousValue
+    .replace(/\D/g, "")
+    .replace(/^0+(?=\d)/, "");
+  const deleting = value === previousValue.slice(0, -1);
+  const digits = (
+    deleting
+      ? previousDigits.slice(0, -1)
+      : value.replace(/\D/g, "").replace(/^0+(?=\d)/, "")
+  ).slice(0, 14);
+  if (!digits) return "";
+  const padded = digits.padStart(3, "0");
+  const integer = BigInt(padded.slice(0, -2)).toString();
+  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${formattedInteger},${padded.slice(-2)}`;
+}
+
+export function formatIntegerInput(value: string, maxLength: number) {
+  return value.replace(/\D/g, "").slice(0, maxLength);
+}
+
+export function formatPercentageInput(value: string) {
+  const sanitized = value.replace(".", ",").replace(/[^\d,]/g, "");
+  const separator = sanitized.indexOf(",");
+  if (separator < 0) return sanitized.slice(0, 3);
+  const integer = sanitized.slice(0, separator).slice(0, 3);
+  const fraction = sanitized
+    .slice(separator + 1)
+    .replace(/,/g, "")
+    .slice(0, 2);
+  return `${integer || "0"},${fraction}`;
+}
+
 export function currencyInputToDecimal(value: string): string | null {
   const compact = value.replace(/\s/g, "").replace(/^R\$/i, "");
   if (!compact) return null;
@@ -118,10 +191,12 @@ export function validateCreatePatrimonioStep(
     if (!form.sectorId) errors.sectorId = "Selecione um setor ativo.";
   }
   if (step === 3) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.registryDate))
-      errors.registryDate = "Use a data no formato AAAA-MM-DD.";
-    if (!currencyInputToDecimal(form.incorporationValue))
-      errors.incorporationValue = "Informe um valor monetário válido.";
+    if (!dateInputToIso(form.registryDate))
+      errors.registryDate = "Informe uma data válida no formato DD/MM/AAAA.";
+    const incorporationValue = currencyInputToDecimal(form.incorporationValue);
+    if (!incorporationValue || /^0(?:\.0+)?$/.test(incorporationValue))
+      errors.incorporationValue =
+        "Informe um valor monetário válido e maior que zero.";
   }
   if (step === 4) {
     const months = Number(form.usefulLifeMonths);
@@ -137,8 +212,9 @@ export function validateCreatePatrimonioStep(
       Number(form.residualPercentage.replace(",", ".")) > 100
     )
       errors.residual = "O percentual não pode superar 100%.";
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.depreciationStartDate))
-      errors.depreciationStartDate = "Use a data no formato AAAA-MM-DD.";
+    if (!dateInputToIso(form.depreciationStartDate))
+      errors.depreciationStartDate =
+        "Informe uma data válida no formato DD/MM/AAAA.";
   }
   return errors;
 }
@@ -165,7 +241,7 @@ export function mapCreatePatrimonioForm(
       : undefined;
   return CriarPatrimonioBodySchema.parse({
     semNumeroOficial: form.withoutOfficialNumber,
-    dataTombamento: form.registryDate,
+    dataTombamento: dateInputToIso(form.registryDate)!,
     tipoIncorporacao: form.incorporationType,
     descricao: form.description.trim(),
     ...(brand ? { marca: brand } : {}),
@@ -181,7 +257,7 @@ export function mapCreatePatrimonioForm(
       ...(residualPercentage ? { percentualResidual: residualPercentage } : {}),
       valorResidual: effectiveResidual(form)!,
       valorBaseInicial: base,
-      dataInicio: form.depreciationStartDate,
+      dataInicio: dateInputToIso(form.depreciationStartDate)!,
     },
   });
 }

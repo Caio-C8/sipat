@@ -269,6 +269,7 @@ Objetivos patrimoniais futuros que exigirem comissão dependerão de
 | 24    | `INVENTARIOS-001` — Criar e consultar inventários  | concluído | `CONTRACTS-008`, `COMISSOES-001`, setores e patrimônios    |
 | 25    | `INVENTARIOS-002` — Conferir, corrigir e finalizar | concluído | `INVENTARIOS-001`, concorrência e política de movimentação |
 | 26    | `INVENTARIOS-003` — Consulta pelo Administrador    | concluído | `INVENTARIOS-001`, `INVENTARIOS-002` e RNF05               |
+| 27    | `INVENTARIOS-004` — Localização posterior          | concluído | `INVENTARIOS-002`, mobile e movimentações                  |
 
 Os três primeiros objetivos entregaram contratos, persistência e API sem
 interfaces. `INVENTARIOS-003` alterou somente a autorização das consultas
@@ -276,6 +277,12 @@ existentes para permitir acompanhamento administrativo; as operações do
 inventário continuam exclusivas do Diretor de Patrimônio. A primeira integração
 mobile foi implementada em `MOBILE-HOME-002`; câmera, scanner e fila offline
 continuam fora desta sequência.
+
+`INVENTARIOS-004` preserva o item consolidado como `NAO_LOCALIZADO` e registra
+em entidade separada quando ele é encontrado durante a conferência de outro
+setor. O registro é consultável nos dois setores, não altera a população ou o
+progresso e reutiliza o fluxo de correção por retorno físico ou transferência
+cadastral.
 
 A população do inventário é formada na criação por todos os setores ativos e
 patrimônios ATIVOS daquele instante. Somente um setor do inventário pode ficar
@@ -749,8 +756,8 @@ auditoria derivada da sessão.
   banco como defesa adicional;
 - normalização dos campos textuais e construção de `textoBusca` no servidor;
 - validação de setor ativo, espécie e processo de compra opcional;
-- criação da situação contábil e dos parâmetros iniciais de depreciação quando
-  informados pelo contrato aprovado;
+- criação obrigatória da situação contábil e dos parâmetros iniciais de
+  depreciação na mesma transação do patrimônio;
 - persistência atômica do patrimônio e de seus registros iniciais;
 - DTO, controller, service, repository, tipos, mapper, módulo e testes.
 

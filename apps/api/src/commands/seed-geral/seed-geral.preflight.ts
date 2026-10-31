@@ -5,8 +5,8 @@ export interface EstadoMigrationSeed {
 }
 
 const ULTIMA_MIGRATION =
-  "20261030045340_alinha_nomes_e_on_delete_fks_manutencoes";
-const TOTAL_MIGRATIONS = 20;
+  "20261030180000_adiciona_localizacoes_posteriores_inventario";
+const TOTAL_MIGRATIONS = 21;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],

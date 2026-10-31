@@ -28,28 +28,36 @@ código interno da API.
   em `development`; a topbar mantém a identificação municipal sem sessão e,
   quando autenticada, apresenta avatar com menu da conta e logout;
 - o grupo `(app)` aplica a bottom bar do protótipo; `Início`, `Bens`,
-  `Inventário` para o Diretor e `Cadastro` representam rotas existentes;
-  Inventário comunica a restrição ao Administrador e Relatórios permanece
-  disabled;
+  `Inventário` e `Cadastro` representam rotas existentes; Inventário é
+  consultável pelos dois perfis e Relatórios permanece disabled;
 - `/bens` e `/bens/[patrimonioId]` implementam consulta para os dois perfis,
-  com busca submetida, filtros públicos, paginação e detalhe nas abas `Dados` e
-  `Valores`;
+  com busca submetida por texto ou pelo número patrimonial exato, filtros
+  públicos, paginação e detalhe nas abas `Dados` e `Valores`;
 - `/inventarios`, `/inventarios/[inventarioId]` e o detalhe do setor permitem
-  selecionar um inventário aberto, buscar e paginar setores e iniciar ou
-  retomar exatamente uma conferência; o Administrador recebe somente leitura;
+  ao Diretor selecionar um inventário aberto e iniciar ou retomar exatamente
+  uma conferência, além de consultar registros por setor; o Administrador lista
+  inventários em andamento e finalizados e consulta setores, progresso e
+  registros sem controles de mutação;
 - a rota de conferência do setor em andamento aceita leitura pela câmera ou
-  entrada manual, valida o número patrimonial no boundary, serializa mutations,
-  refaz o progresso confirmado e distingue sucesso, divergência, idempotência e
-  erros públicos; a simbologia final ainda depende do teste com a etiqueta real;
+  entrada manual numérica com seleção explícita de bem sem número oficial e
+  prefixo `SP-` fixo, normaliza o formato visual para o valor canônico, valida o
+  número patrimonial no boundary, serializa mutations, refaz o progresso
+  confirmado e distingue sucesso, divergência, idempotência e erros públicos; a
+  simbologia final ainda depende do teste com a etiqueta real;
 - divergências pendentes podem ser corrigidas imediatamente ou pelo resumo
   paginado do setor, com retorno físico ou transferência cadastral definidos
-  pelo contrato e sem retry automático;
+  pelo contrato e sem retry automático; o mesmo item permanece visível no setor
+  original e em `Encontrados aqui` no setor da leitura;
+- um bem consolidado como não localizado e lido em outro setor gera uma
+  localização posterior, visível nos registros dos dois setores e corrigível
+  pelo mesmo fluxo, sem aumentar os totais da conferência;
 - o Diretor pode concluir somente a conferência do setor após uma confirmação
   com contagens reais; o resumo refaz setor e pendências, apresenta corretos,
   divergências e não localizados e não expõe finalização global do inventário;
 - `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
-  de cadastro unitário; o Administrador recebe `Cadastro restrito` sem montar o
-  formulário nem consultar catálogos;
+  de cadastro unitário, com máscaras de data civil e moeda e parâmetros
+  iniciais de depreciação obrigatórios; o Administrador recebe `Cadastro
+restrito` sem montar o formulário nem consultar catálogos;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior

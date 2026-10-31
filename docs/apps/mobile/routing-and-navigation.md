@@ -30,6 +30,12 @@ pelo Expo CLI em arquivos ignorados pelo Git quando o servidor inicia.
 - não esconda uma operação essencial somente em gesto;
 - não transforme um guard visual em autorização.
 
+As telas de consulta que permanecem montadas recarregam seus dados quando
+voltam a receber foco depois de uma navegação. A primeira entrada continua sob
+responsabilidade do hook de dados da própria tela, evitando uma consulta
+duplicada. Esse comportamento atualiza a transição de retorno sem polling,
+sincronização em tempo real ou execução periódica em segundo plano.
+
 ## Grupos e layouts
 
 Grupos como `(auth)` ou `(app)` organizam rotas sem alterar o caminho. Use
@@ -57,20 +63,20 @@ A autenticação e os redirects foram implementados por `MOBILE-AUTH-001` e
 `MOBILE-AUTH-002`; `MOBILE-HOME-001` tornou `/` a home protegida inicial e
 concentrou o diagnóstico em `/check`. A matriz aplicada é:
 
-| Rota                                                      | Acesso esperado                               | Destino quando o estado não permite acesso                   |
-| --------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------ |
-| `/login`                                                  | anônimo                                       | pendência → `/redefinir-senha`; sessão comum → `/`           |
-| `/esqueci-senha`                                          | anônimo                                       | pendência → `/redefinir-senha`; sessão comum → `/`           |
-| `/redefinir-senha`                                        | sessão com troca obrigatória                  | anônimo → `/login`; sessão comum → `/`                       |
-| `/senha-atualizada`                                       | sessão válida com troca concluída             | anônimo → `/login`; pendência → `/redefinir-senha`           |
-| `/`                                                       | ambos os perfis, troca concluída              | anônimo → `/login`; pendência → `/redefinir-senha`           |
-| `/bens`                                                   | ambos os perfis, troca concluída              | anônimo → `/login`; pendência → `/redefinir-senha`           |
-| `/bens/[patrimonioId]`                                    | ambos os perfis, UUID válido                  | anônimo → `/login`; ID inválido → estado local de erro       |
-| `/cadastro/patrimonio`                                    | ambos; formulário só para Diretor             | anônimo → `/login`; Administrador → estado restrito          |
-| `/inventarios`                                            | ambos; bottom bar ativa só para Diretor       | anônimo → `/login`; Administrador → consulta somente leitura |
-| `/inventarios/[inventarioId]`                             | ambos, UUID válido                            | anônimo → `/login`; ID inválido → estado local de erro       |
-| `/inventarios/[inventarioId]/setores/[setorInventarioId]` | ambos, UUIDs válidos; mutação só para Diretor | anônimo → `/login`; IDs inválidos → estado local de erro     |
-| `/check`                                                  | pública somente em `development`              | fora de development → mesma decisão protegida de `/`         |
+| Rota                                                      | Acesso esperado                                 | Destino quando o estado não permite acesso                   |
+| --------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| `/login`                                                  | anônimo                                         | pendência → `/redefinir-senha`; sessão comum → `/`           |
+| `/esqueci-senha`                                          | anônimo                                         | pendência → `/redefinir-senha`; sessão comum → `/`           |
+| `/redefinir-senha`                                        | sessão com troca obrigatória                    | anônimo → `/login`; sessão comum → `/`                       |
+| `/senha-atualizada`                                       | sessão válida com troca concluída               | anônimo → `/login`; pendência → `/redefinir-senha`           |
+| `/`                                                       | ambos os perfis, troca concluída                | anônimo → `/login`; pendência → `/redefinir-senha`           |
+| `/bens`                                                   | ambos os perfis, troca concluída                | anônimo → `/login`; pendência → `/redefinir-senha`           |
+| `/bens/[patrimonioId]`                                    | ambos os perfis, UUID válido                    | anônimo → `/login`; ID inválido → estado local de erro       |
+| `/cadastro/patrimonio`                                    | ambos; formulário só para Diretor               | anônimo → `/login`; Administrador → estado restrito          |
+| `/inventarios`                                            | ambos; Administrador vê andamento e finalizados | anônimo → `/login`; Administrador → consulta somente leitura |
+| `/inventarios/[inventarioId]`                             | ambos, UUID válido                              | anônimo → `/login`; ID inválido → estado local de erro       |
+| `/inventarios/[inventarioId]/setores/[setorInventarioId]` | ambos, UUIDs válidos; mutação só para Diretor   | anônimo → `/login`; IDs inválidos → estado local de erro     |
+| `/check`                                                  | pública somente em `development`                | fora de development → mesma decisão protegida de `/`         |
 
 `MOBILE-AUTH-004` acrescentou `/esqueci-senha` como rota pública do grupo
 `(auth)`. O deep link tokenless
@@ -119,9 +125,9 @@ Redirecionamento no cliente melhora a experiência, mas não protege endpoint.
 `MOBILE-UI-001` adicionou a bottom bar desenhada no frame `Home` somente ao
 grupo `(app)`. `Início` representa `/`, `Bens` representa `/bens` e `Cadastro`
 representa `/cadastro/patrimonio`; Bens permanece selecionado no detalhe e
-Cadastro na sua árvore. Inventário fica ativo na sua árvore para o Diretor de
-Patrimônio e comunica a restrição ao Administrador; Relatórios continua
-disabled enquanto seu fluxo não existir. Não
+Cadastro na sua árvore. Inventário navega para ambos os perfis, mas somente o
+Diretor recebe controles de conferência; Relatórios continua disabled enquanto
+seu fluxo não existir. Não
 crie uma rota vazia para fazer um item parecer navegável e não inclua rotas
 inexistentes no catálogo tipado.
 
@@ -133,3 +139,9 @@ desconhecidos em sucesso.
 A bottom bar não aparece em `(auth)`. A rota técnica `/check` preserva sua
 composição e o `DevelopmentCheckBanner`; ela não deve herdar navegação de
 produto apenas por estar disponível durante development.
+
+Na correção de uma ocorrência de inventário, a seta e o retorno após salvar
+voltam pela pilha de navegação. Assim, uma correção aberta durante a conferência
+retorna à conferência atual, e uma correção aberta pelo resumo retorna ao resumo
+que a originou. O setor esperado do item é usado somente como destino seguro
+quando a rota é aberta diretamente, sem histórico anterior.

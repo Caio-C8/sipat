@@ -12,6 +12,7 @@ import {
   type InventarioResumoPayload,
   type ItemInventarioOperacional,
   type ItemInventarioPayload,
+  type LocalizacaoPosteriorOperacional,
   type ProgressoInventarioPayload,
   type ProgressoSetorPayload,
   type SetorInventarioOperacional,
@@ -231,6 +232,45 @@ export class InventariosRepository {
     });
   }
 
+  async bloquearUltimaLocalizacaoPosterior(
+    itemInventarioId: string,
+  ): Promise<LocalizacaoPosteriorOperacional | null> {
+    const registros = await this.database.$queryRaw<
+      LocalizacaoPosteriorOperacional[]
+    >`
+      SELECT l."id", l."item_inventario_id" AS "itemInventarioId",
+             l."setor_inventario_encontrado_id" AS "setorInventarioEncontradoId",
+             si."setor_id" AS "setorEncontradoId",
+             l."status_correcao" AS "statusCorrecao"
+      FROM "localizacoes_posteriores_inventario" l
+      JOIN "setores_inventario" si
+        ON si."id" = l."setor_inventario_encontrado_id"
+      WHERE l."item_inventario_id" = ${itemInventarioId}::uuid
+      ORDER BY l."data_localizacao" DESC, l."id" DESC
+      LIMIT 1
+      FOR UPDATE OF l
+    `;
+    return registros[0] ?? null;
+  }
+
+  criarLocalizacaoPosterior(dados: {
+    itemInventarioId: string;
+    inventarioId: string;
+    setorInventarioEncontradoId: string;
+    instante: Date;
+    usuarioId: string;
+  }): Promise<unknown> {
+    return this.database.localizacaoPosteriorInventario.create({
+      data: {
+        itemInventarioId: dados.itemInventarioId,
+        inventarioId: dados.inventarioId,
+        setorInventarioEncontradoId: dados.setorInventarioEncontradoId,
+        dataLocalizacao: dados.instante,
+        localizadoPorId: dados.usuarioId,
+      },
+    });
+  }
+
   buscarSetorInventario(
     setorInventarioId: string,
   ): Promise<SetorInventarioResumoPayload | null> {
@@ -381,6 +421,65 @@ export class InventariosRepository {
     });
   }
 
+  corrigirLocalizacaoPosteriorRetorno(
+    localizacaoPosteriorId: string,
+    instante: Date,
+    usuarioId: string,
+    observacao?: string,
+  ): Promise<unknown> {
+    return this.database.localizacaoPosteriorInventario.update({
+      where: { id: localizacaoPosteriorId },
+      data: {
+        statusCorrecao: "CORRIGIDO",
+        tipoCorrecao: "RETORNO_AO_SETOR_CADASTRADO",
+        dataCorrecao: instante,
+        corrigidoPorId: usuarioId,
+        observacao,
+        updatedAt: instante,
+      },
+    });
+  }
+
+  async corrigirLocalizacaoPosteriorComTransferencia(dados: {
+    localizacaoPosteriorId: string;
+    patrimonioId: string;
+    setorAntigoId: string;
+    setorAtualId: string;
+    comissaoId: string;
+    usuarioId: string;
+    instante: Date;
+    observacao?: string;
+  }): Promise<void> {
+    const transferencia = await this.database.transferenciaPatrimonio.create({
+      data: {
+        dataTransferencia: dados.instante,
+        observacao: dados.observacao,
+        setorAntigoId: dados.setorAntigoId,
+        setorAtualId: dados.setorAtualId,
+        patrimonioId: dados.patrimonioId,
+        comissaoId: dados.comissaoId,
+        createdById: dados.usuarioId,
+      },
+      select: { id: true },
+    });
+    await this.database.patrimonio.update({
+      where: { id: dados.patrimonioId },
+      data: { setorAtualId: dados.setorAtualId, updatedAt: dados.instante },
+    });
+    await this.database.localizacaoPosteriorInventario.update({
+      where: { id: dados.localizacaoPosteriorId },
+      data: {
+        statusCorrecao: "CORRIGIDO",
+        tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
+        dataCorrecao: dados.instante,
+        corrigidoPorId: dados.usuarioId,
+        transferenciaCorrecaoId: transferencia.id,
+        observacao: dados.observacao,
+        updatedAt: dados.instante,
+      },
+    });
+  }
+
   async concluirItensPendentes(
     setorInventarioId: string,
     instante: Date,
@@ -466,10 +565,17 @@ export class InventariosRepository {
     });
   }
 
-  contarCorrecoesPendentes(inventarioId: string): Promise<number> {
-    return this.database.itemInventario.count({
+  async contarCorrecoesPendentes(inventarioId: string): Promise<number> {
+    const itens = await this.database.itemInventario.count({
       where: { inventarioId, statusCorrecao: "PENDENTE" },
     });
+
+    const localizacoes =
+      await this.database.localizacaoPosteriorInventario.count({
+        where: { inventarioId, statusCorrecao: "PENDENTE" },
+      });
+
+    return itens + localizacoes;
   }
 
   finalizarInventario(

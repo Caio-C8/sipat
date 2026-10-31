@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../../../lib/api/api-error";
 import {
+  composeNumeroPatrimonial,
   conferenciaErrorMessage,
   itemJaVerificadoData,
   normalizeNumeroPatrimonial,
+  numeroPatrimonialDigits,
   parseNumeroPatrimonial,
   releaseSubmission,
   shouldMountCamera,
@@ -14,6 +16,8 @@ describe("estado da conferência", () => {
   it.each([
     [" 123 ", "123"],
     [" sp-45 ", "SP-45"],
+    ["000001", "1"],
+    ["sp-000001", "SP-1"],
   ])("normaliza %s para o valor canônico %s", (input, output) => {
     expect(normalizeNumeroPatrimonial(input)).toBe(output);
     expect(parseNumeroPatrimonial(input)).toMatchObject({
@@ -22,10 +26,16 @@ describe("estado da conferência", () => {
     });
   });
 
-  it.each(["", "0", "001", "SP-0", "1 2", "QR:https://example.test"])(
+  it.each(["", "0", "SP-0", "1 2", "QR:https://example.test"])(
     "rejeita leitura não patrimonial %s",
     (input) => expect(parseNumeroPatrimonial(input).success).toBe(false),
   );
+
+  it("compõe entradas manuais oficiais e SP somente com dígitos", () => {
+    expect(numeroPatrimonialDigits("00A-01")).toBe("0001");
+    expect(composeNumeroPatrimonial("000001", false)).toBe("000001");
+    expect(composeNumeroPatrimonial("000001", true)).toBe("SP-000001");
+  });
 
   it("mantém somente uma submissão adquirida por vez", () => {
     const lock = { current: false };
@@ -76,16 +86,17 @@ describe("estado da conferência", () => {
   });
 
   it.each([
-    [new ApiError("network"), "Nenhuma leitura foi salva"],
-    [new ApiError("timeout"), "Tente novamente explicitamente"],
+    [new ApiError("network"), "A leitura não foi salva"],
+    [new ApiError("timeout"), "Tente novamente"],
     [
       new ApiError("http", 404, "ITEM_INVENTARIO_NAO_ENCONTRADO"),
-      "não pertence",
+      "não faz parte",
     ],
     [
       new ApiError("http", 409, "SETOR_INVENTARIO_FORA_DE_ANDAMENTO"),
       "não está mais em andamento",
     ],
+    [new ApiError("invalid-response"), "Não foi possível confirmar a leitura"],
   ])("distingue erros públicos", (error, message) => {
     expect(conferenciaErrorMessage(error)).toContain(message);
   });

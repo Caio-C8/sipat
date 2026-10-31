@@ -210,7 +210,7 @@ pertencem ao servidor e não podem ser promovidos acidentalmente a inputs.
   necessários às operações;
 - params UUID do patrimônio;
 - body estrito de cadastro com a indicação `semNumeroOficial`, dados cadastrais,
-  vínculos e parâmetros iniciais de depreciação quando aplicáveis;
+  vínculos e parâmetros iniciais de depreciação obrigatórios;
 - query de listagem baseada no contrato comum de paginação, com padrão 20,
   máximo 50, busca e filtros por status, setor, espécie, natureza e tipo de
   numeração;
@@ -368,10 +368,13 @@ por um PATCH genérico de status.
 - listagens paginadas, filtros finitos, resumos e detalhes com agregados;
 - início e conclusão de setor e finalização do inventário;
 - conferência por número patrimonial com resultados correto, divergente,
-  idempotente e já verificado em outro setor;
+  idempotente e já verificado em outro setor, incluindo o resultado específico
+  de localização posterior de item consolidado como não localizado;
 - correção estrita por retorno ao setor cadastrado ou transferência cadastral;
 - snapshot do status patrimonial observado e referências opcionais ao empréstimo
   ou item de manutenção que justifique um bem não localizado;
+- localização posterior aninhada no item, com setor, auditoria e estado da
+  correção, sem promover a entidade persistente a um segundo item;
 - confirmação explícita para finalizar com correções pendentes;
 - códigos públicos estáveis para transições e conflitos concorrentes.
 

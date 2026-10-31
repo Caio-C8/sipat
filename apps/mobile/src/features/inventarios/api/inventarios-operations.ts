@@ -82,6 +82,7 @@ export function createInventariosOperations(baseUrl: string) {
           limite: query.limite,
           busca: query.busca,
           setorInventarioId: query.setorInventarioId,
+          contextoSetor: query.contextoSetor,
           statusVerificacao: query.statusVerificacao,
           situacao: query.situacao,
           statusCorrecao: query.statusCorrecao,

@@ -16,13 +16,7 @@ export default function AppLayout() {
       <View style={styles.content}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>
-      <AppBottomBar
-        profile={
-          state.status === "authenticated" && "identity" in state
-            ? state.identity.perfil
-            : undefined
-        }
-      />
+      <AppBottomBar />
     </View>
   );
 }

@@ -57,6 +57,24 @@ export const itemInventarioArgs = {
     },
     setorEsperado: { select: { id: true, nome: true } },
     setorEncontrado: { select: { id: true, nome: true } },
+    localizacoesPosteriores: {
+      take: 1,
+      orderBy: [{ dataLocalizacao: "desc" as const }, { id: "desc" as const }],
+      select: {
+        id: true,
+        dataLocalizacao: true,
+        localizadoPorId: true,
+        statusCorrecao: true,
+        tipoCorrecao: true,
+        dataCorrecao: true,
+        corrigidoPorId: true,
+        transferenciaCorrecaoId: true,
+        observacao: true,
+        setorInventarioEncontrado: {
+          select: { setor: { select: { id: true, nome: true } } },
+        },
+      },
+    },
   },
 } satisfies Prisma.ItemInventarioDefaultArgs;
 
@@ -135,8 +153,20 @@ export type ItemInventarioOperacional = {
 
 export type TransferenciaPosterior = { id: string };
 
+export type LocalizacaoPosteriorOperacional = {
+  id: string;
+  itemInventarioId: string;
+  setorInventarioEncontradoId: string;
+  setorEncontradoId: string;
+  statusCorrecao: "PENDENTE" | "CORRIGIDO";
+};
+
 export type VerificacaoItemResultado = {
-  tipo: "CONFERENCIA_REGISTRADA" | "LEITURA_IDEMPOTENTE";
+  tipo:
+    | "CONFERENCIA_REGISTRADA"
+    | "LEITURA_IDEMPOTENTE"
+    | "LOCALIZACAO_POSTERIOR_REGISTRADA"
+    | "LOCALIZACAO_POSTERIOR_IDEMPOTENTE";
   item: ItemInventarioPayload;
 };
 

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import CheckScreen from "../../app/check";
+import { institutionalPalette } from "../../theme/tokens";
 
 vi.mock("expo-router", () => ({
   Redirect: () => null,
@@ -36,5 +37,11 @@ describe("CheckScreen", () => {
     expect(markup).toContain("/check");
     expect(markup).not.toContain("accessToken");
     expect(markup).not.toContain("refreshToken");
+    expect(markup.toLowerCase()).toContain("#2563eb");
+    expect(institutionalPalette).toMatchObject({
+      action: "#2563EB",
+      institutional: "#1E3A5F",
+      structure: "#0F2644",
+    });
   });
 });

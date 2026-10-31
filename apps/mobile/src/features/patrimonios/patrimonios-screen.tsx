@@ -20,6 +20,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useReloadOnReturn } from "../../lib/navigation/use-reload-on-return";
 import { layout, mobilePatrimonios, radii, spacing } from "../../theme/tokens";
 import { useSession } from "../auth/session/session-context";
 import { formatPatrimonioNumber, formatStatus } from "./patrimonio-formatters";
@@ -358,6 +359,7 @@ export function PatrimoniosScreen() {
     filters,
     page,
   );
+  useReloadOnReturn(reload);
   const catalogs = usePatrimonioCatalogs(manager);
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
@@ -393,7 +395,7 @@ export function PatrimoniosScreen() {
           maxLength={200}
           onChangeText={setSearchText}
           onSubmitEditing={submitSearch}
-          placeholder="Patrimônio ou descrição"
+          placeholder="Número exato ou descrição"
           placeholderTextColor={mobilePatrimonios.textSubtle}
           returnKeyType="search"
           style={styles.searchInput}
@@ -551,7 +553,7 @@ export function PatrimoniosScreen() {
             <Text style={styles.stateText}>
               {emptySearch
                 ? "Revise a busca ou os filtros aplicados."
-                : "A API não retornou patrimônios para esta consulta."}
+                : "Nenhum patrimônio foi encontrado para esta consulta."}
             </Text>
           </View>
         }

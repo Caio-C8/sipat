@@ -34,7 +34,7 @@ function InventorySection({
   wide,
 }: Readonly<{
   title: string;
-  status: Extract<StatusInventario, "PENDENTE" | "EM_ANDAMENTO">;
+  status: StatusInventario;
   state: RemoteState<ListarInventariosResponse>;
   page: number;
   onPage: (page: number) => void;
@@ -81,7 +81,11 @@ function InventorySection({
         <View accessibilityLiveRegion="polite" style={styles.inlineState}>
           <Text style={styles.emptyTitle}>
             Nenhum inventário{" "}
-            {status === "PENDENTE" ? "pendente" : "em andamento"}
+            {status === "PENDENTE"
+              ? "pendente"
+              : status === "EM_ANDAMENTO"
+                ? "em andamento"
+                : "finalizado"}
           </Text>
           <Text style={styles.stateText}>
             A consulta não retornou resultados nesta página.
@@ -123,11 +127,16 @@ export function InventariosScreen() {
   const [submittedSearch, setSubmittedSearch] = useState<string>();
   const [pendingPage, setPendingPage] = useState(1);
   const [ongoingPage, setOngoingPage] = useState(1);
+  const [finishedPage, setFinishedPage] = useState(1);
+  const isAdmin =
+    session.status === "authenticated" &&
+    session.identity.perfil === "ADMINISTRADOR";
   const pending = useInventarios(
     manager,
     "PENDENTE",
     submittedSearch,
     pendingPage,
+    !isAdmin,
   );
   const ongoing = useInventarios(
     manager,
@@ -135,33 +144,43 @@ export function InventariosScreen() {
     submittedSearch,
     ongoingPage,
   );
-  const isAdmin =
-    session.status === "authenticated" &&
-    session.identity.perfil === "ADMINISTRADOR";
+  const finished = useInventarios(
+    manager,
+    "FINALIZADO",
+    submittedSearch,
+    finishedPage,
+  );
   const reloadsRef = useRef({
     pending: pending.reload,
     ongoing: ongoing.reload,
+    finished: finished.reload,
   });
   const focusedOnce = useRef(false);
 
   useEffect(() => {
-    reloadsRef.current = { pending: pending.reload, ongoing: ongoing.reload };
-  }, [ongoing.reload, pending.reload]);
+    reloadsRef.current = {
+      pending: pending.reload,
+      ongoing: ongoing.reload,
+      finished: finished.reload,
+    };
+  }, [finished.reload, ongoing.reload, pending.reload]);
 
   useFocusEffect(
     useCallback(() => {
       if (focusedOnce.current) {
-        void reloadsRef.current.pending();
+        if (!isAdmin) void reloadsRef.current.pending();
         void reloadsRef.current.ongoing();
+        void reloadsRef.current.finished();
       } else {
         focusedOnce.current = true;
       }
-    }, []),
+    }, [isAdmin]),
   );
 
   const submitSearch = () => {
     setPendingPage(1);
     setOngoingPage(1);
+    setFinishedPage(1);
     const normalized = searchText.trim();
     setSubmittedSearch(normalized || undefined);
   };
@@ -176,18 +195,21 @@ export function InventariosScreen() {
         <View style={styles.headingBlock}>
           <Text style={styles.eyebrow}>INVENTÁRIO</Text>
           <Text accessibilityRole="header" style={styles.title}>
-            Selecionar inventário
+            {isAdmin ? "Consultar inventários" : "Selecionar inventário"}
           </Text>
           <Text style={styles.subtitle}>
-            Escolha um inventário aberto antes de consultar seus setores.
+            {isAdmin
+              ? "Acompanhe inventários em andamento e consulte os registros já finalizados."
+              : "Escolha um inventário para conferir setores ou consultar registros."}
           </Text>
         </View>
         <Pressable
           accessibilityLabel="Atualizar inventários"
           accessibilityRole="button"
           onPress={() => {
-            void pending.reload();
+            if (!isAdmin) void pending.reload();
             void ongoing.reload();
+            void finished.reload();
           }}
           style={styles.iconButton}
         >
@@ -233,6 +255,7 @@ export function InventariosScreen() {
               setSubmittedSearch(undefined);
               setPendingPage(1);
               setOngoingPage(1);
+              setFinishedPage(1);
             }}
             style={styles.clearButton}
           >
@@ -254,13 +277,24 @@ export function InventariosScreen() {
         title="Em andamento"
         wide={wide}
       />
+      {!isAdmin ? (
+        <InventorySection
+          onPage={setPendingPage}
+          onRetry={pending.reload}
+          page={pendingPage}
+          state={pending.state}
+          status="PENDENTE"
+          title="Pendentes"
+          wide={wide}
+        />
+      ) : null}
       <InventorySection
-        onPage={setPendingPage}
-        onRetry={pending.reload}
-        page={pendingPage}
-        state={pending.state}
-        status="PENDENTE"
-        title="Pendentes"
+        onPage={setFinishedPage}
+        onRetry={finished.reload}
+        page={finishedPage}
+        state={finished.state}
+        status="FINALIZADO"
+        title="Finalizados"
         wide={wide}
       />
     </ScrollView>

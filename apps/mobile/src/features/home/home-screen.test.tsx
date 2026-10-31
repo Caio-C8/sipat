@@ -9,6 +9,10 @@ vi.mock("@react-native-vector-icons/lucide", () => ({
   Lucide: ({ name }: { name: string }) => <span data-icon={name} />,
 }));
 
+vi.mock("expo-router", () => ({
+  useRouter: vi.fn(),
+}));
+
 vi.mock("../auth/session/session-context", () => ({
   useSession: vi.fn(),
 }));
@@ -21,7 +25,8 @@ vi.mock("./use-home-dashboard", () => ({
       return "Sua sessão expirou. Aguarde o redirecionamento para entrar novamente.";
     if (error.kind === "timeout")
       return "A consulta demorou mais que o esperado.";
-    if (error.kind === "network") return "Sem conexão ou API indisponível.";
+    if (error.kind === "network")
+      return "Sem conexão. Verifique sua internet e tente novamente.";
     return "Não foi possível carregar este bloco.";
   },
   useHomeDashboard: vi.fn(),
@@ -90,6 +95,8 @@ const successState: HomeDashboardState = {
 };
 
 const actions = {
+  onOpenInventories: vi.fn(),
+  onOpenInventory: vi.fn(),
   onRefresh: vi.fn(),
   onRetry: vi.fn(),
 };
@@ -114,7 +121,9 @@ describe("HomeContent", () => {
     expect(markup).toContain("Pendentes");
     expect(markup).toContain("Em andamento");
     expect(markup).toContain("Finalizados");
+    expect(markup).toContain('aria-label="Abrir Inventário atual"');
     expect(markup).not.toContain("Iniciar conferência");
+    expect(markup).toContain('aria-label="Ver inventários"');
     expect(markup).toContain("Gerar relatório");
     expect(markup).toContain("Atualizar dados");
   });
@@ -131,7 +140,8 @@ describe("HomeContent", () => {
 
     expect(markup).toContain("Fazer inventário");
     expect(markup).toContain("Iniciar conferência");
-    expect(markup).toContain('aria-disabled="true"');
+    expect(markup).toContain('aria-label="Iniciar conferência"');
+    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(1);
     expect(markup).toContain("Inventário atual");
     expect(markup).toContain("15 de");
     expect(markup).toContain("20 bens conferidos");
@@ -164,7 +174,7 @@ describe("HomeContent", () => {
       />,
     );
 
-    expect(markup).toContain("Nenhum inventário disponível");
+    expect(markup).toContain("Nenhum inventário em andamento");
     expect(markup).toContain("Nenhuma conferência finalizada");
   });
 
@@ -194,7 +204,7 @@ describe("HomeContent", () => {
   it.each([
     [new ApiError("http", 401), "Sua sessão expirou"],
     [new ApiError("timeout"), "demorou mais que o esperado"],
-    [new ApiError("network"), "Sem conexão ou API indisponível"],
+    [new ApiError("network"), "Verifique sua internet"],
   ])("explica falhas sem exibir zero enganoso", (error, message) => {
     const markup = renderToStaticMarkup(
       <HomeContent

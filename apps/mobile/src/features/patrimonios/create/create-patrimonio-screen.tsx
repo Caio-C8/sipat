@@ -31,7 +31,6 @@ import {
 } from "../../../theme/tokens";
 import { useSession } from "../../auth/session/session-context";
 import {
-  formatCivilDate,
   formatCurrency,
   formatIncorporation,
   formatPatrimonioNumber,
@@ -44,6 +43,10 @@ import {
   EMPTY_CREATE_PATRIMONIO_FORM,
   currencyInputToDecimal,
   effectiveResidual,
+  formatCurrencyInput,
+  formatDateInput,
+  formatIntegerInput,
+  formatPercentageInput,
   mapCreatePatrimonioForm,
   monthlyDepreciationPreview,
   validateCreatePatrimonioStep,
@@ -85,10 +88,12 @@ const INCORPORATIONS: readonly Readonly<{
 
 export function createPatrimonioErrorMessage(error: unknown) {
   if (!isApiError(error)) return "Ocorreu um erro inesperado. Tente novamente.";
-  if (error.kind === "timeout") return "A API demorou para responder.";
-  if (error.kind === "network") return "Sem conexão ou API indisponível.";
+  if (error.kind === "timeout")
+    return "O cadastro demorou mais que o esperado. Tente novamente.";
+  if (error.kind === "network")
+    return "Sem conexão. Verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
-    return "A API retornou uma resposta inválida.";
+    return "Não foi possível confirmar o cadastro. Tente novamente.";
   if (error.status === 401) return "Sua sessão expirou. Entre novamente.";
   if (error.status === 403)
     return "Seu perfil não tem permissão para cadastrar patrimônios.";
@@ -107,10 +112,11 @@ export function createPatrimonioCatalogErrorMessage(
 ) {
   const label = CATALOG_LABELS[catalog];
   if (!isApiError(error)) return `Não foi possível carregar ${label}.`;
-  if (error.kind === "timeout") return `A API demorou para carregar ${label}.`;
+  if (error.kind === "timeout")
+    return `O carregamento de ${label} demorou mais que o esperado.`;
   if (error.kind === "network") return `Sem conexão para carregar ${label}.`;
   if (error.kind === "invalid-response")
-    return `A API retornou uma resposta inválida ao carregar ${label}.`;
+    return `Não foi possível carregar ${label}. Tente novamente.`;
   if (error.status === 401) return "Sua sessão expirou. Entre novamente.";
   if (error.status === 403)
     return `Seu perfil não tem permissão para consultar ${label}.`;
@@ -811,7 +817,7 @@ function DirectorFlow({
         </Pressable>
         <Derived
           label="Número patrimonial"
-          value="Gerado pelo servidor ao cadastrar"
+          value="Gerado automaticamente ao cadastrar"
         />
       </>
     ) : step === 2 ? (
@@ -910,27 +916,45 @@ function DirectorFlow({
         <Field
           error={errors.registryDate}
           label="Data de tombamento *"
-          onChange={(registryDate) => update({ registryDate })}
-          placeholder="AAAA-MM-DD"
+          numeric
+          onChange={(registryDate) =>
+            update({ registryDate: formatDateInput(registryDate) })
+          }
+          placeholder="DD/MM/AAAA"
           value={form.registryDate}
         />
         <Field
           error={errors.incorporationValue}
           label="Valor de incorporação (R$) *"
           numeric
-          onChange={(incorporationValue) => update({ incorporationValue })}
+          onChange={(incorporationValue) =>
+            update({
+              incorporationValue: formatCurrencyInput(
+                incorporationValue,
+                form.incorporationValue,
+              ),
+            })
+          }
           placeholder="0,00"
           value={form.incorporationValue}
         />
       </>
     ) : (
       <>
+        <Derived
+          label="Parâmetros obrigatórios"
+          value="Depois do cadastro, estes dados só podem ser alterados por uma reavaliação."
+        />
         <Derived label="Método" value="Linear · processamento automático" />
         <Field
           error={errors.usefulLifeMonths}
           label="Vida útil inicial (meses) *"
           numeric
-          onChange={(usefulLifeMonths) => update({ usefulLifeMonths })}
+          onChange={(usefulLifeMonths) =>
+            update({
+              usefulLifeMonths: formatIntegerInput(usefulLifeMonths, 4),
+            })
+          }
           value={form.usefulLifeMonths}
         />
         <Text style={styles.label}>Informar o residual em</Text>
@@ -962,7 +986,14 @@ function DirectorFlow({
             error={errors.residual}
             label="Valor residual (R$) *"
             numeric
-            onChange={(residualValue) => update({ residualValue })}
+            onChange={(residualValue) =>
+              update({
+                residualValue: formatCurrencyInput(
+                  residualValue,
+                  form.residualValue,
+                ),
+              })
+            }
             value={form.residualValue}
           />
         ) : (
@@ -970,7 +1001,11 @@ function DirectorFlow({
             error={errors.residual}
             label="Percentual residual (%) *"
             numeric
-            onChange={(residualPercentage) => update({ residualPercentage })}
+            onChange={(residualPercentage) =>
+              update({
+                residualPercentage: formatPercentageInput(residualPercentage),
+              })
+            }
             value={form.residualPercentage}
           />
         )}
@@ -983,10 +1018,13 @@ function DirectorFlow({
         <Field
           error={errors.depreciationStartDate}
           label="Início da depreciação *"
+          numeric
           onChange={(depreciationStartDate) =>
-            update({ depreciationStartDate })
+            update({
+              depreciationStartDate: formatDateInput(depreciationStartDate),
+            })
           }
-          placeholder="AAAA-MM-DD"
+          placeholder="DD/MM/AAAA"
           value={form.depreciationStartDate}
         />
         {monthlyDepreciationPreview(form) ? (
@@ -999,7 +1037,7 @@ function DirectorFlow({
     );
 
   const reviewContent =
-    selectedSpecies && selectedSector ? (
+    review && selectedSpecies && selectedSector ? (
       <>
         <Text style={styles.reviewEyebrow}>REVISÃO · 1 PATRIMÔNIO</Text>
         <ReviewCard
@@ -1048,7 +1086,7 @@ function DirectorFlow({
             ]
               .filter(Boolean)
               .join(" · "),
-            `Tombamento em ${formatCivilDate(form.registryDate)}`,
+            `Tombamento em ${form.registryDate}`,
             `Valor de incorporação: ${formatCurrency(currencyInputToDecimal(form.incorporationValue)!)}`,
           ]}
         />
@@ -1060,12 +1098,12 @@ function DirectorFlow({
           title="Depreciação"
           lines={[
             `Linear · ${form.usefulLifeMonths} meses · Residual: ${formatCurrency(effectiveResidual(form)!)}`,
-            `Início em ${formatCivilDate(form.depreciationStartDate)}`,
+            `Início em ${form.depreciationStartDate}`,
           ]}
         />
         <Derived
           label="Antes de concluir"
-          value="Confira os dados: a edição posterior é restrita."
+          value="Confira os dados: os parâmetros de depreciação só poderão ser substituídos por uma reavaliação."
         />
       </>
     ) : null;

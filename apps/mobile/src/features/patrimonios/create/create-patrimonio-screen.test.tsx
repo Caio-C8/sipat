@@ -55,7 +55,7 @@ describe("cadastro restrito", () => {
   it.each([
     [new ApiError("timeout"), "demorou"],
     [new ApiError("network"), "Sem conexão"],
-    [new ApiError("invalid-response"), "resposta inválida"],
+    [new ApiError("invalid-response"), "Não foi possível confirmar"],
     [new ApiError("http", 401), "sessão expirou"],
     [new ApiError("http", 403), "não tem permissão"],
     [new ApiError("http", 409, "NUMERO_SERIE_JA_EXISTENTE"), "número de série"],

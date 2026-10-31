@@ -209,10 +209,7 @@ describe("PatrimoniosService", () => {
   it("usa a sequence independente para patrimônio sem número oficial", async () => {
     repository.gerarProximoNumero.mockResolvedValue("SP-1");
 
-    await service.criar(
-      dados({ semNumeroOficial: true, parametrosDepreciacao: undefined }),
-      identidade,
-    );
+    await service.criar(dados({ semNumeroOficial: true }), identidade);
 
     expect(repository.gerarProximoNumero).toHaveBeenCalledWith(
       "SEM_NUMERO_OFICIAL",

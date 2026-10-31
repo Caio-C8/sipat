@@ -24,9 +24,7 @@ describe("AppBottomBar", () => {
       expect.objectContaining({ label: "Relatórios" }),
     ]);
 
-    const markup = renderToStaticMarkup(
-      <AppBottomBar profile="DIRETOR_PATRIMONIO" />,
-    );
+    const markup = renderToStaticMarkup(<AppBottomBar />);
 
     expect(markup).toContain('aria-label="Navegação principal"');
     expect(markup).toContain('aria-selected="true"');
@@ -34,14 +32,10 @@ describe("AppBottomBar", () => {
     expect(markup).not.toContain("href=");
   });
 
-  it("comunica a restrição de Inventário para o Administrador", () => {
-    const markup = renderToStaticMarkup(
-      <AppBottomBar profile="ADMINISTRADOR" />,
-    );
+  it("habilita a consulta de Inventário para o Administrador", () => {
+    const markup = renderToStaticMarkup(<AppBottomBar />);
 
-    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(2);
-    expect(markup).toContain(
-      "Conferência disponível somente para o Diretor de Patrimônio",
-    );
+    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(1);
+    expect(markup).toContain('aria-label="Inventário"');
   });
 });

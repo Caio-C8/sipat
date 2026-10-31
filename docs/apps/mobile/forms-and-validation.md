@@ -87,3 +87,17 @@ compartilhados quando a representação do campo for idêntica. O formulário:
 Não introduza uma biblioteca de formulários somente por esses dois formulários.
 A tarefa pode adotá-la se medir necessidade real de foco, performance e
 composição e registrar a compatibilidade com o SDK.
+
+## Cadastro patrimonial
+
+O cadastro patrimonial mantém datas civis como `DD/MM/AAAA` no estado visual e
+as converte para o contrato ISO `YYYY-MM-DD` somente no mapper. Os campos de
+valor monetário usam duas casas decimais e entrada em centavos da direita para a
+esquerda; a representação mascarada também é convertida antes da validação do
+contrato compartilhado. Vida útil aceita somente dígitos, enquanto percentual
+residual admite dígitos e um separador decimal controlado pela máscara.
+
+Os parâmetros iniciais de depreciação são obrigatórios para concluir o
+cadastro. A revisão deve informar que esses parâmetros não poderão ser editados
+diretamente depois da criação; qualquer substituição pertence ao fluxo de
+reavaliação.

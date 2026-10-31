@@ -1,4 +1,7 @@
-import type { IdentidadeAutenticada } from "@repo/contracts";
+import {
+  ProgressoInventarioSchema,
+  type IdentidadeAutenticada,
+} from "@repo/contracts";
 import { createDatabaseClient, type DatabaseClient } from "@repo/database";
 import { ComissoesRepository } from "../src/modules/comissoes/comissoes.repository";
 import { ComissoesService } from "../src/modules/comissoes/comissoes.service";
@@ -311,6 +314,13 @@ describeComPostgres("inventários no PostgreSQL", () => {
       { numeroPatrimonial: "1001" },
       identidade,
     );
+    const encontradoAntesDaCorrecao = await service.listarItens(inventario.id, {
+      pagina: 1,
+      limite: 10,
+      setorInventarioId: setorEncontrado.id,
+      contextoSetor: "ENCONTRADO_NO_SETOR",
+      statusVerificacao: "VERIFICADO",
+    });
     const corrigido = await service.corrigirItem(
       inventario.id,
       verificado.item.id,
@@ -324,6 +334,40 @@ describeComPostgres("inventários no PostgreSQL", () => {
       tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
     });
     expect(corrigido.transferenciaCorrecaoId).not.toBeNull();
+    expect(encontradoAntesDaCorrecao).toMatchObject({
+      total: 1,
+      items: [{ id: verificado.item.id, situacao: "DIVERGENCIA" }],
+    });
+    await expect(
+      service.listarItens(inventario.id, {
+        pagina: 1,
+        limite: 10,
+        setorInventarioId: setorEsperado.id,
+        contextoSetor: "PREVISTO",
+        statusVerificacao: "VERIFICADO",
+      }),
+    ).resolves.toMatchObject({
+      total: 1,
+      items: [{ id: verificado.item.id, situacao: "DIVERGENCIA" }],
+    });
+    await expect(
+      service.listarItens(inventario.id, {
+        pagina: 1,
+        limite: 10,
+        setorInventarioId: setorEncontrado.id,
+        contextoSetor: "ENCONTRADO_NO_SETOR",
+        statusVerificacao: "VERIFICADO",
+      }),
+    ).resolves.toMatchObject({
+      total: 1,
+      items: [
+        {
+          id: verificado.item.id,
+          situacao: "DIVERGENCIA",
+          statusCorrecao: "CORRIGIDO",
+        },
+      ],
+    });
     await expect(
       database.patrimonio.findUniqueOrThrow({
         where: { numeroPatrimonio: "1001" },
@@ -346,6 +390,107 @@ describeComPostgres("inventários no PostgreSQL", () => {
         identidade,
       ),
     ).resolves.toMatchObject({ status: "FINALIZADO" });
+  });
+
+  it("registra e corrige localização posterior sem duplicar o item", async () => {
+    const inventario = await service.criar(
+      { nome: "Inventário com localização posterior", comissaoId },
+      identidade,
+    );
+    const setores = await database.setorInventario.findMany({
+      where: { inventarioId: inventario.id },
+    });
+    const setorEsperado = setores.find(
+      ({ setorId }) => setorId === setorAtivoId,
+    )!;
+    const setorEncontrado = setores.find(
+      ({ setorId }) => setorId !== setorAtivoId,
+    )!;
+
+    await service.iniciarSetor(inventario.id, setorEsperado.id, identidade);
+    await service.concluirSetor(inventario.id, setorEsperado.id, identidade);
+    await service.iniciarSetor(inventario.id, setorEncontrado.id, identidade);
+
+    const resultados = await Promise.all([
+      service.verificarItem(
+        inventario.id,
+        setorEncontrado.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+      service.verificarItem(
+        inventario.id,
+        setorEncontrado.id,
+        { numeroPatrimonial: "1001" },
+        identidade,
+      ),
+    ]);
+    const localizado = resultados.find(
+      ({ tipo }) => tipo === "LOCALIZACAO_POSTERIOR_REGISTRADA",
+    )!;
+    const repetido = resultados.find(
+      ({ tipo }) => tipo === "LOCALIZACAO_POSTERIOR_IDEMPOTENTE",
+    )!;
+
+    expect(localizado).toMatchObject({
+      tipo: "LOCALIZACAO_POSTERIOR_REGISTRADA",
+      item: {
+        situacao: "NAO_LOCALIZADO",
+        localizacoesPosteriores: [
+          {
+            statusCorrecao: "PENDENTE",
+            setorInventarioEncontrado: {
+              setor: { id: setorEncontrado.setorId },
+            },
+          },
+        ],
+      },
+    });
+    expect(repetido.tipo).toBe("LOCALIZACAO_POSTERIOR_IDEMPOTENTE");
+    expect(
+      await database.itemInventario.count({
+        where: { inventarioId: inventario.id },
+      }),
+    ).toBe(1);
+    expect(
+      await database.localizacaoPosteriorInventario.count({
+        where: { inventarioId: inventario.id },
+      }),
+    ).toBe(1);
+    const progressoAposLocalizacao = (await service.consultar(inventario.id))
+      .progresso;
+    expect(progressoAposLocalizacao).toMatchObject({
+      itensVerificados: 1,
+      divergencias: 0,
+      naoLocalizados: 1,
+      correcoesPendentes: 0,
+      correcoesCorrigidas: 0,
+    });
+    expect(() =>
+      ProgressoInventarioSchema.parse(progressoAposLocalizacao),
+    ).not.toThrow();
+
+    const corrigido = await service.corrigirItem(
+      inventario.id,
+      localizado.item.id,
+      { tipoCorrecao: "TRANSFERENCIA_CADASTRAL" },
+      identidade,
+    );
+    expect(corrigido).toMatchObject({
+      situacao: "NAO_LOCALIZADO",
+      localizacoesPosteriores: [
+        {
+          statusCorrecao: "CORRIGIDO",
+          tipoCorrecao: "TRANSFERENCIA_CADASTRAL",
+        },
+      ],
+    });
+    await expect(
+      database.patrimonio.findUniqueOrThrow({
+        where: { numeroPatrimonio: "1001" },
+        select: { setorAtualId: true },
+      }),
+    ).resolves.toEqual({ setorAtualId: setorEncontrado.setorId });
   });
 
   it("preserva empréstimo vigente ao encerrar item não localizado", async () => {
