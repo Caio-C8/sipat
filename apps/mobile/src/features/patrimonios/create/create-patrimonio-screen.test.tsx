@@ -65,10 +65,7 @@ describe("cadastro restrito", () => {
       new ApiError("http", 409, "OPERACAO_JA_PROCESSADA"),
       "Nenhum novo patrimônio",
     ],
-    [
-      new ApiError("http", 409, "CHAVE_IDEMPOTENCIA_REUTILIZADA"),
-      "reutilizar",
-    ],
+    [new ApiError("http", 409, "CHAVE_IDEMPOTENCIA_REUTILIZADA"), "reutilizar"],
     [
       new ApiError("http", 409, "OPERACAO_EM_PROCESSAMENTO"),
       "ainda está em processamento",

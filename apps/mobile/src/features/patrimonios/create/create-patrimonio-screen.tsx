@@ -608,10 +608,7 @@ function DirectorFlow({
       if (isCurrentSession(manager, identityId)) setCreated(result);
       creationKey.current = undefined;
     } catch (error) {
-      if (
-        isApiError(error) &&
-        error.code === "CHAVE_IDEMPOTENCIA_REUTILIZADA"
-      )
+      if (isApiError(error) && error.code === "CHAVE_IDEMPOTENCIA_REUTILIZADA")
         creationKey.current = undefined;
       if (isApiError(error) && error.code === "OPERACAO_JA_PROCESSADA")
         await invalidatePatrimonioCreation(queryClient);

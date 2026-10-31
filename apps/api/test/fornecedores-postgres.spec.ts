@@ -51,11 +51,19 @@ describeComPostgres("fornecedores no PostgreSQL", () => {
   it("permite somente um CNPJ sob criações concorrentes", async () => {
     const resultados = await Promise.allSettled([
       service.criar(
-        { chaveIdempotencia: randomUUID(), razaoSocial: "Fornecedor Um", cnpj: CNPJ },
+        {
+          chaveIdempotencia: randomUUID(),
+          razaoSocial: "Fornecedor Um",
+          cnpj: CNPJ,
+        },
         identidade,
       ),
       service.criar(
-        { chaveIdempotencia: randomUUID(), razaoSocial: "Fornecedor Dois", cnpj: CNPJ },
+        {
+          chaveIdempotencia: randomUUID(),
+          razaoSocial: "Fornecedor Dois",
+          cnpj: CNPJ,
+        },
         identidade,
       ),
     ]);

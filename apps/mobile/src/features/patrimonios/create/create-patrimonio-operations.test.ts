@@ -137,9 +137,9 @@ describe("operações do cadastro patrimonial", () => {
       ),
     ).resolves.toMatchObject({ id: ITEM });
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string)).toMatchObject(
-      { chaveIdempotencia: IDEMPOTENCY_KEY },
-    );
+    expect(
+      JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string),
+    ).toMatchObject({ chaveIdempotencia: IDEMPOTENCY_KEY });
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.test/api/patrimonios",
       expect.objectContaining({ method: "POST" }),

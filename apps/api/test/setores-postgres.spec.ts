@@ -133,11 +133,11 @@ describeComPostgres("setores no PostgreSQL", () => {
   it("exige responsável ativo na criação e na troca", async () => {
     await expect(
       setores.criar(
-      {
-        chaveIdempotencia: randomUUID(),
-        nome: "Arquivo",
-        responsavelId: responsavelInativoId,
-      },
+        {
+          chaveIdempotencia: randomUUID(),
+          nome: "Arquivo",
+          responsavelId: responsavelInativoId,
+        },
         identidade,
       ),
     ).rejects.toMatchObject({
