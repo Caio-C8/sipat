@@ -68,7 +68,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: PackageSearch,
     grupo: "principal",
     perfis: TODOS_PERFIS,
-    implementado: false,
+    implementado: true,
+    href: "/patrimonios",
+    breadcrumb: ["Patrimônio", "Consulta"],
   },
   {
     id: "cadastrar-patrimonio",
@@ -76,7 +78,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Plus,
     grupo: "principal",
     perfis: APENAS_DIRETOR,
-    implementado: false,
+    implementado: true,
+    href: "/patrimonios/novo",
+    breadcrumb: ["Patrimônio", "Cadastrar patrimônio"],
   },
   {
     id: "processos-compra-documentos-fiscais",

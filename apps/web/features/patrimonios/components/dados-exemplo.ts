@@ -1,0 +1,55 @@
+/** Dados ilustrativos das telas de referência. Não representam registros da API. */
+export const patrimonioExemplo = {
+  numero: "000002656",
+  codigo: "NB-2026-001",
+  nome: "Notebook corporativo",
+  descricao: "Notebook corporativo, 16 GB de memória RAM, SSD de 512 GB.",
+  marca: "Dell",
+  modelo: "Latitude 3450",
+  serie: "LAT2026001",
+  especie: "Notebooks",
+  natureza: "Bens móveis",
+  setor: "Tecnologia da Informação",
+  responsavel: "Paulo Caixeta",
+  incorporacao: "R$ 5.490,00",
+  atual: "R$ 5.242,95",
+  depreciacao: "R$ 247,05",
+  residual: "R$ 549,00 · 10%",
+  tombamento: "15/06/2026",
+  aquisicao: "Processo 028/2026",
+} as const;
+
+export const historicoExemplo = [
+  {
+    data: "27/09/2026",
+    tipo: "Inventário",
+    registro: "INV-2026-0041",
+    descricao: "Conferência do setor concluída",
+    detalhe: "Bem conferido no setor Tecnologia da Informação.",
+    resultado: "Setor correto",
+  },
+  {
+    data: "01/09/2026",
+    tipo: "Depreciação",
+    registro: "DEP-2026-0091",
+    descricao: "Depreciação de setembro",
+    detalhe: "Método linear · valor depreciado: R$ 82,35.",
+    resultado: "R$ 5.242,95",
+  },
+  {
+    data: "20/08/2026",
+    tipo: "Movimentação",
+    registro: "TR-00218",
+    descricao: "Transferência entre setores",
+    detalhe: "Administrativo → Tecnologia da Informação.",
+    resultado: "Concluída",
+  },
+  {
+    data: "12/08/2026",
+    tipo: "Manutenção",
+    registro: "MAN-2026-0012",
+    descricao: "Retorno da manutenção",
+    detalhe: "Limpeza interna e revisão preventiva.",
+    resultado: "Concluída",
+  },
+] as const;
