@@ -50,6 +50,47 @@ Antes de cachear, defina:
 Um cache privado nunca é compartilhado entre identidades. Dado sensível não é
 persistido em armazenamento não criptografado apenas para acelerar a tela.
 
+## Política aprovada para o cache em memória
+
+`MOBILE-QUERY-001/002/003` adota TanStack Query v5 somente para dados de domínio
+autenticados. A fundação e o isolamento por sessão foram implementados em
+`MOBILE-QUERY-001`; as famílias abaixo passam a usar o cache somente quando os
+hooks forem migrados por `MOBILE-QUERY-002`.
+
+| Família de dados                                       | `staleTime` | Invalidação adicional                                |
+| ------------------------------------------------------ | ----------- | ---------------------------------------------------- |
+| Home, listas e detalhes patrimoniais                   | 30 segundos | mutation patrimonial relacionada                     |
+| Inventários, setores, itens, pendências e agregados    | 30 segundos | mutation do inventário/setor/item relacionado        |
+| Setores, espécies, naturezas e processos de referência | 5 minutos   | mutation futura que altere o catálogo correspondente |
+
+- o cache existe somente em memória e usa o `gcTime` padrão de cinco minutos
+  do TanStack Query v5 para queries inativas;
+- não existe persister, hidratação, AsyncStorage, SecureStore ou disponibilidade
+  offline do cache;
+- query keys são arrays determinísticos, incluem parâmetros normalizados,
+  paginação e identificadores do recurso e não incluem token, e-mail, nome ou
+  ID da identidade;
+- logout, expiração ou troca de identidade cancelam trabalho pendente e limpam
+  `QueryCache` e `MutationCache`; refresh da mesma identidade não limpa dados;
+- queries e mutations usam `retry: false`; a recuperação única de `401` seguro
+  continua exclusivamente em `SessionManager.authorizedRequest`;
+- atualização manual chama `refetch` mesmo com dado fresco;
+- nas plataformas nativas, ao voltar para `AppState.active`, o `focusManager`
+  revalida apenas queries vencidas; Web preserva o lifecycle do navegador e não
+  haverá polling nem integração de reconexão nesta entrega;
+- a `queryFn` encaminha seu `AbortSignal` à operação existente, preservando
+  cancelamento de request obsoleta;
+- dado cacheado permanece visível durante refetch em background e continua
+  identificado como último resultado confirmado;
+- mutations não são otimistas nem repetidas automaticamente. Após sucesso,
+  invalidam somente as raízes de domínio potencialmente alteradas;
+- health check, login, refresh, `/me`, primeiro acesso, recuperação de senha e
+  logout permanecem fora do cache.
+
+A matriz de invalidação está especificada em
+[`MOBILE-QUERY-003`](../../tasks/MOBILE-QUERY-003-invalidar-apos-mutations.md).
+Persistência, reconexão observada, modo offline e fila exigem objetivos futuros.
+
 ## Offline e sincronização
 
 Modo offline exige contrato próprio: quais leituras ficam disponíveis, quais

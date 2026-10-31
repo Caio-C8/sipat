@@ -22,7 +22,16 @@ logout. O CI também
 constrói e inicia o container `mobile-web`, consulta `/health` e confirma que a
 raiz protegida e `/check` servem HTML sem expor o conteúdo de development.
 As primeiras páginas de domínio são `/bens` e `/bens/[patrimonioId]`; ainda não
-existem cache/offline ou E2E em dispositivos.
+existem leituras de domínio cacheadas, offline ou E2E em dispositivos.
+
+`MOBILE-QUERY-001` instalou `@tanstack/react-query@5.105.0` e adicionou um único
+provider global somente em memória. O lifecycle nativo publica foco por
+`AppState`, enquanto Web mantém o comportamento do navegador. Um boundary
+serializa `cancelQueries()` e a limpeza dos caches de queries e mutations antes
+de liberar consumidores após logout, expiração ou troca de identidade; refresh
+e revalidação da mesma identidade preservam o cache. Nenhuma leitura de domínio
+foi migrada nesta tarefa. A entrega passou em lint, typecheck, 141 testes e
+exports Expo Android, iOS e Web; build EAS e aparelho real não foram validados.
 
 `MOBILE-UI-001` implementou o shell comum observado na página `Telas Mobile`:
 topbar azul-marinho com brasão, safe area coerente e bottom bar somente em

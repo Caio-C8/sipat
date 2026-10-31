@@ -101,6 +101,29 @@ ou regra que também precisa existir em outro fluxo.
 O health check atual usa `useState`, `useEffect` e `AbortController` porque é
 uma única operação sem cache. Isso não define a estratégia das futuras features.
 
+## Estado remoto com TanStack Query
+
+A sequência `MOBILE-QUERY-001/002/003` aprovou TanStack Query v5 para o estado
+remoto de domínio. `MOBILE-QUERY-001` entregou o provider, o lifecycle de foco e
+o isolamento por sessão; até `MOBILE-QUERY-002`, os hooks manuais existentes
+continuam sendo o estado real das leituras.
+
+- um `QueryClient` estável e global fornece somente cache em memória;
+- `QueryClientProvider` envolve sessão e rotas, e um boundary autenticado
+  cancela e limpa caches quando a identidade muda ou deixa de estar autenticada;
+- query keys são factories das features, incluem todos os parâmetros que mudam
+  a response e não incluem token nem dado pessoal;
+- operações continuam responsáveis por HTTP e validação de contrato; hooks
+  recebem estado, signal, cache e invalidação;
+- `focusManager` acompanha `AppState` para revalidar apenas dado vencido quando
+  o aplicativo volta a `active`;
+- estado visual e de formulário não migra para o cache remoto;
+- autenticação e health check permanecem fora do `QueryClient`.
+
+Consulte a
+[política de cache](../../integrations/mobile-api/errors-cache-testing.md#política-aprovada-para-o-cache-em-memória)
+para validade, limpeza, retry e comportamento depois de mutations.
+
 ## Estrutura aprovada para a primeira entrega autenticada
 
 A estrutura abaixo é alvo das tarefas aprovadas e não representa código já

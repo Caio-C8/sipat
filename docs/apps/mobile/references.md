@@ -22,6 +22,14 @@ conhecida, dependência nativa ou configuração de loja.
 - [Notação de rotas](https://docs.expo.dev/router/basics/notation/)
 - [Rotas tipadas](https://docs.expo.dev/router/reference/typed-routes/)
 
+## TanStack Query v5
+
+- [Uso com React Native](https://tanstack.com/query/latest/docs/framework/react/react-native)
+- [Defaults importantes](https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults)
+- [Query functions e `AbortSignal`](https://tanstack.com/query/latest/docs/framework/react/guides/query-functions)
+- [Query keys](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys)
+- [Invalidação depois de mutations](https://tanstack.com/query/latest/docs/framework/react/guides/invalidations-from-mutations)
+
 ## Configuração e segurança local
 
 - [Variáveis de ambiente no Expo](https://docs.expo.dev/guides/environment-variables/)
