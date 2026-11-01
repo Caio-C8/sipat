@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -35,12 +36,17 @@ export default defineConfig({
         AUTH_ARGON2_MAX_CONCURRENCY: "1",
         AUTH_ARGON2_MAX_QUEUE: "2",
         AUTH_PASSWORD_RESET_ENABLED: "false",
+        UPLOADS_ROOT_PATH: path.resolve(
+          process.cwd(),
+          "test-results/uploads-emprestimos-real",
+        ),
       },
     },
     {
-      command: "pnpm exec next start --port 3100",
+      command:
+        "node node_modules/next/dist/bin/next build --webpack && node node_modules/next/dist/bin/next start --port 3100",
       url: "http://localhost:3100",
-      timeout: 30000,
+      timeout: 180000,
       reuseExistingServer: false,
       env: { API_INTERNAL_URL: "http://127.0.0.1:3202", PLAYWRIGHT_TEST: "1" },
     },

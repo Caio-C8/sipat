@@ -7,6 +7,7 @@ import type {
   ListarOpcoesComissoesEmprestimoQueryInput,
 } from "@repo/contracts";
 import { browserApiClient } from "@/lib/api/browser-api-client";
+import { useMutacaoSemRepeticao } from "@/lib/api/client/use-mutacao-sem-repeticao";
 import { criarOperacoesEmprestimos } from "./emprestimo-operations";
 
 const operacoes = criarOperacoesEmprestimos(browserApiClient);
@@ -49,31 +50,18 @@ export function useComissoesEmprestimo() {
   return useLeitura(buscarComissoes);
 }
 
-function useMutacao<TInput, TResposta>(
-  operacao: (input: TInput) => Promise<TResposta>,
-) {
-  const [pending, setPending] = useState(false);
-  const emCurso = useRef(false);
-  const confirmar = useCallback(
-    async (input: TInput): Promise<TResposta | null> => {
-      if (emCurso.current) return null;
-      emCurso.current = true;
-      setPending(true);
-      try {
-        return await operacao(input);
-      } finally {
-        emCurso.current = false;
-        setPending(false);
-      }
-    },
-    [operacao],
+export function useConsultarEmprestimo(id: string) {
+  const consultar = useCallback(
+    async () => (await operacoes.consultar(id)).dados,
+    [id],
   );
-  return { pending, confirmar };
+  return { consultar };
 }
+
 const criarEmprestimo = (body: CriarEmprestimoBodyInput) =>
   operacoes.criar(body);
 export function useCriarEmprestimo() {
-  return useMutacao(criarEmprestimo);
+  return useMutacaoSemRepeticao(criarEmprestimo);
 }
 export function useDevolverEmprestimo(id: string) {
   const operacao = useCallback(
@@ -81,5 +69,5 @@ export function useDevolverEmprestimo(id: string) {
       operacoes.devolver(id, body),
     [id],
   );
-  return useMutacao(operacao);
+  return useMutacaoSemRepeticao(operacao);
 }

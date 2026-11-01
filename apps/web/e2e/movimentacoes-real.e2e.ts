@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -96,7 +97,7 @@ test.describe("Web → API → PostgreSQL isolado", () => {
       fullPage: true,
     });
   });
-  test("perda da resposta depois do commit recupera os mesmos IDs sem duplicar", async ({
+  test("perda da resposta preserva a chave e informa o conflito sem duplicar", async ({
     page,
   }) => {
     await autenticar(page);
@@ -128,20 +129,24 @@ test.describe("Web → API → PostgreSQL isolado", () => {
       .getByRole("button", { name: "Recuperar confirmação", exact: true })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Movimentação confirmada" }),
+      page.getByRole("status").filter({
+        hasText:
+          "Esta operação já havia sido concluída. Nenhuma nova alteração foi feita.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Consultar movimentações" }),
     ).toBeVisible();
     const original = gravado as unknown as {
       dados: { id: string; dataTransferencia: string }[];
     };
-    await expect(
-      page.getByRole("link", { name: "Ver transferência do patrimônio 12" }),
-    ).toHaveAttribute("href", `/movimentacoes/${original.dados[0]!.id}`);
     const lista = await (
       await page.request.get(
         `/api/backend/movimentacoes?patrimonioId=${f.bens[11]!.id}`,
       )
     ).json();
     expect(lista.meta.total).toBe(1);
+    expect(lista.dados[0].id).toBe(original.dados[0]!.id);
     expect(lista.dados[0].dataTransferencia).toBe(
       original.dados[0]!.dataTransferencia,
     );
@@ -211,6 +216,7 @@ test.describe("Web → API → PostgreSQL isolado", () => {
     const criar = await page.request.post("/api/backend/inventarios", {
       headers: { Origin: "http://localhost:3100", "X-SIPAT-CSRF": "1" },
       data: {
+        chaveIdempotencia: randomUUID(),
         nome: "Inventário criado no intervalo",
         comissaoId: f.comissaoId,
       },

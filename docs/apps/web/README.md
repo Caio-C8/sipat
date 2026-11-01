@@ -27,6 +27,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
   devolução parcial na API real; o percurso com PostgreSQL isolado está em
   [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md);
+- movimentações, manutenções, reavaliações e empréstimos distinguem os três
+  conflitos públicos de idempotência, preservam a chave somente enquanto o
+  resultado permanece incerto e nunca fazem retry automático;
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;

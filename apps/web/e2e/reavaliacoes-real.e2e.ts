@@ -69,13 +69,36 @@ test.describe("reavaliação Web → API → PostgreSQL descartável", () => {
       page.getByRole("heading", { name: "3. Revisar antes de confirmar" }),
     ).toBeVisible();
     await expect(page.getByText("Quota mensal inicial estimada")).toBeVisible();
+    let gravado: { dados: { id: string }[] } | null = null;
+    await page.route(
+      "**/api/backend/reavaliacoes",
+      async (route) => {
+        if (route.request().method() !== "POST") {
+          await route.continue();
+          return;
+        }
+        const resposta = await route.fetch();
+        expect(resposta.status()).toBe(201);
+        gravado = await resposta.json();
+        await route.abort("connectionfailed");
+      },
+      { times: 1 },
+    );
     await page.getByRole("button", { name: "Confirmar reavaliação" }).click();
     await expect(
-      page.getByText("1 registro(s) individual(is) criado(s)."),
+      page.getByRole("heading", {
+        name: "Confirmação sem resultado conhecido",
+      }),
     ).toBeVisible();
-    await page
-      .getByRole("link", { name: /Ver reavaliação do patrimônio/ })
-      .click();
+    await page.getByRole("button", { name: "Reenviar confirmação" }).click();
+    await expect(
+      page.getByRole("status").filter({
+        hasText:
+          "Esta operação já havia sido concluída. Nenhuma nova alteração foi feita.",
+      }),
+    ).toBeVisible();
+    const original = gravado as unknown as { dados: { id: string }[] };
+    await page.goto(`/reavaliacoes/${original.dados[0]!.id}`);
     await expect(page).toHaveURL(/\/reavaliacoes\/[0-9a-f-]+$/);
     await expect(page.getByText(fixture.numero)).toBeVisible();
     await expect(

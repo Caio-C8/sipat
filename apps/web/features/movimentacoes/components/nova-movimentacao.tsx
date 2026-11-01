@@ -14,7 +14,13 @@ import {
   type ErroCampo,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
+import {
+  decidirAposFalha,
+  isConflitoIdempotencia,
+  type DecisaoIdempotencia,
+} from "@/lib/api/core/idempotencia";
 import {
   usePatrimoniosMovimentacao,
   useSetoresMovimentacao,
@@ -25,7 +31,6 @@ import {
 import {
   campoMovimentacao,
   painelMovimentacao,
-  resultadoDesconhecido,
   formatarDataMovimentacao,
 } from "../presentation";
 import { ErroMovimentacao } from "./erro-movimentacao";
@@ -54,6 +59,8 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
   const [erro, setErro] = useState<unknown>(null),
     [errosCampos, setErrosCampos] = useState<ErroCampo[]>([]),
     [aviso, setAviso] = useState("");
+  const [decisaoIdempotencia, setDecisaoIdempotencia] =
+    useState<DecisaoIdempotencia | null>(null);
   const [pedido, setPedido] = useState<CriarMovimentacaoBodyData | null>(null),
     [incerto, setDesconhecido] = useState(false),
     [resultado, setResultado] = useState<CriarMovimentacaoResponse | null>(
@@ -81,6 +88,7 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
     setEtapa(valor);
     setErro(null);
     setErrosCampos([]);
+    setDecisaoIdempotencia(null);
     setAviso("");
     requestAnimationFrame(() => tituloEtapa.current?.focus());
   }
@@ -151,6 +159,7 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
     setPedido(novoPedido);
     setErro(null);
     setErrosCampos([]);
+    setDecisaoIdempotencia(null);
     persistencia.salvar(novoPedido);
     try {
       const resposta = await criacao.confirmar(novoPedido);
@@ -162,13 +171,23 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
       router.refresh();
       requestAnimationFrame(() => tituloEtapa.current?.focus());
     } catch (e) {
+      const decisao = decidirAposFalha(e);
       setErro(e);
-      if (isApiError(e)) setErrosCampos(e.erros);
-      const incerto = resultadoDesconhecido(e, desconhecido);
+      setDecisaoIdempotencia(isConflitoIdempotencia(e) ? decisao : null);
+      if (isApiError(e) && !isConflitoIdempotencia(e)) {
+        setErrosCampos(e.erros);
+      }
+      const incerto =
+        decisao.tipo === "resultado_incerto" ||
+        decisao.tipo === "em_processamento";
       setDesconhecido(incerto);
-      if (!incerto) {
+      if (!decisao.manterChave) {
         setPedido(null);
         persistencia.salvar(null);
+      }
+      if (decisao.atualizarConsultas) {
+        void carregarBens({ limite: "20" });
+        router.refresh();
       }
     } finally {
       envioEmCurso.current = false;
@@ -205,7 +224,10 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
       .map((e) => e.mensagem)
       .join(" ");
   }
-  const desabilitado = criacao.pending || desconhecido;
+  const desabilitado =
+    criacao.pending ||
+    desconhecido ||
+    decisaoIdempotencia?.tipo === "ja_processada";
   if (resultado)
     return (
       <main className="grid min-w-0 gap-6 p-4 sm:p-7">
@@ -307,8 +329,22 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
           className="grid gap-3 outline-offset-4"
           aria-label="Revise a confirmação"
         >
-          {erro ? <ErroMovimentacao erro={erro} /> : null}
-          {desconhecido ? (
+          {erro && !decisaoIdempotencia ? (
+            <ErroMovimentacao erro={erro} />
+          ) : null}
+          {erro && decisaoIdempotencia ? (
+            <AlertaIdempotencia
+              erro={erro}
+              decisao={decisaoIdempotencia}
+              destino={{
+                href: "/movimentacoes",
+                rotulo: "Consultar movimentações",
+              }}
+              pending={criacao.pending}
+              onTentarNovamente={() => void confirmar()}
+            />
+          ) : null}
+          {desconhecido && !decisaoIdempotencia ? (
             <section
               role="alert"
               className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"

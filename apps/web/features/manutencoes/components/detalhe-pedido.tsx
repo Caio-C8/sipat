@@ -9,7 +9,13 @@ import {
   AtualizarOrcamentoManutencaoBodySchema,
   RegistrarRetornoManutencaoBodySchema,
 } from "@repo/contracts";
+import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { browserApiClient } from "@/lib/api/browser-api-client";
+import {
+  decidirAposFalha,
+  isConflitoIdempotencia,
+  type DecisaoIdempotencia,
+} from "@/lib/api/core/idempotencia";
 import { criarOperacoesManutencoes } from "../api/manutencao-operations";
 import { ErroManutencao } from "./erro-manutencao";
 
@@ -54,16 +60,20 @@ function EnviarDocumento({
   pedidoId,
   item,
   onAtualizar,
+  onJaProcessada,
 }: {
   pedidoId: string;
   item?: ItemManutencao;
   onAtualizar: () => Promise<void>;
+  onJaProcessada: (erro: unknown, decisao: DecisaoIdempotencia) => void;
 }) {
   const [fase, setFase] = useState<"PEDIDO" | "ENVIO" | "RECEBIMENTO">(
     item ? (item.dataRetorno ? "RECEBIMENTO" : "ENVIO") : "PEDIDO",
   );
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erro, setErro] = useState<unknown>(null);
+  const [decisaoIdempotencia, setDecisaoIdempotencia] =
+    useState<DecisaoIdempotencia | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const chave = useRef<string | null>(null);
@@ -72,6 +82,7 @@ function EnviarDocumento({
     if (!arquivo || ocupado) return;
     setOcupado(true);
     setErro(null);
+    setDecisaoIdempotencia(null);
     chave.current ??= crypto.randomUUID();
     try {
       await operacoes.enviarDocumento(
@@ -88,7 +99,18 @@ function EnviarDocumento({
       if (input.current) input.current.value = "";
       await onAtualizar();
     } catch (e) {
+      const decisao = decidirAposFalha(e);
       setErro(e);
+      setDecisaoIdempotencia(
+        isConflitoIdempotencia(e) && decisao.tipo !== "ja_processada"
+          ? decisao
+          : null,
+      );
+      if (!decisao.manterChave) chave.current = null;
+      if (decisao.atualizarConsultas) {
+        onJaProcessada(e, decisao);
+        await onAtualizar();
+      }
     } finally {
       setOcupado(false);
     }
@@ -104,6 +126,8 @@ function EnviarDocumento({
             onChange={(e) => {
               setFase(e.target.value as "ENVIO" | "RECEBIMENTO");
               chave.current = null;
+              setErro(null);
+              setDecisaoIdempotencia(null);
             }}
             className={campo}
           >
@@ -127,6 +151,8 @@ function EnviarDocumento({
           onChange={(e) => {
             setArquivo(e.target.files?.[0] ?? null);
             chave.current = null;
+            setErro(null);
+            setDecisaoIdempotencia(null);
           }}
           required
           className={campo}
@@ -134,12 +160,23 @@ function EnviarDocumento({
       </label>
       <button
         type="submit"
-        disabled={!arquivo || ocupado}
+        disabled={
+          !arquivo || ocupado || decisaoIdempotencia?.tipo === "ja_processada"
+        }
         className="justify-self-start rounded border px-3 py-2 disabled:opacity-50"
       >
         {ocupado ? "Enviando..." : "Enviar documento"}
       </button>
-      {erro ? (
+      {erro && decisaoIdempotencia ? (
+        <AlertaIdempotencia
+          erro={erro}
+          decisao={decisaoIdempotencia}
+          destino={{
+            href: `/manutencoes/${pedidoId}`,
+            rotulo: "Atualizar detalhe da manutenção",
+          }}
+        />
+      ) : erro ? (
         <>
           <ErroManutencao erro={erro} />
           <p role="status">
@@ -330,11 +367,13 @@ function Retorno({
   item,
   dataEnvio,
   onAtualizar,
+  onJaProcessada,
 }: {
   pedidoId: string;
   item: ItemManutencao;
   dataEnvio: string;
   onAtualizar: () => Promise<void>;
+  onJaProcessada: (erro: unknown, decisao: DecisaoIdempotencia) => void;
 }) {
   const [data, setData] = useState(hoje);
   const [descricao, setDescricao] = useState("");
@@ -343,9 +382,13 @@ function Retorno({
   const [garantiaFim, setGarantiaFim] = useState("");
   const [erro, setErro] = useState<unknown>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [decisaoIdempotencia, setDecisaoIdempotencia] =
+    useState<DecisaoIdempotencia | null>(null);
   const chave = useRef<string | null>(null);
   const alterar = () => {
     chave.current = null;
+    setErro(null);
+    setDecisaoIdempotencia(null);
   };
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -370,11 +413,23 @@ function Retorno({
     chave.current = body.chaveIdempotencia;
     setOcupado(true);
     setErro(null);
+    setDecisaoIdempotencia(null);
     try {
       await operacoes.registrarRetorno(pedidoId, item.id, body);
       await onAtualizar();
     } catch (e) {
+      const decisao = decidirAposFalha(e);
       setErro(e);
+      setDecisaoIdempotencia(
+        isConflitoIdempotencia(e) && decisao.tipo !== "ja_processada"
+          ? decisao
+          : null,
+      );
+      if (!decisao.manterChave) chave.current = null;
+      if (decisao.atualizarConsultas) {
+        onJaProcessada(e, decisao);
+        await onAtualizar();
+      }
     } finally {
       setOcupado(false);
     }
@@ -455,12 +510,23 @@ function Retorno({
       </label>
       <button
         type="submit"
-        disabled={ocupado}
+        disabled={ocupado || decisaoIdempotencia?.tipo === "ja_processada"}
         className="justify-self-start rounded border px-3 py-2 disabled:opacity-50"
       >
         {ocupado ? "Registrando..." : "Confirmar retorno"}
       </button>
-      {erro ? (
+      {erro && decisaoIdempotencia ? (
+        <div className="sm:col-span-2">
+          <AlertaIdempotencia
+            erro={erro}
+            decisao={decisaoIdempotencia}
+            destino={{
+              href: `/manutencoes/${pedidoId}`,
+              rotulo: "Atualizar detalhe da manutenção",
+            }}
+          />
+        </div>
+      ) : erro ? (
         <div className="sm:col-span-2">
           <ErroManutencao erro={erro} />
         </div>
@@ -472,6 +538,18 @@ function Retorno({
 export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
   const [pedido, setPedido] = useState(inicial);
   const [erro, setErro] = useState<unknown>(null);
+  const [conflitoProcessado, setConflitoProcessado] = useState<{
+    erro: unknown;
+    decisao: DecisaoIdempotencia;
+  } | null>(null);
+  const conflitoRef = useRef<HTMLDivElement>(null);
+  function informarJaProcessada(
+    erroConflito: unknown,
+    decisao: DecisaoIdempotencia,
+  ) {
+    setConflitoProcessado({ erro: erroConflito, decisao });
+    requestAnimationFrame(() => conflitoRef.current?.focus());
+  }
   async function atualizar() {
     try {
       setPedido((await operacoes.consultar(pedido.id)).dados);
@@ -482,6 +560,18 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
   }
   return (
     <div className="grid gap-5">
+      {conflitoProcessado ? (
+        <div ref={conflitoRef} tabIndex={-1} className="outline-none">
+          <AlertaIdempotencia
+            erro={conflitoProcessado.erro}
+            decisao={conflitoProcessado.decisao}
+            destino={{
+              href: "/manutencoes",
+              rotulo: "Consultar manutenções",
+            }}
+          />
+        </div>
+      ) : null}
       <section className="grid gap-2 rounded-md border bg-white p-4">
         <h2 className="font-semibold">
           Pedido {pedido.numeroRequisicao ?? pedido.id}
@@ -517,7 +607,11 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
         <h3 className="font-semibold">Documentos do pedido</h3>
         <Documentos documentos={pedido.documentos} />
         {!pedido.documentos.length ? (
-          <EnviarDocumento pedidoId={pedido.id} onAtualizar={atualizar} />
+          <EnviarDocumento
+            pedidoId={pedido.id}
+            onAtualizar={atualizar}
+            onJaProcessada={informarJaProcessada}
+          />
         ) : null}
       </section>
       {pedido.itens.map((item) => (
@@ -588,6 +682,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
             item={item}
             dataEnvio={pedido.dataEnvio}
             onAtualizar={atualizar}
+            onJaProcessada={informarJaProcessada}
           />
           <Documentos documentos={item.documentos} />
           <EnviarDocumento
@@ -595,6 +690,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
             pedidoId={pedido.id}
             item={item}
             onAtualizar={atualizar}
+            onJaProcessada={informarJaProcessada}
           />
         </section>
       ))}

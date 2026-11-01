@@ -6,6 +6,7 @@ import type {
   ListarPatrimoniosQueryInput,
 } from "@repo/contracts";
 import { browserApiClient } from "@/lib/api/browser-api-client";
+import { useMutacaoSemRepeticao } from "@/lib/api/client/use-mutacao-sem-repeticao";
 import { criarOperacoesMovimentacoes } from "./movimentacao-operations";
 const operacoes = criarOperacoesMovimentacoes(browserApiClient);
 export function usePatrimoniosMovimentacao() {
@@ -93,18 +94,7 @@ export function useAtualizarPatrimonioMovimentacao() {
   return { pending, atualizar };
 }
 export function useCriarMovimentacao() {
-  const [pending, setPending] = useState(false);
-  const emCurso = useRef(false);
-  const confirmar = useCallback(async (body: CriarMovimentacaoBodyInput) => {
-    if (emCurso.current) return null;
-    emCurso.current = true;
-    setPending(true);
-    try {
-      return await operacoes.criar(body);
-    } finally {
-      emCurso.current = false;
-      setPending(false);
-    }
-  }, []);
-  return { pending, confirmar };
+  return useMutacaoSemRepeticao((body: CriarMovimentacaoBodyInput) =>
+    operacoes.criar(body),
+  );
 }

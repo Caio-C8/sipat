@@ -62,7 +62,7 @@ describe("fronteiras da integração de movimentações", () => {
         ),
       ).toBe(false);
     for (const codigo of [
-      "MOVIMENTACAO_EM_PROCESSAMENTO",
+      "OPERACAO_EM_PROCESSAMENTO",
       "CONFLITO_CONCORRENTE_MOVIMENTACAO",
     ])
       expect(

@@ -1,6 +1,6 @@
 # WEB-IDEMPOTENCIA-001 — Adaptar conflitos de operações na Web
 
-**Status:** aprovada
+**Status:** concluída e verificada em 31/10/2026
 
 ## Objetivo
 
@@ -68,4 +68,30 @@ processada, sem redesenhar telas, criar rotas ou esconder o conflito do usuário
 
 ## Pendências ou decisões bloqueantes
 
-- Depende de `CONTRACTS-016` e `IDEMPOTENCIA-001` verificados.
+- Nenhuma.
+
+## Resultado verificado
+
+- Movimentações, criações/retornos/documentos de manutenção, confirmações de
+  reavaliação e saídas/devoluções de empréstimo preservam a mesma chave em
+  resultado incerto ou processamento e descartam-na após falha conclusiva ou
+  reutilização incompatível.
+- `OPERACAO_JA_PROCESSADA` permanece `409`, apresenta a mensagem aprovada em
+  `role=status`, atualiza somente as leituras relacionadas e oferece a rota de
+  lista ou detalhe existente, sem replay, toast duplicado ou nova mutation.
+- `CHAVE_IDEMPOTENCIA_REUTILIZADA` exige nova confirmação e chave;
+  `OPERACAO_EM_PROCESSAMENTO` mantém dados e chave para retry exclusivamente
+  manual. O bloqueio síncrono compartilhado impede duplo clique concorrente.
+- Os formulários, foco programático e navegação existentes foram preservados;
+  nenhuma tela, rota, permissão ou response de sucesso foi criada ou alterada.
+
+## Verificações executadas
+
+- `@repo/web`: lint, typecheck, 67 testes e build de produção aprovados.
+- Playwright Web → API → PostgreSQL descartável: movimentações (5),
+  manutenções (1), reavaliações (1) e empréstimos (1) aprovados em Chromium.
+  Os cenários simulam resposta perdida após commit, reenvio com a mesma chave,
+  conflito explícito, ausência de duplicação e atualização da leitura.
+- Os E2E mantêm as verificações existentes de viewport estreita e axe nos
+  percursos aplicáveis. A automação não substitui inspeção manual completa com
+  teclado, leitor de tela ou navegadores adicionais.
