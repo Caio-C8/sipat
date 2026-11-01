@@ -172,6 +172,8 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
       requestAnimationFrame(() => tituloEtapa.current?.focus());
     } catch (e) {
       const decisao = decidirAposFalha(e);
+      const preservarIncertezaAnterior =
+        desconhecido && decisao.tipo === "falha_conclusiva";
       setErro(e);
       setDecisaoIdempotencia(isConflitoIdempotencia(e) ? decisao : null);
       if (isApiError(e) && !isConflitoIdempotencia(e)) {
@@ -180,8 +182,8 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
       const incerto =
         decisao.tipo === "resultado_incerto" ||
         decisao.tipo === "em_processamento";
-      setDesconhecido(incerto);
-      if (!decisao.manterChave) {
+      setDesconhecido(incerto || preservarIncertezaAnterior);
+      if (!decisao.manterChave && !preservarIncertezaAnterior) {
         setPedido(null);
         persistencia.salvar(null);
       }
