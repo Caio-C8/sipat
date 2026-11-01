@@ -700,9 +700,10 @@ model DocumentoManutencao {
   createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamp(6)
   createdById  String?                 @map("created_by_id") @db.Uuid
 
-  manutencao Manutencao      @relation(fields: [manutencaoId], references: [id])
-  item       ItemManutencao? @relation(fields: [itemId], references: [id])
-  createdBy  Usuario?        @relation(fields: [createdById], references: [id])
+  manutencao    Manutencao               @relation(fields: [manutencaoId], references: [id])
+  item          ItemManutencao?          @relation(fields: [itemId], references: [id])
+  createdBy     Usuario?                 @relation(fields: [createdById], references: [id])
+  idempotencias IdempotenciaManutencao[]
 
   @@index([manutencaoId, createdAt, id], map: "documentos_manutencao_pedido_data_idx")
   @@index([itemId, createdAt, id], map: "documentos_manutencao_item_data_idx")
@@ -720,9 +721,10 @@ model IdempotenciaManutencao {
   documentoId  String?  @map("documento_id") @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuario    Usuario         @relation(fields: [usuarioId], references: [id])
-  manutencao Manutencao      @relation(fields: [manutencaoId], references: [id])
-  item       ItemManutencao? @relation(fields: [itemId], references: [id])
+  usuario    Usuario              @relation(fields: [usuarioId], references: [id])
+  manutencao Manutencao           @relation(fields: [manutencaoId], references: [id])
+  item       ItemManutencao?      @relation(fields: [itemId], references: [id])
+  documento  DocumentoManutencao? @relation(fields: [documentoId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "idempotencias_manutencao_documento_id_fkey")
 
   @@unique([usuarioId, chave], map: "idempotencias_manutencao_usuario_chave_key")
   @@map("idempotencias_manutencao")

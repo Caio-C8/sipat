@@ -40,6 +40,15 @@ No estado atual:
   verificados em PostgreSQL descartável; ver
   [IDEMPOTENCIA-001](../../tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md).
 
+- `IDEMPOTENCIA-002` congela por vetores literais a canonicalização e o
+  SHA-256 V1, separa por domínio os advisory locks de movimentação, manutenção
+  e reavaliação e protege `IdempotenciaManutencao.documentoId` com relação
+  Prisma, FK `RESTRICT` e `CHECK` de tipo/documento. As 26 migrations passaram
+  desde banco vazio e sobre o schema anterior; as suítes PostgreSQL afetadas e
+  o banco de desenvolvimento foram verificados sem drift. Rotas, contratos,
+  mensagens e os três conflitos `409` não mudaram; ver
+  [IDEMPOTENCIA-002](../../tasks/IDEMPOTENCIA-002-endurecer-hash-locks-integridade.md).
+
 - `SEED-GERAL-001` fornece um comando Nest standalone opt-in para development e
   staging, cria a massa sintética pelos services da API, grava PDFs pelo storage
   privado e audita o estado final; production, test, migrations incompatíveis e

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Prisma, type DatabaseClient } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
+import { construirNamespaceLockIdempotencia } from "../../common/utils/idempotencia";
 import { reavaliacaoArgs, type EstadoReavaliacao } from "./types";
 
 type Cliente = DatabaseClient | Prisma.TransactionClient;
@@ -28,8 +29,13 @@ export class ReavaliacoesRepository {
     usuarioId: string,
     chave: string,
   ): Promise<boolean> {
+    const namespace = construirNamespaceLockIdempotencia(
+      "reavaliacao",
+      usuarioId,
+      chave,
+    );
     const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
-      SELECT pg_try_advisory_xact_lock(hashtextextended(${`${usuarioId}:${chave}`}, 0)) AS obtido
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${namespace}, 0)) AS obtido
     `;
     return linha?.obtido === true;
   }

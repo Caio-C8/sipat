@@ -1,10 +1,11 @@
 import { lerConfiguracaoSeedGeral } from "./seed-geral.config";
 import {
+  criarChaveIdempotenciaSeed,
   criarCnpjSintetico,
   dataCivilSaoPaulo,
   deslocarDataCivil,
 } from "./seed-geral.matriz";
-import { CnpjFornecedorSchema } from "@repo/contracts";
+import { ChaveIdempotenciaSchema, CnpjFornecedorSchema } from "@repo/contracts";
 import {
   exigirBancoDominioVazio,
   exigirMigrationsAtuais,
@@ -63,11 +64,26 @@ describe("seed geral", () => {
     expect(new Set(valores).size).toBe(5);
   });
 
+  it("produz chaves de idempotência determinísticas, válidas e distintas", () => {
+    const valores = Array.from({ length: 6 }, (_, grupo) =>
+      Array.from({ length: 50 }, (_, indice) =>
+        ChaveIdempotenciaSchema.parse(
+          criarChaveIdempotenciaSeed(grupo + 1, indice + 1),
+        ),
+      ),
+    ).flat();
+
+    expect(new Set(valores).size).toBe(valores.length);
+    expect(criarChaveIdempotenciaSeed(5, 1)).toBe(
+      "00000000-0000-4000-8000-050000000001",
+    );
+  });
+
   it("recusa migration pendente ou build com histórico diferente", () => {
-    const concluidas = Array.from({ length: 23 }, (_, indice) => ({
+    const concluidas = Array.from({ length: 26 }, (_, indice) => ({
       migration_name:
-        indice === 22
-          ? "20261030180000_adiciona_localizacoes_posteriores_inventario"
+        indice === 25
+          ? "20261101120000_adiciona_integridade_documento_idempotencia_manutencao"
           : `migration-${indice}`,
       finished_at: new Date(),
       rolled_back_at: null,
@@ -84,8 +100,8 @@ describe("seed geral", () => {
       ]),
     ).toThrow("migrations esperadas");
     expect(() => exigirMigrationsAtuais(concluidas.slice(0, -1))).toThrow(
-      "Esperado: 23 migrations, última " +
-        "20261030180000_adiciona_localizacoes_posteriores_inventario",
+      "Esperado: 26 migrations, última " +
+        "20261101120000_adiciona_integridade_documento_idempotencia_manutencao",
     );
   });
 
