@@ -28,6 +28,17 @@ comandos de reprodução e a pendência de homologação manual com leitor de te
 A suíte real também comprovou cookie/Guards nesse fluxo, sem substituir as
 pendências históricas específicas da tela de login.
 
+`WEB-IDEMPOTENCIA-001` está concluída para movimentações, manutenções,
+reavaliações e empréstimos. Os três conflitos públicos permanecem `409`
+visíveis, sem replay de sucesso ou retry automático. Em movimentações, o pedido
+e a chave sobrevivem à recarga enquanto o resultado anterior estiver incerto;
+um `401` durante a recuperação não elimina essa incerteza. A regressão observada
+na CI foi corrigida e revalidada em 01/11/2026 com 67 testes unitários, build de
+produção, cenário Playwright focal e suíte Web local com 29 aprovados e 8 E2E
+reais ignorados por ausência da infraestrutura descartável. Detalhes e limites
+estão em
+[WEB-IDEMPOTENCIA-001](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
+
 `/emprestimos`, `/emprestimos/nova` e `/emprestimos/[emprestimoId]` foram
 validados com saída agrupada, retorno parcial e conclusão sobre API e banco
 isolados, inclusive por Playwright reproduzível. O detalhe permaneceu legível

@@ -29,7 +29,10 @@ fronteiras entre UI, contratos e integração HTTP.
   [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md);
 - movimentações, manutenções, reavaliações e empréstimos distinguem os três
   conflitos públicos de idempotência, preservam a chave somente enquanto o
-  resultado permanece incerto e nunca fazem retry automático;
+  resultado permanece incerto e nunca fazem retry automático. Em movimentações,
+  uma falha conclusiva durante a recuperação não apaga a chave quando uma
+  tentativa anterior ainda tem resultado incerto; ver
+  [WEB-IDEMPOTENCIA-001](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md);
 - `/api/health` verifica o processo Web;
 - `/api/backend/:path*` encaminha chamadas para a API por
   `API_INTERNAL_URL`;

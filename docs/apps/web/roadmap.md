@@ -2,12 +2,16 @@
 
 ## WEB-IDEMPOTENCIA-001 — Adaptar conflitos de operações
 
-**Status:** implementado e validado em 31/10/2026. Movimentações, manutenções,
-reavaliações e empréstimos preservam chave e formulário em resultado incerto,
-distinguem os três conflitos públicos e mostram o `409
-OPERACAO_JA_PROCESSADA` como aviso explícito de que nada foi duplicado, sem
-novas rotas ou redesign. Os quatro percursos passaram em Chromium contra API e
-PostgreSQL descartável.
+**Status:** implementado e validado em 31/10/2026; regressão de CI corrigida e
+revalidada em 01/11/2026. Movimentações, manutenções, reavaliações e empréstimos
+preservam chave e formulário em resultado incerto, distinguem os três conflitos
+públicos e mostram o `409` com `OPERACAO_JA_PROCESSADA` como aviso explícito de
+que nada foi duplicado, sem novas rotas ou redesign. Em movimentações, uma
+falha conclusiva durante a recuperação, como `401`, não descarta a chave quando
+o resultado de uma tentativa anterior ainda é incerto. Os quatro percursos
+passaram em Chromium contra API e PostgreSQL descartável; após a correção, a
+suíte Web local passou com 29 cenários aprovados e 8 integrações reais ignoradas
+por falta da infraestrutura descartável nessa execução.
 [Tarefa e aceite](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
 
 ## WEB-EMPRESTIMOS-001 — Consulta, saída e devolução
