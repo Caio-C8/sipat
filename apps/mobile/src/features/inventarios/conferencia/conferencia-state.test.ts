@@ -86,7 +86,10 @@ describe("estado da conferência", () => {
   });
 
   it.each([
-    [new ApiError("network"), "A leitura não foi salva"],
+    [
+      new ApiError("network"),
+      "Não foi possível confirmar o resultado da leitura",
+    ],
     [new ApiError("timeout"), "Tente novamente"],
     [
       new ApiError("http", 404, "ITEM_INVENTARIO_NAO_ENCONTRADO"),

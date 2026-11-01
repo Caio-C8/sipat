@@ -2,10 +2,10 @@
 
 ## MOBILE-IDEMPOTENCIA-001 — Proteger cadastro patrimonial
 
-**Status:** planejado. O cadastro unitário existente passará a enviar e
-preservar uma chave por confirmação, sem retry automático, fila offline,
-mudança visual ou nova rota. Reenvio já concluído será mostrado como conflito
-informativo e não criará outro patrimônio.
+**Status:** concluído. O cadastro unitário envia e preserva uma chave por
+confirmação, sem retry automático, fila offline, mudança visual ou nova rota.
+Reenvio já concluído é mostrado como conflito informativo e não cria outro
+patrimônio.
 [Tarefa e aceite](../../tasks/MOBILE-IDEMPOTENCIA-001-proteger-cadastro-patrimonio.md).
 
 ## Baseline concluído

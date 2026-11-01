@@ -58,6 +58,7 @@ import {
   type CreatePatrimonioForm,
   type FormErrors,
 } from "./create-patrimonio-form";
+import { PatrimonioCreationAttempt } from "./patrimonio-creation-attempt";
 
 type Step = 1 | 2 | 3 | 4;
 type Catalog = "species" | "sectors" | "processes";
@@ -539,8 +540,7 @@ function DirectorFlow({
   const [errors, setErrors] = useState<FormErrors>({});
   const [feedback, setFeedback] = useState<string>();
   const [created, setCreated] = useState<PatrimonioDetalhe>();
-  const posting = useRef(false);
-  const creationKey = useRef<string | undefined>(undefined);
+  const creationAttempt = useRef(new PatrimonioCreationAttempt());
   const [catalog, setCatalog] = useState<Catalog>();
   const queries = useCreatePatrimonioQueries(
     manager,
@@ -582,10 +582,9 @@ function DirectorFlow({
   );
 
   const update = (patch: Partial<CreatePatrimonioForm>) => {
-    creationKey.current = undefined;
+    creationAttempt.current.payloadChanged();
     setForm((current) => ({ ...current, ...patch }));
     setErrors({});
-    setFeedback(undefined);
   };
 
   const next = () => {
@@ -596,20 +595,18 @@ function DirectorFlow({
   };
 
   const submit = async () => {
-    if (posting.current) return;
-    posting.current = true;
+    const creationKey = creationAttempt.current.start(Crypto.randomUUID);
+    if (!creationKey) return;
     setFeedback(undefined);
     creation.reset();
     try {
-      creationKey.current ??= Crypto.randomUUID();
-      const body = mapCreatePatrimonioForm(form, creationKey.current);
+      const body = mapCreatePatrimonioForm(form, creationKey);
       const identityId = currentSessionIdentity(manager);
       const result = await creation.mutateAsync({ body, identityId });
       if (isCurrentSession(manager, identityId)) setCreated(result);
-      creationKey.current = undefined;
+      creationAttempt.current.complete();
     } catch (error) {
-      if (isApiError(error) && error.code === "CHAVE_IDEMPOTENCIA_REUTILIZADA")
-        creationKey.current = undefined;
+      creationAttempt.current.fail(error);
       if (isApiError(error) && error.code === "OPERACAO_JA_PROCESSADA")
         await invalidatePatrimonioCreation(queryClient);
       const fieldFeedback = fieldErrorsFromApi(error);
@@ -619,8 +616,6 @@ function DirectorFlow({
         setReview(false);
       }
       setFeedback(createPatrimonioErrorMessage(error));
-    } finally {
-      posting.current = false;
     }
   };
 
@@ -629,7 +624,7 @@ function DirectorFlow({
       <Success
         item={created}
         onAnother={() => {
-          creationKey.current = undefined;
+          creationAttempt.current.complete();
           setCreated(undefined);
           setForm(EMPTY_CREATE_PATRIMONIO_FORM);
           setStep(1);

@@ -61,7 +61,7 @@ export function conferenciaErrorMessage(error: ApiError) {
   if (error.kind === "timeout")
     return "A verificação demorou mais que o esperado. Tente novamente.";
   if (error.kind === "network")
-    return "Sem conexão. A leitura não foi salva; verifique sua internet e tente novamente.";
+    return "Sem conexão. Não foi possível confirmar o resultado da leitura; verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
     return "Não foi possível confirmar a leitura. Atualize os dados e tente novamente.";
   return "Não foi possível verificar este item.";
