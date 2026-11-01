@@ -682,3 +682,10 @@ posteriormente por `WEB-AUTH-001`. O consumidor mobile permanece nas tarefas
 - [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
 - [NIST SP 800-63B: passwords e autenticação](https://pages.nist.gov/800-63-4/sp800-63b.html)
 - [Nodemailer: transporte SMTP](https://nodemailer.com/smtp)
+
+## Relatórios patrimoniais — decisão aprovada
+
+Administrador e Diretor podem consultar e exportar os novos relatórios e a
+ficha de bem. Isto não amplia permissões das operações, CRUDs administrativos
+ou anexos, inclusive anexo de baixa. Primeiro acesso permanece bloqueado.
+[Semântica e limites](./apps/api/relatorios-patrimoniais.md).

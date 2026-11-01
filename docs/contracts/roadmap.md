@@ -586,3 +586,8 @@ Executar antes de MOVIMENTACOES-001 e WEB-MOVIMENTACOES-001. A existência de
 TransferenciaPatrimonio e de correções não comprova contratos gerais.
 A regra B e a vigência de comissão nas transferências comuns estão aprovadas;
 a avaliação de vigência nas correções é futura e não bloqueia este contrato.
+
+## CONTRACTS-017 — Relatórios patrimoniais
+
+**Status:** concluído em 01/11/2026; 146 testes, lint e tipos aprovados. [Tarefa](../tasks/CONTRACTS-017-relatorios-patrimoniais.md).
+Filtros e respostas por relatório, ficha/eventos, catálogo, opções e PDF.

@@ -71,3 +71,11 @@ pnpm --filter @repo/web build
 pnpm --filter @repo/web test:e2e
 pnpm format:check
 ```
+
+## Relatórios patrimoniais
+
+`/relatorios` está integrado aos nove tipos aprovados, incluindo ficha com
+eventos reais e download PDF binário pelo cliente central.
+[Contrato de execução e evidências](../../tasks/WEB-RELATORIOS-001-interface.md).
+A stack local foi deixada em execução nas portas 3000/3001, com banco Docker
+isolado em 55420; não foram alterados dados operacionais nem criados commits.

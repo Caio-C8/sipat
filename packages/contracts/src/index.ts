@@ -27,3 +27,5 @@ export * from "./movimentacao";
 export * from "./manutencao";
 export * from "./reavaliacao-patrimonio";
 export * from "./emprestimo";
+
+export * from "./relatorio-patrimonial";

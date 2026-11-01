@@ -1672,3 +1672,11 @@ revalidação de vigência. A revisão futura dessas correções continua fora d
 ciclo. UUID individual, sem código TR nem lote; migrations aplicadas no local e
 no ambiente isolado com dados preservados. O placeholder foi substituído.
 [Evidências e reprodução](../PROMPTS-MOVIMENTACOES.md).
+
+## Relatórios patrimoniais — RF20/RF21
+
+**Status:** concluído e verificado em 01/11/2026, nos nove tipos aprovados.
+
+Nove categorias, consultas reais, ficha, PDF e Web simples.
+[Escopo e sequência de tarefas](./apps/api/relatorios-patrimoniais.md).
+Contratos, consultas/ficha, PDF e consumidor verificados em banco isolado. Estornos permanecem fora do escopo.

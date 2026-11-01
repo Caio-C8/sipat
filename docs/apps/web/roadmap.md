@@ -168,3 +168,9 @@ individuais. Sem código TR ou data manual; erros preservam preenchimento,
 reenvios recuperam a confirmação anterior e horário usa America/Sao_Paulo.
 Lint, tipos, 43 testes unitários, build, 22 E2E padrão e cinco E2E reais passaram.
 Comparação visual, acessibilidade e reprodução estão registradas na tarefa.
+
+## WEB-RELATORIOS-001 — Relatórios patrimoniais
+
+**Status:** concluída em 01/11/2026. Nove tipos com prévia/PDF reais, ficha,
+seletores e filtros; Chrome integrado ao PostgreSQL isolado nos dois perfis.
+[Tarefa, evidências e limitações](../../tasks/WEB-RELATORIOS-001-interface.md).
