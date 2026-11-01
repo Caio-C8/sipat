@@ -9,6 +9,46 @@ import type {
 } from "./types";
 
 const TIMEOUT_PADRAO_MS = 30_000;
+const LIMITE_PDF_BYTES = 10 * 1024 * 1024;
+
+async function lerPdf(response: Response): Promise<Blob> {
+  const falha = () =>
+    criarErroRespostaInvalida({
+      response,
+      codigo: "PDF_RESPOSTA_INVALIDA",
+      mensagem:
+        "O serviço retornou um PDF inválido ou acima do limite permitido.",
+    });
+  if (
+    response.headers.get("Content-Type")?.split(";")[0]?.trim() !==
+      "application/pdf" ||
+    Number(response.headers.get("Content-Length")) > LIMITE_PDF_BYTES ||
+    !response.body
+  ) {
+    await response.body?.cancel();
+    throw falha();
+  }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array<ArrayBuffer>[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > LIMITE_PDF_BYTES) {
+        await reader.cancel();
+        throw falha();
+      }
+      chunks.push(new Uint8Array(value));
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const blob = new Blob(chunks, { type: "application/pdf" });
+  if ((await blob.slice(0, 5).text()) !== "%PDF-") throw falha();
+  return blob;
+}
 
 type ControleAbort = {
   signal: AbortSignal;
@@ -311,6 +351,7 @@ export function createApiClient({
       timeoutMs = defaultTimeoutMs,
       cache,
       responseSchema,
+      responseType = "json",
     }: ApiRequestOptions<TResponse>): Promise<TResponse> {
       if (method === "GET" && body !== undefined) {
         throw new ApiError({
@@ -374,8 +415,11 @@ export function createApiClient({
           cache,
         });
 
+        if (response.ok && responseType === "pdf")
+          return (await lerPdf(response)) as TResponse;
         leitura = await lerCorpo(response);
       } catch (error: unknown) {
+        if (error instanceof ApiError) throw error;
         if (
           erroFoiTimeout(
             error,

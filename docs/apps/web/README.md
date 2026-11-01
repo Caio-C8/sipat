@@ -124,3 +124,9 @@ esse template.
 
 Quando uma decisão afetar API, contratos ou comportamento entre aplicações,
 registre-a também em [Integrações](../../integrations/README.md).
+
+## Relatórios patrimoniais
+
+`/relatorios` integra catálogo, filtros por tipo, seletores paginados, prévia,
+ficha, totais e PDF pela API real. Alterar filtros invalida a prévia.
+[Contrato de execução e evidências](../../tasks/WEB-RELATORIOS-001-interface.md).

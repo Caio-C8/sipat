@@ -207,3 +207,12 @@ retorno nunca carrega o token e não cria sessão. `/redefinir-senha` continua
 sendo a página autenticada do primeiro acesso.
 
 Consulte o [contrato de execução](../../tasks/WEB-AUTH-002-recuperar-senha.md).
+
+## Relatórios e transporte de PDF
+
+As operações de relatórios usam os clientes centrais, schemas específicos e
+no-store. A opção `responseType: "pdf"` mantém timeout, AbortSignal e erros JSON
+normalizados, limita o corpo a 10 MiB e valida MIME e assinatura PDF.
+O hook impede emissão duplicada, cancela ao desmontar e libera a Object URL.
+Cada emissão consulta novamente o banco; a prévia não é um snapshot exportável.
+[Semântica e limites](../../apps/api/relatorios-patrimoniais.md).

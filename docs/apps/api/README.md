@@ -283,3 +283,9 @@ aprovada em [Armazenamento local de documentos](../../file-storage.md).
 `STORAGE-001` entregou a infraestrutura local, `CONTRACTS-006` entregou os
 contratos compartilhados e `NOTAS-FISCAIS-001` entregou o fluxo complementar de
 notas e anexos. A implementação de `COMPRAS-001` permanece em validação.
+
+## Relatórios patrimoniais
+
+O novo módulo oferece catálogo, seletores, oito consultas tabulares e ficha
+com eventos reais, além de PDF autenticado dos nove tipos para ambos os perfis.
+[Semântica, rotas, limites e operação local](./relatorios-patrimoniais.md).
