@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { AuthOperations } from "../../auth/api/auth-operations";
+import { SessionManager } from "../../auth/session/session-manager";
+import type { RefreshTokenStorage } from "../../auth/storage/refresh-token-storage";
 import { createCreatePatrimonioOperations } from "./create-patrimonio-operations";
 import {
   mapCreatePatrimonioForm,
@@ -143,6 +146,78 @@ describe("operações do cadastro patrimonial", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.test/api/patrimonios",
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("preserva body e chave quando renova o access token antes do POST", async () => {
+    const oldAccessToken = "A".repeat(43);
+    const newAccessToken = "N".repeat(43);
+    const refreshToken = "R".repeat(43);
+    const nextRefreshToken = "S".repeat(43);
+    const identity = {
+      id: "77777777-7777-4777-8777-777777777777",
+      nome: "Diretora",
+      email: "diretora@example.test",
+      perfil: "DIRETOR_PATRIMONIO" as const,
+      trocaSenhaObrigatoria: false,
+    };
+    const authOperations = {
+      login: vi.fn(async () => ({
+        identidade: identity,
+        credenciais: {
+          accessToken: oldAccessToken,
+          refreshToken,
+          accessTokenExpiraEm: new Date(Date.now() - 60_000).toISOString(),
+          sessaoExpiraEm: new Date(Date.now() + 3_600_000).toISOString(),
+        },
+      })),
+      refresh: vi.fn(async () => ({
+        accessToken: newAccessToken,
+        refreshToken: nextRefreshToken,
+        accessTokenExpiraEm: new Date(Date.now() + 60_000).toISOString(),
+        sessaoExpiraEm: new Date(Date.now() + 3_600_000).toISOString(),
+      })),
+      me: vi.fn(async () => identity),
+      completeFirstAccess: vi.fn(),
+      requestPasswordReset: vi.fn(async () => ({
+        status: 202 as const,
+        sucesso: true as const,
+        mensagem:
+          "Se houver uma conta elegível, enviaremos as instruções para redefinir a senha." as const,
+      })),
+      logout: vi.fn(async () => undefined),
+    } as AuthOperations;
+    const storage: RefreshTokenStorage = {
+      read: vi.fn(async () => refreshToken),
+      write: vi.fn(async () => undefined),
+      remove: vi.fn(async () => undefined),
+    };
+    const manager = new SessionManager(authOperations, storage);
+    await manager.login({ email: identity.email, senha: "senha segura" });
+    const body = mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(response(success(created(), 201), 201));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await manager.authorizedRequest(
+      (accessToken) =>
+        createCreatePatrimonioOperations("https://api.test").create(body, {
+          accessToken,
+        }),
+      false,
+    );
+
+    expect(authOperations.refresh).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.test/api/patrimonios",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: `Bearer ${newAccessToken}`,
+        }),
+        body: JSON.stringify(body),
+      }),
     );
   });
 

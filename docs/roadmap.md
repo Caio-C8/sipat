@@ -26,9 +26,8 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Idempotência de operações críticas
 
-**Status:** em andamento em 31/10/2026; contratos, banco e API foram concluídos
-e verificados em PostgreSQL isolado. As adaptações Web e mobile permanecem
-planejadas.
+**Status:** em andamento em 01/11/2026; contratos, banco, API e adaptação mobile
+foram concluídos e verificados. A adaptação Web permanece planejada.
 
 O objetivo é impedir duplicação causada por duplo envio, timeout ou
 concorrência com o mecanismo mais barato adequado a cada entidade. A sequência
@@ -39,7 +38,7 @@ aprovada é:
 | 1     | [`CONTRACTS-016`](./tasks/CONTRACTS-016-idempotencia-operacoes-criticas.md) — chave e conflitos públicos                   | concluído | contratos atuais                       |
 | 2     | [`IDEMPOTENCIA-001`](./tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md) — persistência mínima e API          | concluído | objetivo anterior e banco sincronizado |
 | 3     | [`WEB-IDEMPOTENCIA-001`](./tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md) — consumidores Web existentes        | planejado | dois objetivos anteriores              |
-| 4     | [`MOBILE-IDEMPOTENCIA-001`](./tasks/MOBILE-IDEMPOTENCIA-001-proteger-cadastro-patrimonio.md) — cadastro patrimonial mobile | planejado | dois primeiros objetivos               |
+| 4     | [`MOBILE-IDEMPOTENCIA-001`](./tasks/MOBILE-IDEMPOTENCIA-001-proteger-cadastro-patrimonio.md) — cadastro patrimonial mobile | concluído | dois primeiros objetivos               |
 
 As rotas não mudam. Repetir a mesma chave e conteúdo depois do commit passa a
 retornar `409 OPERACAO_JA_PROCESSADA`, informando que a execução anterior foi

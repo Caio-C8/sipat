@@ -103,7 +103,10 @@ describe("estado da correção de inventário", () => {
   });
 
   it.each([
-    [new ApiError("network"), "A correção não foi salva"],
+    [
+      new ApiError("network"),
+      "Não foi possível confirmar o resultado da correção",
+    ],
     [new ApiError("timeout"), "Tente novamente"],
     [
       new ApiError("http", 409, "CORRECAO_ITEM_INVENTARIO_INCOMPATIVEL"),

@@ -61,8 +61,10 @@ código interno da API.
   divergências e não localizados e não expõe finalização global do inventário;
 - `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
   de cadastro unitário, com máscaras de data civil e moeda e parâmetros
-  iniciais de depreciação obrigatórios; o Administrador recebe `Cadastro
-restrito` sem montar o formulário nem consultar catálogos;
+  iniciais de depreciação obrigatórios; a confirmação preserva uma chave de
+  idempotência em resultados incertos e distingue os três conflitos públicos;
+  o Administrador recebe `Cadastro restrito` sem montar o formulário nem
+  consultar catálogos;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior

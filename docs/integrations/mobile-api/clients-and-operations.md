@@ -165,7 +165,11 @@ espécies e processos de compra, consulta do processo selecionado e
 o access token existe somente no escopo da request. Leituras podem recuperar
 uma única vez um `401` pela sessão, mas a mutation nunca recebe retry
 automático. A UI bloqueia ativação duplicada enquanto a confirmação está
-pendente.
+pendente. `MOBILE-IDEMPOTENCIA-001` passou a gerar a chave uma vez por
+confirmação, preservá-la após resultado incerto ou renovação prévia da sessão e
+substituí-la somente quando o payload muda após erro conclusivo ou quando outro
+cadastro é iniciado. Os três conflitos públicos permanecem distintos e
+`OPERACAO_JA_PROCESSADA` refaz as consultas patrimoniais sem simular sucesso.
 
 ## Conferência inicial de inventário implementada
 

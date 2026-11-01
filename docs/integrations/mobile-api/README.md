@@ -28,7 +28,8 @@ sessão em memória + refresh no storage nativo
 - a consulta possui timeout de oito segundos e cancelamento;
 - a request anterior é abortada antes de outra verificação;
 - o cliente HTTP comum atende autenticação, leituras de domínio e o cadastro
-  unitário de patrimônio com os catálogos gerais existentes;
+  unitário de patrimônio com os catálogos gerais existentes; esse cadastro
+  preserva sua chave de idempotência em resultados incertos;
 - as leituras de domínio usam cache somente em memória e offline não existe;
 - `MOBILE-QUERY-001` entregou TanStack Query v5, provider, foco nativo e limpeza
   do cache em memória por sessão; `MOBILE-QUERY-002` migrou as leituras e
@@ -72,7 +73,7 @@ política diferente para credenciais persistidas.
 
 - persistência, criptografia e operação offline, que não fazem parte da política
   em memória aprovada;
-- retry e idempotência por operação;
+- retry e idempotência das demais operações que ainda não possuem política;
 - correlation ID e provedor de observabilidade;
 - limites de request/response e metas de latência;
 - comportamento no background e retomada.

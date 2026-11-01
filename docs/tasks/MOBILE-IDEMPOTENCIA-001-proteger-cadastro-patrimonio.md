@@ -1,6 +1,6 @@
 # MOBILE-IDEMPOTENCIA-001 — Proteger cadastro patrimonial no mobile
 
-**Status:** aprovada
+**Status:** concluída (01/11/2026)
 
 ## Objetivo
 
@@ -40,12 +40,12 @@ concluída.
 
 ## Critérios de aceite
 
-- [ ] Reenvio incerto usa a mesma chave e cria no máximo um patrimônio.
-- [ ] Alterar o conteúdo depois de falha conclusiva gera outra chave.
-- [ ] Duplo toque não dispara duas requests.
-- [ ] Os três conflitos possuem mensagens claras e acessíveis, sem apagar os
+- [x] Reenvio incerto usa a mesma chave e cria no máximo um patrimônio.
+- [x] Alterar o conteúdo depois de falha conclusiva gera outra chave.
+- [x] Duplo toque não dispara duas requests.
+- [x] Os três conflitos possuem mensagens claras e acessíveis, sem apagar os
       dados corrigíveis.
-- [ ] Renovação de access token não troca chave nem corpo da mutation original.
+- [x] Renovação de access token não troca chave nem corpo da mutation original.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -63,4 +63,29 @@ concluída.
 
 ## Pendências ou decisões bloqueantes
 
-- Depende de `CONTRACTS-016` e `IDEMPOTENCIA-001` verificados.
+- Nenhuma.
+
+## Resultado verificado
+
+- O cliente gera um UUID v4 somente na confirmação e mantém a mesma chave em
+  timeout, falha de rede, response inválida e `OPERACAO_EM_PROCESSAMENTO`.
+- Uma edição só libera outra chave depois de resposta HTTP conclusiva. Repetir
+  sem editar mantém a chave anterior; iniciar outro cadastro a descarta.
+- A trava síncrona bloqueia confirmações concorrentes e a mutation continua com
+  `retry: false`, sem fila ou persistência offline.
+- `OPERACAO_JA_PROCESSADA` invalida as consultas patrimoniais existentes e
+  informa que nenhum novo bem foi criado; os outros conflitos mantêm mensagens
+  próprias e o formulário preservado.
+- A revisão final também removeu das mensagens de rede da leitura e da correção
+  de inventário a garantia indevida de ausência de persistência: elas agora
+  informam que não foi possível confirmar o resultado, sem alterar esses
+  fluxos.
+- Typecheck, ESLint sem erros, 190 testes mobile e exports Expo Android, iOS e
+  Web foram aprovados. A suíte integrada de idempotência passou com 5 testes
+  após aplicar as 25 migrations em PostgreSQL descartável.
+
+### Limites da validação
+
+O ESLint reportou somente um aviso preexistente no arquivo gerado
+`.expo/types/router.d.ts`. Leitor de tela, foco e larguras foram preservados sem
+mudança visual, mas não foram revalidados em dispositivo físico nesta execução.

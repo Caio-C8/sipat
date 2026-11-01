@@ -44,7 +44,7 @@ export function correcaoErrorMessage(error: ApiError) {
   if (error.kind === "timeout")
     return "A correção demorou mais que o esperado. Tente novamente.";
   if (error.kind === "network")
-    return "Sem conexão. A correção não foi salva; verifique sua internet e tente novamente.";
+    return "Sem conexão. Não foi possível confirmar o resultado da correção; verifique sua internet e tente novamente.";
   if (error.kind === "invalid-response")
     return "Não foi possível confirmar a correção. Atualize os dados e tente novamente.";
   return "Não foi possível registrar a correção.";

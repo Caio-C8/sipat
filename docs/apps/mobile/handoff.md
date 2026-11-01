@@ -82,6 +82,15 @@ navegador em 390×844 e comparados quanto a hierarquia, cards e ações. A
 comparação visual da implementação executada, tecnologias assistivas e
 dispositivos reais permanecem pendentes.
 
+`MOBILE-IDEMPOTENCIA-001` protegeu a confirmação desse cadastro com uma chave
+UUID por tentativa lógica. Timeout, rede, response inválida e operação ainda em
+processamento preservam a chave; somente uma edição posterior a erro conclusivo
+ou o início de outro cadastro libera uma nova. A trava local bloqueia duplo
+toque, a mutation segue sem retry automático e os três conflitos mantêm o
+formulário. A entrega passou em typecheck, ESLint sem erros, 190 testes e na
+suíte PostgreSQL descartável de idempotência; dispositivo físico continua fora
+desta validação.
+
 `MOBILE-INVENTARIOS-002` adicionou a rota de conferência sob o setor em
 andamento, `expo-camera@~58.0.14` sem permissão de microfone/áudio, scanner e
 entrada manual convergindo na mesma mutation validada. A câmera é desmontada
