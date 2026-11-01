@@ -38,9 +38,10 @@ export default defineConfig({
       },
     },
     {
-      command: "pnpm exec next start --port 3100",
+      command:
+        "node node_modules/next/dist/bin/next build --webpack && node node_modules/next/dist/bin/next start --port 3100",
       url: "http://localhost:3100",
-      timeout: 30000,
+      timeout: 180000,
       reuseExistingServer: false,
       env: { API_INTERNAL_URL: "http://127.0.0.1:3201", PLAYWRIGHT_TEST: "1" },
     },

@@ -30,7 +30,7 @@ export default defineConfig({
         APP_ENV: "test",
         API_PORT: "3201",
         CORS_ORIGINS: "http://localhost:3100,http://localhost:3000",
-        AUTH_RATE_LIMIT_HMAC_SECRET: randomBytes(32).toString("base64"),
+        AUTH_RATE_LIMIT_HMAC_SECRET: randomBytes(32).toString("base64url"),
         AUTH_ARGON2_MAX_CONCURRENCY: "1",
         AUTH_ARGON2_MAX_QUEUE: "2",
         AUTH_PASSWORD_RESET_ENABLED: "false",
@@ -38,9 +38,10 @@ export default defineConfig({
       },
     },
     {
-      command: "pnpm exec next start --port 3100",
+      command:
+        "node node_modules/next/dist/bin/next build --webpack && node node_modules/next/dist/bin/next start --port 3100",
       url: "http://localhost:3100",
-      timeout: 30000,
+      timeout: 180000,
       reuseExistingServer: false,
       env: { API_INTERNAL_URL: "http://127.0.0.1:3201", PLAYWRIGHT_TEST: "1" },
     },

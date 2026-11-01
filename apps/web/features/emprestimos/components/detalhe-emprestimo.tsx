@@ -7,8 +7,17 @@ import {
   type EmprestimoDetalhe,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
-import { useDevolverEmprestimo } from "../api/hooks";
+import {
+  decidirAposFalha,
+  isConflitoIdempotencia,
+  obterTentativaIdempotente,
+  tentativaAposFalha,
+  type DecisaoIdempotencia,
+  type TentativaIdempotente,
+} from "@/lib/api/core/idempotencia";
+import { useConsultarEmprestimo, useDevolverEmprestimo } from "../api/hooks";
 import {
   campoEmprestimo,
   dataExibicao,
@@ -33,9 +42,12 @@ export function DetalheEmprestimo({
   const [observacao, setObservacao] = useState("");
   const [erro, setErro] = useState<unknown>(null);
   const [aviso, setAviso] = useState("");
-  const chaveAnterior = useRef<{ corpo: string; chave: string } | null>(null);
+  const [decisaoIdempotencia, setDecisaoIdempotencia] =
+    useState<DecisaoIdempotencia | null>(null);
+  const chaveAnterior = useRef<TentativaIdempotente | null>(null);
   const avisoRef = useRef<HTMLDivElement>(null);
   const devolucao = useDevolverEmprestimo(detalhe.id);
+  const consulta = useConsultarEmprestimo(detalhe.id);
 
   function alternar(id: string) {
     setSelecionados((atuais) =>
@@ -48,6 +60,7 @@ export function DetalheEmprestimo({
     evento.preventDefault();
     setErro(null);
     setAviso("");
+    setDecisaoIdempotencia(null);
     const semChave = {
       emprestimoIds: selecionados,
       dataDevolucao,
@@ -55,8 +68,10 @@ export function DetalheEmprestimo({
       ...(observacao.trim() ? { observacao } : {}),
     };
     const corpo = JSON.stringify(semChave);
-    if (chaveAnterior.current?.corpo !== corpo)
-      chaveAnterior.current = { corpo, chave: crypto.randomUUID() };
+    chaveAnterior.current = obterTentativaIdempotente(
+      chaveAnterior.current,
+      corpo,
+    );
     const validacao = RegistrarDevolucaoEmprestimoBodySchema.safeParse({
       ...semChave,
       chaveIdempotencia: chaveAnterior.current!.chave,
@@ -74,11 +89,29 @@ export function DetalheEmprestimo({
         setObservacao("");
         setAviso(`${resposta.dados.devolvidos.length} bem(ns) recebido(s).`);
         chaveAnterior.current = null;
+        setDecisaoIdempotencia(null);
         router.refresh();
         requestAnimationFrame(() => avisoRef.current?.focus());
       }
     } catch (e) {
+      const decisao = decidirAposFalha(e);
       setErro(e);
+      setDecisaoIdempotencia(isConflitoIdempotencia(e) ? decisao : null);
+      chaveAnterior.current = tentativaAposFalha(chaveAnterior.current, e);
+      if (decisao.atualizarConsultas) {
+        try {
+          const atualizado = await consulta.consultar();
+          setDetalhe(atualizado);
+          setSelecionados((atuais) =>
+            atuais.filter((id) =>
+              atualizado.itens.some((item) => item.id === id && item.pendente),
+            ),
+          );
+        } catch {
+          // O conflito original permanece visível; a navegação permite nova leitura.
+        }
+        router.refresh();
+      }
       requestAnimationFrame(() => avisoRef.current?.focus());
     }
   }
@@ -219,7 +252,12 @@ export function DetalheEmprestimo({
             void confirmar(e);
           }}
         >
-          <fieldset disabled={devolucao.pending} className="grid gap-4">
+          <fieldset
+            disabled={
+              devolucao.pending || decisaoIdempotencia?.tipo === "ja_processada"
+            }
+            className="grid gap-4"
+          >
             <legend className="mb-3 font-bold">Registrar devolução</legend>
             <p className="text-sm">
               Selecione apenas os bens efetivamente recebidos.
@@ -291,19 +329,36 @@ export function DetalheEmprestimo({
         <div
           ref={avisoRef}
           tabIndex={-1}
-          role={erro ? "alert" : "status"}
-          className={`rounded-md p-4 ${erro ? "bg-red-50 text-red-900" : "bg-green-50 text-green-900"}`}
+          role={decisaoIdempotencia ? undefined : erro ? "alert" : "status"}
+          className={
+            decisaoIdempotencia
+              ? "outline-none"
+              : `rounded-md p-4 ${erro ? "bg-red-50 text-red-900" : "bg-green-50 text-green-900"}`
+          }
         >
-          <p>{erro ? mensagemEmprestimo(erro) : aviso}</p>
-          {isApiError(erro) && erro.erros.length > 0 && (
-            <ul className="mt-2 list-inside list-disc">
-              {erro.erros.map((item, i) => (
-                <li key={i}>
-                  {item.campo}: {item.mensagem}
-                </li>
-              ))}
-            </ul>
+          {erro && decisaoIdempotencia ? (
+            <AlertaIdempotencia
+              erro={erro}
+              decisao={decisaoIdempotencia}
+              destino={{
+                href: `/emprestimos/${detalhe.id}`,
+                rotulo: "Atualizar detalhes do empréstimo",
+              }}
+            />
+          ) : (
+            <p>{erro ? mensagemEmprestimo(erro) : aviso}</p>
           )}
+          {isApiError(erro) &&
+            !decisaoIdempotencia &&
+            erro.erros.length > 0 && (
+              <ul className="mt-2 list-inside list-disc">
+                {erro.erros.map((item, i) => (
+                  <li key={i}>
+                    {item.campo}: {item.mensagem}
+                  </li>
+                ))}
+              </ul>
+            )}
         </div>
       )}
     </main>

@@ -394,20 +394,29 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .getByRole("button", { name: "Recuperar confirmação", exact: true })
       .click();
     await expect(
+      page.getByText("Sua sessão expirou. Entre novamente para continuar."),
+    ).toBeVisible();
+    await expect(
       page.getByRole("heading", { name: "Resultado ainda não confirmado" }),
     ).toBeVisible();
     auxiliares(apiMock);
-    apiMock.expectGet("/patrimonios", () => ({ body: paginada(fixture.bens) }));
+    apiMock.expectGet(
+      "/patrimonios",
+      () => ({ body: paginada(fixture.bens) }),
+      2,
+    );
     await page.reload();
     apiMock.expectPost("/movimentacoes", ({ body }) => {
       expect(body).toEqual(original);
       return {
-        status: 201,
+        status: 409,
         body: {
-          status: 201,
-          sucesso: true,
-          mensagem: "Recuperada",
-          dados: [fixture.detalhe],
+          status: 409,
+          sucesso: false,
+          codigo: "OPERACAO_JA_PROCESSADA",
+          mensagem: "Operação já processada.",
+          erros: [],
+          requisicaoId: "mov-409",
         },
       };
     });
@@ -415,8 +424,17 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .getByRole("button", { name: "Recuperar confirmação", exact: true })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Movimentação confirmada" }),
+      page.getByRole("status").filter({
+        hasText:
+          "Esta operação já havia sido concluída. Nenhuma nova alteração foi feita.",
+      }),
+    ).toContainText("Esta operação já havia sido concluída");
+    await expect(
+      page.getByRole("link", { name: "Consultar movimentações" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Movimentação confirmada" }),
+    ).toHaveCount(0);
   });
   test("erro de consulta é diferente de vazio, anônimo e primeiro acesso", async ({
     page,

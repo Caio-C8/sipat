@@ -13,6 +13,7 @@ import {
   type PreviaReavaliacao,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { isApiError } from "@/lib/api/core/api-error";
+import {
+  decidirAposFalha,
+  isConflitoIdempotencia,
+  type DecisaoIdempotencia,
+} from "@/lib/api/core/idempotencia";
 import {
   useComissoesReavaliacao,
   useCriarReavaliacao,
@@ -84,6 +90,8 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
   const [erro, setErro] = useState<unknown>(null);
   const [errosCampos, setErrosCampos] = useState<ErroCampo[]>([]);
   const [aviso, setAviso] = useState("");
+  const [decisaoIdempotencia, setDecisaoIdempotencia] =
+    useState<DecisaoIdempotencia | null>(null);
   const painelAviso = useRef<HTMLDivElement>(null);
   const chaveStorage = `sipat.reavaliacao.pendente.${usuarioId}`;
   const carregarBens = bens.carregar;
@@ -127,6 +135,7 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
     setPrevia(null);
     setErro(null);
     setErrosCampos([]);
+    setDecisaoIdempotencia(null);
   }
 
   async function alternar(id: string) {
@@ -238,6 +247,7 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
     setPedidoPendente(pedido);
     setErro(null);
     setErrosCampos([]);
+    setDecisaoIdempotencia(null);
     setAviso("");
     try {
       sessionStorage.setItem(chaveStorage, JSON.stringify(pedido));
@@ -257,27 +267,36 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
       router.refresh();
       requestAnimationFrame(() => painelAviso.current?.focus());
     } catch (e) {
+      const decisao = decidirAposFalha(e);
       setErro(e);
-      if (isApiError(e)) {
+      setDecisaoIdempotencia(isConflitoIdempotencia(e) ? decisao : null);
+      if (isApiError(e) && !isConflitoIdempotencia(e)) {
         setErrosCampos(e.erros);
-        if (
-          e.status !== null &&
-          e.status < 500 &&
-          e.status !== 401 &&
-          e.status !== 403 &&
-          e.codigo !== "CONFLITO_CONCORRENTE_REAVALIACAO"
-        ) {
-          setPedidoPendente(null);
-          setPrevia(null);
-          try {
-            sessionStorage.removeItem(chaveStorage);
-          } catch {
-            /* Sem armazenamento. */
-          }
-          setAviso(
-            "Os dados foram mantidos. Gere uma nova prévia antes de confirmar.",
-          );
+      }
+      if (!decisao.manterChave) {
+        setPedidoPendente(null);
+        try {
+          sessionStorage.removeItem(chaveStorage);
+        } catch {
+          /* Sem armazenamento. */
         }
+      }
+      if (
+        decisao.tipo === "falha_conclusiva" ||
+        decisao.tipo === "chave_reutilizada"
+      ) {
+        setPrevia(null);
+        setAviso(
+          "Os dados foram mantidos. Gere uma nova prévia antes de confirmar.",
+        );
+      }
+      if (decisao.atualizarConsultas) {
+        void carregarBens({
+          pagina: String(pagina),
+          limite: "20",
+          ...(buscaAplicada ? { busca: buscaAplicada } : {}),
+        });
+        router.refresh();
       }
     }
   }
@@ -286,7 +305,10 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
     (item) => item.id === comissaoId,
   );
   const bloqueado =
-    criacao.pending || previaOperacao.pending || detalhe.pending;
+    criacao.pending ||
+    previaOperacao.pending ||
+    detalhe.pending ||
+    decisaoIdempotencia?.tipo === "ja_processada";
   const parametroPendente = selecionados.find(
     (item) => item.bem.id === parametroPendenteId,
   );
@@ -387,10 +409,26 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
         </p>
       </header>
       <div ref={painelAviso} tabIndex={-1} className="outline-none">
-        {erro ? (
+        {erro && !decisaoIdempotencia ? (
           <div role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
             {mensagemReavaliacao(erro)}
           </div>
+        ) : null}
+        {erro && decisaoIdempotencia ? (
+          <AlertaIdempotencia
+            erro={erro}
+            decisao={decisaoIdempotencia}
+            destino={{
+              href: "/reavaliacoes",
+              rotulo: "Consultar reavaliações",
+            }}
+            pending={criacao.pending}
+            onTentarNovamente={
+              decisaoIdempotencia.tipo === "em_processamento" && pedidoPendente
+                ? () => void confirmar(pedidoPendente)
+                : undefined
+            }
+          />
         ) : null}
         {aviso ? (
           <p role="status" className="rounded-md bg-blue-50 p-4 text-blue-900">
@@ -430,7 +468,7 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
         </section>
       ) : (
         <>
-          {pedidoPendente ? (
+          {pedidoPendente && !decisaoIdempotencia ? (
             <section
               className={painelReavaliacao}
               aria-label="Confirmação pendente"

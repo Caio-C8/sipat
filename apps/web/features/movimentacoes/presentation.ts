@@ -1,4 +1,5 @@
 import { isApiError } from "@/lib/api/core/api-error";
+import { decidirAposFalha } from "@/lib/api/core/idempotencia";
 export const campoMovimentacao =
   "min-h-10 min-w-0 w-full rounded-md border border-[#b8c7d9] bg-white px-3 py-2 text-sm text-[#19355d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2860eb] disabled:bg-[#eef2f7]";
 export const painelMovimentacao =
@@ -20,15 +21,12 @@ export function resultadoDesconhecido(
   erro: unknown,
   recuperando = false,
 ): boolean {
-  if (!isApiError(erro)) return true;
-  if (recuperando && (erro.status === 401 || erro.status === 403)) return true;
-  return (
-    erro.status === null ||
-    erro.status >= 500 ||
-    ["resposta_invalida", "rede", "timeout"].includes(erro.categoria) ||
-    [
-      "MOVIMENTACAO_EM_PROCESSAMENTO",
-      "CONFLITO_CONCORRENTE_MOVIMENTACAO",
-    ].includes(erro.codigo)
-  );
+  if (
+    recuperando &&
+    isApiError(erro) &&
+    (erro.status === 401 || erro.status === 403)
+  ) {
+    return true;
+  }
+  return decidirAposFalha(erro).manterChave;
 }

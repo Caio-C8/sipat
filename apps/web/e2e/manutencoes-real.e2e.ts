@@ -68,9 +68,36 @@ test.describe("manutenção Web → API → PostgreSQL descartável", () => {
     await segundo
       .getByRole("combobox", { name: "Tipo" })
       .selectOption("PREVENTIVA");
+    let criado: { dados: { id: string } } | null = null;
+    await page.route(
+      "**/api/backend/manutencoes",
+      async (route) => {
+        if (route.request().method() !== "POST") {
+          await route.continue();
+          return;
+        }
+        const resposta = await route.fetch();
+        expect(resposta.status()).toBe(201);
+        criado = await resposta.json();
+        await route.abort("connectionfailed");
+      },
+      { times: 1 },
+    );
     await page.getByRole("button", { name: "Criar pedido" }).click();
-    await page.waitForURL(/\/manutencoes\/[0-9a-f-]+$/);
-    const pedidoId = page.url().split("/").at(-1)!;
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Não foi possível confirmar o resultado" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Criar pedido" }).click();
+    await expect(
+      page.getByRole("status").filter({
+        hasText:
+          "Esta operação já havia sido concluída. Nenhuma nova alteração foi feita.",
+      }),
+    ).toBeVisible();
+    const pedidoId = (criado as unknown as { dados: { id: string } }).dados.id;
+    await page.goto(`/manutencoes/${pedidoId}`);
     await expect(page.getByText("0 retornados e 2 pendentes")).toBeVisible();
 
     const item = page

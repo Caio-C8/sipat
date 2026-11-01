@@ -5,7 +5,13 @@ import {
   CriarManutencaoBodySchema,
   type CriarManutencaoBodyInput,
 } from "@repo/contracts";
+import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { browserApiClient } from "@/lib/api/browser-api-client";
+import {
+  decidirAposFalha,
+  isConflitoIdempotencia,
+  type DecisaoIdempotencia,
+} from "@/lib/api/core/idempotencia";
 import { criarOperacoesManutencoes } from "../api/manutencao-operations";
 import { ErroManutencao } from "./erro-manutencao";
 
@@ -49,6 +55,8 @@ export function NovoPedido() {
   const [bemSelecionado, setBemSelecionado] = useState("");
   const [erro, setErro] = useState<unknown>(null);
   const [aviso, setAviso] = useState("");
+  const [decisaoIdempotencia, setDecisaoIdempotencia] =
+    useState<DecisaoIdempotencia | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const chave = useRef<string | null>(null);
   const enviando = useRef(false);
@@ -56,6 +64,8 @@ export function NovoPedido() {
   const alterar = () => {
     chave.current = null;
     setAviso("");
+    setErro(null);
+    setDecisaoIdempotencia(null);
   };
   async function carregarBens(busca = "") {
     try {
@@ -218,14 +228,21 @@ export function NovoPedido() {
     setOcupado(true);
     setErro(null);
     setAviso("");
+    setDecisaoIdempotencia(null);
     try {
       const resposta = await operacoes.criar(body);
       router.push(`/manutencoes/${resposta.dados.id}`);
     } catch (e) {
+      const decisao = decidirAposFalha(e);
       setErro(e);
-      setAviso(
-        "O formulário foi preservado. Se a resposta se perdeu, consulte a lista antes de reenviar.",
-      );
+      setDecisaoIdempotencia(isConflitoIdempotencia(e) ? decisao : null);
+      if (!decisao.manterChave) chave.current = null;
+      if (decisao.atualizarConsultas) router.refresh();
+      if (!isConflitoIdempotencia(e)) {
+        setAviso(
+          "O formulário foi preservado. Se a resposta se perdeu, consulte a lista antes de reenviar.",
+        );
+      }
     } finally {
       enviando.current = false;
       setOcupado(false);
@@ -486,7 +503,18 @@ export function NovoPedido() {
           </fieldset>
         ))}
       </section>
-      {erro ? <ErroManutencao erro={erro} /> : null}
+      {erro && decisaoIdempotencia ? (
+        <AlertaIdempotencia
+          erro={erro}
+          decisao={decisaoIdempotencia}
+          destino={{
+            href: "/manutencoes",
+            rotulo: "Consultar manutenções",
+          }}
+        />
+      ) : erro ? (
+        <ErroManutencao erro={erro} />
+      ) : null}
       {aviso ? (
         <p role="status" className="text-sm">
           {aviso}
@@ -494,7 +522,11 @@ export function NovoPedido() {
       ) : null}
       <button
         type="submit"
-        disabled={ocupado || itens.length === 0}
+        disabled={
+          ocupado ||
+          itens.length === 0 ||
+          decisaoIdempotencia?.tipo === "ja_processada"
+        }
         className="justify-self-start rounded-md bg-[#19355d] px-4 py-2 text-white disabled:opacity-50"
       >
         {ocupado ? "Salvando..." : "Criar pedido"}

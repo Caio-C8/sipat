@@ -68,6 +68,15 @@ de bens é atualizada; após devolução, o detalhe recebe o resultado real e
 atualiza a leitura Server. O percurso Web → API → PostgreSQL isolado está em
 [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
 
+Nas mutações idempotentes já consumidas por movimentações, manutenções,
+reavaliações e empréstimos, a Web conserva chave e payload em timeout, falha de
+rede, response inválida, erro `5xx` ou `OPERACAO_EM_PROCESSAMENTO`. Falha
+conclusiva e `CHAVE_IDEMPOTENCIA_REUTILIZADA` descartam a chave; a segunda exige
+nova confirmação manual. `OPERACAO_JA_PROCESSADA` continua sendo conflito
+visível, atualiza apenas a leitura relacionada e oferece a navegação existente,
+sem replay de sucesso, polling ou retry automático. Consulte
+[WEB-IDEMPOTENCIA-001](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
+
 ## Transporte HTTP
 
 Os clientes centrais usam o `fetch` nativo dos runtimes atuais do Next.js. A
@@ -166,8 +175,8 @@ fluxo; falta de perfil permanece negação de acesso, não expiração de sessã
 
 ## Decisões pendentes
 
-- biblioteca de estado remoto e regras de cache;
-- retry por operação e idempotência;
+- biblioteca de estado remoto e regras gerais de cache;
+- retry para operações ainda não cobertas por política explícita;
 - propagação de correlation ID para dependências externas;
 - provedor de observabilidade, retenção, alertas e metas.
 

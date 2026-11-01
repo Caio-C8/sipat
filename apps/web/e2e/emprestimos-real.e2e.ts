@@ -62,12 +62,43 @@ test.describe("empréstimo Web → API → PostgreSQL descartável", () => {
     await page
       .getByRole("combobox", { name: "Comissão vigente na saída" })
       .selectOption(fixture.comissaoId);
+    let saida: { dados: { id: string }[] | { id: string } } | null = null;
+    await page.route(
+      "**/api/backend/emprestimos",
+      async (route) => {
+        if (route.request().method() !== "POST") {
+          await route.continue();
+          return;
+        }
+        const resposta = await route.fetch();
+        expect(resposta.status()).toBe(201);
+        saida = await resposta.json();
+        await route.abort("connectionfailed");
+      },
+      { times: 1 },
+    );
     await page.getByRole("button", { name: "Registrar saída" }).click();
-    const resultado = page.getByRole("region", {
-      name: "Resultado do registro",
-    });
-    await expect(resultado).toContainText("2 bem(ns)");
-    await resultado.getByRole("link").click();
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Não foi possível conectar com o serviço" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Registrar saída" }).click();
+    await expect(
+      page.getByRole("status").filter({
+        hasText:
+          "Esta operação já havia sido concluída. Nenhuma nova alteração foi feita.",
+      }),
+    ).toBeVisible();
+    const emprestimos = (
+      saida as unknown as {
+        dados: { id: string }[] | { id: string };
+      }
+    ).dados;
+    const emprestimoId = Array.isArray(emprestimos)
+      ? emprestimos[0]!.id
+      : emprestimos.id;
+    await page.goto(`/emprestimos/${emprestimoId}`);
     await expect(
       page.getByText("Em andamento · 2 de 2 pendente(s)"),
     ).toBeVisible();
@@ -77,9 +108,32 @@ test.describe("empréstimo Web → API → PostgreSQL descartável", () => {
     await page
       .getByRole("combobox", { name: "Comissão vigente na devolução" })
       .selectOption(fixture.comissaoId);
+    await page.route(
+      `**/api/backend/emprestimos/${emprestimoId}/devolucoes`,
+      async (route) => {
+        const resposta = await route.fetch();
+        expect(resposta.status()).toBe(201);
+        await route.abort("connectionfailed");
+      },
+      { times: 1 },
+    );
     await page
       .getByRole("button", { name: "Registrar devolução de 1 bem(ns)" })
       .click();
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Não foi possível conectar com o serviço" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Registrar devolução de 1 bem(ns)" })
+      .click();
+    await expect(
+      page.getByRole("status").filter({
+        hasText:
+          "Esta operação já havia sido concluída. Nenhuma nova alteração foi feita.",
+      }),
+    ).toBeVisible();
     await expect(
       page.getByText("Em andamento · 1 de 2 pendente(s)"),
     ).toBeVisible();
@@ -87,8 +141,14 @@ test.describe("empréstimo Web → API → PostgreSQL descartável", () => {
       page.getByRole("checkbox", { name: new RegExp(fixture.bens[0]!.numero) }),
     ).toHaveCount(0);
     await page
+      .getByRole("link", { name: "Atualizar detalhes do empréstimo" })
+      .click();
+    await page
       .getByRole("checkbox", { name: new RegExp(fixture.bens[1]!.numero) })
       .check();
+    await page
+      .getByRole("combobox", { name: "Comissão vigente na devolução" })
+      .selectOption(fixture.comissaoId);
     await page
       .getByRole("button", { name: "Registrar devolução de 1 bem(ns)" })
       .click();
