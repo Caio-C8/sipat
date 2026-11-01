@@ -16,8 +16,9 @@ consumidores somente onde a proteção exigir.
 - [Erros compartilhados](../contracts/errors.md)
 - [Integração Web–API](../integrations/web-api/README.md)
 - [Integração Mobile–API](../integrations/mobile-api/README.md)
-- Estado atual: movimentações, manutenções, reavaliações e empréstimos já
-  recebem `chaveIdempotencia`, mas repetem a resposta de sucesso anterior.
+- Contexto anterior à entrega: movimentações, manutenções, reavaliações e
+  empréstimos já recebiam `chaveIdempotencia`, mas repetiam a resposta de
+  sucesso anterior.
 
 ## Escopo
 
@@ -107,9 +108,9 @@ consumidores somente onde a proteção exigir.
   os mesmos códigos públicos.
 - `@repo/contracts`: lint e typecheck sem erros; 143 testes aprovados.
 - Prettier dos contratos e documentos afetados e `git diff --check` aprovados.
-- Consumidores em API, Web, mobile, testes e seed foram localizados. Sua
-  persistência e experiência de conflito permanecem nas tarefas dependentes
-  `IDEMPOTENCIA-001`, `WEB-IDEMPOTENCIA-001` e
+- Consumidores em API, Web, mobile, testes e seed foram localizados. Persistência
+  e experiência de conflito foram implementadas e verificadas nas tarefas
+  dependentes `IDEMPOTENCIA-001`, `WEB-IDEMPOTENCIA-001` e
   `MOBILE-IDEMPOTENCIA-001`.
 
 ## Pendências ou decisões bloqueantes

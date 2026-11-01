@@ -71,10 +71,13 @@ atualiza a leitura Server. O percurso Web → API → PostgreSQL isolado está e
 Nas mutações idempotentes já consumidas por movimentações, manutenções,
 reavaliações e empréstimos, a Web conserva chave e payload em timeout, falha de
 rede, response inválida, erro `5xx` ou `OPERACAO_EM_PROCESSAMENTO`. Falha
-conclusiva e `CHAVE_IDEMPOTENCIA_REUTILIZADA` descartam a chave; a segunda exige
-nova confirmação manual. `OPERACAO_JA_PROCESSADA` continua sendo conflito
-visível, atualiza apenas a leitura relacionada e oferece a navegação existente,
-sem replay de sucesso, polling ou retry automático. Consulte
+conclusiva descarta a chave somente quando não existe resultado anterior ainda
+incerto; em movimentações, por exemplo, um `401` durante a recuperação não
+resolve a incerteza de uma tentativa anterior com `503`. O conflito
+`CHAVE_IDEMPOTENCIA_REUTILIZADA` sempre descarta a chave e exige nova
+confirmação manual. `OPERACAO_JA_PROCESSADA` continua sendo conflito visível,
+atualiza apenas a leitura relacionada e oferece a navegação existente, sem
+replay de sucesso, polling ou retry automático. Consulte
 [WEB-IDEMPOTENCIA-001](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
 
 ## Transporte HTTP

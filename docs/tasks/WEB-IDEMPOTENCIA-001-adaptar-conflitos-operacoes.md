@@ -1,6 +1,7 @@
 # WEB-IDEMPOTENCIA-001 — Adaptar conflitos de operações na Web
 
-**Status:** concluída e verificada em 31/10/2026
+**Status:** concluída e verificada em 31/10/2026; regressão de CI corrigida e
+revalidada em 01/11/2026
 
 ## Objetivo
 
@@ -42,12 +43,12 @@ processada, sem redesenhar telas, criar rotas ou esconder o conflito do usuário
 
 ## Critérios de aceite
 
-- [ ] Os quatro fluxos usam a mesma chave em reenvio de resultado incerto.
-- [ ] O usuário distingue operação já concluída, chave reutilizada, operação em
+- [x] Os quatro fluxos usam a mesma chave em reenvio de resultado incerto.
+- [x] O usuário distingue operação já concluída, chave reutilizada, operação em
       processamento e falha real.
-- [ ] O `409` de operação já concluída não duplica toast, navegação ou mutation.
-- [ ] Consultas afetadas são atualizadas sem limpar dados corrigíveis.
-- [ ] Testes cobrem timeout/reenvio, payload alterado, duplo clique e os três
+- [x] O `409` de operação já concluída não duplica toast, navegação ou mutation.
+- [x] Consultas afetadas são atualizadas sem limpar dados corrigíveis.
+- [x] Testes cobrem timeout/reenvio, payload alterado, duplo clique e os três
       códigos públicos.
 
 ## Arquivos ou módulos potencialmente afetados
@@ -74,8 +75,11 @@ processada, sem redesenhar telas, criar rotas ou esconder o conflito do usuário
 
 - Movimentações, criações/retornos/documentos de manutenção, confirmações de
   reavaliação e saídas/devoluções de empréstimo preservam a mesma chave em
-  resultado incerto ou processamento e descartam-na após falha conclusiva ou
-  reutilização incompatível.
+  resultado incerto ou processamento. Uma falha conclusiva descarta a chave
+  somente quando não há resultado anterior ainda incerto; por exemplo, um
+  `401` durante a recuperação não prova que a tentativa anterior com `503`
+  deixou de ser processada. Reutilização incompatível continua descartando a
+  chave e exigindo nova confirmação.
 - `OPERACAO_JA_PROCESSADA` permanece `409`, apresenta a mensagem aprovada em
   `role=status`, atualiza somente as leituras relacionadas e oferece a rota de
   lista ou detalhe existente, sem replay, toast duplicado ou nova mutation.
@@ -87,11 +91,23 @@ processada, sem redesenhar telas, criar rotas ou esconder o conflito do usuário
 
 ## Verificações executadas
 
-- `@repo/web`: lint, typecheck, 67 testes e build de produção aprovados.
-- Playwright Web → API → PostgreSQL descartável: movimentações (5),
-  manutenções (1), reavaliações (1) e empréstimos (1) aprovados em Chromium.
-  Os cenários simulam resposta perdida após commit, reenvio com a mesma chave,
-  conflito explícito, ausência de duplicação e atualização da leitura.
+- Em 31/10/2026, `@repo/web`: lint, typecheck, 67 testes e build de produção
+  aprovados.
+- Em 31/10/2026, Playwright Web → API → PostgreSQL descartável: movimentações
+  (5), manutenções (1), reavaliações (1) e empréstimos (1) aprovados em
+  Chromium. Os cenários simulam resposta perdida após commit, reenvio com a
+  mesma chave, conflito explícito, ausência de duplicação e atualização da
+  leitura.
+- Em 01/11/2026, após a falha observada na CI, o cenário mockado de movimentação
+  foi corrigido para cobrir `503`, tentativa manual com `401`, recarga e `409`
+  com `OPERACAO_JA_PROCESSADA`. A mesma chave e o mesmo payload permanecem
+  recuperáveis após o `401`; o `409` continua explícito, atualiza a consulta e
+  não é convertido em sucesso.
+- Na revalidação de 01/11/2026: lint dos dois arquivos alterados, 67 testes
+  unitários e build de produção aprovados; Playwright focal com 1 cenário
+  aprovado e suíte Web completa com 29 aprovados e 8 ignorados. Os ignorados
+  são os E2E que exigem API e PostgreSQL descartáveis, não configurados nessa
+  execução local.
 - Os E2E mantêm as verificações existentes de viewport estreita e axe nos
   percursos aplicáveis. A automação não substitui inspeção manual completa com
   teclado, leitor de tela ou navegadores adicionais.

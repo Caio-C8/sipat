@@ -607,7 +607,9 @@ não concede autorização nem permite consultar a resposta de outro usuário.
 Origem, autoria, instante, comissão, estados e inventários são validados pela
 API, na unidade transacional apropriada, inclusive no conflito concorrente.
 Origem enviada é somente pré-condição, nunca autoridade sobre o histórico.
-Replay de sucesso recupera resultado anterior autorizado sem transferir novamente.
+Repetir chave e conteúdo depois do commit retorna o conflito explícito `409`
+com `OPERACAO_JA_PROCESSADA`, sem transferir novamente nem expor a resposta
+anterior.
 
 Correções de inventário mantêm controles e validações atuais. A evolução das
 transferências comuns não amplia automaticamente o acesso aos endpoints de
