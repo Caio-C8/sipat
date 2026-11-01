@@ -16,6 +16,27 @@ export function deslocarDataCivil(data: string, dias: number): string {
   return instante.toISOString().slice(0, 10);
 }
 
+export function criarChaveIdempotenciaSeed(
+  grupo: number,
+  indice: number,
+): string {
+  if (
+    !Number.isInteger(grupo) ||
+    grupo < 1 ||
+    grupo > 99 ||
+    !Number.isInteger(indice) ||
+    indice < 1 ||
+    indice > 9_999_999_999
+  ) {
+    throw new RangeError(
+      "Grupo ou indice invalido para a chave do seed geral.",
+    );
+  }
+
+  const sufixo = `${String(grupo).padStart(2, "0")}${String(indice).padStart(10, "0")}`;
+  return `00000000-0000-4000-8000-${sufixo}`;
+}
+
 export const SETORES_DEMO = [
   "Diretoria Administrativa",
   "Gestão Patrimonial",

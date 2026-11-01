@@ -218,6 +218,7 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       })
       .expect(200);
     const pdf = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
+    const chaveDocumento = randomUUID();
     const doc = EnviarDocumentoManutencaoResponseSchema.parse(
       (
         await request(app.getHttpServer())
@@ -227,7 +228,10 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
           .set(CABECALHO_CSRF, "1")
           .field(
             "dados",
-            JSON.stringify({ chaveIdempotencia: randomUUID(), fase: "PEDIDO" }),
+            JSON.stringify({
+              chaveIdempotencia: chaveDocumento,
+              fase: "PEDIDO",
+            }),
           )
           .attach("documento", pdf, {
             filename: "pedido.pdf",
@@ -236,6 +240,42 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
           .expect(201)
       ).body,
     ).dados;
+    expect(
+      await db.idempotenciaManutencao.findUnique({
+        where: {
+          usuarioId_chave: { usuarioId: adminId, chave: chaveDocumento },
+        },
+        select: {
+          tipo: true,
+          manutencaoId: true,
+          itemId: true,
+          documentoId: true,
+        },
+      }),
+    ).toEqual({
+      tipo: "DOCUMENTO",
+      manutencaoId: criado.id,
+      itemId: null,
+      documentoId: doc.id,
+    });
+    const documentoRepetido = await request(app.getHttpServer())
+      .post(`/api/manutencoes/${criado.id}/documentos`)
+      .set("Cookie", adminCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .field(
+        "dados",
+        JSON.stringify({
+          chaveIdempotencia: chaveDocumento,
+          fase: "PEDIDO",
+        }),
+      )
+      .attach("documento", pdf, {
+        filename: "pedido.pdf",
+        contentType: "application/pdf",
+      })
+      .expect(409);
+    expect(documentoRepetido.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
     await get(`/${criado.id}/documentos/${doc.id}`, diretorCookie)
       .expect(200)
       .expect("Content-Type", /pdf/);

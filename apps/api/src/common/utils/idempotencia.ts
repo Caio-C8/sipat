@@ -15,6 +15,19 @@ type ValorCanonico =
   | ValorCanonico[]
   | { [chave: string]: ValorCanonico };
 
+export type DominioLockIdempotencia =
+  | "comissao"
+  | "emprestimo"
+  | "fornecedor"
+  | "inventario"
+  | "manutencao"
+  | "movimentacao"
+  | "nota-fiscal"
+  | "patrimonio"
+  | "processo-compra"
+  | "reavaliacao"
+  | "setor";
+
 function normalizarValor(valor: unknown): ValorCanonico | undefined {
   if (valor === undefined) return undefined;
   if (valor === null || typeof valor === "boolean") return valor;
@@ -52,6 +65,13 @@ function normalizarValor(valor: unknown): ValorCanonico | undefined {
   );
 }
 
+/**
+ * Canonicalização V1 persistida nos hashes de idempotência.
+ *
+ * Ordenação, normalização ou serialização aparentemente inofensivas mudam o
+ * digest e tornam incompatíveis chaves já gravadas. Qualquer evolução exige
+ * um novo algoritmo e uma estratégia explícita de compatibilidade com a V1.
+ */
 export function canonicalizarIdempotencia(valor: unknown): string {
   return JSON.stringify(normalizarValor(valor) ?? null);
 }
@@ -64,6 +84,14 @@ export function calcularHashIdempotencia(valor: unknown): string {
 
 export function calcularHashArquivo(conteudo: Buffer): string {
   return createHash("sha256").update(conteudo).digest("hex");
+}
+
+export function construirNamespaceLockIdempotencia(
+  dominio: DominioLockIdempotencia,
+  usuarioId: string,
+  chave: string,
+): string {
+  return `${dominio}:${usuarioId}:${chave}`;
 }
 
 export function construirConflitoIdempotencia(

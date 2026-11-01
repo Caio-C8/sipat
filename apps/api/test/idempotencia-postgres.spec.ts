@@ -4,6 +4,7 @@ import {
   Prisma,
   type DatabaseClient,
 } from "@repo/database";
+import { construirNamespaceLockIdempotencia } from "../src/common/utils/idempotencia";
 import { InventariosPolicyService } from "../src/modules/inventarios/inventarios-policy.service";
 import { InventariosRepository } from "../src/modules/inventarios/inventarios.repository";
 import { ResponsaveisRepository } from "../src/modules/responsaveis/responsaveis.repository";
@@ -170,9 +171,14 @@ describeComPostgres("IDEMPOTENCIA-001 no PostgreSQL", () => {
     let bloqueado!: () => void;
     const pronto = new Promise<void>((resolve) => (bloqueado = resolve));
     const fim = new Promise<void>((resolve) => (liberar = resolve));
+    const namespace = construirNamespaceLockIdempotencia(
+      "setor",
+      base.usuarioId,
+      chave,
+    );
     const primeira = db.$transaction(async (tx) => {
       const [linha] = await tx.$queryRaw<{ obtido: boolean }[]>`
-        SELECT pg_try_advisory_xact_lock(hashtextextended(${`setor:${base.usuarioId}:${chave}`}, 0)) AS obtido
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${namespace}, 0)) AS obtido
       `;
       expect(linha?.obtido).toBe(true);
       bloqueado();
@@ -181,13 +187,124 @@ describeComPostgres("IDEMPOTENCIA-001 no PostgreSQL", () => {
     await pronto;
     const segunda = await db.$transaction(async (tx) => {
       const [linha] = await tx.$queryRaw<{ obtido: boolean }[]>`
-        SELECT pg_try_advisory_xact_lock(hashtextextended(${`setor:${base.usuarioId}:${chave}`}, 0)) AS obtido
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${namespace}, 0)) AS obtido
       `;
       return linha?.obtido;
     });
     expect(segunda).toBe(false);
     liberar();
     await primeira;
+  });
+
+  it("isola locks de domínios diferentes sem perder a exclusão no mesmo domínio", async () => {
+    const base = await criarBase();
+    const chave = randomUUID();
+    const movimentacao = construirNamespaceLockIdempotencia(
+      "movimentacao",
+      base.usuarioId,
+      chave,
+    );
+    const manutencao = construirNamespaceLockIdempotencia(
+      "manutencao",
+      base.usuarioId,
+      chave,
+    );
+    const reavaliacao = construirNamespaceLockIdempotencia(
+      "reavaliacao",
+      base.usuarioId,
+      chave,
+    );
+    let liberar!: () => void;
+    let bloqueado!: () => void;
+    const pronto = new Promise<void>((resolve) => (bloqueado = resolve));
+    const fim = new Promise<void>((resolve) => (liberar = resolve));
+    const titular = db.$transaction(async (tx) => {
+      const [linha] = await tx.$queryRaw<{ obtido: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${movimentacao}, 0)) AS obtido
+      `;
+      expect(linha?.obtido).toBe(true);
+      bloqueado();
+      await fim;
+    });
+    await pronto;
+
+    const resultado = await db.$transaction(async (tx) => {
+      const [mesmoDominio] = await tx.$queryRaw<{ obtido: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${movimentacao}, 0)) AS obtido
+      `;
+      const [outroDominio] = await tx.$queryRaw<{ obtido: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${manutencao}, 0)) AS obtido
+      `;
+      const [terceiroDominio] = await tx.$queryRaw<{ obtido: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${reavaliacao}, 0)) AS obtido
+      `;
+      return {
+        mesmoDominio: mesmoDominio?.obtido,
+        outroDominio: outroDominio?.obtido,
+        terceiroDominio: terceiroDominio?.obtido,
+      };
+    });
+
+    expect(resultado).toEqual({
+      mesmoDominio: false,
+      outroDominio: true,
+      terceiroDominio: true,
+    });
+    liberar();
+    await titular;
+  });
+
+  it("protege documento de manutenção por FK, CHECK e unicidade", async () => {
+    const base = await criarBase();
+    const manutencao = await db.manutencao.create({
+      data: {
+        dataEnvio: new Date("2026-11-01T00:00:00Z"),
+        comissaoId: base.comissaoId,
+        createdById: base.usuarioId,
+      },
+    });
+    const documento = await db.documentoManutencao.create({
+      data: {
+        manutencaoId: manutencao.id,
+        fase: "PEDIDO",
+        chave: `testes/${randomUUID()}.pdf`,
+        nome: "Documento.pdf",
+        createdById: base.usuarioId,
+      },
+    });
+    const chave = randomUUID();
+    const dados = {
+      usuarioId: base.usuarioId,
+      chave,
+      tipo: "DOCUMENTO",
+      hashPayload: "c".repeat(64),
+      manutencaoId: manutencao.id,
+      documentoId: documento.id,
+    };
+
+    await db.idempotenciaManutencao.create({ data: dados });
+    await expect(
+      db.idempotenciaManutencao.create({ data: dados }),
+    ).rejects.toMatchObject({ code: "P2002" });
+    await expect(
+      db.idempotenciaManutencao.create({
+        data: {
+          ...dados,
+          chave: randomUUID(),
+          documentoId: randomUUID(),
+        },
+      }),
+    ).rejects.toMatchObject({ code: "P2003" });
+    await expect(
+      db.idempotenciaManutencao.create({
+        data: { ...dados, chave: randomUUID(), documentoId: null },
+      }),
+    ).rejects.toMatchObject({ code: "P2039" });
+    await expect(
+      db.idempotenciaManutencao.create({
+        data: { ...dados, chave: randomUUID(), tipo: "CRIACAO" },
+      }),
+    ).rejects.toMatchObject({ code: "P2039" });
   });
 
   it("a API distingue repetição confirmada, chave reutilizada e operação concorrente", async () => {
@@ -230,9 +347,14 @@ describeComPostgres("IDEMPOTENCIA-001 no PostgreSQL", () => {
     let bloqueado!: () => void;
     const pronto = new Promise<void>((resolve) => (bloqueado = resolve));
     const fim = new Promise<void>((resolve) => (liberar = resolve));
+    const namespace = construirNamespaceLockIdempotencia(
+      "setor",
+      base.usuarioId,
+      chaveConcorrente,
+    );
     const titular = db.$transaction(async (tx) => {
       await tx.$queryRaw`
-        SELECT pg_advisory_xact_lock(hashtextextended(${`setor:${base.usuarioId}:${chaveConcorrente}`}, 0)) IS NULL AS obtido
+        SELECT pg_advisory_xact_lock(hashtextextended(${namespace}, 0)) IS NULL AS obtido
       `;
       bloqueado();
       await fim;

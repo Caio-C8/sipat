@@ -44,6 +44,7 @@ import { SetoresService } from "../../modules/setores/setores.service";
 import { UsuariosService } from "../../modules/usuarios/usuarios.service";
 import type { ConfiguracaoSeedGeral } from "./seed-geral.config";
 import {
+  criarChaveIdempotenciaSeed,
   criarCnpjSintetico,
   dataCivilSaoPaulo,
   deslocarDataCivil,
@@ -218,6 +219,7 @@ export class SeedGeralService {
       resultado.push(
         await this.setores.criar(
           CriarSetorSchema.parse({
+            chaveIdempotencia: criarChaveIdempotenciaSeed(1, i + 1),
             nome,
             sala: `Sala ${101 + i}`,
             ramal: String(2100 + i),
@@ -269,6 +271,7 @@ export class SeedGeralService {
       resultado.push(
         await this.fornecedores.criar(
           CriarFornecedorSchema.parse({
+            chaveIdempotencia: criarChaveIdempotenciaSeed(2, i + 1),
             razaoSocial: `${nome} Demonstração Ltda.`,
             nomeFantasia: nome,
             nomeRepresentante: `Representante Sintético ${i + 1}`,
@@ -309,6 +312,7 @@ export class SeedGeralService {
       resultado.push(
         await this.comissoes.criar(
           CriarComissaoBodySchema.parse({
+            chaveIdempotencia: criarChaveIdempotenciaSeed(3, i + 1),
             nome: `Comissão de Patrimônio Demonstração ${i + 1}`,
             descricao:
               "Comissão composta exclusivamente por dados sintéticos de demonstração.",
@@ -344,6 +348,7 @@ export class SeedGeralService {
         await this.processos.criar(
           {
             dados: JSON.stringify({
+              chaveIdempotencia: criarChaveIdempotenciaSeed(4, i + 1),
               numeroProcesso: `DEMO-${this.dataBase.slice(0, 4)}-${String(i + 1).padStart(3, "0")}`,
               anoProcesso: Number(this.dataBase.slice(0, 4)),
               numeroEmpenho: `EMP-DEMO-${String(i + 1).padStart(3, "0")}`,
@@ -380,6 +385,7 @@ export class SeedGeralService {
       resultado.push(
         await this.patrimonios.criar(
           CriarPatrimonioBodySchema.parse({
+            chaveIdempotencia: criarChaveIdempotenciaSeed(5, i + 1),
             semNumeroOficial: i % 5 === 4,
             dataTombamento: deslocarDataCivil(
               this.dataBase,
@@ -419,6 +425,7 @@ export class SeedGeralService {
   ) {
     const inventario = await this.inventarios.criar(
       CriarInventarioBodySchema.parse({
+        chaveIdempotencia: criarChaveIdempotenciaSeed(6, 1),
         nome: `Inventário Geral Demonstração ${this.dataBase}`,
         descricao: "Inventário sintético completo para validação manual.",
         observacao: "Três divergências permanecem intencionalmente pendentes.",

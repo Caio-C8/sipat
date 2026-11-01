@@ -26,8 +26,10 @@ Documentação de intenção não muda o status de uma capacidade para concluíd
 
 ## Idempotência de operações críticas
 
-**Status:** concluído e verificado em 31/10/2026; a adaptação Web foi revalidada
-em 01/11/2026 após a correção de uma regressão encontrada na CI.
+**Status:** entrega funcional concluída e verificada em 31/10/2026; a adaptação
+Web foi revalidada em 01/11/2026 após a correção de uma regressão encontrada na
+CI. O endurecimento posterior `IDEMPOTENCIA-002` foi concluído e verificado
+localmente em 01/11/2026.
 
 O objetivo é impedir duplicação causada por duplo envio, timeout ou
 concorrência com o mecanismo mais barato adequado a cada entidade. A sequência
@@ -39,6 +41,7 @@ aprovada é:
 | 2     | [`IDEMPOTENCIA-001`](./tasks/IDEMPOTENCIA-001-api-persistencia-operacoes-criticas.md) — persistência mínima e API          | concluído | objetivo anterior e banco sincronizado |
 | 3     | [`WEB-IDEMPOTENCIA-001`](./tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md) — consumidores Web existentes        | concluído | dois objetivos anteriores              |
 | 4     | [`MOBILE-IDEMPOTENCIA-001`](./tasks/MOBILE-IDEMPOTENCIA-001-proteger-cadastro-patrimonio.md) — cadastro patrimonial mobile | concluído | dois primeiros objetivos               |
+| 5     | [`IDEMPOTENCIA-002`](./tasks/IDEMPOTENCIA-002-endurecer-hash-locks-integridade.md) — hash V1, namespaces e FK de documento | concluído | entrega funcional concluída            |
 
 As rotas não mudam. Repetir a mesma chave e conteúdo depois do commit passa a
 retornar `409 OPERACAO_JA_PROCESSADA`, informando que a execução anterior foi
@@ -64,9 +67,13 @@ explicitamente a redução da garantia.
 
 A etapa 2 adicionou a migration
 `20261031150000_adiciona_idempotencia_operacoes_criticas`. As 25 migrations e o
-schema foram verificados sem diff em PostgreSQL descartável; o banco de
-desenvolvimento em `localhost:5432` estava indisponível e não recebeu a
-migration. Staging e produção também não foram migrados.
+schema foram verificados sem diff em PostgreSQL descartável. Como pré-condição
+de `IDEMPOTENCIA-002`, essa migration pendente foi aplicada ao banco de
+desenvolvimento; a etapa 5 adicionou a migration
+`20261101120000_adiciona_integridade_documento_idempotencia_manutencao`. As 26
+migrations passaram desde banco vazio e sobre o schema anterior, e o banco de
+desenvolvimento terminou sincronizado e sem diff. Staging e produção não foram
+migrados.
 
 ## Estado atual
 

@@ -5,8 +5,8 @@ export interface EstadoMigrationSeed {
 }
 
 const ULTIMA_MIGRATION =
-  "20261030180000_adiciona_localizacoes_posteriores_inventario";
-const TOTAL_MIGRATIONS = 23;
+  "20261101120000_adiciona_integridade_documento_idempotencia_manutencao";
+const TOTAL_MIGRATIONS = 26;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],
