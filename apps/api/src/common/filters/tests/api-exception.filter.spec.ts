@@ -9,6 +9,7 @@ import { RespostaErroSchema, type RespostaErro } from "@repo/contracts";
 import { ZodSerializationException, ZodValidationException } from "nestjs-zod";
 import * as z from "zod";
 import { ApiExceptionFilter } from "../api-exception.filter";
+import { DependenciaConsultaIndisponivelException } from "../../http/dependencia-consulta-indisponivel.exception";
 
 const REQUISICAO_ID = "requisicao-teste";
 
@@ -351,6 +352,16 @@ describe("ApiExceptionFilter", () => {
   });
 
   describe("exceções não HTTP", () => {
+    it("preserva 503 opt-in das consultas, com mensagem fixa sem dados internos", () => {
+      const corpo = executarFiltro(
+        new DependenciaConsultaIndisponivelException("SQL e caminho interno"),
+      );
+      expect(corpo).toMatchObject({
+        status: 503,
+        codigo: "SERVICO_INDISPONIVEL",
+      });
+      expect(JSON.stringify(corpo)).not.toContain("SQL");
+    });
     it("converte um Error desconhecido para erro interno", () => {
       const corpo = executarFiltro(new Error("Não deve aparecer na resposta"));
 

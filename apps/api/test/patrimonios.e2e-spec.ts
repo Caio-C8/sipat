@@ -91,6 +91,7 @@ describe("patrimônios", () => {
         },
       },
       processoCompra: null,
+      createdBy: { id: DIRETOR_ID, nome: "Diretor" },
       situacaoContabil: {
         valorBrutoAtual: new Prisma.Decimal("1000"),
         depreciacaoAcumuladaAtual: new Prisma.Decimal(0),
@@ -309,6 +310,10 @@ describe("patrimônios", () => {
       limite: 10,
     });
     expect(response.body.dados[0]).not.toHaveProperty("createdAt");
+    expect(response.body.dados[0].situacaoContabil).toEqual({
+      valorBrutoAtual: "1000",
+      depreciacaoAcumuladaAtual: "0",
+    });
     expect(database.patrimonio.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: 10,

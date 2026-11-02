@@ -24,6 +24,10 @@ function summary() {
     modelo: "Latitude",
     numeroSerie: "ABC-123",
     status: "ATIVO",
+    situacaoContabil: {
+      valorBrutoAtual: "6000.0000000",
+      depreciacaoAcumuladaAtual: "720.0000000",
+    },
     setorAtual: {
       id: SETOR_ID,
       nome: "Tecnologia da Informação",

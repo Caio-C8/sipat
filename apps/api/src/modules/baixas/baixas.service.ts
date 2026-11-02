@@ -6,6 +6,7 @@ import {
 import type {
   BaixarPatrimonioDados,
   IdentidadeAutenticada,
+  ListarOpcoesComissoesBaixaQueryData,
 } from "@repo/contracts";
 import { BaixarPatrimonioMultipartSchema } from "@repo/contracts";
 import { Prisma } from "@repo/database";
@@ -87,6 +88,24 @@ export class BaixasService {
     const baixa = await this.baixas.buscarPorPatrimonio(patrimonioId);
     if (baixa === null) throw this.baixaNaoEncontrada();
     return baixa;
+  }
+
+  async listarOpcoesComissoes(query: ListarOpcoesComissoesBaixaQueryData) {
+    const dataBaixa = this.paraDataCivil(query.dataBaixa);
+    const skip = (query.pagina - 1) * query.limite;
+    const { items, total } = await this.comissoes.listarOpcoesMovimentacao(
+      query.busca,
+      dataBaixa,
+      skip,
+      query.limite,
+    );
+    return {
+      items,
+      total,
+      pagina: query.pagina,
+      ultimaPagina: Math.max(1, Math.ceil(total / query.limite)),
+      limite: query.limite,
+    };
   }
 
   async abrirDocumento(patrimonioId: string): Promise<DocumentoBaixaAberto> {

@@ -201,3 +201,10 @@ ver [MANUTENCOES-001](./tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
 - uma única instância gravável por diretório é a premissa inicial; múltiplos
   hosts exigem storage compartilhado ou uma nova decisão arquitetural;
 - testes usam diretório temporário isolado e nunca o diretório real do operador.
+
+## Relatórios gerados
+
+Os PDFs de relatórios são gerados em memória limitada e descartados após a
+resposta autenticada. Não passam pelo storage de anexos, não são retidos
+permanentemente e não incluem anexos patrimoniais.
+[Regras de emissão](./apps/api/relatorios-patrimoniais.md).

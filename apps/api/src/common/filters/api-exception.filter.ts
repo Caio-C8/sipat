@@ -1,3 +1,4 @@
+import { DependenciaConsultaIndisponivelException } from "../http/dependencia-consulta-indisponivel.exception";
 import {
   ArgumentsHost,
   Catch,
@@ -217,6 +218,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
     requisicaoId: string,
   ): RespostaErro {
     const status = exception.getStatus();
+
+    if (exception instanceof DependenciaConsultaIndisponivelException)
+      return {
+        status,
+        sucesso: false,
+        codigo: "SERVICO_INDISPONIVEL",
+        mensagem:
+          "O serviço está temporariamente indisponível. Tente novamente.",
+        erros: [],
+        requisicaoId,
+      };
 
     if (
       !Number.isInteger(status) ||

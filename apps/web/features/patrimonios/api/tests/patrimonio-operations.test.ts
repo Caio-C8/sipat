@@ -1,11 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  BaixarPatrimonioResponseSchema,
   CABECALHO_CSRF,
-  VALOR_CABECALHO_CSRF,
+  ConsultarPatrimonioResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
   ListarPatrimoniosResponseSchema,
+  ListarOpcoesComissoesBaixaResponseSchema,
   STATUS_PATRIMONIO,
+  SubstituirNumeroPatrimonialResponseSchema,
+  VALOR_CABECALHO_CSRF,
   type StatusPatrimonio,
 } from "@repo/contracts";
 import { createApiClient } from "@/lib/api/core/create-api-client";
@@ -28,6 +32,8 @@ function respostaPaginada(total: number) {
 }
 
 describe("operações de patrimônios", () => {
+  const patrimonioId = "7041c62b-5f83-432c-a178-889977d839b1";
+  const comissaoId = "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab";
   it("valida a query e encaminha cookie sem permitir cache", async () => {
     const request = vi.fn().mockResolvedValue(respostaPaginada(12));
     const apiClient = { request } as unknown as ApiClient;
@@ -160,6 +166,92 @@ describe("operações de patrimônios", () => {
     await expect(resumoPendente).resolves.toEqual({
       total: 32,
       porStatus: totais,
+    });
+  });
+
+  it("consulta detalhe e opções da baixa sem cache com contratos próprios", async () => {
+    const request = vi.fn().mockResolvedValue({});
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+
+    await operacoes.consultar(patrimonioId, {
+      cookie: "sipat_session=segredo",
+    });
+    await operacoes.listarOpcoesComissoesBaixa(patrimonioId, {
+      dataBaixa: "2026-11-02",
+      busca: " Comissão ",
+    });
+
+    expect(request).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        path: `/patrimonios/${patrimonioId}`,
+        method: "GET",
+        cache: "no-store",
+        headers: { Cookie: "sipat_session=segredo" },
+        responseSchema: ConsultarPatrimonioResponseSchema,
+      }),
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        path: `/patrimonios/${patrimonioId}/baixa/opcoes/comissoes`,
+        query: {
+          dataBaixa: "2026-11-02",
+          busca: "Comissão",
+          pagina: 1,
+          limite: 20,
+        },
+        cache: "no-store",
+        responseSchema: ListarOpcoesComissoesBaixaResponseSchema,
+      }),
+    );
+  });
+
+  it("envia baixa multipart e substituição sem Content-Type manual ou retry", async () => {
+    const request = vi.fn().mockResolvedValue({});
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+    const documento = new File(["%PDF-1.7"], "baixa.pdf", {
+      type: "application/pdf",
+    });
+
+    await operacoes.baixar(
+      patrimonioId,
+      {
+        dataBaixa: "2026-11-02",
+        tipo: "ALIENACAO",
+        motivo: "Alienação autorizada",
+        comissaoId,
+      },
+      documento,
+    );
+    await operacoes.substituirNumero(patrimonioId, "123");
+
+    const baixa = request.mock.calls[0]![0];
+    expect(baixa).toMatchObject({
+      path: `/patrimonios/${patrimonioId}/baixa`,
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      responseSchema: BaixarPatrimonioResponseSchema,
+    });
+    expect(baixa.headers).not.toHaveProperty("Content-Type");
+    expect(baixa.body).toBeInstanceOf(FormData);
+    expect(JSON.parse(baixa.body.get("dados") as string)).toEqual({
+      dataBaixa: "2026-11-02",
+      tipo: "ALIENACAO",
+      motivo: "Alienação autorizada",
+      comissaoId,
+    });
+    expect(baixa.body.get("documento")).toBe(documento);
+    expect(request).toHaveBeenNthCalledWith(2, {
+      path: `/patrimonios/${patrimonioId}/substituicoes-numero`,
+      method: "POST",
+      body: { numeroPatrimonioAtual: "123" },
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      responseSchema: SubstituirNumeroPatrimonialResponseSchema,
     });
   });
 });

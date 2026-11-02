@@ -49,6 +49,10 @@ const patrimonio = {
     numeroProcesso: "024",
     anoProcesso: 2026,
   },
+  cadastradoPor: {
+    id: "77777777-7777-4777-8777-777777777777",
+    nome: "Diretor de Patrimônio",
+  },
   situacaoContabil: {
     valorBrutoAtual: "6000.0000000",
     depreciacaoAcumuladaAtual: "720.0000000",

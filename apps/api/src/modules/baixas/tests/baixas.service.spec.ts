@@ -77,6 +77,10 @@ describe("BaixasService", () => {
     );
     comissoes = {
       consultarVigente: jest.fn().mockResolvedValue({ id: COMISSAO_ID }),
+      listarOpcoesMovimentacao: jest.fn().mockResolvedValue({
+        items: [{ id: COMISSAO_ID, nome: "Comissão" }],
+        total: 1,
+      }),
     } as unknown as jest.Mocked<ComissoesService>;
     policy = {
       exigirPatrimonioPodeSerBaixado: jest.fn().mockResolvedValue(undefined),
@@ -120,6 +124,29 @@ describe("BaixasService", () => {
       }),
     };
   }
+
+  it("lista somente comissões vigentes na data civil com paginação", async () => {
+    await expect(
+      service.listarOpcoesComissoes({
+        dataBaixa: "2026-10-27",
+        busca: "Comissão",
+        pagina: 1,
+        limite: 20,
+      }),
+    ).resolves.toEqual({
+      items: [{ id: COMISSAO_ID, nome: "Comissão" }],
+      total: 1,
+      pagina: 1,
+      ultimaPagina: 1,
+      limite: 20,
+    });
+    expect(comissoes.listarOpcoesMovimentacao).toHaveBeenCalledWith(
+      "Comissão",
+      new Date("2026-10-27T00:00:00.000Z"),
+      0,
+      20,
+    );
+  });
 
   it("registra baixa e status atomicamente com auditoria da sessão", async () => {
     await expect(

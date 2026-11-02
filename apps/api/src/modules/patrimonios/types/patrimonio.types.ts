@@ -10,6 +10,12 @@ export const patrimonioResumoArgs = {
     modelo: true,
     numeroSerie: true,
     status: true,
+    situacaoContabil: {
+      select: {
+        valorBrutoAtual: true,
+        depreciacaoAcumuladaAtual: true,
+      },
+    },
     setorAtual: {
       select: {
         id: true,
@@ -52,12 +58,7 @@ export const patrimonioDetalheArgs = {
     processoCompra: {
       select: { id: true, numeroProcesso: true, anoProcesso: true },
     },
-    situacaoContabil: {
-      select: {
-        valorBrutoAtual: true,
-        depreciacaoAcumuladaAtual: true,
-      },
-    },
+    createdBy: { select: { id: true, nome: true } },
     parametrosDepreciacao: {
       where: { dataFim: null },
       orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }],

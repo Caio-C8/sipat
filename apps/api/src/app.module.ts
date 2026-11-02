@@ -1,3 +1,4 @@
+import { RelatoriosModule } from "./modules/relatorios/relatorios.module";
 import { MovimentacoesModule } from "./modules/movimentacoes/movimentacoes.module";
 import {
   type MiddlewareConsumer,
@@ -58,6 +59,7 @@ import { EmprestimosModule } from "./modules/emprestimos/emprestimos.module";
     ResponsaveisModule,
     SetoresModule,
     UsuariosModule,
+    RelatoriosModule,
   ],
   controllers: [AppController],
   providers: [

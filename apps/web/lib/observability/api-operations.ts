@@ -33,6 +33,28 @@ type InstrumentarApiClientOptions = Readonly<{
 }>;
 
 const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
+  { pattern: /^\/relatorios$/, operacoes: { GET: "relatorios.catalogo" } },
+  {
+    pattern: /^\/relatorios\/opcoes\/[^/]+$/,
+    operacoes: { GET: "relatorios.opcoes" },
+  },
+  {
+    pattern: /^\/relatorios\/ficha-bem\/[^/]+\/pdf$/,
+    operacoes: { GET: "relatorios.ficha_pdf" },
+  },
+  {
+    pattern: /^\/relatorios\/ficha-bem\/[^/]+\/eventos$/,
+    operacoes: { GET: "relatorios.eventos" },
+  },
+  {
+    pattern: /^\/relatorios\/ficha-bem\/[^/]+$/,
+    operacoes: { GET: "relatorios.ficha" },
+  },
+  {
+    pattern: /^\/relatorios\/[^/]+\/pdf$/,
+    operacoes: { GET: "relatorios.pdf" },
+  },
+  { pattern: /^\/relatorios\/[^/]+$/, operacoes: { GET: "relatorios.previa" } },
   {
     pattern: /^\/movimentacoes$/,
     operacoes: { GET: "movimentacoes.listar", POST: "movimentacoes.criar" },

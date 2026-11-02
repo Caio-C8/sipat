@@ -79,6 +79,10 @@ function created() {
     tipoIncorporacao: "AQUISICAO",
     valorIncorporacao: "6000",
     processoCompra: null,
+    cadastradoPor: {
+      id: RESPONSIBLE,
+      nome: "Paulo",
+    },
     situacaoContabil: {
       valorBrutoAtual: "6000",
       depreciacaoAcumuladaAtual: "0",

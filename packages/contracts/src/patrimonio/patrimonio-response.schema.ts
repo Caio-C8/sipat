@@ -48,6 +48,11 @@ const SituacaoContabilPatrimonioResponseSchema = z.strictObject({
   depreciacaoAcumuladaAtual: Decimal19_7Schema,
 });
 
+const UsuarioCadastroPatrimonioResponseSchema = z.strictObject({
+  id: z.uuid(),
+  nome: NomeRelacionadoSchema,
+});
+
 const ParametroDepreciacaoPatrimonioResponseSchema = z.strictObject({
   metodo: z.literal("LINEAR"),
   vidaUtilInicialMeses: z.number().int().min(1).max(1_200),
@@ -71,6 +76,7 @@ export const PatrimonioResumoSchema = z
     modelo: z.string().min(1).max(100).nullable(),
     numeroSerie: z.string().min(1).max(100).nullable(),
     status: StatusPatrimonioSchema,
+    situacaoContabil: SituacaoContabilPatrimonioResponseSchema,
     setorAtual: SetorPatrimonioResponseSchema,
     especie: EspeciePatrimonioResponseSchema,
   })
@@ -94,7 +100,7 @@ export const PatrimonioDetalheSchema = PatrimonioResumoSchema.safeExtend({
   tipoIncorporacao: TipoIncorporacaoSchema,
   valorIncorporacao: Decimal19_7Schema,
   processoCompra: ProcessoCompraPatrimonioResponseSchema.nullable(),
-  situacaoContabil: SituacaoContabilPatrimonioResponseSchema,
+  cadastradoPor: UsuarioCadastroPatrimonioResponseSchema,
   parametroDepreciacaoAtual:
     ParametroDepreciacaoPatrimonioResponseSchema.nullable(),
   createdAt: DateTimeUtcResponseSchema,

@@ -164,6 +164,13 @@ cadastro de vários bens iguais, aba de histórico nem geração de ficha nesta
 sequência. Esses controles não devem ser implementados como decoração ativa,
 mock, chamada repetida de `POST` ou rota vazia.
 
+Por decisão de produto de 01/11/2026, o mobile fica limitado a autenticação,
+execução das ações de inventário, cadastro e pesquisa de bens já implementados
+e uma futura geração de relatórios. Movimentação, reavaliação, baixa e
+substituição do número patrimonial serão implementadas somente na Web por
+`WEB-PATRIMONIOS-001`. Relatórios mobile exigirão objetivo e tarefa próprios;
+esta decisão não autoriza antecipar rota, botão ativo ou operação.
+
 ## Conferência de inventário
 
 Esta sequência habilita `Inventário` para o Diretor de Patrimônio e reutiliza

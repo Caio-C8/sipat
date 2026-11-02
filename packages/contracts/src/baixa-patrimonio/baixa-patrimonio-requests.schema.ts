@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { PaginacaoQuerySchema } from "../common";
 import { DataCivilSchema } from "../patrimonio";
 import {
   MotivoBaixaPatrimonioSchema,
@@ -16,9 +17,21 @@ export const BaixarPatrimonioDadosSchema = z.strictObject({
   }),
 });
 
+export const ListarOpcoesComissoesBaixaQuerySchema =
+  PaginacaoQuerySchema.extend({
+    dataBaixa: DataCivilSchema,
+    busca: z.string().trim().min(1).max(200).optional(),
+  });
+
 export type BaixarPatrimonioDadosInput = z.input<
   typeof BaixarPatrimonioDadosSchema
 >;
 export type BaixarPatrimonioDados = z.output<
   typeof BaixarPatrimonioDadosSchema
+>;
+export type ListarOpcoesComissoesBaixaQueryInput = z.input<
+  typeof ListarOpcoesComissoesBaixaQuerySchema
+>;
+export type ListarOpcoesComissoesBaixaQueryData = z.output<
+  typeof ListarOpcoesComissoesBaixaQuerySchema
 >;

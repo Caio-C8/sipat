@@ -28,6 +28,7 @@ export type ApiRequestOptions<TResponse = void> = {
   timeoutMs?: number;
   cache?: RequestCache;
   responseSchema?: RuntimeSchema<TResponse>;
+  responseType?: "json" | "pdf";
 };
 
 export interface ApiClient {

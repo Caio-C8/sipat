@@ -17,6 +17,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/patrimonios/novo` carrega espécies, setores ativos e processos de compra
   pela API, atualiza os campos relacionados conforme a seleção e registra o
   bem por `POST /patrimonios` com validação e idempotência;
+- `/patrimonios` e seu detalhe oferecem pesquisa, histórico, ficha PDF e as
+  quatro ações reais do Diretor; movimentação e reavaliação mantêm o bem fixo
+  em drawers laterais da própria ficha;
 - `/movimentacoes` e seu detalhe consultam transferências reais para os dois perfis;
   `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
 - `/manutencoes`, `/manutencoes/nova` e o detalhe permitem aos dois perfis
@@ -127,3 +130,9 @@ esse template.
 
 Quando uma decisão afetar API, contratos ou comportamento entre aplicações,
 registre-a também em [Integrações](../../integrations/README.md).
+
+## Relatórios patrimoniais
+
+`/relatorios` integra catálogo, filtros por tipo, seletores paginados, prévia,
+ficha, totais e PDF pela API real. Alterar filtros invalida a prévia.
+[Contrato de execução e evidências](../../tasks/WEB-RELATORIOS-001-interface.md).

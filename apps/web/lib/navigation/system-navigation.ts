@@ -170,7 +170,8 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: BarChart3,
     grupo: "principal",
     perfis: TODOS_PERFIS,
-    implementado: false,
+    implementado: true,
+    href: "/relatorios",
   },
   {
     id: "usuarios",
