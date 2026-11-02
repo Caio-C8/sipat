@@ -1,6 +1,8 @@
 import {
   BaixarPatrimonioResponseSchema,
   ConsultarBaixaPatrimonioResponseSchema,
+  ListarOpcoesComissoesBaixaQuerySchema,
+  ListarOpcoesComissoesBaixaResponseSchema,
   PatrimonioParamsSchema,
 } from "@repo/contracts";
 import { createZodDto } from "nestjs-zod";
@@ -13,4 +15,10 @@ export class BaixarPatrimonioResponseDto extends createZodDto(
 ) {}
 export class ConsultarBaixaPatrimonioResponseDto extends createZodDto(
   ConsultarBaixaPatrimonioResponseSchema,
+) {}
+export class ListarOpcoesComissoesBaixaQueryDto extends createZodDto(
+  ListarOpcoesComissoesBaixaQuerySchema,
+) {}
+export class ListarOpcoesComissoesBaixaResponseDto extends createZodDto(
+  ListarOpcoesComissoesBaixaResponseSchema,
 ) {}

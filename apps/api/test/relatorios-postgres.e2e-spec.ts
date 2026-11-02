@@ -227,6 +227,22 @@ const url = process.env.RELATORIOS_INTEGRATION_DATABASE_URL;
       expect(filtrado.status).toBe(200);
       expect(filtrado.body.meta.total).toBe(2);
       expect(filtrado.body.dados).toHaveLength(1);
+      const termo = r.body.dados.find(
+        (evento: { autor: string | null }) => evento.autor,
+      ).autor as string;
+      const pesquisado = await request(app.getHttpServer())
+        .get(`/api/relatorios/ficha-bem/${f.bem.id}/eventos`)
+        .set("Cookie", f.cookies[0]!)
+        .query({ busca: termo.toLocaleLowerCase("pt-BR"), limite: "50" });
+      expect(pesquisado.status).toBe(200);
+      expect(pesquisado.body.meta.total).toBeGreaterThan(0);
+      expect(
+        pesquisado.body.dados.every((evento: unknown) =>
+          JSON.stringify(evento)
+            .toLocaleLowerCase("pt-BR")
+            .includes(termo.toLocaleLowerCase("pt-BR")),
+        ),
+      ).toBe(true);
     });
     it("PDF autenticado dos nove tipos contém todas as páginas e não apenas a prévia", async () => {
       const pasta = path.resolve("../../test-results/relatorios-pdf");

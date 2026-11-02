@@ -64,7 +64,13 @@ function hojeSaoPaulo(): string {
   return `${obter("year")}-${obter("month")}-${obter("day")}`;
 }
 
-export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
+export function NovaReavaliacao({
+  usuarioId,
+  patrimonioInicial,
+}: {
+  usuarioId: string;
+  patrimonioInicial?: PatrimonioDetalhe;
+}) {
   const router = useRouter();
   const bens = usePatrimoniosReavaliacao();
   const detalhe = usePatrimonioReavaliacao();
@@ -77,7 +83,23 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
   const [buscaComissao, setBuscaComissao] = useState("");
   const [dataReferencia, setDataReferencia] = useState(hojeSaoPaulo);
   const [comissaoId, setComissaoId] = useState("");
-  const [selecionados, setSelecionados] = useState<Selecionado[]>([]);
+  const [selecionados, setSelecionados] = useState<Selecionado[]>(
+    patrimonioInicial && patrimonioInicial.status !== "BAIXADO"
+      ? [
+          {
+            bem: patrimonioInicial,
+            valorReavaliado: patrimonioInicial.situacaoContabil.valorBrutoAtual,
+            vidaUtilNovaMeses: String(
+              patrimonioInicial.parametroDepreciacaoAtual
+                ?.vidaUtilInicialMeses ?? 60,
+            ),
+            residualTipo: "VALOR",
+            residual:
+              patrimonioInicial.parametroDepreciacaoAtual?.valorResidual ?? "0",
+          },
+        ]
+      : [],
+  );
   const [parametroPendenteId, setParametroPendenteId] = useState<string | null>(
     null,
   );
@@ -461,6 +483,14 @@ export function NovaReavaliacao({ usuarioId }: { usuarioId: string }) {
                 >
                   Ver reavaliação do patrimônio{" "}
                   {item.patrimonio.numeroPatrimonio}
+                </Link>
+                {" · "}
+                <Link
+                  prefetch={false}
+                  href={`/patrimonios/${item.patrimonio.id}?aba=historico`}
+                  className="underline"
+                >
+                  Ver histórico atualizado
                 </Link>
               </li>
             ))}

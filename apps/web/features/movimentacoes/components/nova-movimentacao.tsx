@@ -38,7 +38,13 @@ type Selecionado = {
   bem: PatrimonioResumo;
   destino: SetorOpcaoMovimentacao | null;
 };
-export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
+export function NovaMovimentacao({
+  usuarioId,
+  patrimonioInicial,
+}: {
+  usuarioId: string;
+  patrimonioInicial?: PatrimonioResumo;
+}) {
   const router = useRouter();
   const envioEmCurso = useRef(false);
   const bens = usePatrimoniosMovimentacao(),
@@ -47,7 +53,11 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
     atualizacao = useAtualizarPatrimonioMovimentacao(),
     criacao = useCriarMovimentacao();
   const [etapa, setEtapa] = useState(1),
-    [selecionados, setSelecionados] = useState<Selecionado[]>([]);
+    [selecionados, setSelecionados] = useState<Selecionado[]>(
+      patrimonioInicial?.status === "ATIVO"
+        ? [{ bem: patrimonioInicial, destino: null }]
+        : [],
+    );
   const [comissao, setComissao] = useState<ComissaoOpcaoMovimentacao | null>(
       null,
     ),
@@ -257,6 +267,14 @@ export function NovaMovimentacao({ usuarioId }: { usuarioId: string }) {
                 >
                   Ver transferência do patrimônio{" "}
                   {item.patrimonio.numeroPatrimonio}
+                </Link>
+                {" · "}
+                <Link
+                  prefetch={false}
+                  className="text-[#19355d] underline"
+                  href={`/patrimonios/${item.patrimonio.id}?aba=historico`}
+                >
+                  Ver histórico atualizado
                 </Link>
               </li>
             ))}

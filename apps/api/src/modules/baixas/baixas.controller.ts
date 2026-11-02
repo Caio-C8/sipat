@@ -8,6 +8,7 @@ import {
   Logger,
   Param,
   Post,
+  Query,
   Req,
   StreamableFile,
   UploadedFile,
@@ -18,6 +19,7 @@ import {
   CAMPO_DOCUMENTO_BAIXAR_PATRIMONIO,
   type BaixarPatrimonioResponse,
   type ConsultarBaixaPatrimonioResponse,
+  type ListarOpcoesComissoesBaixaResponse,
   LIMITE_ARQUIVOS_BAIXAR_PATRIMONIO,
   LIMITE_BYTES_DOCUMENTO_BAIXA_PATRIMONIO,
   LIMITE_CAMPOS_BAIXAR_PATRIMONIO,
@@ -28,11 +30,14 @@ import { rm } from "node:fs/promises";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { RequisicaoAutenticada } from "../auth/auth.types";
 import { PerfisPermitidos } from "../auth/decorators/perfis-permitidos.decorator";
+import { ComissaoResponseMapper } from "../comissoes/mappers/comissao-response.mapper";
 import { BaixasService } from "./baixas.service";
 import {
   BaixaPatrimonioParamsDto,
   BaixarPatrimonioResponseDto,
   ConsultarBaixaPatrimonioResponseDto,
+  ListarOpcoesComissoesBaixaQueryDto,
+  ListarOpcoesComissoesBaixaResponseDto,
 } from "./dtos";
 import { BaixaResponseMapper } from "./mappers";
 import type { ArquivoBaixaMultipart } from "./types";
@@ -42,6 +47,22 @@ export class BaixasController {
   private readonly logger = new Logger(BaixasController.name);
 
   constructor(private readonly baixas: BaixasService) {}
+
+  @Get("opcoes/comissoes")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(ListarOpcoesComissoesBaixaResponseDto)
+  async listarOpcoesComissoes(
+    @Query() query: ListarOpcoesComissoesBaixaQueryDto,
+  ): Promise<ListarOpcoesComissoesBaixaResponse> {
+    const { items, ...meta } = await this.baixas.listarOpcoesComissoes(query);
+    return {
+      status: HttpStatus.OK,
+      sucesso: true,
+      mensagem: "Comissões elegíveis para a baixa listadas com sucesso.",
+      dados: items.map((item) => ComissaoResponseMapper.paraResumo(item)),
+      meta,
+    };
+  }
 
   @Post()
   @PerfisPermitidos("DIRETOR_PATRIMONIO")

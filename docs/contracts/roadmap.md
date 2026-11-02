@@ -591,3 +591,13 @@ a avaliação de vigência nas correções é futura e não bloqueia este contra
 
 **Status:** concluído em 01/11/2026; 146 testes, lint e tipos aprovados. [Tarefa](../tasks/CONTRACTS-017-relatorios-patrimoniais.md).
 Filtros e respostas por relatório, ficha/eventos, catálogo, opções e PDF.
+
+## Ampliações para WEB-PATRIMONIOS-001
+
+**Status:** aprovadas em 01/11/2026; implementação pendente.
+
+A pesquisa patrimonial Web exige mudanças aditivas e limitadas: situação
+contábil no resumo, usuário de cadastro mínimo no detalhe, busca textual finita
+nos eventos da ficha e query/response próprios para opções de comissão da
+baixa. Não há mudança de banco, semântica de mutação ou permissão administrativa
+geral. [Tarefa e critérios](../tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md).

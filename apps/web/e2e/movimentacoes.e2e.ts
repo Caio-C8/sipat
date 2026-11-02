@@ -3,6 +3,15 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./support/test";
 import type { ApiMock } from "./support/api-mock";
 import fixture from "./support/movimentacoes-fixtures.json";
+
+const bens = fixture.bens.map((bem) => ({
+  ...bem,
+  situacaoContabil: {
+    valorBrutoAtual: "100.0000000",
+    depreciacaoAcumuladaAtual: "0.0000000",
+  },
+}));
+
 const paginada = (
   dados: unknown[],
   total = dados.length,
@@ -57,7 +66,7 @@ function auxiliares(api: ApiMock, contexto = "REGISTRO", optional = false) {
 }
 async function preencher(page: Page, api: ApiMock, quantidade = 1) {
   auxiliares(api);
-  api.expectGet("/patrimonios", () => ({ body: paginada(fixture.bens) }));
+  api.expectGet("/patrimonios", () => ({ body: paginada(bens) }));
   await page.goto("/movimentacoes/nova");
   for (let i = 1; i <= quantidade; i++)
     await page
@@ -151,7 +160,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
   }) => {
     await sessao(page, baseURL);
     auxiliares(apiMock);
-    apiMock.expectGet("/patrimonios", () => ({ body: paginada(fixture.bens) }));
+    apiMock.expectGet("/patrimonios", () => ({ body: paginada(bens) }));
     await page.goto("/movimentacoes/nova");
     for (const i of [13, 14, 15])
       await expect(
@@ -220,7 +229,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
           status: 201,
           sucesso: true,
           mensagem: "Confirmadas.",
-          dados: fixture.bens.slice(0, 10).map((b, i) => ({
+          dados: bens.slice(0, 10).map((b, i) => ({
             ...fixture.detalhe,
             id: `00000000-0000-4000-8000-${String(100 + i).padStart(12, "0")}`,
             patrimonio: {
@@ -251,7 +260,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
     await sessao(page, baseURL);
     auxiliares(apiMock);
     apiMock.expectGet("/patrimonios", () => ({
-      body: paginada([fixture.bens[0]], 21),
+      body: paginada([bens[0]], 21),
     }));
     await page.goto("/movimentacoes/nova");
     await page
@@ -259,7 +268,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .check();
     apiMock.expectGet("/patrimonios", ({ url }) => {
       expect(url.searchParams.get("pagina")).toBe("2");
-      return { body: paginada([fixture.bens[1]], 21, 2) };
+      return { body: paginada([bens[1]], 21, 2) };
     });
     await page.getByRole("button", { name: "Mais bens" }).click();
     await page
@@ -267,7 +276,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .check();
     apiMock.expectGet("/patrimonios", ({ url }) => {
       expect(url.searchParams.get("busca")).toBe("Mesa");
-      return { body: paginada([fixture.bens[0]]) };
+      return { body: paginada([bens[0]]) };
     });
     await page.getByLabel("Buscar patrimônios").fill("Mesa");
     await page.getByRole("button", { name: "Pesquisar bens" }).click();
@@ -310,15 +319,15 @@ test.describe("Movimentações integradas — mocks estritos", () => {
     await expect(
       page.getByRole("button", { name: "Confirmar movimentação", exact: true }),
     ).toBeDisabled();
-    apiMock.expectGet(`/patrimonios/${fixture.bens[0]!.id}`, () => ({
+    apiMock.expectGet(`/patrimonios/${bens[0]!.id}`, () => ({
       body: {
         status: 200,
         sucesso: true,
         mensagem: "Atualizado",
         dados: {
-          ...fixture.bens[0],
+          ...bens[0],
           setorAtual: {
-            ...fixture.bens[0]!.setorAtual,
+            ...bens[0]!.setorAtual,
             id: fixture.setores[2]!.id,
             nome: "Secretaria",
           },
@@ -331,6 +340,10 @@ test.describe("Movimentações integradas — mocks estritos", () => {
             depreciacaoAcumuladaAtual: "0",
           },
           parametroDepreciacaoAtual: null,
+          cadastradoPor: {
+            id: "00000000-0000-4000-8000-000000000001",
+            nome: "Responsável pelo cadastro",
+          },
           createdAt: "2026-10-28T12:00:00.000Z",
           updatedAt: null,
         },
@@ -400,11 +413,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       page.getByRole("heading", { name: "Resultado ainda não confirmado" }),
     ).toBeVisible();
     auxiliares(apiMock);
-    apiMock.expectGet(
-      "/patrimonios",
-      () => ({ body: paginada(fixture.bens) }),
-      2,
-    );
+    apiMock.expectGet("/patrimonios", () => ({ body: paginada(bens) }), 2);
     await page.reload();
     apiMock.expectPost("/movimentacoes", ({ body }) => {
       expect(body).toEqual(original);

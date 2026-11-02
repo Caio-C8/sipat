@@ -34,6 +34,10 @@ const patrimonioResumo = {
   modelo: null,
   numeroSerie: "SERIE-1",
   status: "ATIVO",
+  situacaoContabil: {
+    valorBrutoAtual: "12345.6700000",
+    depreciacaoAcumuladaAtual: "0",
+  },
   setorAtual: {
     id: uuids.setor,
     nome: "Tecnologia",
@@ -62,9 +66,9 @@ const patrimonioDetalhe = {
     numeroProcesso: "123/2026",
     anoProcesso: 2026,
   },
-  situacaoContabil: {
-    valorBrutoAtual: "12345.6700000",
-    depreciacaoAcumuladaAtual: "0",
+  cadastradoPor: {
+    id: uuids.responsavel,
+    nome: "Maria da Silva",
   },
   parametroDepreciacaoAtual: {
     metodo: "LINEAR",

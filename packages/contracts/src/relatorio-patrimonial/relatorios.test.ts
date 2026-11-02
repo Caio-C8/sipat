@@ -77,4 +77,12 @@ test("lacunas contábeis são nulas, totais têm sete casas sem limite individua
     queryRelatorio("ficha-bem").safeParse({ inicio: "2026-01-01" }).success,
     false,
   );
+  assert.deepEqual(
+    queryRelatorio("ficha-bem").parse({ busca: "  comissão  " }).busca,
+    "comissão",
+  );
+  assert.equal(
+    queryRelatorio("ficha-bem").safeParse({ busca: "a".repeat(201) }).success,
+    false,
+  );
 });

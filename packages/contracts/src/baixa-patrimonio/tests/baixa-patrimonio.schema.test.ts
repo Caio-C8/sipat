@@ -21,6 +21,7 @@ import {
   LIMITE_CAMPOS_BAIXAR_PATRIMONIO,
   LIMITE_CARACTERES_TEXTO_BAIXA_PATRIMONIO,
   LIMITE_PARTES_BAIXAR_PATRIMONIO,
+  ListarOpcoesComissoesBaixaQuerySchema,
   TIPOS_BAIXA_PATRIMONIO,
   TIPO_CONTEUDO_BAIXAR_PATRIMONIO,
   TIPO_MIME_DOCUMENTO_BAIXA_PATRIMONIO,
@@ -158,6 +159,24 @@ describe("contratos de entrada da baixa patrimonial", () => {
       CODIGOS_ERRO_BAIXA_PATRIMONIO,
     );
     esperaInvalido(CodigoErroBaixaPatrimonioSchema, "ERRO_INTERNO");
+  });
+
+  it("valida data civil, busca aparada e paginação das comissões elegíveis", () => {
+    assert.deepEqual(
+      parseValido(ListarOpcoesComissoesBaixaQuerySchema, {
+        dataBaixa: "2026-10-27",
+        busca: "  comissão  ",
+        pagina: "2",
+        limite: "50",
+      }),
+      { dataBaixa: "2026-10-27", busca: "comissão", pagina: 2, limite: 50 },
+    );
+    esperaInvalidos(ListarOpcoesComissoesBaixaQuerySchema, [
+      { dataBaixa: "27/10/2026" },
+      { dataBaixa: "2026-10-27", busca: " " },
+      { dataBaixa: "2026-10-27", busca: "a".repeat(201) },
+      { dataBaixa: "2026-10-27", limite: "51" },
+    ]);
   });
 });
 

@@ -6,6 +6,10 @@ import type {
 
 export class PatrimonioResponseMapper {
   static paraResumo(patrimonio: PatrimonioResumoPayload): PatrimonioResumo {
+    if (patrimonio.situacaoContabil === null) {
+      throw new Error("Patrimônio sem situação contábil inicial.");
+    }
+
     return {
       id: patrimonio.id,
       numeroPatrimonio: patrimonio.numeroPatrimonio,
@@ -15,16 +19,17 @@ export class PatrimonioResponseMapper {
       modelo: patrimonio.modelo,
       numeroSerie: patrimonio.numeroSerie,
       status: patrimonio.status,
+      situacaoContabil: {
+        valorBrutoAtual: patrimonio.situacaoContabil.valorBrutoAtual.toString(),
+        depreciacaoAcumuladaAtual:
+          patrimonio.situacaoContabil.depreciacaoAcumuladaAtual.toString(),
+      },
       setorAtual: patrimonio.setorAtual,
       especie: patrimonio.especie,
     };
   }
 
   static paraDetalhe(patrimonio: PatrimonioDetalhePayload): PatrimonioDetalhe {
-    if (patrimonio.situacaoContabil === null) {
-      throw new Error("Patrimônio sem situação contábil inicial.");
-    }
-
     const parametro = patrimonio.parametrosDepreciacao[0] ?? null;
 
     return {
@@ -33,11 +38,7 @@ export class PatrimonioResponseMapper {
       tipoIncorporacao: patrimonio.tipoIncorporacao,
       valorIncorporacao: patrimonio.valorIncorporacao.toString(),
       processoCompra: patrimonio.processoCompra,
-      situacaoContabil: {
-        valorBrutoAtual: patrimonio.situacaoContabil.valorBrutoAtual.toString(),
-        depreciacaoAcumuladaAtual:
-          patrimonio.situacaoContabil.depreciacaoAcumuladaAtual.toString(),
-      },
+      cadastradoPor: patrimonio.createdBy,
       parametroDepreciacaoAtual:
         parametro === null
           ? null

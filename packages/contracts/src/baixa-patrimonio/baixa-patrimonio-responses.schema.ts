@@ -1,5 +1,9 @@
 import * as z from "zod";
-import { criarRespostaSucessoSchema } from "../common";
+import {
+  criarRespostaSucessoPaginadaSchema,
+  criarRespostaSucessoSchema,
+} from "../common";
+import { ComissaoResumoSchema } from "../comissao";
 import { DataCivilSchema, NumeroPatrimonialSchema } from "../patrimonio";
 import {
   MotivoBaixaPatrimonioSchema,
@@ -52,6 +56,8 @@ export const BaixarPatrimonioResponseSchema = criarRespostaSucessoSchema(
 );
 export const ConsultarBaixaPatrimonioResponseSchema =
   criarRespostaSucessoSchema(BaixaPatrimonioDetalheSchema);
+export const ListarOpcoesComissoesBaixaResponseSchema =
+  criarRespostaSucessoPaginadaSchema(ComissaoResumoSchema);
 
 export type BaixaPatrimonioDetalhe = z.output<
   typeof BaixaPatrimonioDetalheSchema
@@ -61,4 +67,7 @@ export type BaixarPatrimonioResponse = z.output<
 >;
 export type ConsultarBaixaPatrimonioResponse = z.output<
   typeof ConsultarBaixaPatrimonioResponseSchema
+>;
+export type ListarOpcoesComissoesBaixaResponse = z.output<
+  typeof ListarOpcoesComissoesBaixaResponseSchema
 >;
