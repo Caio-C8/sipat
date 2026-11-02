@@ -14,6 +14,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
   reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
   blocos ainda sem integração;
+- `/patrimonios/novo` carrega espécies, setores ativos e processos de compra
+  pela API, atualiza os campos relacionados conforme a seleção e registra o
+  bem por `POST /patrimonios` com validação e idempotência;
 - `/movimentacoes` e seu detalhe consultam transferências reais para os dois perfis;
   `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
 - `/manutencoes`, `/manutencoes/nova` e o detalhe permitem aos dois perfis

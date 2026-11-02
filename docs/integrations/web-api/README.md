@@ -53,6 +53,14 @@ O dashboard usa o cliente Server para cinco consultas paralelas e finitas a
 Somente `meta.total` alimenta a interface; a Web não percorre páginas para
 calcular agregados ausentes.
 
+O cadastro em `/patrimonios/novo` usa o cliente do navegador para consultar
+`GET /especies`, `GET /setores?ativo=true` e `GET /processos-compra`, carregando
+todas as páginas válidas (limite 50). A natureza vem da espécie selecionada e
+o responsável vem do setor selecionado. A criação usa `POST /patrimonios`, o
+schema compartilhado e o sinal CSRF; a chave e o payload são preservados na
+sessão quando o resultado da operação fica incerto. Processo de compra é
+opcional conforme o contrato atual.
+
 Em manutenção, a listagem e o detalhe usam operações Server com cookie
 encaminhado por requisição e cache desabilitado. Criação, orçamento, retorno e
 upload usam operações do navegador com CSRF; `FormData` deixa o navegador

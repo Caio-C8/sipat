@@ -1,8 +1,22 @@
 import {
+  CABECALHO_CSRF,
+  VALOR_CABECALHO_CSRF,
+  CriarPatrimonioBodySchema,
+  CriarPatrimonioResponseSchema,
+  ListarEspeciesQuerySchema,
+  ListarEspeciesResponseSchema,
   ListarPatrimoniosQuerySchema,
   ListarPatrimoniosResponseSchema,
+  ListarProcessosCompraQuerySchema,
+  ListarProcessosCompraResponseSchema,
+  ListarSetoresQuerySchema,
+  ListarSetoresResponseSchema,
   STATUS_PATRIMONIO,
+  type CriarPatrimonioBodyInput,
+  type ListarEspeciesQueryInput,
   type ListarPatrimoniosQueryInput,
+  type ListarProcessosCompraQueryInput,
+  type ListarSetoresQueryInput,
   type ListarPatrimoniosResponse,
   type StatusPatrimonio,
 } from "@repo/contracts";
@@ -66,6 +80,48 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
 
   return {
     listar,
+    especies(query: ListarEspeciesQueryInput, signal?: AbortSignal) {
+      return apiClient.request({
+        path: "/especies",
+        method: "GET",
+        query: ListarEspeciesQuerySchema.parse(query),
+        cache: "no-store",
+        signal,
+        responseSchema: ListarEspeciesResponseSchema,
+      });
+    },
+    setores(query: ListarSetoresQueryInput, signal?: AbortSignal) {
+      return apiClient.request({
+        path: "/setores",
+        method: "GET",
+        query: ListarSetoresQuerySchema.parse(query),
+        cache: "no-store",
+        signal,
+        responseSchema: ListarSetoresResponseSchema,
+      });
+    },
+    processosCompra(
+      query: ListarProcessosCompraQueryInput,
+      signal?: AbortSignal,
+    ) {
+      return apiClient.request({
+        path: "/processos-compra",
+        method: "GET",
+        query: ListarProcessosCompraQuerySchema.parse(query),
+        cache: "no-store",
+        signal,
+        responseSchema: ListarProcessosCompraResponseSchema,
+      });
+    },
+    criar(body: CriarPatrimonioBodyInput) {
+      return apiClient.request({
+        path: "/patrimonios",
+        method: "POST",
+        body: CriarPatrimonioBodySchema.parse(body),
+        headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+        responseSchema: CriarPatrimonioResponseSchema,
+      });
+    },
     obterResumoDashboard,
   };
 }
