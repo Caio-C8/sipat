@@ -14,6 +14,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
   reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
   blocos ainda sem integração;
+- `/configuracoes` exibe a identidade autenticada; a aba de usuários permanece
+  indisponível. `/configuracoes/alterar-senha` consome o `AUTH-002`, encerra as
+  sessões no backend e orienta um novo login;
 - `/patrimonios` e seu detalhe oferecem pesquisa, histórico, ficha PDF e as
   quatro ações reais do Diretor; movimentação e reavaliação mantêm o bem fixo
   em drawers laterais da própria ficha;

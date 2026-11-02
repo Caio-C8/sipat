@@ -89,6 +89,42 @@ describe("operações de autenticação", () => {
     });
   });
 
+  it("altera a própria senha com CSRF e sem aceitar body de resposta", async () => {
+    const { auth, request } = clienteComResposta(undefined);
+    const body = {
+      senhaAtual: "senha atual antiga 1!",
+      novaSenha: "nova senha segura 2!",
+      confirmacaoNovaSenha: "nova senha segura 2!",
+    };
+
+    await auth.alterarSenha(body);
+
+    expect(request).toHaveBeenCalledWith({
+      path: "/auth/alterar-senha",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      body,
+    });
+  });
+
+  it("altera a própria senha com CSRF e sem aceitar body de resposta", async () => {
+    const { auth, request } = clienteComResposta(undefined);
+    const body = {
+      senhaAtual: "senha atual 1!",
+      novaSenha: "nova senha segura 2!",
+      confirmacaoNovaSenha: "nova senha segura 2!",
+    };
+
+    await auth.alterarSenha(body);
+
+    expect(request).toHaveBeenCalledWith({
+      path: "/auth/alterar-senha",
+      method: "POST",
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      body,
+    });
+  });
+
   it("solicita recuperação com response neutra e conclui sem esperar body", async () => {
     const respostaNeutra = {
       status: 202,

@@ -2,10 +2,11 @@
 
 ## Estado atual
 
-O SIPAT ainda não possui formulários de domínio e não instala React Hook Form
-ou resolvers. Escolha a solução quando uma entrega concreta exigir
-gerenciamento de formulário; valide compatibilidade com React e Zod nas
-versões do projeto.
+O SIPAT não instala React Hook Form ou resolvers. Os formulários de
+`/patrimonios/novo` e `/configuracoes/alterar-senha` usam estado local e os
+schemas compartilhados das respectivas operações. Escolha outra solução quando
+uma entrega concreta exigir gerenciamento adicional; valide compatibilidade
+com React e Zod nas versões do projeto.
 
 Independentemente da biblioteca, dados externos devem ser validados no boundary
 e a API deve repetir a validação. Validação no navegador melhora a experiência,

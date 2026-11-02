@@ -100,7 +100,9 @@ export function SystemSidebar({ perfil }: Readonly<{ perfil: PerfilUsuario }>) {
                     (item.href === "/movimentacoes" &&
                       pathname.startsWith("/movimentacoes/")) ||
                     (item.href === "/cadastros/setores" &&
-                      pathname.startsWith("/cadastros/setores/"));
+                      pathname.startsWith("/cadastros/setores/")) ||
+                    (item.href === "/configuracoes" &&
+                      pathname.startsWith("/configuracoes/"));
 
                   return (
                     <li key={item.id}>
