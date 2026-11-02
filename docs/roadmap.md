@@ -241,6 +241,25 @@ placeholder. Para o Administrador, `Cadastro` permanece visível na navegação 
 abre um estado de acesso restrito coerente com o protótipo, sem carregar o
 formulário nem disparar operações de criação.
 
+### Pesquisa e detalhe patrimonial na Web
+
+`WEB-PATRIMONIOS-001` substitui a demonstração estática da Web por um fluxo
+integrado. A ordem aprovada evita telas sustentadas por dados fixos ou chamadas
+N+1:
+
+| Ordem | Objetivo                                                     | Status   | Dependências                             |
+| ----- | ------------------------------------------------------------ | -------- | ---------------------------------------- |
+| 1     | completar dados públicos e opções necessárias                | aprovado | contratos e APIs patrimoniais existentes |
+| 2     | pesquisa paginada e detalhe individual reais                 | aprovado | objetivo anterior                        |
+| 3     | histórico filtrável e ficha PDF                              | aprovado | detalhe e relatórios existentes          |
+| 4     | ações Web de movimentação, reavaliação, baixa e substituição | aprovado | objetivos anteriores e APIs existentes   |
+
+Administrador consulta; Diretor consulta e executa as mutações autorizadas. O
+implementador deve usar `@Figma` e inspecionar os frames Web da página `Telas
+PC`. O escopo, os desvios deliberados do protótipo e os arquivos de referência
+estão na
+[tarefa WEB-PATRIMONIOS-001](./tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md).
+
 ### Conferência de inventário no mobile
 
 O aplicativo executará somente a conferência dos inventários previamente

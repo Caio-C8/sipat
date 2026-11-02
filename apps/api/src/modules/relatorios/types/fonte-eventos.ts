@@ -227,6 +227,15 @@ export function fonteEventos(
   );
   const cond: Prisma.Sql[] = [Prisma.sql`true`];
   if (q.evento) cond.push(Prisma.sql`dados->>'tipo'=${String(q.evento)}`);
+  if (q.busca) {
+    const buscaNormalizada = String(q.busca)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("pt-BR");
+    cond.push(
+      Prisma.sql`translate(lower(dados::text), 'áàâãäéèêëíìîïóòôõöúùûüç', 'aaaaaeeeeiiiiooooouuuuc') LIKE ${`%${buscaNormalizada}%`}`,
+    );
+  }
   if (q.inicio && q.fim)
     cond.push(
       Prisma.sql`ordem1 >= ${inicioDiaSaoPaulo(String(q.inicio))} AND ordem1 < ${inicioDiaSaoPaulo(proximoDiaCivil(String(q.fim)))}`,

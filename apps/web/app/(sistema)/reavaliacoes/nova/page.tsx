@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { PatrimonioParamsSchema } from "@repo/contracts";
 import { obterIdentidadeAtual } from "@/lib/auth/server-session";
 import { NovaReavaliacao } from "@/features/reavaliacoes/components/nova-reavaliacao";
+import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 
 export const metadata: Metadata = { title: "Nova reavaliação" };
 
-export default async function NovaReavaliacaoPage() {
+export default async function NovaReavaliacaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ patrimonioId?: string }>;
+}) {
   const identidade = await obterIdentidadeAtual();
   if (!identidade) return null;
   if (identidade.perfil !== "DIRETOR_PATRIMONIO") {
@@ -25,5 +32,19 @@ export default async function NovaReavaliacaoPage() {
       </main>
     );
   }
-  return <NovaReavaliacao usuarioId={identidade.id} />;
+  const parametro = PatrimonioParamsSchema.safeParse(await searchParams);
+  const patrimonioInicial = parametro.success
+    ? (
+        await serverPatrimonioOperations.consultar(
+          parametro.data.patrimonioId,
+          { cookie: (await headers()).get("cookie") ?? "" },
+        )
+      ).dados
+    : undefined;
+  return (
+    <NovaReavaliacao
+      usuarioId={identidade.id}
+      patrimonioInicial={patrimonioInicial}
+    />
+  );
 }

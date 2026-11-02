@@ -5,6 +5,7 @@ import {
   CABECALHO_CSRF,
   ConsultarBaixaPatrimonioResponseSchema,
   LIMITE_BYTES_DOCUMENTO_BAIXA_PATRIMONIO,
+  ListarOpcoesComissoesBaixaResponseSchema,
 } from "@repo/contracts";
 import cookieParser from "cookie-parser";
 import { Readable } from "node:stream";
@@ -56,6 +57,7 @@ describe("baixas patrimoniais", () => {
     criar: jest.fn(),
     consultar: jest.fn(),
     abrirDocumento: jest.fn(),
+    listarOpcoesComissoes: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -110,6 +112,21 @@ describe("baixas patrimoniais", () => {
     service.abrirDocumento.mockResolvedValue({
       conteudo: Readable.from("%PDF-1.7"),
       tamanho: 8,
+    });
+    service.listarOpcoesComissoes.mockResolvedValue({
+      items: [
+        {
+          id: COMISSAO_ID,
+          nome: "Comissão",
+          numeroAto: "1/2026",
+          dataVigenciaInicio: new Date("2026-01-01T00:00:00.000Z"),
+          dataVigenciaFim: new Date("2026-12-31T00:00:00.000Z"),
+        },
+      ],
+      total: 1,
+      pagina: 1,
+      ultimaPagina: 1,
+      limite: 20,
     });
   });
 
@@ -166,6 +183,31 @@ describe("baixas patrimoniais", () => {
       expect.objectContaining({ mimetype: "application/pdf" }),
       expect.objectContaining({ id: DIRETOR_ID }),
     );
+  });
+
+  it("lista somente para o Diretor as comissões elegíveis na data informada", async () => {
+    const caminho = `${rota}/opcoes/comissoes?dataBaixa=2026-10-27&busca=Comiss%C3%A3o`;
+    const administrador = await request(app.getHttpServer())
+      .get(caminho)
+      .set("Cookie", cookie(tokenAdministrador));
+    const diretor = await request(app.getHttpServer())
+      .get(caminho)
+      .set("Cookie", cookie(tokenDiretor));
+    const invalido = await request(app.getHttpServer())
+      .get(`${rota}/opcoes/comissoes?dataBaixa=27/10/2026`)
+      .set("Cookie", cookie(tokenDiretor));
+    expect(administrador.status).toBe(403);
+    expect(diretor.status).toBe(200);
+    expect(
+      ListarOpcoesComissoesBaixaResponseSchema.safeParse(diretor.body).success,
+    ).toBe(true);
+    expect(service.listarOpcoesComissoes).toHaveBeenCalledWith({
+      dataBaixa: "2026-10-27",
+      busca: "Comissão",
+      pagina: 1,
+      limite: 20,
+    });
+    expect(invalido.status).toBe(400);
   });
 
   it("aplica o limite multipart antes do service", async () => {

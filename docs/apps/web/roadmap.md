@@ -126,6 +126,26 @@ Especificação aprovada:
 Cada objetivo registra contexto, escopo, estados da interface, contratos e
 endpoints afetados, critérios de acessibilidade, segurança, performance e testes.
 
+## WEB-PATRIMONIOS-001 — Pesquisa, detalhe e ações reais
+
+**Status:** aprovado em 01/11/2026.
+
+A prévia estática de patrimônios será substituída por pesquisa e detalhe reais,
+histórico e ficha PDF para os dois perfis e pelas quatro ações permitidas ao
+Diretor. A execução deve seguir esta ordem:
+
+| Ordem | Objetivo                                                                 | Dependência                        |
+| ----- | ------------------------------------------------------------------------ | ---------------------------------- |
+| 1     | completar resumo/detalhe, busca de eventos e opções de comissão da baixa | contratos e APIs existentes        |
+| 2     | integrar pesquisa paginada e rota individual                             | objetivo 1                         |
+| 3     | integrar histórico e relatório do bem                                    | objetivo 2 e relatórios existentes |
+| 4     | integrar movimentação, reavaliação, baixa e substituição                 | objetivos 1–3                      |
+
+O implementador deve usar `@Figma`, abrir o arquivo fornecido e inspecionar os
+oito frames da página `Telas PC` antes de alterar cada fluxo. Mobile e relatório
+HTML não fazem parte desta tarefa.
+[Contrato de execução, frames e aceite](../../tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md).
+
 ## Manutenção de patrimônios
 
 ### WEB-MANUTENCOES-001 — Interface simples integrada

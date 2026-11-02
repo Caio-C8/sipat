@@ -123,6 +123,7 @@ export const filtrosRelatorios = {
     inicio: dia.optional(),
     fim: dia.optional(),
     evento: TipoEventoRelatorioSchema.optional(),
+    busca: busca.optional(),
   }),
 } as const;
 export type FiltrosRelatorios = {
