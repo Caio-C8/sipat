@@ -179,6 +179,28 @@ O suporte de rede pode interceptar `/api/backend` e verifica expectations por
 método e path. Ele deve ser usado por novas features sem transformar fixtures
 de uma entrega em parte permanente da infraestrutura comum.
 
+### Cadastros contra API e banco reais
+
+`e2e/cadastros-real.e2e.ts` cobre os seis cadastros, integrantes, situações,
+notas e PDFs nos dois perfis, além de axe e reflow. A execução é opt-in:
+
+1. prepare um PostgreSQL descartável em `127.0.0.1:55434/sipat_cadastros`,
+   schema `public`, e aplique as migrations existentes;
+2. inicie a API com `DATABASE_URL` apontando somente para esse banco, uploads
+   isolados e CORS para a origem Web; inicie a Web apontando para essa API;
+3. na raiz, defina `CADASTROS_INTEGRATION_DATABASE_URL` com a mesma conexão e
+   execute
+   `node --import ./packages/database/node_modules/tsx/dist/loader.mjs apps/web/e2e/support/seed-cadastros-real.mjs`;
+4. defina `PLAYWRIGHT_BASE_URL=http://localhost:3000` (ou a origem utilizada) e
+   execute
+   `pnpm --filter @repo/web exec playwright test e2e/cadastros-real.e2e.ts --workers=1`.
+
+O seed recusa outra conexão, cria apenas dados sintéticos e salva sessões
+temporárias no arquivo ignorado `test-results/cadastros-real-fixture.json` da
+raiz, fora da pasta de resultados que o Playwright limpa. Não use banco
+operacional. Sem a variável opt-in, esses dois cenários são ignorados na suíte
+padrão.
+
 ### Verificação local do artefato standalone
 
 Com `output: "standalone"`, o servidor mínimo deve ser iniciado pelo

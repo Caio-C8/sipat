@@ -1,15 +1,19 @@
 import { expect, test } from "@playwright/test";
-
-test("administrador navega pelos cadastros visuais", async ({ page }) => {
+async function sessao(page: import("@playwright/test").Page, value = "active") {
   await page.context().addCookies([
     {
       name: "sipat_session",
-      value: "active",
-      url: "http://localhost:3100",
+      value,
+      url: test.info().project.use.baseURL ?? "http://localhost:3100",
       httpOnly: true,
       sameSite: "Strict",
     },
   ]);
+}
+test("administrador navega pelos cadastros integrados e distingue listas vazias", async ({
+  page,
+}) => {
+  await sessao(page);
   for (const [rota, titulo] of [
     ["/cadastros", "Cadastros"],
     ["/cadastros/especies", "Cadastrar espécie"],
@@ -21,70 +25,81 @@ test("administrador navega pelos cadastros visuais", async ({ page }) => {
     await expect(
       page.getByRole("heading", { name: titulo, exact: true }),
     ).toBeVisible();
+    await expect(page.getByText("Nenhum registro encontrado.")).toBeVisible();
     await expect(
-      page.getByText("Dados de exemplo · sem gravação"),
-    ).toBeVisible();
+      page.getByText(/Prévia visual|sem gravação|de exemplo/),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", {
+        name: /^Salvar (processo|espécie|natureza|comissão|responsável)$/,
+      }),
+    ).toBeEnabled();
   }
 });
-
-test("administrador consulta e abre o cadastro visual de setores", async ({
+test("administrador consulta setores reais e abre formulário habilitado", async ({
   page,
 }) => {
-  await page.context().addCookies([
-    {
-      name: "sipat_session",
-      value: "active",
-      url: "http://localhost:3100",
-      httpOnly: true,
-      sameSite: "Strict",
-    },
-  ]);
+  await sessao(page);
   await page.goto("/cadastros/setores");
-  await expect(
-    page.getByRole("heading", { name: "Setores", exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("textbox", { name: "Nome, código ou sigla" })
-    .fill("Gabinete 02");
+  await page.getByRole("textbox", { name: "Nome do setor" }).fill("Gabinete");
   await page.getByRole("button", { name: "Consultar", exact: true }).click();
-  await expect(page.getByText("1 setor de exemplo")).toBeVisible();
-  await page.getByRole("link", { name: "Consultar Gabinete 02" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Gabinete 02" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Bens vinculados ao setor" }),
-  ).toBeVisible();
-  await page.getByRole("link", { name: "Voltar aos setores" }).click();
+  await expect(page).toHaveURL(/busca=Gabinete/);
+  await expect(page.getByText("Nenhum setor encontrado.")).toBeVisible();
   await page.getByRole("link", { name: "Cadastrar setor" }).click();
   await expect(
-    page.getByRole("heading", { name: "Cadastrar setor" }),
+    page.getByRole("heading", { name: "Cadastrar setor", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Salvar setor" }),
-  ).toBeDisabled();
+  ).toBeEnabled();
 });
-
-test("diretor consulta processos sem acessar cadastros administrativos", async ({
+test("diretor cria processo sem notas novas e não acessa cadastros administrativos", async ({
   page,
 }) => {
+  await sessao(page, "director");
+  await page.goto("/cadastros");
+  await expect(
+    page.getByRole("heading", { name: "Cadastros", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Você pode cadastrar o processo sem notas.", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Adicionar nota fiscal" }),
+  ).toHaveCount(0);
+  for (const rota of [
+    "/cadastros/especies",
+    "/cadastros/naturezas",
+    "/cadastros/comissoes",
+    "/cadastros/responsaveis",
+    "/cadastros/setores",
+    "/cadastros/setores/novo",
+  ]) {
+    await page.goto(rota);
+    await expect(
+      page.getByRole("heading", { name: "Acesso não permitido" }),
+    ).toBeVisible();
+  }
+});
+test("falha da API aparece como erro e não como lista vazia", async ({
+  page,
+}) => {
+  await sessao(page);
   await page.context().addCookies([
     {
-      name: "sipat_session",
-      value: "director",
+      name: "sipat_cadastros_scenario",
+      value: "error",
       url: "http://localhost:3100",
-      httpOnly: true,
-      sameSite: "Strict",
     },
   ]);
-  await page.goto("/cadastros");
-  await expect(page.getByRole("heading", { name: "Cadastros" })).toBeVisible();
-  await page.goto("/cadastros/especies");
+  await page.goto("/cadastros/naturezas");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Consulta temporariamente indisponível.",
+  );
+  await expect(page.getByText("Nenhum registro encontrado.")).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Acesso não permitido" }),
-  ).toBeVisible();
-  await page.goto("/cadastros/setores");
-  await expect(
-    page.getByRole("heading", { name: "Acesso não permitido" }),
+    page.getByRole("link", { name: "Tentar novamente" }),
   ).toBeVisible();
 });
