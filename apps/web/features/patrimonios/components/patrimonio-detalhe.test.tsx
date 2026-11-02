@@ -71,6 +71,7 @@ describe("PatrimonioDetalheView", () => {
         erroEventos={null}
         valores={{ aba: "historico" }}
         diretor={false}
+        usuarioId={id}
       />,
     );
 
@@ -88,6 +89,7 @@ describe("PatrimonioDetalheView", () => {
         erroEventos="Falha ao carregar eventos."
         valores={{ aba: "historico" }}
         diretor={false}
+        usuarioId={id}
       />,
     );
 

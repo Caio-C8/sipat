@@ -67,9 +67,15 @@ function hojeSaoPaulo(): string {
 export function NovaReavaliacao({
   usuarioId,
   patrimonioInicial,
+  modoDetalhe = false,
+  onPendingChange,
+  onSuccess,
 }: {
   usuarioId: string;
   patrimonioInicial?: PatrimonioDetalhe;
+  modoDetalhe?: boolean;
+  onPendingChange?: (pending: boolean) => void;
+  onSuccess?: (mensagem: string) => void;
 }) {
   const router = useRouter();
   const bens = usePatrimoniosReavaliacao();
@@ -115,17 +121,20 @@ export function NovaReavaliacao({
   const [decisaoIdempotencia, setDecisaoIdempotencia] =
     useState<DecisaoIdempotencia | null>(null);
   const painelAviso = useRef<HTMLDivElement>(null);
-  const chaveStorage = `sipat.reavaliacao.pendente.${usuarioId}`;
+  const chaveStorage = `sipat.reavaliacao.pendente.${usuarioId}${
+    modoDetalhe && patrimonioInicial ? `.${patrimonioInicial.id}` : ""
+  }`;
   const carregarBens = bens.carregar;
   const carregarComissoes = comissoes.carregar;
 
   useEffect(() => {
+    if (modoDetalhe) return;
     void carregarBens({
       pagina: String(pagina),
       limite: "20",
       ...(buscaAplicada ? { busca: buscaAplicada } : {}),
     });
-  }, [carregarBens, buscaAplicada, pagina]);
+  }, [carregarBens, buscaAplicada, pagina, modoDetalhe]);
   useEffect(() => {
     void carregarComissoes({
       contexto: "REGISTRO",
@@ -152,6 +161,9 @@ export function NovaReavaliacao({
   useEffect(() => {
     if (erro || errosCampos.length || aviso) painelAviso.current?.focus();
   }, [erro, errosCampos, aviso]);
+  useEffect(() => {
+    onPendingChange?.(criacao.pending);
+  }, [criacao.pending, onPendingChange]);
 
   function invalidarPrevia() {
     setPrevia(null);
@@ -286,7 +298,10 @@ export function NovaReavaliacao({
       } catch {
         /* Sem armazenamento. */
       }
-      router.refresh();
+      if (!modoDetalhe) router.refresh();
+      onSuccess?.(
+        "Reavaliação registrada. Os dados e o histórico foram atualizados.",
+      );
       requestAnimationFrame(() => painelAviso.current?.focus());
     } catch (e) {
       const decisao = decidirAposFalha(e);
@@ -334,8 +349,15 @@ export function NovaReavaliacao({
   const parametroPendente = selecionados.find(
     (item) => item.bem.id === parametroPendenteId,
   );
+  const Conteiner = modoDetalhe ? "div" : "main";
   return (
-    <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
+    <Conteiner
+      className={
+        modoDetalhe
+          ? "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-6"
+          : "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7"
+      }
+    >
       <Dialog
         open={!!parametroPendente}
         onOpenChange={(aberto) => {
@@ -416,20 +438,22 @@ export function NovaReavaliacao({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <header>
-        <Link
-          prefetch={false}
-          href="/reavaliacoes"
-          className="text-sm underline"
-        >
-          Voltar às reavaliações
-        </Link>
-        <h1 className="mt-4 text-2xl font-bold">Nova reavaliação</h1>
-        <p className="mt-2 text-sm text-[#526580]">
-          Selecione até 20 bens, informe os novos parâmetros e revise a prévia
-          calculada pela API.
-        </p>
-      </header>
+      {!modoDetalhe ? (
+        <header>
+          <Link
+            prefetch={false}
+            href="/reavaliacoes"
+            className="text-sm underline"
+          >
+            Voltar às reavaliações
+          </Link>
+          <h1 className="mt-4 text-2xl font-bold">Nova reavaliação</h1>
+          <p className="mt-2 text-sm text-[#526580]">
+            Selecione até 20 bens, informe os novos parâmetros e revise a prévia
+            calculada pela API.
+          </p>
+        </header>
+      ) : null}
       <div ref={painelAviso} tabIndex={-1} className="outline-none">
         {erro && !decisaoIdempotencia ? (
           <div role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
@@ -467,7 +491,7 @@ export function NovaReavaliacao({
           </ul>
         ) : null}
       </div>
-      {resultado ? (
+      {resultado && !modoDetalhe ? (
         <section className={painelReavaliacao}>
           <h2 className="text-xl font-bold">Reavaliação confirmada</h2>
           <p role="status" className="mt-2">
@@ -518,111 +542,116 @@ export function NovaReavaliacao({
               </Button>
             </section>
           ) : null}
-          <section
-            className={painelReavaliacao}
-            aria-labelledby="selecionar-bens-title"
-          >
-            <h2 id="selecionar-bens-title" className="font-bold">
-              1. Selecionar bens
-            </h2>
-            <form
-              className="mt-4 flex flex-wrap items-end gap-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setPagina(1);
-                setBuscaAplicada(busca.trim());
-                if (pagina === 1 && buscaAplicada === busca.trim())
-                  void carregarBens({
-                    pagina: "1",
-                    limite: "20",
-                    ...(buscaAplicada ? { busca: buscaAplicada } : {}),
-                  });
-              }}
+          {!modoDetalhe ? (
+            <section
+              className={painelReavaliacao}
+              aria-labelledby="selecionar-bens-title"
             >
-              <label className="grid min-w-56 flex-1 gap-2 text-sm">
-                Descrição ou características
-                <input
-                  className={campoReavaliacao}
-                  type="search"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  maxLength={200}
-                />
-              </label>
-              <Button type="submit">Pesquisar</Button>
-            </form>
-            {bens.loading ? (
-              <p role="status" className="mt-4">
-                Carregando bens…
-              </p>
-            ) : bens.erro ? (
-              <p role="alert" className="mt-4 text-red-800">
-                Não foi possível consultar os patrimônios.
-              </p>
-            ) : (
-              <ul className="mt-4 grid gap-2">
-                {bens.dados?.dados.map((bem) => (
-                  <li
-                    key={bem.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
-                  >
-                    <div>
-                      <strong>{bem.numeroPatrimonio}</strong> · {bem.descricao}
-                      <p className="text-xs text-[#526580]">
-                        {bem.status.replaceAll("_", " ")}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={
-                        bem.status === "BAIXADO" ||
-                        (detalhe.pending &&
-                          !selecionados.some(
-                            (item) => item.bem.id === bem.id,
-                          )) ||
-                        (selecionados.length >= 20 &&
-                          !selecionados.some((item) => item.bem.id === bem.id))
-                      }
-                      onClick={() => void alternar(bem.id)}
-                    >
-                      {selecionados.some((item) => item.bem.id === bem.id)
-                        ? "Remover"
-                        : bem.status === "BAIXADO"
-                          ? "Baixado"
-                          : "Selecionar"}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {bens.dados ? (
-              <nav
-                aria-label="Páginas de patrimônios"
-                className="mt-4 flex items-center gap-3 text-sm"
+              <h2 id="selecionar-bens-title" className="font-bold">
+                1. Selecionar bens
+              </h2>
+              <form
+                className="mt-4 flex flex-wrap items-end gap-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setPagina(1);
+                  setBuscaAplicada(busca.trim());
+                  if (pagina === 1 && buscaAplicada === busca.trim())
+                    void carregarBens({
+                      pagina: "1",
+                      limite: "20",
+                      ...(buscaAplicada ? { busca: buscaAplicada } : {}),
+                    });
+                }}
               >
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={pagina <= 1}
-                  onClick={() => setPagina((atual) => atual - 1)}
+                <label className="grid min-w-56 flex-1 gap-2 text-sm">
+                  Descrição ou características
+                  <input
+                    className={campoReavaliacao}
+                    type="search"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    maxLength={200}
+                  />
+                </label>
+                <Button type="submit">Pesquisar</Button>
+              </form>
+              {bens.loading ? (
+                <p role="status" className="mt-4">
+                  Carregando bens…
+                </p>
+              ) : bens.erro ? (
+                <p role="alert" className="mt-4 text-red-800">
+                  Não foi possível consultar os patrimônios.
+                </p>
+              ) : (
+                <ul className="mt-4 grid gap-2">
+                  {bens.dados?.dados.map((bem) => (
+                    <li
+                      key={bem.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                    >
+                      <div>
+                        <strong>{bem.numeroPatrimonio}</strong> ·{" "}
+                        {bem.descricao}
+                        <p className="text-xs text-[#526580]">
+                          {bem.status.replaceAll("_", " ")}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={
+                          bem.status === "BAIXADO" ||
+                          (detalhe.pending &&
+                            !selecionados.some(
+                              (item) => item.bem.id === bem.id,
+                            )) ||
+                          (selecionados.length >= 20 &&
+                            !selecionados.some(
+                              (item) => item.bem.id === bem.id,
+                            ))
+                        }
+                        onClick={() => void alternar(bem.id)}
+                      >
+                        {selecionados.some((item) => item.bem.id === bem.id)
+                          ? "Remover"
+                          : bem.status === "BAIXADO"
+                            ? "Baixado"
+                            : "Selecionar"}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {bens.dados ? (
+                <nav
+                  aria-label="Páginas de patrimônios"
+                  className="mt-4 flex items-center gap-3 text-sm"
                 >
-                  Anterior
-                </Button>
-                <span>
-                  {pagina} de {bens.dados.meta.ultimaPagina}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={pagina >= bens.dados.meta.ultimaPagina}
-                  onClick={() => setPagina((atual) => atual + 1)}
-                >
-                  Próxima
-                </Button>
-              </nav>
-            ) : null}
-          </section>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={pagina <= 1}
+                    onClick={() => setPagina((atual) => atual - 1)}
+                  >
+                    Anterior
+                  </Button>
+                  <span>
+                    {pagina} de {bens.dados.meta.ultimaPagina}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={pagina >= bens.dados.meta.ultimaPagina}
+                    onClick={() => setPagina((atual) => atual + 1)}
+                  >
+                    Próxima
+                  </Button>
+                </nav>
+              ) : null}
+            </section>
+          ) : null}
           <section
             className={painelReavaliacao}
             aria-labelledby="parametros-title"
@@ -949,6 +978,6 @@ export function NovaReavaliacao({
           ) : null}
         </>
       )}
-    </main>
+    </Conteiner>
   );
 }
