@@ -128,7 +128,8 @@ endpoints afetados, critérios de acessibilidade, segurança, performance e test
 
 ## WEB-PATRIMONIOS-001 — Pesquisa, detalhe e ações reais
 
-**Status:** aprovado em 01/11/2026.
+**Status:** implementado em 02/11/2026; E2E Web real e comparação visual
+completa com o Figma pendentes.
 
 A prévia estática de patrimônios será substituída por pesquisa e detalhe reais,
 histórico e ficha PDF para os dois perfis e pelas quatro ações permitidas ao
@@ -143,7 +144,9 @@ Diretor. A execução deve seguir esta ordem:
 
 O implementador deve usar `@Figma`, abrir o arquivo fornecido e inspecionar os
 oito frames da página `Telas PC` antes de alterar cada fluxo. Mobile e relatório
-HTML não fazem parte desta tarefa.
+HTML não fazem parte desta tarefa. Na tela individual, movimentação e
+reavaliação executam um único bem em drawers laterais, sem navegar para as
+páginas gerais.
 [Contrato de execução, frames e aceite](../../tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md).
 
 ## Manutenção de patrimônios

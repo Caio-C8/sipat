@@ -182,12 +182,14 @@ export function PatrimonioDetalheView({
   erroEventos,
   valores,
   diretor,
+  usuarioId,
 }: {
   patrimonio: PatrimonioDetalhe;
   eventos: EventosFichaResponse | null;
   erroEventos: string | null;
   valores: Record<string, string>;
   diretor: boolean;
+  usuarioId: string;
 }) {
   const liquido =
     Number(patrimonio.situacaoContabil.valorBrutoAtual) -
@@ -249,7 +251,9 @@ export function PatrimonioDetalheView({
           </section>
         ))}
       </div>
-      {diretor ? <PatrimonioAcoes patrimonio={patrimonio} /> : null}
+      {diretor ? (
+        <PatrimonioAcoes patrimonio={patrimonio} usuarioId={usuarioId} />
+      ) : null}
       <nav
         className="flex gap-2 rounded-lg border border-[#dce5f0] bg-white px-3"
         aria-label="Seções do patrimônio"

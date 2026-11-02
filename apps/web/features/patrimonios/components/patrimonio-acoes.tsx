@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Box } from "lucide-react";
 import {
@@ -17,8 +16,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { isApiError } from "@/lib/api/core/api-error";
+import { NovaMovimentacao } from "@/features/movimentacoes/components/nova-movimentacao";
+import { NovaReavaliacao } from "@/features/reavaliacoes/components/nova-reavaliacao";
 import { browserPatrimonioOperations } from "../api/browser-patrimonio-operations";
 
 const campo =
@@ -40,12 +50,16 @@ const rotuloTipo = (tipo: string) =>
 
 export function PatrimonioAcoes({
   patrimonio,
+  usuarioId,
 }: {
   patrimonio: PatrimonioDetalhe;
+  usuarioId: string;
 }) {
   const router = useRouter();
   const feedback = useRef<HTMLParagraphElement>(null);
-  const [modal, setModal] = useState<"baixa" | "substituicao" | null>(null);
+  const [acao, setAcao] = useState<
+    "movimentacao" | "reavaliacao" | "baixa" | "substituicao" | null
+  >(null);
   const [dataBaixa, setDataBaixa] = useState(hoje);
   const [comissoes, setComissoes] = useState<
     Array<{ id: string; nome: string }>
@@ -56,8 +70,16 @@ export function PatrimonioAcoes({
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    if (mensagem || erro) feedback.current?.focus();
-  }, [mensagem, erro]);
+    if (erro) feedback.current?.focus();
+  }, [erro]);
+
+  function concluirAcao(mensagemSucesso: string) {
+    setPending(false);
+    setErro("");
+    setMensagem(mensagemSucesso);
+    setAcao(null);
+    router.refresh();
+  }
 
   async function carregarComissoes(data = dataBaixa) {
     setCarregandoComissoes(true);
@@ -105,7 +127,7 @@ export function PatrimonioAcoes({
       setMensagem(
         "Baixa registrada. Os dados e o histórico foram atualizados.",
       );
-      setModal(null);
+      setAcao(null);
       router.refresh();
     } catch (e) {
       setErro(
@@ -131,7 +153,7 @@ export function PatrimonioAcoes({
       setMensagem(
         "Número patrimonial substituído pelo próximo número oficial.",
       );
-      setModal(null);
+      setAcao(null);
       router.refresh();
     } catch (e) {
       setErro(
@@ -152,24 +174,75 @@ export function PatrimonioAcoes({
           <h2 className="font-bold">Ações deste patrimônio</h2>
           <p className="text-xs text-[#7188a5]">O bem já está selecionado.</p>
         </div>
-        <Link
-          className={botao}
-          href={`/movimentacoes/nova?patrimonioId=${patrimonio.id}`}
+        <Drawer
+          open={acao === "movimentacao"}
+          onOpenChange={(aberto) => {
+            if (aberto) setAcao("movimentacao");
+            else if (!pending) setAcao(null);
+          }}
         >
-          Movimentar
-        </Link>
-        <Link
-          className={botao}
-          href={`/reavaliacoes/nova?patrimonioId=${patrimonio.id}`}
+          <DrawerTrigger asChild>
+            <button className={botao} type="button">
+              Movimentar
+            </button>
+          </DrawerTrigger>
+          <DrawerContent closeDisabled={pending}>
+            <DrawerHeader>
+              <DrawerTitle>Movimentar patrimônio</DrawerTitle>
+              <DrawerDescription>
+                {patrimonio.numeroPatrimonio} · {patrimonio.descricao}. O bem e
+                o setor de origem permanecem fixos nesta operação.
+              </DrawerDescription>
+            </DrawerHeader>
+            <DrawerBody>
+              <NovaMovimentacao
+                modoDetalhe
+                usuarioId={usuarioId}
+                patrimonioInicial={patrimonio}
+                onCancelar={() => setAcao(null)}
+                onPendingChange={setPending}
+                onSuccess={concluirAcao}
+              />
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+        <Drawer
+          open={acao === "reavaliacao"}
+          onOpenChange={(aberto) => {
+            if (aberto) setAcao("reavaliacao");
+            else if (!pending) setAcao(null);
+          }}
         >
-          Reavaliar
-        </Link>
+          <DrawerTrigger asChild>
+            <button className={botao} type="button">
+              Reavaliar
+            </button>
+          </DrawerTrigger>
+          <DrawerContent closeDisabled={pending}>
+            <DrawerHeader>
+              <DrawerTitle>Reavaliar patrimônio</DrawerTitle>
+              <DrawerDescription>
+                {patrimonio.numeroPatrimonio} · {patrimonio.descricao}. A
+                confirmação usará a prévia válida mais recente da API.
+              </DrawerDescription>
+            </DrawerHeader>
+            <DrawerBody>
+              <NovaReavaliacao
+                modoDetalhe
+                usuarioId={usuarioId}
+                patrimonioInicial={patrimonio}
+                onPendingChange={setPending}
+                onSuccess={concluirAcao}
+              />
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
         {patrimonio.status === "ATIVO" ? (
           <button
             className={botao}
             type="button"
             onClick={() => {
-              setModal("baixa");
+              setAcao("baixa");
               void carregarComissoes();
             }}
           >
@@ -181,7 +254,7 @@ export function PatrimonioAcoes({
           <button
             className={botao}
             type="button"
-            onClick={() => setModal("substituicao")}
+            onClick={() => setAcao("substituicao")}
           >
             Substituir número
           </button>
@@ -202,10 +275,10 @@ export function PatrimonioAcoes({
         {erro || mensagem}
       </p>
       <Dialog
-        open={modal === "baixa"}
-        onOpenChange={(aberto) => !aberto && setModal(null)}
+        open={acao === "baixa"}
+        onOpenChange={(aberto) => !aberto && !pending && setAcao(null)}
       >
-        <DialogContent>
+        <DialogContent closeDisabled={pending}>
           <DialogHeader>
             <DialogTitle>Registrar baixa patrimonial</DialogTitle>
             <DialogDescription>
@@ -296,7 +369,8 @@ export function PatrimonioAcoes({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setModal(null)}
+                disabled={pending}
+                onClick={() => setAcao(null)}
               >
                 Cancelar
               </Button>
@@ -308,10 +382,10 @@ export function PatrimonioAcoes({
         </DialogContent>
       </Dialog>
       <Dialog
-        open={modal === "substituicao"}
-        onOpenChange={(aberto) => !aberto && setModal(null)}
+        open={acao === "substituicao"}
+        onOpenChange={(aberto) => !aberto && !pending && setAcao(null)}
       >
-        <DialogContent>
+        <DialogContent closeDisabled={pending}>
           <DialogHeader>
             <DialogTitle>Substituir número patrimonial</DialogTitle>
             <DialogDescription>
@@ -324,7 +398,8 @@ export function PatrimonioAcoes({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setModal(null)}
+              disabled={pending}
+              onClick={() => setAcao(null)}
             >
               Cancelar
             </Button>

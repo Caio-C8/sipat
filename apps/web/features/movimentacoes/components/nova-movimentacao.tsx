@@ -41,9 +41,17 @@ type Selecionado = {
 export function NovaMovimentacao({
   usuarioId,
   patrimonioInicial,
+  modoDetalhe = false,
+  onCancelar,
+  onPendingChange,
+  onSuccess,
 }: {
   usuarioId: string;
   patrimonioInicial?: PatrimonioResumo;
+  modoDetalhe?: boolean;
+  onCancelar?: () => void;
+  onPendingChange?: (pending: boolean) => void;
+  onSuccess?: (mensagem: string) => void;
 }) {
   const router = useRouter();
   const envioEmCurso = useRef(false);
@@ -52,7 +60,7 @@ export function NovaMovimentacao({
     comissoes = useComissoesMovimentacao(),
     atualizacao = useAtualizarPatrimonioMovimentacao(),
     criacao = useCriarMovimentacao();
-  const [etapa, setEtapa] = useState(1),
+  const [etapa, setEtapa] = useState(modoDetalhe ? 2 : 1),
     [selecionados, setSelecionados] = useState<Selecionado[]>(
       patrimonioInicial?.status === "ATIVO"
         ? [{ bem: patrimonioInicial, destino: null }]
@@ -79,7 +87,9 @@ export function NovaMovimentacao({
 
   const painelErro = useRef<HTMLDivElement>(null),
     tituloEtapa = useRef<HTMLHeadingElement>(null);
-  const chaveStorage = `sipat.movimentacao.pendente.${usuarioId}`;
+  const chaveStorage = `sipat.movimentacao.pendente.${usuarioId}${
+    modoDetalhe && patrimonioInicial ? `.${patrimonioInicial.id}` : ""
+  }`;
   const persistencia = useConfirmacaoPendente(chaveStorage);
   const restaurado = persistencia.pedido !== null && pedido === null;
   const desconhecido = incerto || (restaurado && resultado === null);
@@ -87,10 +97,13 @@ export function NovaMovimentacao({
     carregarSetores = setores.carregar,
     carregarComissoes = comissoes.carregar;
   useEffect(() => {
-    void carregarBens({ limite: "20" });
+    if (!modoDetalhe) void carregarBens({ limite: "20" });
     void carregarSetores({ contexto: "REGISTRO" });
     void carregarComissoes({ contexto: "REGISTRO" });
-  }, [carregarBens, carregarSetores, carregarComissoes]);
+  }, [carregarBens, carregarSetores, carregarComissoes, modoDetalhe]);
+  useEffect(() => {
+    onPendingChange?.(criacao.pending);
+  }, [criacao.pending, onPendingChange]);
   useEffect(() => {
     if (erro || errosCampos.length || desconhecido) painelErro.current?.focus();
   }, [erro, errosCampos, desconhecido]);
@@ -178,7 +191,10 @@ export function NovaMovimentacao({
       setDesconhecido(false);
       setPedido(null);
       persistencia.salvar(null);
-      router.refresh();
+      if (!modoDetalhe) router.refresh();
+      onSuccess?.(
+        "Movimentação registrada. Os dados e o histórico foram atualizados.",
+      );
       requestAnimationFrame(() => tituloEtapa.current?.focus());
     } catch (e) {
       const decisao = decidirAposFalha(e);
@@ -240,7 +256,7 @@ export function NovaMovimentacao({
     criacao.pending ||
     desconhecido ||
     decisaoIdempotencia?.tipo === "ja_processada";
-  if (resultado)
+  if (resultado && !modoDetalhe)
     return (
       <main className="grid min-w-0 gap-6 p-4 sm:p-7">
         <section className={painelMovimentacao}>
@@ -299,49 +315,58 @@ export function NovaMovimentacao({
   ].filter(
     (c, indice, lista) => lista.findIndex((x) => x.id === c.id) === indice,
   );
+  const Conteiner = modoDetalhe ? "div" : "main";
   return (
-    <main className="grid min-w-0 gap-5 p-4 sm:p-7 text-[#19355d]">
-      <header className="grid gap-3">
-        <Link
-          prefetch={false}
-          href="/movimentacoes"
-          className="flex w-fit items-center gap-1 text-sm underline"
-        >
-          <ArrowLeft size={15} aria-hidden="true" />
-          Voltar às movimentações
-        </Link>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Nova movimentação</h1>
-            <p className="mt-1 text-sm text-[#526580]">
-              Transfira até dez patrimônios entre setores.
-            </p>
-          </div>
-          <ol
-            className="flex flex-wrap gap-3 text-xs"
-            aria-label="Etapas da movimentação"
+    <Conteiner
+      className={
+        modoDetalhe
+          ? "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-6"
+          : "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7"
+      }
+    >
+      {!modoDetalhe ? (
+        <header className="grid gap-3">
+          <Link
+            prefetch={false}
+            href="/movimentacoes"
+            className="flex w-fit items-center gap-1 text-sm underline"
           >
-            {["Selecionar bens", "Definir destinos", "Revisar"].map(
-              (nome, i) => (
-                <li
-                  key={nome}
-                  aria-current={etapa === i + 1 ? "step" : undefined}
-                  className={
-                    etapa === i + 1
-                      ? "font-bold text-[#2057d6]"
-                      : "text-[#526580]"
-                  }
-                >
-                  <span className="mr-1 inline-grid size-6 place-items-center rounded-full border">
-                    {i + 1}
-                  </span>
-                  {nome}
-                </li>
-              ),
-            )}
-          </ol>
-        </div>
-      </header>
+            <ArrowLeft size={15} aria-hidden="true" />
+            Voltar às movimentações
+          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold">Nova movimentação</h1>
+              <p className="mt-1 text-sm text-[#526580]">
+                Transfira até dez patrimônios entre setores.
+              </p>
+            </div>
+            <ol
+              className="flex flex-wrap gap-3 text-xs"
+              aria-label="Etapas da movimentação"
+            >
+              {["Selecionar bens", "Definir destinos", "Revisar"].map(
+                (nome, i) => (
+                  <li
+                    key={nome}
+                    aria-current={etapa === i + 1 ? "step" : undefined}
+                    className={
+                      etapa === i + 1
+                        ? "font-bold text-[#2057d6]"
+                        : "text-[#526580]"
+                    }
+                  >
+                    <span className="mr-1 inline-grid size-6 place-items-center rounded-full border">
+                      {i + 1}
+                    </span>
+                    {nome}
+                  </li>
+                ),
+              )}
+            </ol>
+          </div>
+        </header>
+      ) : null}
       {erro || errosCampos.length || desconhecido ? (
         <div
           ref={painelErro}
@@ -423,7 +448,7 @@ export function NovaMovimentacao({
         className="grid min-w-0 gap-5 disabled:opacity-70"
       >
         <legend className="sr-only">Preenchimento da movimentação</legend>
-        {etapa === 1 ? (
+        {etapa === 1 && !modoDetalhe ? (
           <section
             className={painelMovimentacao}
             aria-label="Selecionar patrimônios"
@@ -757,31 +782,33 @@ export function NovaMovimentacao({
                     Buscar setores
                   </Button>
                 </div>
-                <div className="flex flex-wrap items-end gap-2">
-                  <label className="grid min-w-0 flex-1 gap-2 text-sm">
-                    Destino para todos
-                    <select
-                      className={campoMovimentacao}
-                      value={destinoTodos}
-                      onChange={(e) => setDestinoTodos(e.target.value)}
+                {!modoDetalhe ? (
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="grid min-w-0 flex-1 gap-2 text-sm">
+                      Destino para todos
+                      <select
+                        className={campoMovimentacao}
+                        value={destinoTodos}
+                        onChange={(e) => setDestinoTodos(e.target.value)}
+                      >
+                        <option value="">Selecione um destino</option>
+                        {opcoesSetores.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!destinoTodos}
+                      onClick={aplicarTodos}
                     >
-                      <option value="">Selecione um destino</option>
-                      {opcoesSetores.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={!destinoTodos}
-                    onClick={aplicarTodos}
-                  >
-                    Aplicar a todos
-                  </Button>
-                </div>
+                      Aplicar a todos
+                    </Button>
+                  </div>
+                ) : null}
               </div>
               <div className="mb-3 flex flex-wrap gap-2">
                 <Button
@@ -889,19 +916,21 @@ export function NovaMovimentacao({
                         {campoErro(`itens.${i}.setorDestinoId`)}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-label={`Remover patrimônio ${item.bem.numeroPatrimonio}`}
-                      onClick={() =>
-                        setSelecionados((atuais) =>
-                          atuais.filter((s) => s.bem.id !== item.bem.id),
-                        )
-                      }
-                    >
-                      <Trash2 size={15} aria-hidden="true" />
-                      Remover
-                    </Button>
+                    {!modoDetalhe ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        aria-label={`Remover patrimônio ${item.bem.numeroPatrimonio}`}
+                        onClick={() =>
+                          setSelecionados((atuais) =>
+                            atuais.filter((s) => s.bem.id !== item.bem.id),
+                          )
+                        }
+                      >
+                        <Trash2 size={15} aria-hidden="true" />
+                        Remover
+                      </Button>
+                    ) : null}
                   </article>
                 ))}
               </div>
@@ -974,12 +1003,23 @@ export function NovaMovimentacao({
         className={`${painelMovimentacao} flex flex-wrap items-center justify-between gap-3`}
       >
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link prefetch={false} href="/movimentacoes">
-              {desconhecido ? "Consultar movimentações" : "Cancelar"}
-            </Link>
-          </Button>
-          {etapa > 1 ? (
+          {modoDetalhe ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={criacao.pending}
+              onClick={onCancelar}
+            >
+              Cancelar
+            </Button>
+          ) : (
+            <Button asChild variant="outline">
+              <Link prefetch={false} href="/movimentacoes">
+                {desconhecido ? "Consultar movimentações" : "Cancelar"}
+              </Link>
+            </Button>
+          )}
+          {etapa > (modoDetalhe ? 2 : 1) ? (
             <Button
               type="button"
               variant="outline"
@@ -1027,6 +1067,6 @@ export function NovaMovimentacao({
           </Button>
         )}
       </footer>
-    </main>
+    </Conteiner>
   );
 }

@@ -96,6 +96,7 @@ export default async function PatrimonioDetalhePage({
       }
       valores={valores}
       diretor={identidade.perfil === "DIRETOR_PATRIMONIO"}
+      usuarioId={identidade.id}
     />
   );
 }

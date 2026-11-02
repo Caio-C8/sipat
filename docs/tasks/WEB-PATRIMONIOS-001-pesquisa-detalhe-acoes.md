@@ -1,6 +1,7 @@
 # WEB-PATRIMONIOS-001 — Pesquisa, detalhe e ações patrimoniais
 
-**Status:** implementada; validação E2E Web real e revisão visual completa pendentes
+**Status:** implementada — validação E2E Web real e comparação visual completa
+com o Figma pendentes
 
 ## Objetivo
 
@@ -45,19 +46,16 @@ deliberadas registradas nesta tarefa.
 
 ## Estado confirmado
 
-- `/patrimonios` renderiza `PatrimonioTelas`, que alterna lista, detalhe e
-  relatório em memória usando `dados-exemplo.ts`; buscas, datas, usuários,
-  valores, comissões, setores e histórico são fixos.
-- Não existe rota Web `/patrimonios/[patrimonioId]` nem operação Web de baixa.
-- A API já possui listagem e detalhe de patrimônio, substituição de número,
-  movimentação, reavaliação, baixa e ficha/eventos/PDF patrimoniais.
+- `/patrimonios` e `/patrimonios/[patrimonioId]` já consomem dados reais, com
+  pesquisa, filtros, paginação, detalhe, histórico e ficha do bem.
+- Situação contábil, responsável pelo cadastro, busca de eventos e opções de
+  comissão da baixa já foram adicionados aos contratos e à API.
+- Baixa e substituição já são executadas no detalhe por diálogos reais.
+- `PatrimonioAcoes` ainda implementa “Movimentar” e “Reavaliar” como links para
+  `/movimentacoes/nova` e `/reavaliacoes/nova`. Esse comportamento diverge dos
+  frames e deve ser substituído pelos drawers definidos no Objetivo 4.
 - Movimentação, reavaliação e relatórios já possuem consumidores Web reais que
   devem ser reutilizados. Não duplicar regras, schemas ou clientes HTTP.
-- O resumo do patrimônio não expõe a situação contábil mostrada na lista; o
-  detalhe não expõe quem cadastrou o bem; a consulta de eventos não possui busca
-  textual; e a baixa não possui endpoint próprio de opções de comissão legível
-  pelo Diretor. Esses gaps impedem retirar os textos fixos sem N+1, abuso de
-  permissões ou dados inventados.
 
 ## Escopo e roadmap de execução
 
@@ -109,15 +107,35 @@ deliberadas registradas nesta tarefa.
 
 ### Objetivo 4 — Integrar as quatro ações do Diretor
 
-Usar pequenos limites Client Component para formulários e diálogos; o detalhe e
-as leituras permanecem server-first.
+Usar um pequeno limite Client Component para as ações; o detalhe e as leituras
+permanecem server-first. “Movimentar” e “Reavaliar” devem ser botões que abrem
+um drawer modal pela lateral direita da própria tela individual. Eles não podem
+navegar para as páginas gerais `/movimentacoes/nova` ou `/reavaliacoes/nova`.
+
+- Criar `apps/web/components/ui/drawer.tsx` como composição visual da primitive
+  `Dialog` do `radix-ui` já instalado, sem nova dependência. O drawer deve ter
+  overlay, título e descrição acessíveis, foco contido, fechamento por botão e
+  `Esc`, devolução do foco ao gatilho, rolagem interna e largura responsiva
+  coerente com o Figma. A [documentação oficial do Radix Dialog](https://www.radix-ui.com/primitives/docs/components/dialog)
+  é a referência de semântica e teclado.
+- Manter no máximo um drawer aberto por vez e preservar a URL
+  `/patrimonios/[patrimonioId]`. O patrimônio recebido pelo detalhe fica fixo,
+  identificado no cabeçalho do drawer e não pode ser pesquisado, removido ou
+  trocado dentro do formulário.
+- Extrair dos fluxos gerais apenas os campos e a lógica compartilháveis. As
+  páginas gerais continuam existindo para operações iniciadas fora do detalhe;
+  o drawer não deve montar a página completa nem duplicar cliente HTTP, schema
+  ou tratamento de conflito.
 
 - **Movimentação:** reutilizar operações, schemas, catálogo de opções e chave de
-  idempotência existentes, enviando um único item. A data é registrada pelo
-  servidor; não criar campo de data do cliente apenas porque aparece no frame.
+  idempotência existentes, enviando exatamente um item: o patrimônio do detalhe.
+  Origem e identificação do bem são somente leitura; destino, comissão e motivo
+  seguem o contrato existente. A data é registrada pelo servidor; não criar
+  campo de data do cliente apenas porque aparece no frame.
 - **Reavaliação:** reutilizar preview, `versaoEsperada`, chave de idempotência e
-  tratamento de conflitos existentes. Não calcular valor confirmado apenas no
-  navegador.
+  tratamento de conflitos existentes para exatamente o patrimônio do detalhe.
+  A confirmação usa o preview válido mais recente; não calcular valor confirmado
+  apenas no navegador.
 - **Baixa:** adicionar operação/hook Web para `FormData`, com JSON no campo
   `dados` e PDF opcional em `documento`, sem definir manualmente
   `Content-Type`. Exigir confirmação explícita da irreversibilidade e usar as
@@ -126,10 +144,12 @@ as leituras permanecem server-first.
   pré-condição. O servidor gera o próximo número oficial; a interface não pode
   pedir nem sugerir o número novo. Exibir a ação apenas para bem de numeração
   oficial elegível, mantendo a API como autoridade final.
-- Após sucesso, atualizar o detalhe e o histórico com `router.refresh()`, mover
-  foco para o feedback e manter mensagens de erro acionáveis. Movimentação e
-  reavaliação preservam idempotência. Baixa e substituição não recebem retry
-  automático; resultado de rede incerto exige reconciliação por nova leitura.
+- Após sucesso, fechar o drawer, atualizar detalhe e histórico com
+  `router.refresh()`, devolver o foco e anunciar o feedback na página. Durante
+  envio, impedir nova confirmação e fechamento acidental. Em resultado de rede
+  incerto, manter formulário e chave para recuperação/reenvio conforme o fluxo
+  existente. Baixa e substituição não recebem retry automático; resultado
+  incerto exige reconciliação por nova leitura.
 
 ## Fora do escopo
 
@@ -168,6 +188,10 @@ as leituras permanecem server-first.
       protegendo todas as chamadas diretas.
 - [ ] Diretor conclui movimentação, reavaliação, baixa e substituição e vê o
       resultado atualizado no detalhe/histórico.
+- [ ] “Movimentar” e “Reavaliar” abrem drawers na tela individual, não alteram a
+      URL, não permitem trocar o bem e enviam exatamente o patrimônio exibido.
+- [ ] Os drawers prendem e restauram o foco, respondem a `Esc`, possuem nome e
+      descrição acessíveis, rolagem interna e comportamento responsivo.
 - [ ] Ficha real abre na tela de relatórios e o PDF autenticado é gerado; não há
       opção HTML fictícia.
 - [ ] Baixa envia multipart corretamente, aceita um PDF opcional de até 10 MiB
@@ -206,12 +230,11 @@ abrir somente o conjunto do objetivo em execução:
    `apps/api/src/modules/relatorios/types/fonte-eventos.ts` e
    `apps/api/src/modules/baixas/`.
 2. **Pesquisa e detalhe:** `apps/web/app/(sistema)/patrimonios/page.tsx`,
+   `apps/web/app/(sistema)/patrimonios/[patrimonioId]/page.tsx`,
    `apps/web/features/patrimonios/api/server-patrimonio-operations.ts`,
    `apps/web/features/patrimonios/api/patrimonio-operations.ts`,
-   `apps/web/features/patrimonios/components/patrimonio-telas.tsx`,
-   `apps/web/features/patrimonios/components/dados-exemplo.ts` e os padrões das
-   rotas dinâmicas em `apps/web/app/(sistema)/movimentacoes/[movimentacaoId]/`
-   e `apps/web/app/(sistema)/reavaliacoes/[reavaliacaoId]/`.
+   `apps/web/features/patrimonios/components/patrimonio-lista.tsx` e
+   `apps/web/features/patrimonios/components/patrimonio-detalhe.tsx`.
 3. **Histórico e relatório:**
    `packages/contracts/src/relatorio-patrimonial/`,
    `apps/api/src/modules/relatorios/ficha.service.ts`,
@@ -220,7 +243,9 @@ abrir somente o conjunto do objetivo em execução:
    `apps/web/features/relatorios/apresentacao.tsx` e
    `apps/web/app/(sistema)/relatorios/page.tsx`.
 4. **Ações do Diretor:**
-   `apps/web/features/patrimonios/components/patrimonio-modais.tsx`,
+   `apps/web/features/patrimonios/components/patrimonio-acoes.tsx`,
+   `apps/web/features/patrimonios/components/patrimonio-detalhe.test.tsx`,
+   `apps/web/components/ui/dialog.tsx`,
    `apps/web/features/movimentacoes/api/`,
    `apps/web/features/movimentacoes/components/nova-movimentacao.tsx`,
    `apps/web/features/reavaliacoes/api/`,
@@ -253,15 +278,23 @@ abrir somente o conjunto do objetivo em execução:
 - Os contratos e a API agora expõem a situação contábil, o responsável pelo
   cadastro, busca textual de eventos e as comissões elegíveis para baixa na data
   informada.
-- As ações de movimentação e reavaliação reutilizam os fluxos existentes com o
-  patrimônio pré-selecionado. Baixa e substituição usam consumidores Web reais,
-  preservam CSRF/idempotência e não fazem retry automático de mutação.
-- Foram aprovados: 147 testes de contratos; 416 testes da API em 58 suítes; 71
-  testes Web em 17 arquivos; lint e typecheck de API e Web; builds de API e Web;
+- As ações de movimentação e reavaliação agora abrem drawers modais na própria
+  ficha, mantêm a URL e fixam o único patrimônio recebido pelo detalhe. Os
+  formulários reutilizam os fluxos gerais, inclusive catálogos, preview,
+  idempotência e conflitos, sem oferecer busca ou remoção do bem. Baixa e
+  substituição continuam usando os consumidores Web reais existentes.
+- Foram aprovados: 147 testes de contratos; 416 testes da API em 58 suítes; 74
+  testes Web em 19 arquivos; lint e typecheck de API e Web; builds de API e Web;
   e `git diff --check`. A suíte completa da API ignorou 22 suítes/132 testes que
-  dependem de infraestrutura ou flags específicas do ambiente.
+  dependem de infraestrutura ou flags específicas do ambiente. O build Web da
+  correção dos drawers foi repetido fora do sandbox após o ambiente isolado
+  impedir a criação de `apps/web/.next/server/app/api` com `EPERM`.
+- A inspeção local com a API e os dados de demonstração confirmou abertura,
+  conteúdo fixo, URL preservada, rolagem, fechamento por `Esc`, devolução do
+  foco e ausência de erros no console para os dois drawers. Nenhuma mutação foi
+  confirmada durante essa inspeção, para não alterar a base compartilhada.
 - A inspeção programática dos oito frames foi impedida pelo limite do plano do
-  conector Figma. Houve inspeção visual parcial da página `Telas PC` no aplicativo
-  desktop, sem alteração do arquivo. Permanecem pendentes a comparação visual
-  completa dos oito frames, a revisão responsiva/acessível manual e o E2E Web
-  com backend real cobrindo as quatro ações e a geração da ficha.
+  conector Figma. O aplicativo desktop também não expôs uma janela controlável
+  nesta execução. Permanecem pendentes a comparação visual completa dos oito
+  frames, a revisão manual em viewports estreita e intermediária e o E2E Web
+  com backend real confirmando as quatro ações e a geração da ficha.
