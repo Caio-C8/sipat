@@ -123,9 +123,23 @@ function hojeLocal() {
 }
 
 export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
-  const especies = useEspeciesPatrimonio();
-  const setores = useSetoresPatrimonio();
-  const processos = useProcessosCompraPatrimonio();
+  const {
+    dados: especiesDados,
+    erro: erroEspecies,
+    loading: carregandoEspecies,
+    carregar: carregarEspecies,
+  } = useEspeciesPatrimonio();
+  const {
+    dados: setoresDados,
+    erro: erroSetores,
+    loading: carregandoSetores,
+    carregar: carregarSetores,
+  } = useSetoresPatrimonio();
+  const {
+    dados: processosDados,
+    erro: erroProcessos,
+    carregar: carregarProcessos,
+  } = useProcessosCompraPatrimonio();
   const criacao = useCriarPatrimonio();
   const persistencia = usePatrimonioPendente(usuarioId);
   const [descricao, setDescricao] = useState("");
@@ -146,7 +160,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const [inicioDepreciacao, setInicioDepreciacao] = useState(hojeLocal);
   const [manterDados, setManterDados] = useState(false);
   const [pedidoPendente, setPedidoPendente] =
-    useState<CriarPatrimonioBodyData | null>(persistencia.pedido);
+    useState<CriarPatrimonioBodyData | null>(null);
   const [erro, setErro] = useState<unknown>(null);
   const [decisao, setDecisao] = useState<DecisaoIdempotencia | null>(null);
   const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
@@ -157,65 +171,67 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const envioEmCurso = useRef(false);
 
   useEffect(() => {
-    void especies.carregar();
-    void setores.carregar();
-    void processos.carregar();
-  }, [especies.carregar, setores.carregar, processos.carregar]);
-
-  useEffect(() => {
-    const pedido = persistencia.pedido;
-    if (!pedido || pedidoPendente) return;
-    setDescricao(pedido.descricao);
-    setMarca(pedido.marca ?? "");
-    setModelo(pedido.modelo ?? "");
-    setSerie(pedido.numeroSerie ?? "");
-    setEspecieId(pedido.especieId);
-    setSetorId(pedido.setorAtualId);
-    setSemNumeroOficial(pedido.semNumeroOficial);
-    setTipo(pedido.tipoIncorporacao);
-    setProcessoCompraId(pedido.processoCompraId ?? "");
-    setDataTombamento(pedido.dataTombamento);
-    setValor(pedido.valorIncorporacao.replace(".", ","));
-    setVidaUtil(String(pedido.parametrosDepreciacao.vidaUtilInicialMeses));
-    setResidualEmPercentual(
-      pedido.parametrosDepreciacao.percentualResidual !== undefined,
-    );
-    setResidual(
-      (
-        pedido.parametrosDepreciacao.percentualResidual ??
-        pedido.parametrosDepreciacao.valorResidual
-      ).replace(".", ","),
-    );
-    setInicioDepreciacao(pedido.parametrosDepreciacao.dataInicio);
-    setPedidoPendente(pedido);
-  }, [persistencia.pedido, pedidoPendente]);
+    void carregarEspecies();
+    void carregarSetores();
+    void carregarProcessos();
+  }, [carregarEspecies, carregarSetores, carregarProcessos]);
 
   useEffect(() => {
     if (erro || Object.keys(errosCampos).length) painelErro.current?.focus();
   }, [erro, errosCampos]);
 
-  const listaEspecies = especies.dados ?? [];
-  const listaSetores = setores.dados ?? [];
-  const listaProcessos = processos.dados ?? [];
-  const especie = listaEspecies.find((item) => item.id === especieId);
-  const setor = listaSetores.find((item) => item.id === setorId);
+  const pedidoAtual = pedidoPendente ?? persistencia.pedido;
+  const descricaoAtual = pedidoAtual?.descricao ?? descricao;
+  const marcaAtual = pedidoAtual?.marca ?? marca;
+  const modeloAtual = pedidoAtual?.modelo ?? modelo;
+  const serieAtual = pedidoAtual?.numeroSerie ?? serie;
+  const especieIdAtual = pedidoAtual?.especieId ?? especieId;
+  const setorIdAtual = pedidoAtual?.setorAtualId ?? setorId;
+  const semNumeroOficialAtual =
+    pedidoAtual?.semNumeroOficial ?? semNumeroOficial;
+  const tipoAtual = pedidoAtual?.tipoIncorporacao ?? tipo;
+  const processoCompraIdAtual =
+    pedidoAtual?.processoCompraId ?? processoCompraId;
+  const dataTombamentoAtual = pedidoAtual?.dataTombamento ?? dataTombamento;
+  const valorAtual = pedidoAtual
+    ? pedidoAtual.valorIncorporacao.replace(".", ",")
+    : valor;
+  const vidaUtilAtual = pedidoAtual
+    ? String(pedidoAtual.parametrosDepreciacao.vidaUtilInicialMeses)
+    : vidaUtil;
+  const residualEmPercentualAtual = pedidoAtual
+    ? pedidoAtual.parametrosDepreciacao.percentualResidual !== undefined
+    : residualEmPercentual;
+  const residualAtual = pedidoAtual
+    ? (
+        pedidoAtual.parametrosDepreciacao.percentualResidual ??
+        pedidoAtual.parametrosDepreciacao.valorResidual
+      ).replace(".", ",")
+    : residual;
+  const inicioDepreciacaoAtual =
+    pedidoAtual?.parametrosDepreciacao.dataInicio ?? inicioDepreciacao;
+  const listaEspecies = especiesDados ?? [];
+  const listaSetores = setoresDados ?? [];
+  const listaProcessos = processosDados ?? [];
+  const especie = listaEspecies.find((item) => item.id === especieIdAtual);
+  const setor = listaSetores.find((item) => item.id === setorIdAtual);
   const processoCompra = listaProcessos.find(
-    (item) => item.id === processoCompraId,
+    (item) => item.id === processoCompraIdAtual,
   );
-  const valorNumerico = numeroDecimal(valor);
-  const valorResidualNumerico = residualEmPercentual
-    ? (valorNumerico * numeroDecimal(residual)) / 100
-    : numeroDecimal(residual);
-  const vidaUtilNumerica = Number(vidaUtil);
+  const valorNumerico = numeroDecimal(valorAtual);
+  const valorResidualNumerico = residualEmPercentualAtual
+    ? (valorNumerico * numeroDecimal(residualAtual)) / 100
+    : numeroDecimal(residualAtual);
+  const vidaUtilNumerica = Number(vidaUtilAtual);
   const estimativaMensal =
     valorNumerico > valorResidualNumerico && vidaUtilNumerica > 0
       ? (valorNumerico - valorResidualNumerico) / vidaUtilNumerica
       : null;
-  const nomeResumo = descricao.split(",")[0]?.trim() || "Bem sem descrição";
-  const carregandoObrigatorios = especies.loading || setores.loading;
-  const erroObrigatorios = especies.erro !== null || setores.erro !== null;
-  const erroProcessos = processos.erro !== null;
-  const formularioBloqueado = criacao.pending || pedidoPendente !== null;
+  const nomeResumo =
+    descricaoAtual.split(",")[0]?.trim() || "Bem sem descrição";
+  const carregandoObrigatorios = carregandoEspecies || carregandoSetores;
+  const erroObrigatorios = erroEspecies !== null || erroSetores !== null;
+  const formularioBloqueado = criacao.pending || pedidoAtual !== null;
 
   function limparFormulario() {
     setDescricao("");
@@ -279,8 +295,8 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
     evento.preventDefault();
     setErrosCampos({});
     setErro(null);
-    if (pedidoPendente) {
-      void confirmar(pedidoPendente);
+    if (pedidoAtual) {
+      void confirmar(pedidoAtual);
       return;
     }
 
@@ -397,20 +413,20 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
         >
           Não foi possível carregar as espécies ou setores necessários.
           <div className="mt-2 flex gap-3">
-            {especies.erro ? (
+            {erroEspecies ? (
               <button
                 type="button"
                 className="underline"
-                onClick={() => void especies.carregar()}
+                onClick={() => void carregarEspecies()}
               >
                 Tentar espécies novamente
               </button>
             ) : null}
-            {setores.erro ? (
+            {erroSetores ? (
               <button
                 type="button"
                 className="underline"
-                onClick={() => void setores.carregar()}
+                onClick={() => void carregarSetores()}
               >
                 Tentar setores novamente
               </button>
@@ -419,7 +435,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
         </div>
       ) : null}
 
-      {erro || Object.keys(errosCampos).length || pedidoPendente ? (
+      {erro || Object.keys(errosCampos).length || pedidoAtual ? (
         <div
           ref={painelErro}
           tabIndex={-1}
@@ -445,9 +461,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   type="button"
                   className="w-fit rounded-md border border-amber-500 px-3 py-2 font-semibold disabled:opacity-60"
                   disabled={criacao.pending}
-                  onClick={() =>
-                    pedidoPendente && void confirmar(pedidoPendente)
-                  }
+                  onClick={() => pedidoAtual && void confirmar(pedidoAtual)}
                 >
                   {criacao.pending
                     ? "Enviando…"
@@ -476,16 +490,14 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   type="button"
                   className="mt-3 w-fit rounded-md border border-red-500 px-3 py-2 font-semibold disabled:opacity-60"
                   disabled={criacao.pending}
-                  onClick={() =>
-                    pedidoPendente && void confirmar(pedidoPendente)
-                  }
+                  onClick={() => pedidoAtual && void confirmar(pedidoAtual)}
                 >
                   Tentar novamente com os mesmos dados
                 </button>
               ) : null}
             </div>
           ) : null}
-          {pedidoPendente && !erro ? (
+          {pedidoAtual && !erro ? (
             <p
               role="status"
               className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
@@ -515,7 +527,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <Rotulo obrigatorio>Descrição do bem</Rotulo>
                   <input
                     className={campo}
-                    value={descricao}
+                    value={descricaoAtual}
                     required
                     maxLength={1000}
                     onChange={(e) => setDescricao(e.target.value)}
@@ -525,7 +537,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <label className="flex items-center gap-2 text-[11px] text-[#29456d]">
                     <input
                       type="checkbox"
-                      checked={semNumeroOficial}
+                      checked={semNumeroOficialAtual}
                       onChange={(e) => setSemNumeroOficial(e.target.checked)}
                     />
                     Bem sem número oficial (S/P)
@@ -535,7 +547,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     <input
                       className={bloqueado}
                       value={
-                        semNumeroOficial
+                        semNumeroOficialAtual
                           ? "Sem número oficial"
                           : "Gerado ao cadastrar"
                       }
@@ -552,7 +564,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <Rotulo>Marca</Rotulo>
                   <input
                     className={campo}
-                    value={marca}
+                    value={marcaAtual}
                     maxLength={100}
                     onChange={(e) => setMarca(e.target.value)}
                   />
@@ -561,7 +573,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <Rotulo>Modelo</Rotulo>
                   <input
                     className={campo}
-                    value={modelo}
+                    value={modeloAtual}
                     maxLength={100}
                     onChange={(e) => setModelo(e.target.value)}
                   />
@@ -570,7 +582,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <Rotulo>Número de série</Rotulo>
                   <input
                     className={campo}
-                    value={serie}
+                    value={serieAtual}
                     maxLength={100}
                     onChange={(e) => setSerie(e.target.value)}
                   />
@@ -585,11 +597,11 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <select
                     className={campo}
                     required
-                    value={especieId}
+                    value={especieIdAtual}
                     onChange={(e) => setEspecieId(e.target.value)}
                   >
                     <option value="">
-                      {especies.loading
+                      {carregandoEspecies
                         ? "Carregando…"
                         : "Selecione uma espécie"}
                     </option>
@@ -619,11 +631,11 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <select
                     className={campo}
                     required
-                    value={setorId}
+                    value={setorIdAtual}
                     onChange={(e) => setSetorId(e.target.value)}
                   >
                     <option value="">
-                      {setores.loading ? "Carregando…" : "Selecione um setor"}
+                      {carregandoSetores ? "Carregando…" : "Selecione um setor"}
                     </option>
                     {listaSetores.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -658,7 +670,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   <Rotulo obrigatorio>Tipo de tombamento</Rotulo>
                   <select
                     className={campo}
-                    value={tipo}
+                    value={tipoAtual}
                     onChange={(e) => {
                       setTipo(e.target.value as typeof tipo);
                       setProcessoCompraId("");
@@ -671,12 +683,12 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     ))}
                   </select>
                 </label>
-                {tipo === "AQUISICAO" ? (
+                {tipoAtual === "AQUISICAO" ? (
                   <label>
                     <Rotulo>Aquisição / processo de compra</Rotulo>
                     <select
                       className={campo}
-                      value={processoCompraId}
+                      value={processoCompraIdAtual}
                       onChange={(e) => setProcessoCompraId(e.target.value)}
                     >
                       <option value="">Sem processo vinculado</option>
@@ -700,7 +712,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     className={campo}
                     type="date"
                     required
-                    value={dataTombamento}
+                    value={dataTombamentoAtual}
                     onChange={(e) => setDataTombamento(e.target.value)}
                   />
                 </label>
@@ -711,7 +723,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     className={campo}
                     inputMode="decimal"
                     required
-                    value={valor}
+                    value={valorAtual}
                     onChange={(e) => setValor(e.target.value)}
                   />
                 </label>
@@ -723,11 +735,11 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     ? `Processo vinculado com ${processoCompra.quantidadeNotas} nota(s) fiscal(is).`
                     : "A vinculação de processo de compra é opcional."}
               </p>
-              {erroProcessos && tipo === "AQUISICAO" ? (
+              {erroProcessos && tipoAtual === "AQUISICAO" ? (
                 <button
                   type="button"
                   className="mt-1 text-[11px] text-[#2057d6] underline"
-                  onClick={() => void processos.carregar()}
+                  onClick={() => void carregarProcessos()}
                 >
                   Tentar carregar processos novamente
                 </button>
@@ -748,7 +760,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     min="1"
                     max="1200"
                     required
-                    value={vidaUtil}
+                    value={vidaUtilAtual}
                     onChange={(e) => setVidaUtil(e.target.value)}
                   />
                 </label>
@@ -758,16 +770,16 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     <span className="inline-flex rounded-full bg-[#f1f5f9] p-0.5">
                       <button
                         type="button"
-                        aria-pressed={!residualEmPercentual}
-                        className={`rounded-full px-2 py-1 text-[10px] ${!residualEmPercentual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
+                        aria-pressed={!residualEmPercentualAtual}
+                        className={`rounded-full px-2 py-1 text-[10px] ${!residualEmPercentualAtual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
                         onClick={() => setResidualEmPercentual(false)}
                       >
                         R$
                       </button>
                       <button
                         type="button"
-                        aria-pressed={residualEmPercentual}
-                        className={`rounded-full px-2 py-1 text-[10px] ${residualEmPercentual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
+                        aria-pressed={residualEmPercentualAtual}
+                        className={`rounded-full px-2 py-1 text-[10px] ${residualEmPercentualAtual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
                         onClick={() => setResidualEmPercentual(true)}
                       >
                         %
@@ -779,7 +791,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     className={campo}
                     inputMode="decimal"
                     required
-                    value={residual}
+                    value={residualAtual}
                     onChange={(e) => setResidual(e.target.value)}
                   />
                 </label>
@@ -789,7 +801,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     className={campo}
                     type="date"
                     required
-                    value={inicioDepreciacao}
+                    value={inicioDepreciacaoAtual}
                     onChange={(e) => setInicioDepreciacao(e.target.value)}
                   />
                 </label>
@@ -821,7 +833,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                 <div className="min-w-0">
                   <strong className="break-words text-sm">{nomeResumo}</strong>
                   <p className="text-[11px] text-[#62748e]">
-                    {[marca, modelo].filter(Boolean).join(" · ") ||
+                    {[marcaAtual, modeloAtual].filter(Boolean).join(" · ") ||
                       "Marca e modelo não informados"}
                   </p>
                 </div>
@@ -830,7 +842,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                 Número patrimonial
               </p>
               <p className="text-base font-bold">
-                {semNumeroOficial
+                {semNumeroOficialAtual
                   ? "Sem número oficial (S/P)"
                   : "Gerado ao cadastrar"}
               </p>
@@ -931,7 +943,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
           >
             {criacao.pending
               ? "Cadastrando…"
-              : pedidoPendente
+              : pedidoAtual
                 ? "Tentar novamente"
                 : "Cadastrar patrimônio"}
           </button>

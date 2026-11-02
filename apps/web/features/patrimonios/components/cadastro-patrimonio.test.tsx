@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   carregar: vi.fn(async () => undefined),
   confirmar: vi.fn(),
   salvar: vi.fn(),
+  pedido: null as unknown,
   especies: [
     {
       id: "00000000-0000-4000-8000-000000000001",
@@ -78,7 +79,10 @@ vi.mock("../api/hooks", () => ({
 }));
 
 vi.mock("../api/use-patrimonio-pendente", () => ({
-  usePatrimonioPendente: () => ({ pedido: null, salvar: mocks.salvar }),
+  usePatrimonioPendente: () => ({
+    pedido: mocks.pedido,
+    salvar: mocks.salvar,
+  }),
 }));
 
 afterEach(cleanup);
@@ -86,6 +90,7 @@ afterEach(cleanup);
 beforeEach(() => {
   mocks.confirmar.mockReset();
   mocks.salvar.mockReset();
+  mocks.pedido = null;
   mocks.confirmar.mockResolvedValue({
     dados: {
       descricao: "Notebook corporativo",
@@ -190,5 +195,55 @@ describe("CadastroPatrimonio", () => {
     expect(mocks.confirmar.mock.calls[0]![0]).toEqual(
       mocks.confirmar.mock.calls[1]![0],
     );
+  });
+
+  it("restaura os valores do pedido pendente sem alterar estado em efeito", async () => {
+    const pedido = {
+      chaveIdempotencia: "00000000-0000-4000-8000-000000000021",
+      semNumeroOficial: false,
+      dataTombamento: "2026-09-27",
+      tipoIncorporacao: "DOACAO",
+      descricao: "Notebook corporativo recuperado",
+      marca: "Dell",
+      modelo: "Latitude 3450",
+      numeroSerie: "LAT2026001",
+      valorIncorporacao: "5490.00",
+      especieId: mocks.especies[0]!.id,
+      setorAtualId: mocks.setores[0]!.id,
+      parametrosDepreciacao: {
+        metodo: "LINEAR",
+        vidaUtilInicialMeses: 60,
+        valorResidual: "549.00",
+        valorBaseInicial: "5490.00",
+        dataInicio: "2026-10-01",
+      },
+    };
+    mocks.pedido = pedido;
+    render(<CadastroPatrimonio usuarioId="usuario-teste" />);
+
+    expect(
+      (screen.getByLabelText("Descrição do bem *") as HTMLInputElement).value,
+    ).toBe(pedido.descricao);
+    expect((screen.getByLabelText("Marca") as HTMLInputElement).value).toBe(
+      "Dell",
+    );
+    expect(
+      (screen.getByLabelText("Tipo de tombamento *") as HTMLSelectElement)
+        .value,
+    ).toBe("DOACAO");
+    expect(
+      (screen.getByLabelText("Valor de incorporação (R$)") as HTMLInputElement)
+        .value,
+    ).toBe("5490,00");
+    expect(
+      screen.getByLabelText("Descrição do bem *").closest("fieldset")?.disabled,
+    ).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Patrimônio cadastrado" }),
+    ).toBeTruthy();
+    expect(mocks.confirmar).toHaveBeenCalledWith(pedido);
   });
 });
