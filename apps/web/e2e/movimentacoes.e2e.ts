@@ -413,11 +413,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       page.getByRole("heading", { name: "Resultado ainda não confirmado" }),
     ).toBeVisible();
     auxiliares(apiMock);
-    apiMock.expectGet(
-      "/patrimonios",
-      () => ({ body: paginada(bens) }),
-      2,
-    );
+    apiMock.expectGet("/patrimonios", () => ({ body: paginada(bens) }), 2);
     await page.reload();
     apiMock.expectPost("/movimentacoes", ({ body }) => {
       expect(body).toEqual(original);
