@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import {
   Check,
@@ -129,9 +135,8 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const [especieId, setEspecieId] = useState("");
   const [setorId, setSetorId] = useState("");
   const [semNumeroOficial, setSemNumeroOficial] = useState(false);
-  const [tipo, setTipo] = useState<(typeof TIPOS_INCORPORACAO)[number][0]>(
-    "AQUISICAO",
-  );
+  const [tipo, setTipo] =
+    useState<(typeof TIPOS_INCORPORACAO)[number][0]>("AQUISICAO");
   const [processoCompraId, setProcessoCompraId] = useState("");
   const [dataTombamento, setDataTombamento] = useState(hojeLocal);
   const [valor, setValor] = useState("");
@@ -145,8 +150,9 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const [erro, setErro] = useState<unknown>(null);
   const [decisao, setDecisao] = useState<DecisaoIdempotencia | null>(null);
   const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
-  const [resultado, setResultado] =
-    useState<CriarPatrimonioResponse["dados"] | null>(null);
+  const [resultado, setResultado] = useState<
+    CriarPatrimonioResponse["dados"] | null
+  >(null);
   const painelErro = useRef<HTMLDivElement>(null);
   const envioEmCurso = useRef(false);
 
@@ -175,8 +181,10 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
       pedido.parametrosDepreciacao.percentualResidual !== undefined,
     );
     setResidual(
-      (pedido.parametrosDepreciacao.percentualResidual ??
-        pedido.parametrosDepreciacao.valorResidual).replace(".", ","),
+      (
+        pedido.parametrosDepreciacao.percentualResidual ??
+        pedido.parametrosDepreciacao.valorResidual
+      ).replace(".", ","),
     );
     setInicioDepreciacao(pedido.parametrosDepreciacao.dataInicio);
     setPedidoPendente(pedido);
@@ -289,9 +297,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
       especieId,
       setorAtualId: setorId,
       processoCompraId:
-        tipo === "AQUISICAO" && processoCompraId
-          ? processoCompraId
-          : undefined,
+        tipo === "AQUISICAO" && processoCompraId ? processoCompraId : undefined,
       parametrosDepreciacao: {
         metodo: "LINEAR",
         vidaUtilInicialMeses: Number(vidaUtil),
@@ -369,52 +375,100 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
             Identifique o bem e informe sua classificação, origem e localização.
           </p>
         </div>
-        <span className="text-[11px] text-[#62748e]">* Campos obrigatórios</span>
+        <span className="text-[11px] text-[#62748e]">
+          * Campos obrigatórios
+        </span>
       </header>
 
       {resultado ? (
-        <p role="status" className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-          Patrimônio {resultado.numeroPatrimonio} cadastrado. Os dados mantidos estão prontos para o próximo bem.
+        <p
+          role="status"
+          className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900"
+        >
+          Patrimônio {resultado.numeroPatrimonio} cadastrado. Os dados mantidos
+          estão prontos para o próximo bem.
         </p>
       ) : null}
 
       {erroObrigatorios ? (
-        <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900"
+        >
           Não foi possível carregar as espécies ou setores necessários.
           <div className="mt-2 flex gap-3">
-                {especies.erro ? <button type="button" className="underline" onClick={() => void especies.carregar()}>Tentar espécies novamente</button> : null}
-                {setores.erro ? <button type="button" className="underline" onClick={() => void setores.carregar()}>Tentar setores novamente</button> : null}
+            {especies.erro ? (
+              <button
+                type="button"
+                className="underline"
+                onClick={() => void especies.carregar()}
+              >
+                Tentar espécies novamente
+              </button>
+            ) : null}
+            {setores.erro ? (
+              <button
+                type="button"
+                className="underline"
+                onClick={() => void setores.carregar()}
+              >
+                Tentar setores novamente
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
 
       {erro || Object.keys(errosCampos).length || pedidoPendente ? (
-        <div ref={painelErro} tabIndex={-1} className="grid gap-2 outline-offset-4">
+        <div
+          ref={painelErro}
+          tabIndex={-1}
+          className="grid gap-2 outline-offset-4"
+        >
           {erro && decisao && isConflitoIdempotencia(erro) ? (
             <section
               role={decisao.tipo === "ja_processada" ? "status" : "alert"}
               className="grid gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
             >
-              <p>{isApiError(erro) ? erro.message : "A confirmação anterior ainda não tem resultado conhecido."}</p>
-              {decisao.tipo === "ja_processada" ? <Link href="/patrimonios" className="underline">Consultar patrimônio</Link> : null}
+              <p>
+                {isApiError(erro)
+                  ? erro.message
+                  : "A confirmação anterior ainda não tem resultado conhecido."}
+              </p>
+              {decisao.tipo === "ja_processada" ? (
+                <Link href="/patrimonios" className="underline">
+                  Consultar patrimônio
+                </Link>
+              ) : null}
               {decisao.manterChave ? (
                 <button
                   type="button"
                   className="w-fit rounded-md border border-amber-500 px-3 py-2 font-semibold disabled:opacity-60"
                   disabled={criacao.pending}
-                  onClick={() => pedidoPendente && void confirmar(pedidoPendente)}
+                  onClick={() =>
+                    pedidoPendente && void confirmar(pedidoPendente)
+                  }
                 >
-                  {criacao.pending ? "Enviando…" : "Tentar novamente com os mesmos dados"}
+                  {criacao.pending
+                    ? "Enviando…"
+                    : "Tentar novamente com os mesmos dados"}
                 </button>
               ) : null}
             </section>
           ) : null}
           {erro && (!decisao || !isConflitoIdempotencia(erro)) ? (
-            <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">
-              {isApiError(erro) ? erro.message : "Não foi possível cadastrar o patrimônio."}
+            <div
+              role="alert"
+              className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900"
+            >
+              {isApiError(erro)
+                ? erro.message
+                : "Não foi possível cadastrar o patrimônio."}
               {isApiError(erro) && erro.erros.length ? (
                 <ul className="mt-2 list-disc pl-5">
-                  {erro.erros.map((item, indice) => <li key={`${item.campo}-${indice}`}>{item.mensagem}</li>)}
+                  {erro.erros.map((item, indice) => (
+                    <li key={`${item.campo}-${indice}`}>{item.mensagem}</li>
+                  ))}
                 </ul>
               ) : null}
               {decisao?.manterChave ? (
@@ -422,7 +476,9 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                   type="button"
                   className="mt-3 w-fit rounded-md border border-red-500 px-3 py-2 font-semibold disabled:opacity-60"
                   disabled={criacao.pending}
-                  onClick={() => pedidoPendente && void confirmar(pedidoPendente)}
+                  onClick={() =>
+                    pedidoPendente && void confirmar(pedidoPendente)
+                  }
                 >
                   Tentar novamente com os mesmos dados
                 </button>
@@ -430,39 +486,95 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
             </div>
           ) : null}
           {pedidoPendente && !erro ? (
-            <p role="status" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-              Há um cadastro anterior sem confirmação. Os campos estão bloqueados para preservar o mesmo pedido; tente novamente manualmente.
+            <p
+              role="status"
+              className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+            >
+              Há um cadastro anterior sem confirmação. Os campos estão
+              bloqueados para preservar o mesmo pedido; tente novamente
+              manualmente.
             </p>
           ) : null}
-          {Object.entries(errosCampos).map(([nome, mensagem]) => <p key={nome} className="text-xs text-red-700">{mensagem}</p>)}
+          {Object.entries(errosCampos).map(([nome, mensagem]) => (
+            <p key={nome} className="text-xs text-red-700">
+              {mensagem}
+            </p>
+          ))}
         </div>
       ) : null}
 
       <form onSubmit={enviar}>
         <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(270px,315px)]">
-          <fieldset disabled={formularioBloqueado} className="grid min-w-0 gap-3">
+          <fieldset
+            disabled={formularioBloqueado}
+            className="grid min-w-0 gap-3"
+          >
             <Secao titulo="Identificação do bem" Icone={Tag}>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_220px]">
                 <label className="block">
                   <Rotulo obrigatorio>Descrição do bem</Rotulo>
-                  <input className={campo} value={descricao} required maxLength={1000} onChange={(e) => setDescricao(e.target.value)} />
+                  <input
+                    className={campo}
+                    value={descricao}
+                    required
+                    maxLength={1000}
+                    onChange={(e) => setDescricao(e.target.value)}
+                  />
                 </label>
                 <div>
                   <label className="flex items-center gap-2 text-[11px] text-[#29456d]">
-                    <input type="checkbox" checked={semNumeroOficial} onChange={(e) => setSemNumeroOficial(e.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={semNumeroOficial}
+                      onChange={(e) => setSemNumeroOficial(e.target.checked)}
+                    />
                     Bem sem número oficial (S/P)
                   </label>
                   <label className="mt-1 block">
                     <Rotulo>Número patrimonial</Rotulo>
-                    <input className={bloqueado} value={semNumeroOficial ? "Sem número oficial" : "Gerado ao cadastrar"} readOnly />
+                    <input
+                      className={bloqueado}
+                      value={
+                        semNumeroOficial
+                          ? "Sem número oficial"
+                          : "Gerado ao cadastrar"
+                      }
+                      readOnly
+                    />
                   </label>
-                  <p className="mt-1 text-[10px] text-[#62748e]">Identificação atribuída pelo sistema.</p>
+                  <p className="mt-1 text-[10px] text-[#62748e]">
+                    Identificação atribuída pelo sistema.
+                  </p>
                 </div>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                <label><Rotulo>Marca</Rotulo><input className={campo} value={marca} maxLength={100} onChange={(e) => setMarca(e.target.value)} /></label>
-                <label><Rotulo>Modelo</Rotulo><input className={campo} value={modelo} maxLength={100} onChange={(e) => setModelo(e.target.value)} /></label>
-                <label><Rotulo>Número de série</Rotulo><input className={campo} value={serie} maxLength={100} onChange={(e) => setSerie(e.target.value)} /></label>
+                <label>
+                  <Rotulo>Marca</Rotulo>
+                  <input
+                    className={campo}
+                    value={marca}
+                    maxLength={100}
+                    onChange={(e) => setMarca(e.target.value)}
+                  />
+                </label>
+                <label>
+                  <Rotulo>Modelo</Rotulo>
+                  <input
+                    className={campo}
+                    value={modelo}
+                    maxLength={100}
+                    onChange={(e) => setModelo(e.target.value)}
+                  />
+                </label>
+                <label>
+                  <Rotulo>Número de série</Rotulo>
+                  <input
+                    className={campo}
+                    value={serie}
+                    maxLength={100}
+                    onChange={(e) => setSerie(e.target.value)}
+                  />
+                </label>
               </div>
             </Secao>
 
@@ -470,54 +582,139 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <label>
                   <Rotulo obrigatorio>Espécie</Rotulo>
-                  <select className={campo} required value={especieId} onChange={(e) => setEspecieId(e.target.value)}>
-                    <option value="">{especies.loading ? "Carregando…" : "Selecione uma espécie"}</option>
-                    {listaEspecies.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
+                  <select
+                    className={campo}
+                    required
+                    value={especieId}
+                    onChange={(e) => setEspecieId(e.target.value)}
+                  >
+                    <option value="">
+                      {especies.loading
+                        ? "Carregando…"
+                        : "Selecione uma espécie"}
+                    </option>
+                    {listaEspecies.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.nome}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
                   <Rotulo>Natureza da espécie</Rotulo>
-                  <input className={bloqueado} value={especie?.natureza.nome ?? "Definida pela espécie selecionada"} readOnly />
-                  <small className="text-[10px] text-[#62748e]">Atualizada conforme a espécie escolhida.</small>
+                  <input
+                    className={bloqueado}
+                    value={
+                      especie?.natureza.nome ??
+                      "Definida pela espécie selecionada"
+                    }
+                    readOnly
+                  />
+                  <small className="text-[10px] text-[#62748e]">
+                    Atualizada conforme a espécie escolhida.
+                  </small>
                 </label>
                 <label>
                   <Rotulo obrigatorio>Setor de destino</Rotulo>
-                  <select className={campo} required value={setorId} onChange={(e) => setSetorId(e.target.value)}>
-                    <option value="">{setores.loading ? "Carregando…" : "Selecione um setor"}</option>
-                    {listaSetores.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
+                  <select
+                    className={campo}
+                    required
+                    value={setorId}
+                    onChange={(e) => setSetorId(e.target.value)}
+                  >
+                    <option value="">
+                      {setores.loading ? "Carregando…" : "Selecione um setor"}
+                    </option>
+                    {listaSetores.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.nome}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
                   <Rotulo>Responsável do setor</Rotulo>
-                  <input className={bloqueado} value={setor?.responsavel.nome ?? "Vinculado ao setor de destino"} readOnly />
-                  <small className="text-[10px] text-[#62748e]">Atualizado conforme o setor escolhido.</small>
+                  <input
+                    className={bloqueado}
+                    value={
+                      setor?.responsavel.nome ?? "Vinculado ao setor de destino"
+                    }
+                    readOnly
+                  />
+                  <small className="text-[10px] text-[#62748e]">
+                    Atualizado conforme o setor escolhido.
+                  </small>
                 </label>
               </div>
             </Secao>
 
-            <Secao titulo="Aquisição e tombamento" Icone={FileText} detalhe="Valores em reais (R$)">
+            <Secao
+              titulo="Aquisição e tombamento"
+              Icone={FileText}
+              detalhe="Valores em reais (R$)"
+            >
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[140px_1fr_145px_145px]">
                 <label>
                   <Rotulo obrigatorio>Tipo de tombamento</Rotulo>
-                  <select className={campo} value={tipo} onChange={(e) => { setTipo(e.target.value as typeof tipo); setProcessoCompraId(""); }}>
-                    {TIPOS_INCORPORACAO.map(([valorTipo, nome]) => <option key={valorTipo} value={valorTipo}>{nome}</option>)}
+                  <select
+                    className={campo}
+                    value={tipo}
+                    onChange={(e) => {
+                      setTipo(e.target.value as typeof tipo);
+                      setProcessoCompraId("");
+                    }}
+                  >
+                    {TIPOS_INCORPORACAO.map(([valorTipo, nome]) => (
+                      <option key={valorTipo} value={valorTipo}>
+                        {nome}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 {tipo === "AQUISICAO" ? (
                   <label>
                     <Rotulo>Aquisição / processo de compra</Rotulo>
-                    <select className={campo} value={processoCompraId} onChange={(e) => setProcessoCompraId(e.target.value)}>
+                    <select
+                      className={campo}
+                      value={processoCompraId}
+                      onChange={(e) => setProcessoCompraId(e.target.value)}
+                    >
                       <option value="">Sem processo vinculado</option>
                       {listaProcessos.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {[item.numeroProcesso, item.anoProcesso].filter(Boolean).join("/") || "Processo sem número"}
+                          {[item.numeroProcesso, item.anoProcesso]
+                            .filter(Boolean)
+                            .join("/") || "Processo sem número"}
                         </option>
                       ))}
                     </select>
                   </label>
-                ) : <div className="text-[11px] text-[#62748e]">Processo de compra não se aplica a este tipo.</div>}
-                <label><Rotulo obrigatorio>Data de tombamento</Rotulo><input className={campo} type="date" required value={dataTombamento} onChange={(e) => setDataTombamento(e.target.value)} /></label>
-                <label><Rotulo obrigatorio>Valor de incorporação (R$)</Rotulo><input aria-label="Valor de incorporação (R$)" className={campo} inputMode="decimal" required value={valor} onChange={(e) => setValor(e.target.value)} /></label>
+                ) : (
+                  <div className="text-[11px] text-[#62748e]">
+                    Processo de compra não se aplica a este tipo.
+                  </div>
+                )}
+                <label>
+                  <Rotulo obrigatorio>Data de tombamento</Rotulo>
+                  <input
+                    className={campo}
+                    type="date"
+                    required
+                    value={dataTombamento}
+                    onChange={(e) => setDataTombamento(e.target.value)}
+                  />
+                </label>
+                <label>
+                  <Rotulo obrigatorio>Valor de incorporação (R$)</Rotulo>
+                  <input
+                    aria-label="Valor de incorporação (R$)"
+                    className={campo}
+                    inputMode="decimal"
+                    required
+                    value={valor}
+                    onChange={(e) => setValor(e.target.value)}
+                  />
+                </label>
               </div>
               <p className="mt-3 text-[11px] text-[#62748e]">
                 {erroProcessos
@@ -527,7 +724,11 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     : "A vinculação de processo de compra é opcional."}
               </p>
               {erroProcessos && tipo === "AQUISICAO" ? (
-                <button type="button" className="mt-1 text-[11px] text-[#2057d6] underline" onClick={() => void processos.carregar()}>
+                <button
+                  type="button"
+                  className="mt-1 text-[11px] text-[#2057d6] underline"
+                  onClick={() => void processos.carregar()}
+                >
                   Tentar carregar processos novamente
                 </button>
               ) : null}
@@ -535,25 +736,75 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
 
             <Secao titulo="Depreciação automática" Icone={TrendingDown}>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                <label><Rotulo>Método</Rotulo><input className={bloqueado} value="Linear" readOnly /></label>
-                <label><Rotulo obrigatorio>Vida útil (meses)</Rotulo><input className={campo} type="number" min="1" max="1200" required value={vidaUtil} onChange={(e) => setVidaUtil(e.target.value)} /></label>
+                <label>
+                  <Rotulo>Método</Rotulo>
+                  <input className={bloqueado} value="Linear" readOnly />
+                </label>
+                <label>
+                  <Rotulo obrigatorio>Vida útil (meses)</Rotulo>
+                  <input
+                    className={campo}
+                    type="number"
+                    min="1"
+                    max="1200"
+                    required
+                    value={vidaUtil}
+                    onChange={(e) => setVidaUtil(e.target.value)}
+                  />
+                </label>
                 <label>
                   <span className="flex items-center justify-between gap-1">
                     <Rotulo obrigatorio>Residual</Rotulo>
                     <span className="inline-flex rounded-full bg-[#f1f5f9] p-0.5">
-                      <button type="button" aria-pressed={!residualEmPercentual} className={`rounded-full px-2 py-1 text-[10px] ${!residualEmPercentual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`} onClick={() => setResidualEmPercentual(false)}>R$</button>
-                      <button type="button" aria-pressed={residualEmPercentual} className={`rounded-full px-2 py-1 text-[10px] ${residualEmPercentual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`} onClick={() => setResidualEmPercentual(true)}>%</button>
+                      <button
+                        type="button"
+                        aria-pressed={!residualEmPercentual}
+                        className={`rounded-full px-2 py-1 text-[10px] ${!residualEmPercentual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
+                        onClick={() => setResidualEmPercentual(false)}
+                      >
+                        R$
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={residualEmPercentual}
+                        className={`rounded-full px-2 py-1 text-[10px] ${residualEmPercentual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
+                        onClick={() => setResidualEmPercentual(true)}
+                      >
+                        %
+                      </button>
                     </span>
                   </span>
-                  <input aria-label="Valor residual" className={campo} inputMode="decimal" required value={residual} onChange={(e) => setResidual(e.target.value)} />
+                  <input
+                    aria-label="Valor residual"
+                    className={campo}
+                    inputMode="decimal"
+                    required
+                    value={residual}
+                    onChange={(e) => setResidual(e.target.value)}
+                  />
                 </label>
-                <label><Rotulo obrigatorio>Início da depreciação</Rotulo><input className={campo} type="date" required value={inicioDepreciacao} onChange={(e) => setInicioDepreciacao(e.target.value)} /></label>
+                <label>
+                  <Rotulo obrigatorio>Início da depreciação</Rotulo>
+                  <input
+                    className={campo}
+                    type="date"
+                    required
+                    value={inicioDepreciacao}
+                    onChange={(e) => setInicioDepreciacao(e.target.value)}
+                  />
+                </label>
                 <div>
                   <Rotulo>Estimativa mensal</Rotulo>
-                  <p className="mt-2 text-base font-bold text-[#19355d]">{estimativaMensal === null ? "Informe os valores" : formatarMoeda(estimativaMensal)}</p>
+                  <p className="mt-2 text-base font-bold text-[#19355d]">
+                    {estimativaMensal === null
+                      ? "Informe os valores"
+                      : formatarMoeda(estimativaMensal)}
+                  </p>
                 </div>
               </div>
-              <p className="mt-3 text-[11px] text-[#62748e]">Estimativa linear calculada com os valores informados.</p>
+              <p className="mt-3 text-[11px] text-[#62748e]">
+                Estimativa linear calculada com os valores informados.
+              </p>
             </Secao>
           </fieldset>
 
@@ -561,30 +812,61 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
             <section className={cartao}>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold">Resumo do cadastro</h2>
-                <span className="rounded-full bg-[#fff8e8] px-2 py-1 text-[10px] text-[#a65b0c]">Em preenchimento</span>
+                <span className="rounded-full bg-[#fff8e8] px-2 py-1 text-[10px] text-[#a65b0c]">
+                  Em preenchimento
+                </span>
               </div>
               <div className="mt-4 flex items-center gap-3 border-b border-[#dfe7f1] pb-4">
                 <Laptop aria-hidden="true" className="size-6 text-[#2860eb]" />
                 <div className="min-w-0">
                   <strong className="break-words text-sm">{nomeResumo}</strong>
-                  <p className="text-[11px] text-[#62748e]">{[marca, modelo].filter(Boolean).join(" · ") || "Marca e modelo não informados"}</p>
+                  <p className="text-[11px] text-[#62748e]">
+                    {[marca, modelo].filter(Boolean).join(" · ") ||
+                      "Marca e modelo não informados"}
+                  </p>
                 </div>
               </div>
-              <p className="mt-4 text-[10px] uppercase text-[#62748e]">Número patrimonial</p>
-              <p className="text-base font-bold">{semNumeroOficial ? "Sem número oficial (S/P)" : "Gerado ao cadastrar"}</p>
-              <p className="text-[11px] text-[#62748e]">Identificação atribuída pelo sistema.</p>
-              <p className="mt-4 text-[11px] text-[#62748e]">Espécie e natureza</p>
-              <p className="text-sm font-bold">{especie ? `${especie.nome} · ${especie.natureza.nome}` : "Não selecionada"}</p>
-              <p className="mt-3 text-[11px] text-[#62748e]">Setor de destino</p>
-              <p className="text-sm font-bold">{setor?.nome ?? "Não selecionado"}</p>
+              <p className="mt-4 text-[10px] uppercase text-[#62748e]">
+                Número patrimonial
+              </p>
+              <p className="text-base font-bold">
+                {semNumeroOficial
+                  ? "Sem número oficial (S/P)"
+                  : "Gerado ao cadastrar"}
+              </p>
+              <p className="text-[11px] text-[#62748e]">
+                Identificação atribuída pelo sistema.
+              </p>
+              <p className="mt-4 text-[11px] text-[#62748e]">
+                Espécie e natureza
+              </p>
+              <p className="text-sm font-bold">
+                {especie
+                  ? `${especie.nome} · ${especie.natureza.nome}`
+                  : "Não selecionada"}
+              </p>
+              <p className="mt-3 text-[11px] text-[#62748e]">
+                Setor de destino
+              </p>
+              <p className="text-sm font-bold">
+                {setor?.nome ?? "Não selecionado"}
+              </p>
               <div className="mt-4 rounded-lg bg-[#eef5ff] p-4">
                 <p className="text-[11px]">Valor de incorporação</p>
-                <p className="break-words text-2xl font-bold text-[#19355d]">{formatarMoeda(valorNumerico)}</p>
+                <p className="break-words text-2xl font-bold text-[#19355d]">
+                  {formatarMoeda(valorNumerico)}
+                </p>
                 <p className="text-right text-[10px] text-[#62748e]">por bem</p>
               </div>
             </section>
             <section className={cartao}>
-              <h2 className="flex items-center gap-2 text-sm font-bold"><FileText aria-hidden="true" className="size-4 text-[#2860eb]" />Documentos da aquisição</h2>
+              <h2 className="flex items-center gap-2 text-sm font-bold">
+                <FileText
+                  aria-hidden="true"
+                  className="size-4 text-[#2860eb]"
+                />
+                Documentos da aquisição
+              </h2>
               <p className="mt-3 text-xs font-bold">
                 {processoCompra
                   ? `Processo ${[processoCompra.numeroProcesso, processoCompra.anoProcesso].filter(Boolean).join("/") || "sem número"}`
@@ -599,24 +881,59 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
               </p>
               <p className="mt-3 border-t border-[#dfe7f1] pt-3 text-[11px]">
                 Valor total da aquisição{" "}
-                <strong className="float-right">{processoCompra?.valorTotal ? formatarMoeda(processoCompra.valorTotal) : "Não informado"}</strong>
+                <strong className="float-right">
+                  {processoCompra?.valorTotal
+                    ? formatarMoeda(processoCompra.valorTotal)
+                    : "Não informado"}
+                </strong>
               </p>
             </section>
             <section className="rounded-lg border border-[#d9e8ff] bg-[#eef5ff] p-4">
-              <h2 className="flex items-center gap-2 text-sm font-bold"><ClipboardCheck aria-hidden="true" className="size-4 text-[#2860eb]" />Confira antes de cadastrar</h2>
-              <p className="mt-3 text-[11px] text-[#62748e]">Revise a identificação, o setor e os valores. A API validará os vínculos e os dados contábeis antes de registrar o bem.</p>
+              <h2 className="flex items-center gap-2 text-sm font-bold">
+                <ClipboardCheck
+                  aria-hidden="true"
+                  className="size-4 text-[#2860eb]"
+                />
+                Confira antes de cadastrar
+              </h2>
+              <p className="mt-3 text-[11px] text-[#62748e]">
+                Revise a identificação, o setor e os valores. A API validará os
+                vínculos e os dados contábeis antes de registrar o bem.
+              </p>
             </section>
           </aside>
         </div>
 
         <footer className={`${cartao} mt-3 flex flex-wrap items-center gap-3`}>
-          <Link href="/patrimonios" className="rounded-md border border-[#dfe7f1] px-4 py-2 text-xs font-semibold">Cancelar</Link>
+          <Link
+            href="/patrimonios"
+            className="rounded-md border border-[#dfe7f1] px-4 py-2 text-xs font-semibold"
+          >
+            Cancelar
+          </Link>
           <label className="mr-auto flex items-center gap-2 text-[11px]">
-            <input type="checkbox" checked={manterDados} disabled={formularioBloqueado} onChange={(e) => setManterDados(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={manterDados}
+              disabled={formularioBloqueado}
+              onChange={(e) => setManterDados(e.target.checked)}
+            />
             Manter dados para cadastrar outro bem
           </label>
-          <button type="submit" className="rounded-md bg-[#19355d] px-5 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={criacao.pending || carregandoObrigatorios || Boolean(erroObrigatorios)}>
-            {criacao.pending ? "Cadastrando…" : pedidoPendente ? "Tentar novamente" : "Cadastrar patrimônio"}
+          <button
+            type="submit"
+            className="rounded-md bg-[#19355d] px-5 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={
+              criacao.pending ||
+              carregandoObrigatorios ||
+              Boolean(erroObrigatorios)
+            }
+          >
+            {criacao.pending
+              ? "Cadastrando…"
+              : pedidoPendente
+                ? "Tentar novamente"
+                : "Cadastrar patrimônio"}
           </button>
         </footer>
       </form>

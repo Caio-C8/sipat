@@ -12,24 +12,36 @@ const mocks = vi.hoisted(() => ({
     {
       id: "00000000-0000-4000-8000-000000000001",
       nome: "Notebooks",
-      natureza: { id: "00000000-0000-4000-8000-000000000011", nome: "Bens móveis" },
+      natureza: {
+        id: "00000000-0000-4000-8000-000000000011",
+        nome: "Bens móveis",
+      },
     },
     {
       id: "00000000-0000-4000-8000-000000000002",
       nome: "Imóveis",
-      natureza: { id: "00000000-0000-4000-8000-000000000012", nome: "Bens imóveis" },
+      natureza: {
+        id: "00000000-0000-4000-8000-000000000012",
+        nome: "Bens imóveis",
+      },
     },
   ],
   setores: [
     {
       id: "00000000-0000-4000-8000-000000000003",
       nome: "Tecnologia da Informação",
-      responsavel: { id: "00000000-0000-4000-8000-000000000013", nome: "Paulo Caixeta" },
+      responsavel: {
+        id: "00000000-0000-4000-8000-000000000013",
+        nome: "Paulo Caixeta",
+      },
     },
     {
       id: "00000000-0000-4000-8000-000000000004",
       nome: "Administrativo",
-      responsavel: { id: "00000000-0000-4000-8000-000000000014", nome: "Ana Oliveira" },
+      responsavel: {
+        id: "00000000-0000-4000-8000-000000000014",
+        nome: "Ana Oliveira",
+      },
     },
   ],
   processos: [
@@ -44,9 +56,24 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../api/hooks", () => ({
-  useEspeciesPatrimonio: () => ({ dados: mocks.especies, erro: null, loading: false, carregar: mocks.carregar }),
-  useSetoresPatrimonio: () => ({ dados: mocks.setores, erro: null, loading: false, carregar: mocks.carregar }),
-  useProcessosCompraPatrimonio: () => ({ dados: mocks.processos, erro: null, loading: false, carregar: mocks.carregar }),
+  useEspeciesPatrimonio: () => ({
+    dados: mocks.especies,
+    erro: null,
+    loading: false,
+    carregar: mocks.carregar,
+  }),
+  useSetoresPatrimonio: () => ({
+    dados: mocks.setores,
+    erro: null,
+    loading: false,
+    carregar: mocks.carregar,
+  }),
+  useProcessosCompraPatrimonio: () => ({
+    dados: mocks.processos,
+    erro: null,
+    loading: false,
+    carregar: mocks.carregar,
+  }),
   useCriarPatrimonio: () => ({ pending: false, confirmar: mocks.confirmar }),
 }));
 
@@ -106,10 +133,17 @@ describe("CadastroPatrimonio", () => {
       target: { value: "600,00" },
     });
 
-    expect((screen.getByLabelText("Valor de incorporação (R$)") as HTMLInputElement).value).toBe("6.000,00");
-    expect((screen.getByLabelText("Valor residual") as HTMLInputElement).value).toBe("600,00");
+    expect(
+      (screen.getByLabelText("Valor de incorporação (R$)") as HTMLInputElement)
+        .value,
+    ).toBe("6.000,00");
+    expect(
+      (screen.getByLabelText("Valor residual") as HTMLInputElement).value,
+    ).toBe("600,00");
     expect(screen.getByText(/90,00/)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Cadastrar patrimônio" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Cadastrar patrimônio" }),
+    );
 
     expect(mocks.confirmar).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -140,7 +174,9 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText("Valor residual"), {
       target: { value: "100,00" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Cadastrar patrimônio" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Cadastrar patrimônio" }),
+    );
 
     const retry = await screen.findByRole("button", {
       name: "Tentar novamente com os mesmos dados",
@@ -155,5 +191,4 @@ describe("CadastroPatrimonio", () => {
       mocks.confirmar.mock.calls[1]![0],
     );
   });
-
 });
