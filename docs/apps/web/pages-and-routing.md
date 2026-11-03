@@ -13,6 +13,13 @@ A aplicação Web do SIPAT expõe:
 - `/senha-atualizada`: confirmação protegida após a troca;
 - `/dashboard`: visão geral protegida com totais patrimoniais para os dois
   perfis;
+- `/cadastros`: processos de compra e notas fiscais integrados para consulta
+  e edição; o Administrador também pode incluir notas novas;
+- `/cadastros/especies`, `/cadastros/naturezas`, `/cadastros/comissoes` e
+  `/cadastros/responsaveis`: gestão administrativa integrada;
+- `/cadastros/setores`, `/cadastros/setores/novo` e
+  `/cadastros/setores/[setorId]`: consulta, criação, edição, situação e bens
+  vinculados reais, sob a proteção administrativa existente;
 - `/movimentacoes` e `/movimentacoes/[movimentacaoId]`: consulta para ambos os perfis;
 - `/movimentacoes/nova`: registro em três etapas somente pelo diretor;
 - `/api/health`: health check da camada Web;
@@ -23,6 +30,14 @@ pelo endpoint `/auth/me` nas fronteiras Server. O grupo não altera a URL e
 compartilha o shell das páginas autenticadas; formulários, menus e logout ficam
 em pequenas fronteiras Client. O dashboard faz leituras paralelas no servidor;
 movimentações acrescenta consulta/detalhe Server e formulário Client integrado.
+
+Nos cadastros em lista e formulário, `id` seleciona o registro e `busca` e
+`pagina` representam a consulta na URL. Setores usam rota individual e
+`paginaBens` para paginar os patrimônios vinculados. As leituras Server
+encaminham o cookie por requisição e desabilitam cache; os formulários usam
+operações e hooks específicos com CSRF. Campos ilustrativos sem contrato,
+como códigos NAT/ESP/COM e cargo/e-mail de responsável, não são enviados nem
+simulados como dados persistidos.
 
 ## Matriz aprovada para WEB-AUTH-001
 

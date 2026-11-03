@@ -93,6 +93,49 @@ const server = createServer((request, response) => {
 
   if (
     request.method === "GET" &&
+    /^\/api\/(?:processos-compra|naturezas|especies|comissoes|responsaveis|setores|fornecedores)$/.test(
+      requestUrl.pathname,
+    )
+  ) {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (!session || session === "pending") {
+      json(response, 401, {
+        status: 401,
+        sucesso: false,
+        codigo: "NAO_AUTENTICADO",
+        mensagem: "Autenticação necessária.",
+        erros: [],
+      });
+      return;
+    }
+    if (request.headers.cookie?.includes("sipat_cadastros_scenario=error")) {
+      json(response, 503, {
+        status: 503,
+        sucesso: false,
+        codigo: "INDISPONIVEL",
+        mensagem: "Consulta temporariamente indisponível.",
+        erros: [],
+        requisicaoId: "cadastros-e2e",
+      });
+      return;
+    }
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Cadastros consultados.",
+      dados: [],
+      meta: {
+        total: 0,
+        pagina: Number(requestUrl.searchParams.get("pagina") ?? 1),
+        limite: Number(requestUrl.searchParams.get("limite") ?? 20),
+        ultimaPagina: 1,
+      },
+    });
+    return;
+  }
+
+  if (
+    request.method === "GET" &&
     /^\/api\/movimentacoes(?:\/|$)/.test(requestUrl.pathname)
   ) {
     const session = sessionFromCookie(request.headers.cookie);
