@@ -11,8 +11,8 @@ A aplicação Web do SIPAT expõe:
 - `/recuperacao-concluida`: confirmação pública sem dado sensível;
 - `/redefinir-senha`: conclusão protegida do primeiro acesso;
 - `/senha-atualizada`: confirmação protegida após a troca;
-- `/dashboard`: visão geral protegida com totais patrimoniais para os dois
-  perfis;
+- `/dashboard`: visão geral protegida com totais, pendências, setores e atividades
+  patrimoniais para os dois perfis;
 - `/cadastros`: processos de compra e notas fiscais integrados para consulta
   e edição; o Administrador também pode incluir notas novas;
 - `/cadastros/especies`, `/cadastros/naturezas`, `/cadastros/comissoes` e
@@ -28,7 +28,7 @@ A aplicação Web do SIPAT expõe:
 As páginas de autenticação e o layout do grupo `(sistema)` validam a identidade
 pelo endpoint `/auth/me` nas fronteiras Server. O grupo não altera a URL e
 compartilha o shell das páginas autenticadas; formulários, menus e logout ficam
-em pequenas fronteiras Client. O dashboard faz leituras paralelas no servidor;
+em pequenas fronteiras Client. O dashboard faz uma leitura agregada no servidor;
 movimentações acrescenta consulta/detalhe Server e formulário Client integrado.
 
 Nos cadastros em lista e formulário, `id` seleciona o registro e `busca` e

@@ -20,9 +20,11 @@ fronteiras entre UI, contratos e integração HTTP.
   O cadastro de patrimônio não faz parte dessa integração.
 
 - `/` apresenta o catálogo público de páginas, acessos e endpoints técnicos;
-- `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
-  reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
-  blocos ainda sem integração;
+- `/dashboard` usa `GET /patrimonios/dashboard` para os totais por situação,
+  correções de inventário pendentes (incluindo localizações posteriores), bens
+  em manutenção, os quatro setores com mais bens (incluindo baixados) e os três
+  registros patrimoniais mais recentes. Os atalhos respeitam o perfil e
+  inventários abre a consulta em Relatórios;
 - `/patrimonios` e seu detalhe oferecem pesquisa, histórico, ficha PDF e as
   quatro ações reais do Diretor; movimentação e reavaliação mantêm o bem fixo
   em drawers laterais da própria ficha;
@@ -75,8 +77,6 @@ fronteiras entre UI, contratos e integração HTTP.
 geral ilustrativa para `/dashboard`, protegida para os dois perfis.
 `WEB-SHELL-001` moveu a proteção e a composição visual das páginas autenticadas
 para o layout do grupo `(sistema)` sem alterar a URL pública.
-`WEB-DASHBOARD-001` substituiu os dados ilustrativos pelos totais reais geral e
-por status, mantendo indisponíveis os blocos que ainda não possuem contrato.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
 ainda não possuem consumidor Web. Login, logout, primeiro acesso e consumo de

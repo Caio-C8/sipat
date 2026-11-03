@@ -15,7 +15,7 @@ const identidade = {
 afterEach(cleanup);
 
 describe("HomeDashboard", () => {
-  it("exibe totais reais, data sem hidratação e estados não implementados", () => {
+  it("exibe totais reais, data sem hidratação e pendências, setores e atividades", () => {
     render(
       <HomeDashboard
         identidade={identidade}
@@ -23,6 +23,22 @@ describe("HomeDashboard", () => {
         resumoPatrimonial={{
           status: "sucesso",
           dados: {
+            correcoesPendentes: 4,
+            setores: [
+              {
+                id: "7041c62b-5f83-432c-a178-889977d839b1",
+                nome: "Administrativo",
+                total: 32,
+              },
+            ],
+            atividades: [
+              {
+                patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
+                numero: "00000001",
+                titulo: "Retorno de manutenção",
+                registradoEm: "2026-09-21T15:00:00.000Z",
+              },
+            ],
             total: 32,
             porStatus: {
               ATIVO: 28,
@@ -45,25 +61,34 @@ describe("HomeDashboard", () => {
         .closest("time")
         ?.getAttribute("datetime"),
     ).toBe("2026-09-23");
+    expect(screen.getByText(/correções de inventário pendentes/)).toBeTruthy();
     expect(
-      screen.getAllByText(
-        "Dados ainda não disponíveis — integração não implementada",
-      ),
-    ).toHaveLength(3);
-    expect(screen.getAllByRole("button", { name: /Em breve/ })).toHaveLength(6);
-    for (const action of screen.getAllByRole("button", { name: /Em breve/ })) {
-      expect((action as HTMLButtonElement).disabled).toBe(true);
-    }
+      screen.getByRole("link", { name: /Administrativo/ }).getAttribute("href"),
+    ).toContain("setorId=");
+    expect(
+      screen
+        .getByRole("link", { name: /Retorno de manutenção/ })
+        .getAttribute("href"),
+    ).toContain("/patrimonios/");
+    expect(screen.queryByRole("link", { name: "Cadastrar bem" })).toBeNull();
+    expect(
+      screen
+        .getByRole("link", { name: "Relatório de inventário" })
+        .getAttribute("href"),
+    ).toBe("/relatorios?tipo=inventarios");
     expect(screen.queryByText(/dados ilustrativos/i)).toBeNull();
   });
 
   it("trata zero como resultado válido", () => {
     render(
       <HomeDashboard
-        identidade={identidade}
+        identidade={{ ...identidade, perfil: "DIRETOR_PATRIMONIO" }}
         resumoPatrimonial={{
           status: "sucesso",
           dados: {
+            correcoesPendentes: 0,
+            setores: [],
+            atividades: [],
             total: 0,
             porStatus: {
               ATIVO: 0,
@@ -77,6 +102,12 @@ describe("HomeDashboard", () => {
     );
 
     expect(screen.getByText("Nenhum patrimônio cadastrado.")).toBeTruthy();
+    expect(screen.getByText("Nenhuma atividade registrada.")).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "Movimentar bens" })
+        .getAttribute("href"),
+    ).toBe("/movimentacoes/nova");
     expect(screen.queryByRole("alert")).toBeNull();
   });
 

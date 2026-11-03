@@ -26,6 +26,10 @@ import type {
 export class PatrimoniosService {
   constructor(private readonly patrimonios: PatrimoniosRepository) {}
 
+  obterDashboard() {
+    return this.patrimonios.obterDashboard();
+  }
+
   async criar(
     dados: CriarPatrimonioBodyData,
     identidade: IdentidadeAutenticada,
