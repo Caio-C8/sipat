@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   ArrowLeftRight,
   Box,
@@ -22,16 +23,38 @@ type EstadoResumoPatrimonial =
   | Readonly<{ status: "erro" }>;
 
 const quickActions = [
-  { label: "Cadastrar bem", icon: Plus },
-  { label: "Pesquisar bem", icon: Search },
-  { label: "Movimentar bens", icon: ArrowLeftRight },
-  { label: "Manutenção", icon: Wrench },
-  { label: "Inventário", icon: ClipboardList },
-  { label: "Relatórios", icon: ChartNoAxesColumn },
+  {
+    label: "Cadastrar bem",
+    icon: Plus,
+    href: "/patrimonios/novo",
+    diretor: true,
+  },
+  {
+    label: "Pesquisar bem",
+    icon: Search,
+    href: "/patrimonios",
+    diretor: false,
+  },
+  {
+    label: "Movimentar bens",
+    icon: ArrowLeftRight,
+    href: "/movimentacoes/nova",
+    diretor: true,
+  },
+  { label: "Manutenção", icon: Wrench, href: "/manutencoes", diretor: false },
+  {
+    label: "Relatório de inventário",
+    icon: ClipboardList,
+    href: "/relatorios?tipo=inventarios",
+    diretor: false,
+  },
+  {
+    label: "Relatórios",
+    icon: ChartNoAxesColumn,
+    href: "/relatorios",
+    diretor: false,
+  },
 ] as const;
-
-const MENSAGEM_NAO_IMPLEMENTADO =
-  "Dados ainda não disponíveis — integração não implementada";
 
 const summaryToneClasses = {
   blue: "bg-[#eff5ff] text-[#2864f0]",
@@ -81,15 +104,6 @@ function criarGradienteSituacoes(
   });
 
   return `conic-gradient(${intervalos.join(", ")})`;
-}
-
-function EstadoNaoImplementado() {
-  return (
-    <div className="flex min-h-24 items-center justify-center gap-2 rounded-lg border border-dashed border-[#cbd7e6] bg-[#f8fafc] p-4 text-center text-[10px] text-[#526984] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
-      <Info size={18} aria-hidden="true" />
-      <p className="m-0">{MENSAGEM_NAO_IMPLEMENTADO}</p>
-    </div>
-  );
 }
 
 export function HomeDashboard({
@@ -257,7 +271,45 @@ export function HomeDashboard({
               </p>
             </div>
           </div>
-          <EstadoNaoImplementado />
+          {dados ? (
+            <ul className="grid gap-2 text-xs">
+              {dados.correcoesPendentes > 0 && (
+                <li className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-amber-50 p-3">
+                  <span>
+                    <strong>{dados.correcoesPendentes}</strong>{" "}
+                    {dados.correcoesPendentes === 1
+                      ? "correção de inventário pendente"
+                      : "correções de inventário pendentes"}
+                  </span>
+                  <Link
+                    className="font-semibold underline"
+                    href="/relatorios?tipo=inventarios"
+                  >
+                    Consultar inventários
+                  </Link>
+                </li>
+              )}
+              {dados.porStatus.EM_MANUTENCAO > 0 && (
+                <li className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-blue-50 p-3">
+                  <span>
+                    <strong>{dados.porStatus.EM_MANUTENCAO}</strong>{" "}
+                    {dados.porStatus.EM_MANUTENCAO === 1
+                      ? "bem em manutenção"
+                      : "bens em manutenção"}
+                  </span>
+                  <Link className="font-semibold underline" href="/manutencoes">
+                    Acompanhar manutenção
+                  </Link>
+                </li>
+              )}
+              {dados.correcoesPendentes === 0 &&
+                dados.porStatus.EM_MANUTENCAO === 0 && (
+                  <li>Nenhuma pendência de inventário ou manutenção.</li>
+                )}
+            </ul>
+          ) : (
+            <p>Não foi possível consultar as pendências.</p>
+          )}
         </section>
 
         <section
@@ -348,11 +400,42 @@ export function HomeDashboard({
                 Bens por setor
               </h2>
               <p className="mt-0.5 text-[9px] text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
-                Distribuição dos bens entre os setores.
+                Até quatro setores com mais bens, incluindo baixados.
               </p>
             </div>
           </div>
-          <EstadoNaoImplementado />
+          {dados ? (
+            dados.setores.length ? (
+              <ul className="grid gap-2 text-xs">
+                {dados.setores.map((setor, i) => (
+                  <li key={setor.id}>
+                    <Link
+                      href={`/patrimonios?setorId=${setor.id}`}
+                      className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-center gap-3 hover:underline"
+                    >
+                      <span className="break-words">{setor.nome}</span>
+                      <span
+                        aria-hidden="true"
+                        className="h-2 rounded bg-slate-100"
+                      >
+                        <span
+                          className={`block h-full rounded ${["bg-blue-600", "bg-teal-600", "bg-violet-500", "bg-amber-500"][i]}`}
+                          style={{
+                            width: `${(setor.total / dados.setores[0]!.total) * 100}%`,
+                          }}
+                        />
+                      </span>
+                      <strong>{setor.total}</strong>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Nenhum setor com bens cadastrados.</p>
+            )
+          ) : (
+            <p>Não foi possível consultar os setores.</p>
+          )}
         </section>
 
         <section
@@ -375,7 +458,39 @@ export function HomeDashboard({
               </p>
             </div>
           </div>
-          <EstadoNaoImplementado />
+          {dados ? (
+            dados.atividades.length ? (
+              <ol className="grid divide-y divide-slate-100 text-xs">
+                {dados.atividades.map((atividade, i) => (
+                  <li key={i}>
+                    <Link
+                      className="flex items-center gap-3 py-2 hover:underline"
+                      href={`/patrimonios/${atividade.patrimonioId}`}
+                    >
+                      <time
+                        className="text-slate-600"
+                        dateTime={atividade.registradoEm}
+                      >
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          timeZone: "America/Sao_Paulo",
+                        }).format(new Date(atividade.registradoEm))}
+                      </time>
+                      <span>
+                        <strong className="block">{atividade.titulo}</strong>Bem{" "}
+                        {atividade.numero}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p>Nenhuma atividade registrada.</p>
+            )
+          ) : (
+            <p>Não foi possível consultar as atividades.</p>
+          )}
         </section>
       </div>
 
@@ -390,20 +505,21 @@ export function HomeDashboard({
           Ações rápidas
         </h2>
         <div className="mt-2 grid grid-cols-1 gap-2.5 min-[421px]:grid-cols-2 min-[651px]:grid-cols-3 min-[1101px]:grid-cols-6 min-[1500px]:mt-3.5 min-[1500px]:gap-3.5">
-          {quickActions.map(({ label, icon: Icon }) => (
-            <button
-              className="flex min-h-[29px] min-w-0 cursor-not-allowed items-center gap-2 rounded-md border border-[#dfe7f1] bg-[#f8fafc] px-2.5 py-1 text-left text-[9px] font-bold whitespace-nowrap text-[#24466e] opacity-100 max-[1100px]:text-[11px] min-[1500px]:min-h-10 min-[1500px]:px-[13px] min-[1500px]:py-2 min-[1500px]:text-[11px]"
-              key={label}
-              type="button"
-              disabled
-            >
-              <Icon className="shrink-0" size={17} aria-hidden="true" />
-              <span>{label}</span>
-              <small className="ml-auto rounded-full bg-[#e7edf5] px-1.5 py-0.5 text-[8px] font-bold text-[#526984]">
-                Em breve
-              </small>
-            </button>
-          ))}
+          {quickActions
+            .filter(
+              (acao) =>
+                !acao.diretor || identidade.perfil === "DIRETOR_PATRIMONIO",
+            )
+            .map(({ label, icon: Icon, href }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex min-h-10 items-center gap-2 rounded-md border border-[#dfe7f1] px-3 text-xs font-semibold text-[#24466e] hover:bg-blue-50"
+              >
+                <Icon size={16} aria-hidden="true" />
+                {label}
+              </Link>
+            ))}
         </div>
       </section>
 

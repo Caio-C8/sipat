@@ -3,7 +3,7 @@
 ## Estado operacional
 
 A Web do SIPAT possui um catálogo público em `/`, a visão geral protegida e
-integrada aos totais patrimoniais em `/dashboard`, shell autenticado
+integrada a totais, pendências, setores e atividades em `/dashboard`, shell autenticado
 compartilhado e filtrado por perfil, fluxo funcional de login e primeiro
 acesso, health check, proxy para a API, clientes HTTP, configuração pública,
 segurança, observabilidade, primitives visuais e testes de infraestrutura,

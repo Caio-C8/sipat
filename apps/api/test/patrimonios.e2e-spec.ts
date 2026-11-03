@@ -4,6 +4,7 @@ import {
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
   CriarPatrimonioResponseSchema,
+  DashboardPatrimonialResponseSchema,
   ListarPatrimoniosResponseSchema,
   RespostaErroSchema,
   SubstituirNumeroPatrimonialResponseSchema,
@@ -281,6 +282,34 @@ describe("patrimônios", () => {
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1");
   }
+
+  it("protege o dashboard e entrega o mesmo contrato aos dois perfis", async () => {
+    const rota = "/api/patrimonios/dashboard";
+    await request(app.getHttpServer()).get(rota).expect(401);
+    const dados = {
+      total: 1,
+      porStatus: { ATIVO: 1, BAIXADO: 0, EMPRESTADO: 0, EM_MANUTENCAO: 0 },
+      correcoesPendentes: 1,
+      setores: [{ id: SETOR_ID, nome: "Administrativo", total: 1 }],
+      atividades: [
+        {
+          patrimonioId: PATRIMONIO_ID,
+          numero: "1",
+          titulo: "Patrimônio cadastrado",
+          registradoEm: "2026-09-23T15:00:00.000Z",
+        },
+      ],
+    };
+    for (const token of [tokenAdministrador, tokenDiretor]) {
+      database.$queryRaw.mockResolvedValueOnce([{ dados }]);
+      const response = await getAutenticado(token, rota)
+        .expect(200)
+        .expect("Cache-Control", "private, no-store");
+      expect(
+        DashboardPatrimonialResponseSchema.parse(response.body).dados,
+      ).toEqual(dados);
+    }
+  });
 
   it("protege consultas e permite os dois perfis autenticados", async () => {
     const anonimo = await request(app.getHttpServer()).get("/api/patrimonios");
