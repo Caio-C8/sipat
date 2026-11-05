@@ -13,6 +13,8 @@ A aplicação Web do SIPAT expõe:
 - `/senha-atualizada`: confirmação protegida após a troca;
 - `/dashboard`: visão geral protegida com totais, pendências, setores e atividades
   patrimoniais para os dois perfis;
+- `/depreciacao`: consulta paginada da competência atual e execução individual
+  ou em lote, exclusiva do Diretor de Patrimônio;
 - `/cadastros`: processos de compra e notas fiscais integrados para consulta
   e edição; o Administrador também pode incluir notas novas;
 - `/cadastros/especies`, `/cadastros/naturezas`, `/cadastros/comissoes` e
