@@ -33,8 +33,8 @@ No estado atual:
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- existem operações tipadas de autenticação, patrimônio, movimentações, manutenções
-  e cadastros;
+- existem operações tipadas de autenticação, patrimônio, movimentações,
+  manutenções, cadastros e depreciações;
   movimentações usa hooks específicos por operação, estado local e URL, sem cache remoto;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
@@ -94,6 +94,12 @@ confirmação manual. `OPERACAO_JA_PROCESSADA` continua sendo conflito visível,
 atualiza apenas a leitura relacionada e oferece a navegação existente, sem
 replay de sucesso, polling ou retry automático. Consulte
 [WEB-IDEMPOTENCIA-001](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
+
+`/depreciacao` consulta `GET /depreciacoes/pendentes` no Server com competência
+corrente, paginação, cookie encaminhado e cache desabilitado. A comissão
+vigente vem do endpoint existente de opções da reavaliação. As execuções
+individual e em lote validam contratos compartilhados, enviam CSRF e não
+repetem automaticamente uma mutação cujo resultado não foi confirmado.
 
 ## Transporte HTTP
 

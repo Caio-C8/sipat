@@ -60,6 +60,22 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
     operacoes: { GET: "movimentacoes.listar", POST: "movimentacoes.criar" },
   },
   {
+    pattern: /^\/depreciacoes\/pendentes$/,
+    operacoes: { GET: "depreciacoes.pendentes" },
+  },
+  {
+    pattern: /^\/depreciacoes$/,
+    operacoes: { POST: "depreciacoes.executar_lote" },
+  },
+  {
+    pattern: /^\/patrimonios\/[^/]+\/depreciacoes$/,
+    operacoes: { POST: "depreciacoes.executar_individual" },
+  },
+  {
+    pattern: /^\/reavaliacoes\/opcoes\/comissoes$/,
+    operacoes: { GET: "reavaliacoes.opcoes_comissoes" },
+  },
+  {
     pattern: /^\/movimentacoes\/opcoes\/setores$/,
     operacoes: { GET: "movimentacoes.opcoes_setores" },
   },

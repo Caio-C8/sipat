@@ -118,6 +118,16 @@ A Web não substitui a autorização da API. Antes de `WEB-AUTH-001`, a gestão 
 usuários poderá ser validada com mocks estritos e testes controlados, mas não
 deve ser apresentada como fluxo operacional concluído.
 
+### WEB-DEPRECIACOES-001 — Interface de processamento
+
+**Status:** em execução; branch `codex/depreciacao-web`.
+
+Integra a consulta dos bens elegíveis da competência atual e as execuções
+individual e em lote para o Diretor de Patrimônio, usando os endpoints e
+contratos já existentes. A lista detalhada de bens no valor residual e o
+histórico de processamentos ficam fora desta entrega, pois não possuem
+consultas correspondentes na API. [Escopo e aceite](../../tasks/WEB-DEPRECIACOES-001-interface-processamento.md).
+
 ### WEB-SHELL-001 — Padronizar o shell autenticado por perfil
 
 **Status:** implementado em 26 de outubro de 2026.

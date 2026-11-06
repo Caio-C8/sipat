@@ -18,6 +18,7 @@ describe("catálogo de navegação do sistema", () => {
       "/emprestimos",
       "/manutencoes",
       "/reavaliacoes",
+      "/depreciacao",
       "/relatorios",
       "/cadastros/responsaveis",
       "/cadastros/setores",

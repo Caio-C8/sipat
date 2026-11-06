@@ -147,7 +147,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: TrendingDown,
     grupo: "principal",
     perfis: APENAS_DIRETOR,
-    implementado: false,
+    implementado: true,
+    href: "/depreciacao",
+    breadcrumb: ["Depreciação", "Processamento"],
   },
   {
     id: "baixa-estorno",
