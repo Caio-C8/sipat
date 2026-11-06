@@ -21,30 +21,21 @@ import {
   SubstituirNumeroPatrimonialResponseSchema,
   VALOR_CABECALHO_CSRF,
   type BaixarPatrimonioDadosInput,
-  type CriarPatrimonioBodyInput,
-  type ListarEspeciesQueryInput,
+  DashboardPatrimonialResponseSchema,
   type ListarPatrimoniosQueryInput,
   type ListarProcessosCompraQueryInput,
   type ListarSetoresQueryInput,
   type ListarPatrimoniosResponse,
-  type StatusPatrimonio,
+  type ResumoPatrimonialDashboard,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
 
-export type ResumoPatrimonialDashboard = Readonly<{
-  total: number;
-  porStatus: Readonly<Record<StatusPatrimonio, number>>;
-}>;
+export type { ResumoPatrimonialDashboard } from "@repo/contracts";
 
 type OpcoesListagem = Readonly<{
   cookie?: string;
   signal?: AbortSignal;
 }>;
-
-const CONSULTA_CONTAGEM = {
-  pagina: "1",
-  limite: "1",
-} as const;
 
 export function criarOperacoesPatrimonios(apiClient: ApiClient) {
   async function listar(
@@ -67,24 +58,14 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
   async function obterResumoDashboard(
     cookie: string,
   ): Promise<ResumoPatrimonialDashboard> {
-    const [geral, ...respostasPorStatus] = await Promise.all([
-      listar(CONSULTA_CONTAGEM, { cookie }),
-      ...STATUS_PATRIMONIO.map((status) =>
-        listar({ ...CONSULTA_CONTAGEM, status }, { cookie }),
-      ),
-    ]);
-
-    const porStatus = Object.fromEntries(
-      STATUS_PATRIMONIO.map((status, indice) => [
-        status,
-        respostasPorStatus[indice]!.meta.total,
-      ]),
-    ) as Record<StatusPatrimonio, number>;
-
-    return {
-      total: geral.meta.total,
-      porStatus,
-    };
+    const resposta = await apiClient.request({
+      path: "/patrimonios/dashboard",
+      method: "GET",
+      headers: { Cookie: cookie },
+      cache: "no-store",
+      responseSchema: DashboardPatrimonialResponseSchema,
+    });
+    return resposta.dados;
   }
 
   async function consultar(

@@ -72,6 +72,10 @@ const ROTAS_OBSERVAVEIS: readonly RotaObservavel[] = [
     operacoes: { GET: "movimentacoes.consultar" },
   },
   {
+    pattern: /^\/patrimonios\/dashboard$/,
+    operacoes: { GET: "patrimonios.dashboard" },
+  },
+  {
     pattern: /^\/patrimonios\/[^/]+$/,
     operacoes: { GET: "patrimonios.consultar" },
   },

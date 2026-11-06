@@ -1,4 +1,5 @@
 import {
+  AlterarSenhaBodySchema,
   AuthMeResponseSchema,
   CABECALHO_CSRF,
   ConcluirPrimeiroAcessoBodySchema,
@@ -9,6 +10,7 @@ import {
   SolicitarRedefinicaoSenhaResponseSchema,
   VALOR_CABECALHO_CSRF,
   type ConcluirPrimeiroAcessoBody,
+  type AlterarSenhaBodyInput,
   type IdentidadeAutenticada,
   type LoginBody,
   type RedefinirSenhaBody,
@@ -55,6 +57,17 @@ export function criarOperacoesAuth(apiClient: ApiClient) {
 
       await apiClient.request({
         path: "/auth/concluir-primeiro-acesso",
+        method: "POST",
+        headers: csrfHeaders,
+        body: bodyValidado,
+      });
+    },
+
+    async alterarSenha(body: AlterarSenhaBodyInput): Promise<void> {
+      const bodyValidado = AlterarSenhaBodySchema.parse(body);
+
+      await apiClient.request({
+        path: "/auth/alterar-senha",
         method: "POST",
         headers: csrfHeaders,
         body: bodyValidado,

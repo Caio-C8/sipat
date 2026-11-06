@@ -13,6 +13,7 @@ import {
   Plus,
   Scale,
   Shapes,
+  SlidersHorizontal,
   TrendingDown,
   TrendingUp,
   Truck,
@@ -239,6 +240,16 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     perfis: APENAS_ADMINISTRADOR,
     implementado: false,
   },
+  {
+    id: "configuracoes",
+    label: "Configurações",
+    icon: SlidersHorizontal,
+    grupo: "administracao",
+    perfis: TODOS_PERFIS,
+    implementado: true,
+    href: "/configuracoes",
+    breadcrumb: ["Configurações", "Minha conta"],
+  },
 ] as const;
 
 export function listarNavegacaoPorPerfil(
@@ -250,6 +261,18 @@ export function listarNavegacaoPorPerfil(
 export function encontrarNavegacaoPorCaminho(
   pathname: string,
 ): ItemNavegacao | undefined {
+  if (pathname === "/configuracoes/alterar-senha") {
+    const configuracoes = catalogoNavegacao.find(
+      (item) => item.href === "/configuracoes",
+    );
+    return configuracoes
+      ? {
+          ...configuracoes,
+          breadcrumb: ["Configurações", "Alterar senha"],
+        }
+      : undefined;
+  }
+
   return catalogoNavegacao.find(
     (item) =>
       item.href === pathname ||
@@ -257,6 +280,8 @@ export function encontrarNavegacaoPorCaminho(
         pathname.startsWith("/movimentacoes/")) ||
       (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")) ||
       (item.href === "/cadastros/setores" &&
-        pathname.startsWith("/cadastros/setores/")),
+        pathname.startsWith("/cadastros/setores/")) ||
+      (item.href === "/configuracoes" &&
+        pathname.startsWith("/configuracoes/")),
   );
 }

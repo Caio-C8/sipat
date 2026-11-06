@@ -10,6 +10,15 @@ fronteiras entre UI, contratos e integração HTTP.
 
 ## Estado atual
 
+- `/cadastros`, `/cadastros/especies`, `/cadastros/naturezas`,
+  `/cadastros/comissoes`, `/cadastros/responsaveis` e as três rotas de
+  setores consomem a API existente: consultas paginadas, criação, edição,
+  situação de responsáveis/setores, integrantes e documentos fiscais.
+  A inclusão de notas novas fica disponível somente ao Administrador, por
+  decisão registrada em
+  [WEB-CADASTROS-001](./roadmap.md#web-cadastros-001--integrar-cadastros-à-api-existente).
+  O cadastro de patrimônio não faz parte dessa integração.
+
 - `/` apresenta o catálogo público de páginas, acessos e endpoints técnicos;
 - `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
   reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
@@ -17,6 +26,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/patrimonios/novo` carrega espécies, setores ativos e processos de compra
   pela API, atualiza os campos relacionados conforme a seleção e registra o
   bem por `POST /patrimonios` com validação e idempotência;
+- `/configuracoes` exibe a identidade autenticada; a aba de usuários permanece
+  indisponível. `/configuracoes/alterar-senha` consome o `AUTH-002`, encerra as
+  sessões no backend e orienta um novo login;
 - `/patrimonios` e seu detalhe oferecem pesquisa, histórico, ficha PDF e as
   quatro ações reais do Diretor; movimentação e reavaliação mantêm o bem fixo
   em drawers laterais da própria ficha;
@@ -69,8 +81,6 @@ fronteiras entre UI, contratos e integração HTTP.
 geral ilustrativa para `/dashboard`, protegida para os dois perfis.
 `WEB-SHELL-001` moveu a proteção e a composição visual das páginas autenticadas
 para o layout do grupo `(sistema)` sem alterar a URL pública.
-`WEB-DASHBOARD-001` substituiu os dados ilustrativos pelos totais reais geral e
-por status, mantendo indisponíveis os blocos que ainda não possuem contrato.
 
 Os contratos e endpoints administrativos de usuários existem no backend, mas
 ainda não possuem consumidor Web. Login, logout, primeiro acesso e consumo de

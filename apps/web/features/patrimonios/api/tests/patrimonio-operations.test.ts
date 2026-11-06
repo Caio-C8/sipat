@@ -7,13 +7,12 @@ import {
   CriarPatrimonioResponseSchema,
   ListarPatrimoniosResponseSchema,
   ListarOpcoesComissoesBaixaResponseSchema,
-  STATUS_PATRIMONIO,
+  DashboardPatrimonialResponseSchema,
   SubstituirNumeroPatrimonialResponseSchema,
   VALOR_CABECALHO_CSRF,
-  type StatusPatrimonio,
 } from "@repo/contracts";
 import { createApiClient } from "@/lib/api/core/create-api-client";
-import type { ApiClient, ApiRequestOptions } from "@/lib/api/core/types";
+import type { ApiClient } from "@/lib/api/core/types";
 import { criarOperacoesPatrimonios } from "../patrimonio-operations";
 
 function respostaPaginada(total: number) {
@@ -123,49 +122,27 @@ describe("operações de patrimônios", () => {
     });
   });
 
-  it("inicia as cinco contagens em paralelo e monta os totais da metadata", async () => {
-    const totais: Record<StatusPatrimonio, number> = {
-      ATIVO: 28,
-      BAIXADO: 2,
-      EMPRESTADO: 1,
-      EM_MANUTENCAO: 1,
+  it("consulta o resumo agregado uma vez com a sessão e sem cache", async () => {
+    const dados = {
+      total: 0,
+      porStatus: { ATIVO: 0, BAIXADO: 0, EMPRESTADO: 0, EM_MANUTENCAO: 0 },
+      correcoesPendentes: 0,
+      setores: [],
+      atividades: [],
     };
-    const resolvers: Array<() => void> = [];
-    const chamadas: ApiRequestOptions<unknown>[] = [];
-    const apiClient: ApiClient = {
-      request: vi.fn((options: ApiRequestOptions<unknown>) => {
-        chamadas.push(options);
-
-        return new Promise((resolve) => {
-          resolvers.push(() => {
-            const status = options.query?.status as
-              StatusPatrimonio | undefined;
-            resolve(respostaPaginada(status ? totais[status] : 32));
-          });
-        });
-      }) as ApiClient["request"],
-    };
-    const operacoes = criarOperacoesPatrimonios(apiClient);
-
-    const resumoPendente = operacoes.obterResumoDashboard(
-      "sipat_session=segredo",
-    );
-
-    expect(chamadas).toHaveLength(5);
-    expect(chamadas.map((chamada) => chamada.query)).toEqual([
-      { pagina: 1, limite: 1 },
-      ...STATUS_PATRIMONIO.map((status) => ({
-        pagina: 1,
-        limite: 1,
-        status,
-      })),
-    ]);
-
-    resolvers.forEach((resolver) => resolver());
-
-    await expect(resumoPendente).resolves.toEqual({
-      total: 32,
-      porStatus: totais,
+    const request = vi.fn().mockResolvedValue({ dados });
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+    await expect(
+      operacoes.obterResumoDashboard("sipat_session=teste"),
+    ).resolves.toEqual(dados);
+    expect(request).toHaveBeenCalledExactlyOnceWith({
+      path: "/patrimonios/dashboard",
+      method: "GET",
+      headers: { Cookie: "sipat_session=teste" },
+      cache: "no-store",
+      responseSchema: DashboardPatrimonialResponseSchema,
     });
   });
 

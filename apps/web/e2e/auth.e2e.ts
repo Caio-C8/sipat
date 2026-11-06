@@ -262,13 +262,20 @@ test.describe("Autenticação Web", () => {
     await expect(resumo.getByText("32")).toBeVisible();
     await expect(resumo.getByText("28")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Cadastrar bem.*Em breve/ }),
-    ).toBeDisabled();
+      page.getByRole("link", { name: "Cadastrar bem", exact: true }),
+    ).toHaveCount(0);
     await expect(
-      page.getByText(
-        "Dados ainda não disponíveis — integração não implementada",
-      ),
-    ).toHaveCount(3);
+      page.getByRole("link", { name: "Pesquisar bem", exact: true }),
+    ).toHaveAttribute("href", "/patrimonios");
+    await expect(
+      page.getByText(/correções de inventário pendentes/),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Administrativo/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Retorno de manutenção/ }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: /Menu do usuário/ }).click();
     const logout = page.getByRole("menuitem");

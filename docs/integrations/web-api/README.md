@@ -33,16 +33,23 @@ No estado atual:
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- existem operações tipadas de autenticação, patrimônio, movimentações e manutenções;
+- existem operações tipadas de autenticação, patrimônio, movimentações, manutenções
+  e cadastros;
   movimentações usa hooks específicos por operação, estado local e URL, sem cache remoto;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
 - login, logout, `/auth/me` e conclusão do primeiro acesso possuem consumidor
   Web; mutações enviam o sinal de CSRF e o cookie permanece `HttpOnly` sob
   controle da API;
-- alteração e recuperação de senha estão planejadas somente para contratos,
-  banco e API em `CONTRACTS-003`, `AUTH-002` e `AUTH-003`; páginas, operações e
-  hooks Web permanecem fora dessas entregas.
+- `/configuracoes` consome `GET /auth/me` via fronteira Server e não consulta
+  `/usuarios/:id`, que permanece exclusivo do Administrador; por isso o setor
+  não está disponível na identidade atual. A situação ativa deriva da sessão
+  autenticada;
+- `/configuracoes/alterar-senha` usa a operação tipada
+  `POST /auth/alterar-senha`, envia CSRF, valida `AlterarSenhaBodySchema` e, após
+  sucesso, orienta novo login porque a API revoga as sessões e expira o cookie;
+- a recuperação de senha continua integrada em `WEB-AUTH-002` pelo token de
+  uso único enviado por e-mail.
 
 A integração básica pode ser verificada por `GET /api/backend/health`. As
 operações e os hooks Web de usuários ainda não existem.

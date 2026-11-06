@@ -2,9 +2,9 @@
 
 ## Estado atual
 
-O SIPAT ainda não instala React Hook Form ou resolvers. O formulário
-`/patrimonios/novo` usa estado local e valida `CriarPatrimonioBodySchema`, pois
-esse contrato representa a operação de criação. Escolha outra solução quando
+O SIPAT não instala React Hook Form ou resolvers. Os formulários de
+`/patrimonios/novo` e `/configuracoes/alterar-senha` usam estado local e os
+schemas compartilhados das respectivas operações. Escolha outra solução quando
 uma entrega concreta exigir gerenciamento adicional; valide compatibilidade
 com React e Zod nas versões do projeto.
 
