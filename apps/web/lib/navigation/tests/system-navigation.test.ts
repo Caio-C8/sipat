@@ -24,6 +24,7 @@ describe("catálogo de navegação do sistema", () => {
       "/cadastros/comissoes",
       "/cadastros/naturezas",
       "/cadastros/especies",
+      "/configuracoes",
     ]);
     expect(
       catalogoNavegacao.find((item) => item.id === "movimentacoes")
@@ -90,6 +91,9 @@ describe("catálogo de navegação do sistema", () => {
       "Início",
       "Movimentações",
     ]);
+    expect(
+      encontrarNavegacaoPorCaminho("/configuracoes/alterar-senha")?.breadcrumb,
+    ).toEqual(["Configurações", "Alterar senha"]);
     expect(
       encontrarNavegacaoPorCaminho("/emprestimos/nova")?.breadcrumb,
     ).toEqual(["Início", "Empréstimos"]);

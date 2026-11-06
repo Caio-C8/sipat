@@ -20,11 +20,12 @@ fronteiras entre UI, contratos e integração HTTP.
   O cadastro de patrimônio não faz parte dessa integração.
 
 - `/` apresenta o catálogo público de páginas, acessos e endpoints técnicos;
-- `/dashboard` usa `GET /patrimonios/dashboard` para os totais por situação,
-  correções de inventário pendentes (incluindo localizações posteriores), bens
-  em manutenção, os quatro setores com mais bens (incluindo baixados) e os três
-  registros patrimoniais mais recentes. Os atalhos respeitam o perfil e
-  inventários abre a consulta em Relatórios;
+- `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
+  reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
+  blocos ainda sem integração;
+- `/configuracoes` exibe a identidade autenticada; a aba de usuários permanece
+  indisponível. `/configuracoes/alterar-senha` consome o `AUTH-002`, encerra as
+  sessões no backend e orienta um novo login;
 - `/patrimonios` e seu detalhe oferecem pesquisa, histórico, ficha PDF e as
   quatro ações reais do Diretor; movimentação e reavaliação mantêm o bem fixo
   em drawers laterais da própria ficha;
