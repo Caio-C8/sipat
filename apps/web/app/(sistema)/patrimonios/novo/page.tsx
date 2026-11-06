@@ -5,7 +5,7 @@ import { CadastroPatrimonio } from "@/features/patrimonios/components/cadastro-p
 
 export const metadata: Metadata = {
   title: "Cadastrar patrimônio",
-  description: "Prévia visual do cadastro patrimonial do SIPAT.",
+  description: "Cadastre bens patrimoniais no SIPAT.",
 };
 
 export default async function NovoPatrimonioPage() {
@@ -26,5 +26,5 @@ export default async function NovoPatrimonioPage() {
       </main>
     );
   }
-  return <CadastroPatrimonio />;
+  return <CadastroPatrimonio usuarioId={identidade.id} />;
 }

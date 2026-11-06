@@ -3,6 +3,8 @@ import {
   BaixarPatrimonioResponseSchema,
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
+  CriarPatrimonioBodySchema,
+  CriarPatrimonioResponseSchema,
   ListarPatrimoniosResponseSchema,
   ListarOpcoesComissoesBaixaResponseSchema,
   DashboardPatrimonialResponseSchema,
@@ -79,6 +81,44 @@ describe("operações de patrimônios", () => {
     ).rejects.toMatchObject({
       codigo: "CONTRATO_RESPOSTA_INVALIDO",
       categoria: "resposta_invalida",
+    });
+  });
+
+  it("valida o cadastro e envia CSRF com o contrato de criação", async () => {
+    const request = vi.fn().mockResolvedValue({});
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+    const body = {
+      chaveIdempotencia: "00000000-0000-4000-8000-000000000001",
+      semNumeroOficial: false,
+      dataTombamento: "2026-09-27",
+      tipoIncorporacao: "AQUISICAO",
+      descricao: "Notebook corporativo",
+      marca: "Dell",
+      modelo: "Latitude 3450",
+      numeroSerie: "LAT2026001",
+      valorIncorporacao: "5490.00",
+      especieId: "00000000-0000-4000-8000-000000000002",
+      setorAtualId: "00000000-0000-4000-8000-000000000003",
+      processoCompraId: "00000000-0000-4000-8000-000000000004",
+      parametrosDepreciacao: {
+        metodo: "LINEAR",
+        vidaUtilInicialMeses: 60,
+        valorResidual: "549.00",
+        valorBaseInicial: "5490.00",
+        dataInicio: "2026-10-01",
+      },
+    } as const;
+
+    await operacoes.criar(body);
+
+    expect(request).toHaveBeenCalledWith({
+      path: "/patrimonios",
+      method: "POST",
+      body: CriarPatrimonioBodySchema.parse(body),
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      responseSchema: CriarPatrimonioResponseSchema,
     });
   });
 
