@@ -82,3 +82,5 @@ persistência
 Frontend e backend podem importar o mesmo schema quando compartilham
 verdadeiramente o mesmo contrato. A validação executada no frontend melhora a
 experiência do usuário, mas nunca substitui a validação do backend.
+
+O dashboard Web consulta `GET /api/patrimonios/dashboard` com sessão de Administrador ou Diretor de Patrimônio. O contrato `DashboardPatrimonialResponseSchema` inclui totais por situação, correções pendentes, até quatro setores por quantidade e as três atividades patrimoniais mais recentes pela data de registro.

@@ -1,5 +1,6 @@
 import {
   ConsultarPatrimonioResponseSchema,
+  DashboardPatrimonialResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
   ListarPatrimoniosQuerySchema,
@@ -33,4 +34,8 @@ export class SubstituirNumeroPatrimonialBodyDto extends createZodDto(
 ) {}
 export class SubstituirNumeroPatrimonialResponseDto extends createZodDto(
   SubstituirNumeroPatrimonialResponseSchema,
+) {}
+
+export class DashboardPatrimonialResponseDto extends createZodDto(
+  DashboardPatrimonialResponseSchema,
 ) {}

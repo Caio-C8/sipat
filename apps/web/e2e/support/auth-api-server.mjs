@@ -93,6 +93,49 @@ const server = createServer((request, response) => {
 
   if (
     request.method === "GET" &&
+    /^\/api\/(?:processos-compra|naturezas|especies|comissoes|responsaveis|setores|fornecedores)$/.test(
+      requestUrl.pathname,
+    )
+  ) {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (!session || session === "pending") {
+      json(response, 401, {
+        status: 401,
+        sucesso: false,
+        codigo: "NAO_AUTENTICADO",
+        mensagem: "Autenticação necessária.",
+        erros: [],
+      });
+      return;
+    }
+    if (request.headers.cookie?.includes("sipat_cadastros_scenario=error")) {
+      json(response, 503, {
+        status: 503,
+        sucesso: false,
+        codigo: "INDISPONIVEL",
+        mensagem: "Consulta temporariamente indisponível.",
+        erros: [],
+        requisicaoId: "cadastros-e2e",
+      });
+      return;
+    }
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Cadastros consultados.",
+      dados: [],
+      meta: {
+        total: 0,
+        pagina: Number(requestUrl.searchParams.get("pagina") ?? 1),
+        limite: Number(requestUrl.searchParams.get("limite") ?? 20),
+        ultimaPagina: 1,
+      },
+    });
+    return;
+  }
+
+  if (
+    request.method === "GET" &&
     /^\/api\/movimentacoes(?:\/|$)/.test(requestUrl.pathname)
   ) {
     const session = sessionFromCookie(request.headers.cookie);
@@ -170,7 +213,12 @@ const server = createServer((request, response) => {
     });
     return;
   }
-  if (request.method === "GET" && requestUrl.pathname === "/api/patrimonios") {
+  if (
+    request.method === "GET" &&
+    ["/api/patrimonios", "/api/patrimonios/dashboard"].includes(
+      requestUrl.pathname,
+    )
+  ) {
     const session = sessionFromCookie(request.headers.cookie);
 
     if (!session || session === "pending") {
@@ -199,6 +247,54 @@ const server = createServer((request, response) => {
       return;
     }
 
+    if (requestUrl.pathname === "/api/patrimonios/dashboard") {
+      const vazio = scenario === "zero";
+      const dados = vazio
+        ? {
+            total: 0,
+            porStatus: {
+              ATIVO: 0,
+              BAIXADO: 0,
+              EMPRESTADO: 0,
+              EM_MANUTENCAO: 0,
+            },
+            correcoesPendentes: 0,
+            setores: [],
+            atividades: [],
+          }
+        : {
+            total: 32,
+            porStatus: patrimonioTotals,
+            ...{
+              correcoesPendentes: 4,
+              setores: [
+                {
+                  id: "7041c62b-5f83-432c-a178-889977d839b1",
+                  nome: "Administrativo",
+                  total: 32,
+                },
+              ],
+              atividades: [
+                {
+                  patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
+                  numero: "00000001",
+                  titulo: "Retorno de manutenção",
+                  registradoEm: "2026-09-21T15:00:00.000Z",
+                },
+              ],
+            },
+          };
+      const enviar = () =>
+        json(response, 200, {
+          status: 200,
+          sucesso: true,
+          mensagem: "Resumo patrimonial consultado.",
+          dados,
+        });
+      if (scenario === "slow") setTimeout(enviar, 1000);
+      else enviar();
+      return;
+    }
     const status = requestUrl.searchParams.get("status");
     const total =
       scenario === "zero" ? 0 : status ? patrimonioTotals[status] : 32;

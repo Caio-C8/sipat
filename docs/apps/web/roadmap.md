@@ -1,5 +1,28 @@
 # Roadmap da aplicação Web
 
+## WEB-CADASTROS-001 — Integrar cadastros à API existente
+
+**Status:** implementado e validado em 02/11/2026. Processos de compra e notas
+fiscais, espécies, naturezas, comissões e integrantes, responsáveis e setores consomem
+os contratos existentes, com consultas paginadas, edição, estados de erro e
+confirmações sem repetição automática. O cadastro de patrimônio fica fora
+desta entrega. A referência visual é a página `Telas PC` do
+[Figma](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled).
+
+Por decisão do usuário, a API e suas permissões permanecem inalteradas:
+somente o Administrador inclui notas novas na Web, pois o catálogo de
+fornecedores é administrativo. O Diretor pode cadastrar processos sem notas
+novas e consultar as notas vinculadas. Não são usados seletores de outros
+domínios para contornar essa restrição.
+
+Lint, tipos, 89 testes unitários e build standalone da Web passaram. A suíte
+E2E padrão passou com 30 cenários aprovados e 13 integrações opt-in ignoradas;
+os dois percursos de cadastros foram executados separadamente e passaram contra
+API e PostgreSQL isolado, incluindo edição, situações, integrantes, notas,
+PDFs, axe e reflow em 390, 900 e 1536px. Os demais 11 cenários reais de outros
+domínios não foram executados nesta entrega. A reprodução está em
+[Testes e workflow](./testing-and-workflow.md#cadastros-contra-api-e-banco-reais).
+
 ## WEB-IDEMPOTENCIA-001 — Adaptar conflitos de operações
 
 **Status:** implementado e validado em 31/10/2026; regressão de CI corrigida e

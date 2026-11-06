@@ -33,7 +33,8 @@ No estado atual:
 - respostas de erro são validadas com `RespostaErroSchema`;
 - operações HTTP podem emitir métricas normalizadas sem paths, payloads,
   credenciais ou identificadores;
-- existem operações tipadas de autenticação, patrimônio, movimentações e manutenções;
+- existem operações tipadas de autenticação, patrimônio, movimentações, manutenções
+  e cadastros;
   movimentações usa hooks específicos por operação, estado local e URL, sem cache remoto;
 - os contratos e endpoints administrativos de usuários estão implementados no
   backend, mas ainda não possuem consumidor Web;
