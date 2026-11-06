@@ -27,6 +27,8 @@ import {
   type ListarSetoresQueryInput,
   type ListarPatrimoniosResponse,
   type ResumoPatrimonialDashboard,
+  type ListarEspeciesQueryInput,
+  type CriarPatrimonioBodyInput,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
 
