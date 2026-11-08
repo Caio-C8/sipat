@@ -5,8 +5,8 @@ export interface EstadoMigrationSeed {
 }
 
 const ULTIMA_MIGRATION =
-  "20261101120000_adiciona_integridade_documento_idempotencia_manutencao";
-const TOTAL_MIGRATIONS = 26;
+  "20261107120000_adiciona_classificacao_depreciavel_patrimonio";
+const TOTAL_MIGRATIONS = 27;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],

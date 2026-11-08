@@ -134,7 +134,7 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve permitir que o Diretor de Patrimônio cadastre bens patrimoniais e suas informações de tombamento, localização, classificação e valor.
 
-**Informações:** Indicação de existência de numeração patrimonial oficial, número patrimonial gerado pelo sistema, data de tombamento, tipo de incorporação, descrição, marca, modelo, número de série, valor de incorporação, status, espécie, setor, aquisição vinculada e parâmetros iniciais de depreciação.
+**Informações:** Indicação de existência de numeração patrimonial oficial, número patrimonial gerado pelo sistema, data de tombamento, tipo de incorporação, descrição, marca, modelo, número de série, valor de incorporação, status, espécie, setor, aquisição vinculada, classificação depreciável e parâmetros iniciais de depreciação quando aplicáveis.
 
 **Regras:**
 
@@ -143,7 +143,15 @@ gerenciem a própria senha com segurança.
 - Bens com numeração oficial devem usar a sequência numérica, armazenada sem zeros à esquerda, por exemplo `1`.
 - Descrição, marca, modelo e número de série devem ser armazenados normalizados em letras maiúsculas e sem acentuação.
 - O sistema deve manter um texto de busca composto pelos principais campos textuais do patrimônio para apoiar consultas.
-- Todo novo patrimônio deve receber parâmetros iniciais de depreciação no mesmo cadastro; sua omissão impede a criação do bem.
+- O Diretor deve declarar explicitamente no cadastro se o patrimônio é
+  depreciável. A classificação pertence ao bem individual e não deve ser
+  inferida da espécie, natureza ou presença de parâmetros.
+- Patrimônio marcado como depreciável deve receber parâmetros iniciais no mesmo
+  cadastro; patrimônio marcado como não depreciável não deve receber parâmetro
+  de depreciação.
+- O parâmetro inicial de um bem depreciável deve ser criado sem data de início.
+  A data somente é definida pela operação posterior e auditável que confirma a
+  disponibilidade do bem para uso.
 - Após o cadastro, os parâmetros de depreciação somente podem ser substituídos pelo fluxo de reavaliação.
 - O status do bem deve admitir, no mínimo: ATIVO, BAIXADO, EMPRESTADO e EM_MANUTENÇÃO.
 - Se o bem não possuir número patrimonial oficial, o sistema deve gerar um identificador em uma sequência própria, armazenado no padrão `SP-1`.
@@ -153,6 +161,12 @@ gerenciem a própria senha com segurança.
 - O patrimônio deve estar vinculado a um setor; o responsável pelo patrimônio será o responsável atual desse setor.
 - O patrimônio deve possuir uma espécie; a natureza será determinada pela espécie.
 - Não é permitido cadastrar patrimônio sem tombamento, e o valor do bem não pode ser zero.
+- Tombamento, cadastro e disponibilidade para uso são fatos distintos. O
+  cadastro não deve tornar o bem automaticamente elegível à depreciação.
+- A disponibilidade para uso é confirmada uma única vez quando o bem estiver no
+  local e em condição de funcionamento na forma pretendida pela administração.
+  A confirmação registra a data civil efetiva, o usuário e o instante do
+  servidor e não aceita data futura.
 
 ### RF11: Consulta, Listagem e Filtros de Patrimônios
 
@@ -252,7 +266,10 @@ correções está registrada em RF19.
 - Se houver parâmetro de depreciação vigente, ele deve ser encerrado e um novo parâmetro deve ser criado com base nos dados reavaliados. Se o bem nunca teve parâmetro, o Diretor pode confirmar na reavaliação a criação do primeiro com o novo valor bruto, vida útil e residual informados, iniciado na data de referência; o histórico deve indicar que não havia parâmetro anterior e a depreciação acumulada anterior deve ser zero.
 - A situação contábil do patrimônio deve ser atualizada, com novo valor bruto e reinício do acumulado de depreciação aplicável ao novo parâmetro.
 - Cada patrimônio reavaliado deve gerar seu próprio registro histórico.
-- Um bem elegível com depreciação pendente na competência corrente deve ser depreciado antes de ser reavaliado. Bens já no residual ou ainda no mês de início do parâmetro não são bloqueados por essa condição.
+- Um bem elegível deve ter todas as competências devidas do parâmetro vigente
+  processadas, em ordem, antes da reavaliação. Bens já no residual, ainda antes
+  da primeira competência ou sem disponibilidade confirmada não são bloqueados
+  por uma obrigação que ainda não existe.
 - O dia civil institucional da reavaliação e a competência de depreciação usam o fuso `America/Sao_Paulo`, inclusive na virada do mês.
 - A data de referência da reavaliação deve estar no mês corrente e não pode ultrapassar o dia atual nesse fuso; datas de meses anteriores e datas futuras são recusadas.
 
@@ -260,18 +277,35 @@ correções está registrada em RF19.
 
 **Descrição:** O sistema deve executar automaticamente a depreciação dos patrimônios que possuam parâmetros de depreciação vigentes.
 
-**Informações:** Competência mensal, comissão, patrimônio, valor bruto atual, depreciação acumulada, valor residual, vida útil, quantidade de depreciações realizadas, valor da depreciação, situação contábil anterior e nova e data de processamento.
+**Informações:** Competência mensal, disponibilidade para uso, primeira e próxima competências devidas, comissão, patrimônio, valor bruto atual, depreciação acumulada, valor residual, vida útil, quantidade de depreciações realizadas, valor da depreciação, situação contábil anterior e nova e data de processamento.
 
 **Regras:**
 
 - A depreciação deve utilizar o método linear definido pela instituição.
 - A documentação registra como referência o cálculo do valor periódico a partir do valor ainda depreciável, do valor residual e da vida útil restante.
-- Cada execução deve tratar somente a competência civil mensal corrente em `America/Sao_Paulo`; competências passadas ou futuras não podem ser processadas.
+- O Diretor deve selecionar uma competência devida entre a primeira pendente e
+  a competência civil corrente em `America/Sao_Paulo`. Competências futuras não
+  podem ser consultadas nem processadas.
 - O mesmo patrimônio não pode possuir duas depreciações para o mesmo parâmetro na mesma competência.
-- A instituição adota a depreciação mensal integral a partir da competência seguinte à `dataInicio` do parâmetro, sem cálculo proporcional por dias no primeiro mês.
-- Um patrimônio cadastrado depois de uma execução pode integrar nova execução da competência corrente somente se seu parâmetro tiver `dataInicio` anterior ao primeiro dia dessa competência; não devem ser criadas depreciações retroativas para compensar competências encerradas.
+- A instituição adota a depreciação mensal integral a partir da competência
+  seguinte à data em que o bem foi confirmado como disponível para uso, sem
+  cálculo proporcional por dias no primeiro mês.
+- Cadastro, tombamento, nota fiscal, entrega física sem aceite ou parâmetro
+  informado não substituem a confirmação de disponibilidade para uso.
+- Bem sem disponibilidade confirmada ou marcado como não depreciável não possui
+  competência devida e não pode ser processado.
+- Para cada parâmetro, as competências devem ser processadas em ordem
+  cronológica e sem lacunas. Uma competência posterior é inelegível enquanto
+  houver competência anterior devida e não processada para o mesmo parâmetro.
+- O sistema deve permitir regularizar competências passadas devidas, uma por
+  vez e em ordem, sem criar vários lançamentos ocultos nem recomposição
+  automática em uma quota única.
 - Patrimônios `ATIVO`, `EMPRESTADO` ou `EM_MANUTENCAO` podem ser depreciados; patrimônios `BAIXADO` devem ser ignorados como inelegíveis.
-- O Diretor de Patrimônio deve poder consultar, com paginação finita, os patrimônios elegíveis ainda não depreciados na competência corrente antes de executar a operação em massa.
+- Empréstimo, manutenção ou ociosidade temporária não suspendem a depreciação
+  pelo método linear baseado no tempo.
+- O Diretor de Patrimônio deve poder consultar, com paginação finita, os
+  patrimônios elegíveis ainda não depreciados na competência selecionada antes
+  de executar a operação em massa.
 - A execução deve abranger exatamente um patrimônio ou todos os patrimônios elegíveis; não deve aceitar uma lista ou quantidade arbitrária de bens.
 - Toda execução deve informar uma única comissão, existente e vigente na data civil do processamento.
 - O valor de depreciação calculado deve ser somado ao acumulado de depreciação da situação patrimonial.
@@ -280,6 +314,14 @@ correções está registrada em RF19.
 - Um patrimônio que atingir o valor residual na execução corrente deve receber a última depreciação, limitada exatamente ao residual, e ser contabilizado separadamente no resultado.
 - A consulta de pendentes é informativa; no momento da mutação, o sistema deve reavaliar elegibilidade e valores dentro da mesma transação.
 - A execução deve ser atômica: erro ou conflito inesperado em qualquer item desfaz todas as depreciações da solicitação. Itens classificados pelas regras como inelegíveis não constituem erro e devem ser discriminados no resultado agregado.
+- A consulta deve informar as competências que possuem pendências, suas
+  quantidades e a competência pendente mais antiga, com respostas finitas.
+- A tela de depreciações, o detalhe do bem, um relatório específico de
+  pendências e o menu de notificações devem tornar as pendências visíveis. O
+  alerta do menu é derivado do estado atual e não cria, neste escopo, caixa
+  postal persistente, leitura individual ou canal externo.
+- A apresentação da competência deve ser localizada, por exemplo, como **Abril
+  de 2026**, preservando `2026-04` como representação canônica na API.
 
 ### RF16: Empréstimo e Devolução de Patrimônios
 
@@ -747,6 +789,27 @@ retirar validações existentes como solução automática.
 
 **Descrição:** Setores inativos não poderão receber novos patrimônios, ser utilizados como destino de transferências ou participar de novos inventários.
 
+### RN20: Disponibilidade para uso como marco da depreciação
+
+**Descrição:** A depreciação somente poderá começar depois que o Diretor de
+Patrimônio confirmar, em operação única e auditável, que o bem está no local e
+em condição de funcionamento na forma pretendida pela administração. A primeira
+competência devida será o mês seguinte à data civil confirmada.
+
+### RN21: Ordem cronológica das competências de depreciação
+
+**Descrição:** Para o mesmo patrimônio e parâmetro, uma competência posterior
+não poderá ser processada enquanto existir competência anterior devida e não
+processada. Regularizações devem produzir um lançamento por competência, sem
+consolidar vários meses em uma única quota.
+
+### RN22: Classificação depreciável do patrimônio
+
+**Descrição:** Cada patrimônio deve declarar explicitamente se é depreciável.
+Bem marcado como não depreciável não recebe parâmetros nem lançamentos de
+depreciação. A classificação não é inferida pela espécie, e sua alteração depois
+do cadastro exige fluxo próprio ainda não definido.
+
 ## Casos de Uso
 
 ### UC01 - Autenticar e controlar acesso
@@ -983,9 +1046,13 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 1. O Diretor acessa o cadastro de patrimônio.
 2. O Diretor informa os dados do bem e marca se ele não possui número patrimonial oficial.
 3. O Diretor seleciona setor, espécie e processo de compra.
-4. O Diretor informa os dados dos parâmetros de depreciação.
+4. O Diretor marca se o patrimônio é depreciável. Quando marcado, informa os
+   parâmetros de depreciação; quando desmarcado, o sistema não apresenta nem
+   aceita esses campos.
 5. O sistema normaliza os campos de busca, valida unicidades e gera o próximo identificador da sequência oficial ou `SP-`, conforme a marcação.
-6. O sistema salva o patrimônio com status inicial ATIVO e associa o identificador gerado.
+6. O sistema salva o patrimônio com status inicial ATIVO e associa o
+   identificador gerado. O cadastro não confirma disponibilidade nem cria
+   competência de depreciação devida.
 
 **Fluxos alternativos / exceções:**
 
@@ -1105,13 +1172,16 @@ alteração parcial. Não existe lote de domínio, edição, exclusão ou estorn
 
 **Ator(es):** Diretor de Patrimônio
 
-**Pré-condição:** O Diretor deve estar autenticado; deve informar uma comissão vigente na data civil do processamento; deve existir ao menos um patrimônio com parâmetro de depreciação vigente e iniciado antes da competência corrente.
+**Pré-condição:** O Diretor deve estar autenticado; deve informar uma comissão vigente na data civil do processamento; deve existir ao menos um patrimônio depreciável, com disponibilidade confirmada, parâmetro vigente e competência devida até o mês corrente.
 
 **Fluxo principal:**
 
-1. O Diretor consulta os patrimônios ainda não depreciados na competência corrente.
-2. O sistema apresenta de forma paginada os itens elegíveis e os totais relevantes para a decisão.
-3. O Diretor inicia a depreciação de um patrimônio ou de todos os elegíveis, informando a competência corrente e a comissão.
+1. O Diretor consulta as competências devidas até o mês corrente, apresentadas
+   em formato localizado e com suas quantidades pendentes.
+2. O Diretor seleciona uma competência, e o sistema apresenta de forma
+   paginada os itens elegíveis e os totais relevantes para a decisão.
+3. O Diretor inicia a depreciação de um patrimônio ou de todos os elegíveis,
+   informando a competência selecionada e a comissão.
 4. O sistema revalida a competência, a comissão e a elegibilidade no estado transacional atual.
 5. Se houver item que já esteja no valor residual, o sistema informa a quantidade ou o item e solicita confirmação para ignorá-lo e continuar.
 6. Confirmada a continuidade quando necessário, o sistema calcula individualmente a quota linear de cada item elegível.
@@ -1120,8 +1190,14 @@ alteração parcial. Não existe lote de domínio, edição, exclusão ou estorn
 
 **Fluxos alternativos / exceções:**
 
-- Competência passada ou futura: o sistema rejeita a solicitação sem alterar dados.
-- Patrimônio baixado, sem parâmetro vigente, ainda no mês de início ou já depreciado na competência: o item é classificado como inelegível e não constitui falha da execução em massa.
+- Competência futura ou sem obrigação de processamento: o sistema rejeita a
+  solicitação sem alterar dados.
+- Competência com mês anterior ainda pendente para o mesmo parâmetro: o item é
+  classificado como inelegível por ordem cronológica e não recebe lançamento.
+- Patrimônio baixado, não depreciável, sem disponibilidade confirmada, sem
+  parâmetro vigente, ainda antes da primeira competência ou já depreciado na
+  competência: o item é classificado como inelegível e não constitui falha da
+  execução em massa.
 - Valor residual já alcançado sem confirmação: o sistema não altera nenhum item e solicita confirmação.
 - Valor residual atingido pela quota corrente: o sistema limita a quota ao saldo depreciável e informa o item no resultado.
 - Erro ou conflito concorrente inesperado: o sistema desfaz integralmente a solicitação.
@@ -1296,31 +1372,68 @@ conferidos, itens não localizados, divergências e correções rastreáveis.
 
 **Requisito relacionado:** RF21
 
+### UC22 - Confirmar disponibilidade do patrimônio para uso
+
+**Ator(es):** Diretor de Patrimônio
+
+**Pré-condição:** O Diretor deve estar autenticado; o patrimônio deve existir,
+não estar baixado e ainda não possuir disponibilidade confirmada.
+
+**Fluxo principal:**
+
+1. O Diretor abre os detalhes do patrimônio.
+2. O sistema informa que o bem ainda não está disponível para depreciação.
+3. O Diretor aciona a confirmação de disponibilidade e informa a data civil em
+   que o bem ficou no local e em condição de funcionamento.
+4. O sistema apresenta a primeira competência de depreciação calculada como o
+   mês seguinte, quando o patrimônio estiver marcado como depreciável.
+5. O Diretor confirma a operação.
+6. O sistema revalida o estado, registra disponibilidade, autoria e instante e
+   inicia o parâmetro vigente na mesma transação.
+
+**Fluxos alternativos / exceções:**
+
+- Data futura: o sistema rejeita sem gravar disponibilidade ou alterar o
+  parâmetro.
+- Bem já confirmado: o reenvio com a mesma chave e conteúdo retorna conflito de
+  operação já processada; conteúdo diferente com a mesma chave retorna conflito
+  de reutilização.
+- Bem baixado ou alterado concorrentemente: o sistema rejeita sem estado
+  parcial.
+- Patrimônio não depreciável: a disponibilidade operacional é registrada, mas
+  não cria parâmetro nem competência de depreciação.
+
+**Pós-condição:** O patrimônio possui um fato imutável e auditável de
+disponibilidade; se depreciável, sua primeira competência devida pode ser
+determinada sem entrada manual do usuário.
+
+**Requisitos relacionados:** RF10 e RF15
+
 ## Matriz de Rastreabilidade
 
-| Requisito Funcional | Regra(s) de Negócio relacionada(s) | Caso de Uso relacionado |
-| ------------------- | ---------------------------------- | ----------------------- |
-| RF01                | -                                  | UC01                    |
-| RF02                | -                                  | UC02                    |
-| RF03                | -                                  | UC03                    |
-| RF04                | RN18, RN19                         | UC04                    |
-| RF05                | RN11                               | UC05                    |
-| RF06                | -                                  | UC06                    |
-| RF07                | RN16, RN17                         | UC07                    |
-| RF08                | -                                  | UC08                    |
-| RF09                | -                                  | UC09                    |
-| RF10                | RN06, RN07, RN08, RN16, RN18, RN19 | UC10                    |
-| RF11                | -                                  | UC11                    |
-| RF12                | RN01, RN07                         | UC12                    |
-| RF13                | RN01, RN09, RN10, RN11, RN19       | UC13                    |
-| RF14                | RN01, RN03, RN11, RN12, RN13       | UC14                    |
-| RF15                | RN01, RN02, RN03, RN14             | UC15                    |
-| RF16                | RN01, RN11, RN15                   | UC16                    |
-| RF17                | RN01, RN04, RN05, RN11, RN15       | UC17                    |
-| RF18                | RN01, RN11                         | UC18                    |
-| RF19                | RN08, RN09, RN11, RN19             | UC19                    |
-| RF20                | RN04                               | UC20                    |
-| RF21                | RN04                               | UC21                    |
+| Requisito Funcional | Regra(s) de Negócio relacionada(s)             | Caso de Uso relacionado |
+| ------------------- | ---------------------------------------------- | ----------------------- |
+| RF01                | -                                              | UC01                    |
+| RF02                | -                                              | UC02                    |
+| RF03                | -                                              | UC03                    |
+| RF04                | RN18, RN19                                     | UC04                    |
+| RF05                | RN11                                           | UC05                    |
+| RF06                | -                                              | UC06                    |
+| RF07                | RN16, RN17                                     | UC07                    |
+| RF08                | -                                              | UC08                    |
+| RF09                | -                                              | UC09                    |
+| RF10                | RN06, RN07, RN08, RN16, RN18, RN19, RN20, RN22 | UC10, UC22              |
+| RF11                | -                                              | UC11                    |
+| RF12                | RN01, RN07                                     | UC12                    |
+| RF13                | RN01, RN09, RN10, RN11, RN19                   | UC13                    |
+| RF14                | RN01, RN03, RN11, RN12, RN13                   | UC14                    |
+| RF15                | RN01, RN02, RN03, RN14, RN20, RN21, RN22       | UC15, UC22              |
+| RF16                | RN01, RN11, RN15                               | UC16                    |
+| RF17                | RN01, RN04, RN05, RN11, RN15                   | UC17                    |
+| RF18                | RN01, RN11                                     | UC18                    |
+| RF19                | RN08, RN09, RN11, RN19                         | UC19                    |
+| RF20                | RN04                                           | UC20                    |
+| RF21                | RN04                                           | UC21                    |
 
 ## Papéis de Usuários
 

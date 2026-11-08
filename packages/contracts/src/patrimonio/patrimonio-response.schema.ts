@@ -76,6 +76,7 @@ export const PatrimonioResumoSchema = z
     modelo: z.string().min(1).max(100).nullable(),
     numeroSerie: z.string().min(1).max(100).nullable(),
     status: StatusPatrimonioSchema,
+    depreciavel: z.boolean(),
     situacaoContabil: SituacaoContabilPatrimonioResponseSchema,
     setorAtual: SetorPatrimonioResponseSchema,
     especie: EspeciePatrimonioResponseSchema,

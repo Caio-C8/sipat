@@ -9,10 +9,20 @@ import {
   SubstituirNumeroPatrimonialBodySchema,
   SubstituirNumeroPatrimonialResponseSchema,
 } from "@repo/contracts";
+import type { CriarPatrimonioBodyData } from "@repo/contracts";
 import { createZodDto } from "nestjs-zod";
 
+type CriarPatrimonioBodyDtoData = Pick<
+  CriarPatrimonioBodyData,
+  keyof CriarPatrimonioBodyData
+>;
+
+const CriarPatrimonioBodyDtoSchema = CriarPatrimonioBodySchema.transform(
+  (dados): CriarPatrimonioBodyDtoData => dados,
+);
+
 export class CriarPatrimonioBodyDto extends createZodDto(
-  CriarPatrimonioBodySchema,
+  CriarPatrimonioBodyDtoSchema,
 ) {}
 
 export class CriarPatrimonioResponseDto extends createZodDto(

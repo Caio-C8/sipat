@@ -42,7 +42,7 @@ const ParametrosDepreciacaoIniciaisSchema = z.strictObject(
   },
 );
 
-export const CriarPatrimonioBodySchema = z.strictObject({
+const CriarPatrimonioBaseShape = {
   chaveIdempotencia: ChaveIdempotenciaSchema,
   semNumeroOficial: z.boolean(),
   dataTombamento: DataCivilSchema,
@@ -61,8 +61,23 @@ export const CriarPatrimonioBodySchema = z.strictObject({
   especieId: z.uuid(),
   setorAtualId: z.uuid(),
   processoCompraId: z.uuid().optional(),
+} as const;
+
+const CriarPatrimonioDepreciavelBodySchema = z.strictObject({
+  ...CriarPatrimonioBaseShape,
+  depreciavel: z.literal(true),
   parametrosDepreciacao: ParametrosDepreciacaoIniciaisSchema,
 });
+
+const CriarPatrimonioNaoDepreciavelBodySchema = z.strictObject({
+  ...CriarPatrimonioBaseShape,
+  depreciavel: z.literal(false),
+});
+
+export const CriarPatrimonioBodySchema = z.discriminatedUnion("depreciavel", [
+  CriarPatrimonioDepreciavelBodySchema,
+  CriarPatrimonioNaoDepreciavelBodySchema,
+]);
 
 export type CriarPatrimonioBodyInput = z.input<
   typeof CriarPatrimonioBodySchema

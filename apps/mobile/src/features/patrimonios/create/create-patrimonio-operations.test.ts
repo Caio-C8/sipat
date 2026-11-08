@@ -48,6 +48,7 @@ const form: CreatePatrimonioForm = {
   purchaseProcessId: "",
   registryDate: "27/09/2026",
   incorporationValue: "6000",
+  depreciable: true,
   usefulLifeMonths: "60",
   residualMode: "value",
   residualValue: "600",
@@ -65,6 +66,7 @@ function created() {
     modelo: "LATITUDE",
     numeroSerie: "ABC",
     status: "ATIVO",
+    depreciavel: true,
     setorAtual: {
       id: SECTOR,
       nome: "TI",

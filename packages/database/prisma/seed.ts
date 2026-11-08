@@ -130,6 +130,7 @@ async function main() {
           tipoIncorporacao: "AQUISICAO",
           dataTombamento: new Date("2026-10-28T00:00:00.000Z"),
           valorIncorporacao: "1000",
+          depreciavel: false,
           especieId: DEMO.especie,
           setorAtualId: DEMO.origem,
           createdById,

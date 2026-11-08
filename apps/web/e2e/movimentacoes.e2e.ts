@@ -6,6 +6,7 @@ import fixture from "./support/movimentacoes-fixtures.json";
 
 const bens = fixture.bens.map((bem) => ({
   ...bem,
+  depreciavel: false,
   situacaoContabil: {
     valorBrutoAtual: "100.0000000",
     depreciacaoAcumuladaAtual: "0.0000000",

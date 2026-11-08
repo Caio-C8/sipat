@@ -1,5 +1,16 @@
 # Roadmap do `@repo/contracts`
 
+## CONTRACTS-018 — Classificação depreciável do patrimônio ponta a ponta
+
+**Status:** aprovada para reexecução; executar antes de `DEPRECIACOES-002`.
+
+Adiciona `depreciavel` ao patrimônio e implementa a mudança como fatia vertical
+em contratos, banco, API, seed, Web e mobile. Não deve ser executada apenas no
+package compartilhado. Disponibilidade, competências e pendências foram movidas
+para `DEPRECIACOES-002` para eliminar o estado intermediário inválido que causou
+a falha da versão anterior.
+[Tarefa e critérios](../tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md).
+
 ## CONTRACTS-016 — Idempotência de operações críticas
 
 **Status:** planejado. Padroniza a chave no body, os conflitos explícitos e as

@@ -122,6 +122,9 @@ describe("CadastroPatrimonio", () => {
 
   it("recalcula a estimativa e envia o contrato ao cadastrar", async () => {
     render(<CadastroPatrimonio usuarioId="usuario-teste" />);
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /Este bem é depreciável/ }),
+    );
     fireEvent.change(screen.getByLabelText("Descrição do bem *"), {
       target: { value: "Notebook corporativo" },
     });
@@ -134,8 +137,14 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText(/Valor de incorporação/), {
       target: { value: "6.000,00" },
     });
+    fireEvent.change(screen.getByLabelText("Vida útil (meses) *"), {
+      target: { value: "60" },
+    });
     fireEvent.change(screen.getByLabelText("Valor residual"), {
       target: { value: "600,00" },
+    });
+    fireEvent.change(screen.getByLabelText("Início da depreciação *"), {
+      target: { value: "2026-10-01" },
     });
 
     expect(
@@ -156,6 +165,7 @@ describe("CadastroPatrimonio", () => {
         especieId: mocks.especies[0]!.id,
         setorAtualId: mocks.setores[0]!.id,
         valorIncorporacao: "6000.00",
+        depreciavel: true,
       }),
     );
   });
@@ -163,6 +173,9 @@ describe("CadastroPatrimonio", () => {
   it("permite repetir o mesmo pedido após uma falha de rede", async () => {
     mocks.confirmar.mockRejectedValueOnce(new Error("Falha de rede"));
     render(<CadastroPatrimonio usuarioId="usuario-teste" />);
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /Este bem é depreciável/ }),
+    );
 
     fireEvent.change(screen.getByLabelText("Descrição do bem *"), {
       target: { value: "Notebook corporativo" },
@@ -176,8 +189,14 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText(/Valor de incorporação/), {
       target: { value: "1.000,00" },
     });
+    fireEvent.change(screen.getByLabelText("Vida útil (meses) *"), {
+      target: { value: "60" },
+    });
     fireEvent.change(screen.getByLabelText("Valor residual"), {
       target: { value: "100,00" },
+    });
+    fireEvent.change(screen.getByLabelText("Início da depreciação *"), {
+      target: { value: "2026-10-01" },
     });
     fireEvent.click(
       screen.getByRole("button", { name: "Cadastrar patrimônio" }),
@@ -210,6 +229,7 @@ describe("CadastroPatrimonio", () => {
       valorIncorporacao: "5490.00",
       especieId: mocks.especies[0]!.id,
       setorAtualId: mocks.setores[0]!.id,
+      depreciavel: true,
       parametrosDepreciacao: {
         metodo: "LINEAR",
         vidaUtilInicialMeses: 60,
@@ -245,5 +265,28 @@ describe("CadastroPatrimonio", () => {
       await screen.findByRole("heading", { name: "Patrimônio cadastrado" }),
     ).toBeTruthy();
     expect(mocks.confirmar).toHaveBeenCalledWith(pedido);
+  });
+
+  it("limpa os parâmetros ao desmarcar e não os reaproveita ao remarcar", () => {
+    render(<CadastroPatrimonio usuarioId="usuario-teste" />);
+    const checkbox = screen.getByRole("checkbox", {
+      name: /Este bem é depreciável/,
+    });
+    fireEvent.click(checkbox);
+    fireEvent.change(screen.getByLabelText("Vida útil (meses) *"), {
+      target: { value: "60" },
+    });
+    fireEvent.change(screen.getByLabelText("Valor residual"), {
+      target: { value: "100" },
+    });
+    fireEvent.click(checkbox);
+    expect(screen.queryByLabelText("Valor residual")).toBeNull();
+    fireEvent.click(checkbox);
+    expect(
+      (screen.getByLabelText("Vida útil (meses) *") as HTMLInputElement).value,
+    ).toBe("");
+    expect(
+      (screen.getByLabelText("Valor residual") as HTMLInputElement).value,
+    ).toBe("");
   });
 });

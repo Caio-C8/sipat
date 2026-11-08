@@ -34,6 +34,7 @@ const patrimonioResumo = {
   modelo: null,
   numeroSerie: "SERIE-1",
   status: "ATIVO",
+  depreciavel: true,
   situacaoContabil: {
     valorBrutoAtual: "12345.6700000",
     depreciacaoAcumuladaAtual: "0",
@@ -97,6 +98,7 @@ function criarBodyValido() {
     especieId: uuids.especie,
     setorAtualId: uuids.setor,
     processoCompraId: uuids.processo,
+    depreciavel: true as const,
     parametrosDepreciacao: {
       metodo: "LINEAR",
       vidaUtilInicialMeses: 60,
@@ -115,6 +117,41 @@ describe("contratos de patrimônios", () => {
     assert.equal(resultado.descricao, "Computador portátil");
     assert.equal(resultado.marca, "Fabricante");
     assert.equal(resultado.valorIncorporacao, "12345.6700000");
+  });
+
+  it("exige classificação explícita e combina parâmetros somente com bem depreciável", () => {
+    const depreciavel = criarBodyValido();
+    assert.equal(
+      parseValido(CriarPatrimonioBodySchema, depreciavel).depreciavel,
+      true,
+    );
+
+    const naoDepreciavel = {
+      ...depreciavel,
+      depreciavel: false as const,
+    } as Record<string, unknown>;
+    delete naoDepreciavel.parametrosDepreciacao;
+    assert.equal(
+      parseValido(CriarPatrimonioBodySchema, naoDepreciavel).depreciavel,
+      false,
+    );
+
+    const semClassificacao = { ...depreciavel } as Record<string, unknown>;
+    delete semClassificacao.depreciavel;
+    esperaInvalido(CriarPatrimonioBodySchema, semClassificacao, "depreciavel");
+
+    const semParametros = { ...depreciavel } as Record<string, unknown>;
+    delete semParametros.parametrosDepreciacao;
+    esperaInvalido(
+      CriarPatrimonioBodySchema,
+      semParametros,
+      "parametrosDepreciacao",
+    );
+
+    esperaInvalido(CriarPatrimonioBodySchema, {
+      ...depreciavel,
+      depreciavel: false,
+    });
   });
 
   it("exige o bloco inicial de depreciação", () => {
@@ -260,6 +297,19 @@ describe("contratos de patrimônios", () => {
       ...patrimonioDetalhe,
       createdById: uuids.responsavel,
     });
+  });
+
+  it("representa patrimônio não depreciável sem parâmetro atual", () => {
+    const naoDepreciavel = {
+      ...patrimonioDetalhe,
+      depreciavel: false,
+      parametroDepreciacaoAtual: null,
+    } as const;
+
+    assert.deepEqual(
+      parseValido(PatrimonioDetalheSchema, naoDepreciavel),
+      naoDepreciavel,
+    );
   });
 
   it("mantém número canônico coerente com o tipo explícito da response", () => {

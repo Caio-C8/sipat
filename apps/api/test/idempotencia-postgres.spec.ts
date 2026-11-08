@@ -119,6 +119,7 @@ describeComPostgres("IDEMPOTENCIA-001 no PostgreSQL", () => {
             descricao: "Bem de teste",
             dataTombamento: new Date("2026-10-31T00:00:00Z"),
             valorIncorporacao: new Prisma.Decimal(1),
+            depreciavel: false,
             especieId: base.especieId,
             setorAtualId: base.setorId,
             createdById: base.usuarioId,

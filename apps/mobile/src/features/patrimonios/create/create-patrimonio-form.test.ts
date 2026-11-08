@@ -26,6 +26,7 @@ const form: CreatePatrimonioForm = {
   purchaseProcessId: "",
   registryDate: "27/09/2026",
   incorporationValue: "6.000,00",
+  depreciable: true,
   usefulLifeMonths: "60",
   residualMode: "value",
   residualValue: "600,00",
@@ -71,6 +72,7 @@ describe("formulário de criação patrimonial", () => {
       valorIncorporacao: "6000.00",
       especieId: form.speciesId,
       setorAtualId: form.sectorId,
+      depreciavel: true,
       parametrosDepreciacao: {
         metodo: "LINEAR",
         vidaUtilInicialMeses: 60,
@@ -81,6 +83,24 @@ describe("formulário de criação patrimonial", () => {
     });
   });
 
+  it("envia não depreciável sem parâmetros e ignora a etapa condicional", () => {
+    const nonDepreciable = {
+      ...form,
+      depreciable: false,
+      usefulLifeMonths: "",
+      residualValue: "",
+      depreciationStartDate: "",
+    };
+
+    expect(validateCreatePatrimonioStep(nonDepreciable, 4)).toEqual({});
+    expect(mapCreatePatrimonioForm(nonDepreciable, IDEMPOTENCY_KEY)).toEqual(
+      expect.objectContaining({ depreciavel: false }),
+    );
+    expect(
+      mapCreatePatrimonioForm(nonDepreciable, IDEMPOTENCY_KEY),
+    ).not.toHaveProperty("parametrosDepreciacao");
+  });
+
   it("calcula residual percentual e quota linear com inteiros escalados", () => {
     const percentage = {
       ...form,
@@ -89,10 +109,10 @@ describe("formulário de criação patrimonial", () => {
     };
     expect(effectiveResidual(percentage)).toBe("600");
     expect(monthlyDepreciationPreview(percentage)).toBe("90");
-    expect(
-      mapCreatePatrimonioForm(percentage, IDEMPOTENCY_KEY)
-        .parametrosDepreciacao,
-    ).toMatchObject({
+    const payload = mapCreatePatrimonioForm(percentage, IDEMPOTENCY_KEY);
+    expect(payload.depreciavel).toBe(true);
+    if (!payload.depreciavel) throw new Error("Classificação divergente.");
+    expect(payload.parametrosDepreciacao).toMatchObject({
       percentualResidual: "10",
       valorResidual: "600",
     });

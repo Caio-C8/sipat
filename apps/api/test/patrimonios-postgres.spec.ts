@@ -106,6 +106,7 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
       valorIncorporacao: "1000",
       especieId,
       setorAtualId: setorId,
+      depreciavel: true,
       parametrosDepreciacao: {
         metodo: "LINEAR",
         vidaUtilInicialMeses: 60,
@@ -147,6 +148,79 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     );
     expect(await database.situacaoContabilPatrimonio.count()).toBe(16);
     expect(await database.parametroDepreciacao.count()).toBe(16);
+  });
+
+  it("persiste as duas classificações e mantém parâmetro somente na depreciável", async () => {
+    const depreciavel = await service.criar(dados(1), identidade);
+    const base = dados(2);
+    const naoDepreciavel = await service.criar(
+      {
+        chaveIdempotencia: base.chaveIdempotencia,
+        semNumeroOficial: base.semNumeroOficial,
+        dataTombamento: base.dataTombamento,
+        tipoIncorporacao: base.tipoIncorporacao,
+        descricao: base.descricao,
+        numeroSerie: base.numeroSerie,
+        valorIncorporacao: base.valorIncorporacao,
+        especieId: base.especieId,
+        setorAtualId: base.setorAtualId,
+        depreciavel: false,
+      },
+      identidade,
+    );
+
+    expect(depreciavel.depreciavel).toBe(true);
+    expect(depreciavel.parametrosDepreciacao).toHaveLength(1);
+    expect(naoDepreciavel.depreciavel).toBe(false);
+    expect(naoDepreciavel.parametrosDepreciacao).toHaveLength(0);
+  });
+
+  it("constraint diferida rejeita as duas combinações incoerentes no commit", async () => {
+    const comum = {
+      tipoNumeroPatrimonial: "OFICIAL" as const,
+      dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
+      valorIncorporacao: "1000",
+      especieId,
+      setorAtualId: setorId,
+      createdById: identidade.id,
+    };
+
+    await expect(
+      database.patrimonio.create({
+        data: {
+          ...comum,
+          numeroPatrimonio: "INCONSISTENTE-TRUE",
+          descricao: "Depreciável sem parâmetro",
+          depreciavel: true,
+        },
+      }),
+    ).rejects.toBeDefined();
+
+    await expect(
+      database.patrimonio.create({
+        data: {
+          ...comum,
+          numeroPatrimonio: "INCONSISTENTE-FALSE",
+          descricao: "Não depreciável com parâmetro",
+          depreciavel: false,
+          parametrosDepreciacao: {
+            create: {
+              metodo: "LINEAR",
+              vidaUtilInicialMeses: 60,
+              valorResidual: "100",
+              valorBaseInicial: "1000",
+              dataInicio: new Date("2026-10-18T00:00:00.000Z"),
+            },
+          },
+        },
+      }),
+    ).rejects.toBeDefined();
+
+    expect(
+      await database.patrimonio.count({
+        where: { numeroPatrimonio: { startsWith: "INCONSISTENTE-" } },
+      }),
+    ).toBe(0);
   });
 
   it("não deixa registros iniciais parciais quando a série conflita", async () => {
@@ -298,6 +372,7 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
         dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
         valorIncorporacao: "1000",
         status: indice % 4 === 0 ? "ATIVO" : "EM_MANUTENCAO",
+        depreciavel: false,
         especieId,
         setorAtualId: setorId,
         createdById: identidade.id,
@@ -370,6 +445,7 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
         dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
         valorIncorporacao: "1000",
         status: indice % 2 === 0 ? "ATIVO" : "EM_MANUTENCAO",
+        depreciavel: false,
         especieId,
         setorAtualId: setorId,
         createdById: identidade.id,

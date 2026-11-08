@@ -151,6 +151,7 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
           dataTombamento: inicioAnterior,
           valorIncorporacao: new Prisma.Decimal("1000"),
           status: indice === 3 ? "BAIXADO" : "ATIVO",
+          depreciavel: true,
           especieId: especie.id,
           setorAtualId: setor.id,
           createdById: autorId,
@@ -160,19 +161,20 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
               depreciacaoAcumuladaAtual: new Prisma.Decimal("10"),
             },
           },
+          parametrosDepreciacao: {
+            create: {
+              metodo: "LINEAR",
+              vidaUtilInicialMeses: 90,
+              percentualResidual: null,
+              valorResidual: new Prisma.Decimal("100"),
+              valorBaseInicial: new Prisma.Decimal("1000"),
+              dataInicio: inicioAnterior,
+            },
+          },
         },
+        include: { parametrosDepreciacao: true },
       });
-      const parametro = await db.parametroDepreciacao.create({
-        data: {
-          metodo: "LINEAR",
-          vidaUtilInicialMeses: 90,
-          percentualResidual: null,
-          valorResidual: new Prisma.Decimal("100"),
-          valorBaseInicial: new Prisma.Decimal("1000"),
-          dataInicio: inicioAnterior,
-          patrimonioId: bem.id,
-        },
-      });
+      const parametro = bem.parametrosDepreciacao[0]!;
       await db.depreciacaoPatrimonio.create({
         data: {
           dataDepreciacao: new Date(),

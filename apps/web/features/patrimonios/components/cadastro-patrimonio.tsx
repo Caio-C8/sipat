@@ -154,10 +154,11 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const [processoCompraId, setProcessoCompraId] = useState("");
   const [dataTombamento, setDataTombamento] = useState(hojeLocal);
   const [valor, setValor] = useState("");
-  const [vidaUtil, setVidaUtil] = useState("60");
+  const [depreciavel, setDepreciavel] = useState(false);
+  const [vidaUtil, setVidaUtil] = useState("");
   const [residual, setResidual] = useState("");
   const [residualEmPercentual, setResidualEmPercentual] = useState(false);
-  const [inicioDepreciacao, setInicioDepreciacao] = useState(hojeLocal);
+  const [inicioDepreciacao, setInicioDepreciacao] = useState("");
   const [manterDados, setManterDados] = useState(false);
   const [pedidoPendente, setPedidoPendente] =
     useState<CriarPatrimonioBodyData | null>(null);
@@ -196,20 +197,23 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const valorAtual = pedidoAtual
     ? pedidoAtual.valorIncorporacao.replace(".", ",")
     : valor;
-  const vidaUtilAtual = pedidoAtual
-    ? String(pedidoAtual.parametrosDepreciacao.vidaUtilInicialMeses)
+  const depreciavelAtual = pedidoAtual?.depreciavel ?? depreciavel;
+  const parametrosAtuais = pedidoAtual?.depreciavel
+    ? pedidoAtual.parametrosDepreciacao
+    : undefined;
+  const vidaUtilAtual = parametrosAtuais
+    ? String(parametrosAtuais.vidaUtilInicialMeses)
     : vidaUtil;
-  const residualEmPercentualAtual = pedidoAtual
-    ? pedidoAtual.parametrosDepreciacao.percentualResidual !== undefined
+  const residualEmPercentualAtual = parametrosAtuais
+    ? parametrosAtuais.percentualResidual !== undefined
     : residualEmPercentual;
-  const residualAtual = pedidoAtual
+  const residualAtual = parametrosAtuais
     ? (
-        pedidoAtual.parametrosDepreciacao.percentualResidual ??
-        pedidoAtual.parametrosDepreciacao.valorResidual
+        parametrosAtuais.percentualResidual ?? parametrosAtuais.valorResidual
       ).replace(".", ",")
     : residual;
   const inicioDepreciacaoAtual =
-    pedidoAtual?.parametrosDepreciacao.dataInicio ?? inicioDepreciacao;
+    parametrosAtuais?.dataInicio ?? inicioDepreciacao;
   const listaEspecies = especiesDados ?? [];
   const listaSetores = setoresDados ?? [];
   const listaProcessos = processosDados ?? [];
@@ -224,7 +228,9 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
     : numeroDecimal(residualAtual);
   const vidaUtilNumerica = Number(vidaUtilAtual);
   const estimativaMensal =
-    valorNumerico > valorResidualNumerico && vidaUtilNumerica > 0
+    depreciavelAtual &&
+    valorNumerico > valorResidualNumerico &&
+    vidaUtilNumerica > 0
       ? (valorNumerico - valorResidualNumerico) / vidaUtilNumerica
       : null;
   const nomeResumo =
@@ -245,10 +251,11 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
     setProcessoCompraId("");
     setDataTombamento(hojeLocal());
     setValor("");
-    setVidaUtil("60");
+    setDepreciavel(false);
+    setVidaUtil("");
     setResidual("");
     setResidualEmPercentual(false);
-    setInicioDepreciacao(hojeLocal());
+    setInicioDepreciacao("");
     setErrosCampos({});
     setErro(null);
     setDecisao(null);
@@ -273,7 +280,10 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
         setModelo("");
         setSerie("");
         setValor("");
+        setDepreciavel(false);
+        setVidaUtil("");
         setResidual("");
+        setInicioDepreciacao("");
       }
     } catch (erroCriacao) {
       const proximaDecisao = decidirAposFalha(erroCriacao);
@@ -314,16 +324,21 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
       setorAtualId: setorId,
       processoCompraId:
         tipo === "AQUISICAO" && processoCompraId ? processoCompraId : undefined,
-      parametrosDepreciacao: {
-        metodo: "LINEAR",
-        vidaUtilInicialMeses: Number(vidaUtil),
-        percentualResidual: residualEmPercentual
-          ? converterDecimal(residual)
-          : undefined,
-        valorResidual: valorResidualNumerico.toFixed(2),
-        valorBaseInicial: converterDecimal(valor),
-        dataInicio: inicioDepreciacao,
-      },
+      depreciavel,
+      ...(depreciavel
+        ? {
+            parametrosDepreciacao: {
+              metodo: "LINEAR",
+              vidaUtilInicialMeses: Number(vidaUtil),
+              percentualResidual: residualEmPercentual
+                ? converterDecimal(residual)
+                : undefined,
+              valorResidual: valorResidualNumerico.toFixed(2),
+              valorBaseInicial: converterDecimal(valor),
+              dataInicio: inicioDepreciacao,
+            },
+          }
+        : {}),
     });
 
     if (!validacao.success) {
@@ -337,7 +352,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
       );
       return;
     }
-    if (valorResidualNumerico >= valorNumerico) {
+    if (depreciavel && valorResidualNumerico >= valorNumerico) {
       setErrosCampos({
         "parametrosDepreciacao.valorResidual":
           "O valor residual deve ser menor que o valor de incorporação.",
@@ -747,76 +762,103 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
             </Secao>
 
             <Secao titulo="Depreciação automática" Icone={TrendingDown}>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                <label>
-                  <Rotulo>Método</Rotulo>
-                  <input className={bloqueado} value="Linear" readOnly />
-                </label>
-                <label>
-                  <Rotulo obrigatorio>Vida útil (meses)</Rotulo>
-                  <input
-                    className={campo}
-                    type="number"
-                    min="1"
-                    max="1200"
-                    required
-                    value={vidaUtilAtual}
-                    onChange={(e) => setVidaUtil(e.target.value)}
-                  />
-                </label>
-                <label>
-                  <span className="flex items-center justify-between gap-1">
-                    <Rotulo obrigatorio>Residual</Rotulo>
-                    <span className="inline-flex rounded-full bg-[#f1f5f9] p-0.5">
-                      <button
-                        type="button"
-                        aria-pressed={!residualEmPercentualAtual}
-                        className={`rounded-full px-2 py-1 text-[10px] ${!residualEmPercentualAtual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
-                        onClick={() => setResidualEmPercentual(false)}
-                      >
-                        R$
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={residualEmPercentualAtual}
-                        className={`rounded-full px-2 py-1 text-[10px] ${residualEmPercentualAtual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
-                        onClick={() => setResidualEmPercentual(true)}
-                      >
-                        %
-                      </button>
-                    </span>
-                  </span>
-                  <input
-                    aria-label="Valor residual"
-                    className={campo}
-                    inputMode="decimal"
-                    required
-                    value={residualAtual}
-                    onChange={(e) => setResidual(e.target.value)}
-                  />
-                </label>
-                <label>
-                  <Rotulo obrigatorio>Início da depreciação</Rotulo>
-                  <input
-                    className={campo}
-                    type="date"
-                    required
-                    value={inicioDepreciacaoAtual}
-                    onChange={(e) => setInicioDepreciacao(e.target.value)}
-                  />
-                </label>
-                <div>
-                  <Rotulo>Estimativa mensal</Rotulo>
-                  <p className="mt-2 text-base font-bold text-[#19355d]">
-                    {estimativaMensal === null
-                      ? "Informe os valores"
-                      : formatarMoeda(estimativaMensal)}
+              <label className="flex items-start gap-3 rounded-md border border-[#dfe7f1] p-3">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 accent-[#2057d6]"
+                  checked={depreciavelAtual}
+                  onChange={(evento) => {
+                    setDepreciavel(evento.target.checked);
+                    setVidaUtil("");
+                    setResidual("");
+                    setResidualEmPercentual(false);
+                    setInicioDepreciacao("");
+                  }}
+                />
+                <span>
+                  <strong className="block text-xs">
+                    Este bem é depreciável
+                  </strong>
+                  <small className="text-[#62748e]">
+                    Quando marcada, a vida útil, o residual e o início da
+                    depreciação são obrigatórios.
+                  </small>
+                </span>
+              </label>
+              {depreciavelAtual ? (
+                <>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <label>
+                      <Rotulo>Método</Rotulo>
+                      <input className={bloqueado} value="Linear" readOnly />
+                    </label>
+                    <label>
+                      <Rotulo obrigatorio>Vida útil (meses)</Rotulo>
+                      <input
+                        className={campo}
+                        type="number"
+                        min="1"
+                        max="1200"
+                        required
+                        value={vidaUtilAtual}
+                        onChange={(e) => setVidaUtil(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <span className="flex items-center justify-between gap-1">
+                        <Rotulo obrigatorio>Residual</Rotulo>
+                        <span className="inline-flex rounded-full bg-[#f1f5f9] p-0.5">
+                          <button
+                            type="button"
+                            aria-pressed={!residualEmPercentualAtual}
+                            className={`rounded-full px-2 py-1 text-[10px] ${!residualEmPercentualAtual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
+                            onClick={() => setResidualEmPercentual(false)}
+                          >
+                            R$
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={residualEmPercentualAtual}
+                            className={`rounded-full px-2 py-1 text-[10px] ${residualEmPercentualAtual ? "bg-white text-[#2057d6]" : "text-[#62748e]"}`}
+                            onClick={() => setResidualEmPercentual(true)}
+                          >
+                            %
+                          </button>
+                        </span>
+                      </span>
+                      <input
+                        aria-label="Valor residual"
+                        className={campo}
+                        inputMode="decimal"
+                        required
+                        value={residualAtual}
+                        onChange={(e) => setResidual(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <Rotulo obrigatorio>Início da depreciação</Rotulo>
+                      <input
+                        className={campo}
+                        type="date"
+                        required
+                        value={inicioDepreciacaoAtual}
+                        onChange={(e) => setInicioDepreciacao(e.target.value)}
+                      />
+                    </label>
+                    <div>
+                      <Rotulo>Estimativa mensal</Rotulo>
+                      <p className="mt-2 text-base font-bold text-[#19355d]">
+                        {estimativaMensal === null
+                          ? "Informe os valores"
+                          : formatarMoeda(estimativaMensal)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-[11px] text-[#62748e]">
+                    Estimativa linear calculada com os valores informados.
                   </p>
-                </div>
-              </div>
-              <p className="mt-3 text-[11px] text-[#62748e]">
-                Estimativa linear calculada com os valores informados.
-              </p>
+                </>
+              ) : null}
             </Secao>
           </fieldset>
 

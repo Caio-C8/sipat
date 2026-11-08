@@ -80,10 +80,10 @@ describe("seed geral", () => {
   });
 
   it("recusa migration pendente ou build com histórico diferente", () => {
-    const concluidas = Array.from({ length: 26 }, (_, indice) => ({
+    const concluidas = Array.from({ length: 27 }, (_, indice) => ({
       migration_name:
-        indice === 25
-          ? "20261101120000_adiciona_integridade_documento_idempotencia_manutencao"
+        indice === 26
+          ? "20261107120000_adiciona_classificacao_depreciavel_patrimonio"
           : `migration-${indice}`,
       finished_at: new Date(),
       rolled_back_at: null,
@@ -100,8 +100,8 @@ describe("seed geral", () => {
       ]),
     ).toThrow("migrations esperadas");
     expect(() => exigirMigrationsAtuais(concluidas.slice(0, -1))).toThrow(
-      "Esperado: 26 migrations, última " +
-        "20261101120000_adiciona_integridade_documento_idempotencia_manutencao",
+      "Esperado: 27 migrations, última " +
+        "20261107120000_adiciona_classificacao_depreciavel_patrimonio",
     );
   });
 

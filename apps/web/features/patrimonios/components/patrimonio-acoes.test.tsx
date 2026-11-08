@@ -55,6 +55,7 @@ const patrimonio = {
   modelo: null,
   numeroSerie: "SERIE-1",
   status: "ATIVO",
+  depreciavel: false,
   situacaoContabil: {
     valorBrutoAtual: "1000.0000000",
     depreciacaoAcumuladaAtual: "100.0000000",

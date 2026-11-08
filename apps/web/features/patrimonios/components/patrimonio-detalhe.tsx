@@ -318,6 +318,10 @@ export function PatrimonioDetalheView({
                 titulo="Natureza"
                 valor={patrimonio.especie.natureza.nome}
               />
+              <Dado
+                titulo="Bem depreciável"
+                valor={patrimonio.depreciavel ? "Sim" : "Não"}
+              />
             </dl>
           </section>
           <section className={cartao}>
@@ -382,7 +386,9 @@ export function PatrimonioDetalheView({
                 />
               </dl>
             ) : (
-              <p className="text-sm text-[#7188a5]">Não informado</p>
+              <p className="text-sm text-[#7188a5]">
+                {patrimonio.depreciavel ? "Não informado" : "Não se aplica"}
+              </p>
             )}
           </section>
         </div>

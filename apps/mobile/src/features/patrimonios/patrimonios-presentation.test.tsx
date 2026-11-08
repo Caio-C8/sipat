@@ -25,6 +25,7 @@ const patrimonio = {
   modelo: "Latitude 3450",
   numeroSerie: "LAT2026001",
   status: "ATIVO",
+  depreciavel: true,
   setorAtual: {
     id: "22222222-2222-4222-8222-222222222222",
     nome: "Tecnologia da Informação",
@@ -88,6 +89,8 @@ describe("apresentação de patrimônios", () => {
     expect(markup).toContain("Identificação");
     expect(markup).toContain("Classificação e localização");
     expect(markup).toContain("Paulo Caixeta");
+    expect(markup).toContain("Bem depreciável");
+    expect(markup).toContain("Sim");
     expect(markup).not.toContain("Histórico");
     expect(markup).not.toContain("Sala");
     expect(markup).not.toContain("Gerar ficha");

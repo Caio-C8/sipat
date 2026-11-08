@@ -99,6 +99,7 @@ export async function fixtureRelatorios(
           textoBusca: tag.toUpperCase(),
           dataTombamento: new Date("2026-01-01"),
           valorIncorporacao: "1000.1234567",
+          depreciavel: false,
           especieId: especie.id,
           setorAtualId: setor.id,
           createdById: u.id,

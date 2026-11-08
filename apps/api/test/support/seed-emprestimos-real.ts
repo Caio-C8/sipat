@@ -79,6 +79,7 @@ async function main() {
           descricao: `Bem Web RF16 ${tag.slice(0, 8)} ${indice}`,
           dataTombamento: new Date("2025-01-01T00:00:00.000Z"),
           valorIncorporacao: "1000",
+          depreciavel: false,
           especieId: especie.id,
           setorAtualId: setor.id,
           createdById: usuario.id,

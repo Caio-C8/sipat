@@ -87,6 +87,7 @@ async function main() {
           descricao: `Equipamento Web ${indice}`,
           dataTombamento: new Date("2025-01-01T00:00:00.000Z"),
           valorIncorporacao: "1000",
+          depreciavel: false,
           especieId: especie.id,
           setorAtualId: setor.id,
           createdById: usuario.id,

@@ -331,6 +331,7 @@ suite("movimentações HTTP + PostgreSQL real", () => {
         descricao: "Bem posterior",
         dataTombamento: new Date(),
         valorIncorporacao: 100,
+        depreciavel: false,
         especieId: f.bens[0]!.especieId,
         setorAtualId: f.setores[0]!.id,
         createdById: f.diretor.id,

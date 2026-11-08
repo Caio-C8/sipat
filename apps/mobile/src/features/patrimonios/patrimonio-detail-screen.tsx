@@ -71,6 +71,10 @@ export function DadosTab({
       <DetailCard title="Classificação e localização">
         <DetailRow label="Espécie" value={patrimonio.especie.nome} />
         <DetailRow label="Natureza" value={patrimonio.especie.natureza.nome} />
+        <DetailRow
+          label="Bem depreciável"
+          value={patrimonio.depreciavel ? "Sim" : "Não"}
+        />
         <DetailRow label="Setor" value={patrimonio.setorAtual.nome} />
         <DetailRow
           label="Responsável"
@@ -167,10 +171,14 @@ export function ValoresTab({
       ) : (
         <View style={styles.emptyDepreciation}>
           <Text style={styles.emptyDepreciationTitle}>
-            Sem depreciação vigente
+            {patrimonio.depreciavel
+              ? "Sem depreciação vigente"
+              : "Bem não depreciável"}
           </Text>
           <Text style={styles.emptyDepreciationText}>
-            A resposta atual não possui parâmetros de depreciação para este bem.
+            {patrimonio.depreciavel
+              ? "A resposta atual não possui parâmetros de depreciação para este bem."
+              : "Este bem não possui parâmetros de depreciação por classificação."}
           </Text>
         </View>
       )}
