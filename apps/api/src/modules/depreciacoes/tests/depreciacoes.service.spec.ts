@@ -24,6 +24,8 @@ function linha(
     numeroPatrimonio: indice.toString(),
     descricao: `Bem ${indice}`,
     status: "ATIVO",
+    depreciavel: true,
+    disponibilidadeId: `30000000-0000-4000-8000-${indice.toString().padStart(12, "0")}`,
     situacaoContabilId: `10000000-0000-4000-8000-${indice.toString().padStart(12, "0")}`,
     valorBrutoAtual: new Prisma.Decimal("1000"),
     depreciacaoAcumuladaAtual: new Prisma.Decimal("0"),
@@ -31,9 +33,12 @@ function linha(
     quantidadeParametrosVigentes: 1n,
     vidaUtilInicialMeses: 10,
     valorResidual: new Prisma.Decimal("100"),
-    dataInicio: new Date("2026-01-01T00:00:00.000Z"),
+    dataInicio: new Date("2026-09-01T00:00:00.000Z"),
     quantidadeRealizada: 0n,
     jaDepreciadoNaCompetencia: false,
+    primeiraCompetencia: new Date("2026-10-01T00:00:00.000Z"),
+    ultimaCompetenciaProcessada: null,
+    competenciaEsperada: new Date("2026-10-01T00:00:00.000Z"),
     ...alteracoes,
   };
 }
@@ -90,31 +95,31 @@ describe("DepreciacoesService", () => {
     jest.setSystemTime(new Date("2026-11-01T02:30:00.000Z"));
     await expect(
       service.listarPendentes({
-        competencia: "2026-10",
+        competencia: "2026-11",
+        pagina: 1,
+        limite: 20,
+      }),
+    ).rejects.toMatchObject({
+      response: { codigo: "COMPETENCIA_FORA_INTERVALO" },
+    });
+    jest.setSystemTime(new Date("2026-11-01T03:30:00.000Z"));
+    await expect(
+      service.listarPendentes({
+        competencia: "2026-11",
         pagina: 1,
         limite: 20,
       }),
     ).resolves.toMatchObject({ total: 0 });
-    jest.setSystemTime(new Date("2026-11-01T03:30:00.000Z"));
-    await expect(
-      service.listarPendentes({
-        competencia: "2026-10",
-        pagina: 1,
-        limite: 20,
-      }),
-    ).rejects.toMatchObject({
-      response: { codigo: "COMPETENCIA_NAO_CORRENTE" },
-    });
   });
 
-  it("rejeita competência passada antes da transação", async () => {
+  it("rejeita competência futura antes da transação", async () => {
     await expect(
       service.executarEmMassa(
-        { ...body(), competencia: "2026-09" },
+        { ...body(), competencia: "2026-11" },
         IDENTIDADE,
       ),
     ).rejects.toMatchObject({
-      response: { codigo: "COMPETENCIA_NAO_CORRENTE" },
+      response: { codigo: "COMPETENCIA_FORA_INTERVALO" },
     });
     expect(repository.executarTransacao).not.toHaveBeenCalled();
   });
@@ -128,7 +133,8 @@ describe("DepreciacoesService", () => {
     expect(repository.executarTransacao).not.toHaveBeenCalled();
   });
 
-  it("revalida a competência dentro da transação após a virada do mês", async () => {
+  it("mantém competência passada processável após a virada do mês", async () => {
+    repository.bloquearAcervo.mockResolvedValue([]);
     repository.executarTransacao.mockImplementationOnce(
       (operacao: (repo: typeof repository) => unknown) => {
         jest.setSystemTime(new Date("2026-11-01T12:00:00.000Z"));
@@ -136,12 +142,10 @@ describe("DepreciacoesService", () => {
       },
     );
 
-    await expect(
-      service.executarEmMassa(body(), IDENTIDADE),
-    ).rejects.toMatchObject({
-      response: { codigo: "COMPETENCIA_NAO_CORRENTE" },
-    });
-    expect(repository.bloquearAcervo).not.toHaveBeenCalled();
+    await expect(service.executarEmMassa(body(), IDENTIDADE)).resolves.toEqual(
+      expect.objectContaining({ quantidadeProcessada: 0 }),
+    );
+    expect(repository.bloquearAcervo).toHaveBeenCalledTimes(1);
   });
 
   it("exige confirmação e não persiste quando há item no residual", async () => {
@@ -183,9 +187,12 @@ describe("DepreciacoesService", () => {
     expect(resultado.quantidadeProcessada).toBe(1);
     expect(resultado.quantidadesInelegiveis).toEqual({
       baixado: 1,
+      naoDepreciavel: 0,
+      indisponivelParaUso: 0,
       semParametroVigente: 1,
       dataInicioNaoAtingida: 1,
       jaDepreciadoNaCompetencia: 1,
+      competenciaAnteriorPendente: 0,
       valorResidualAtingido: 1,
     });
     expect(repository.persistirEmLote).toHaveBeenCalledTimes(1);

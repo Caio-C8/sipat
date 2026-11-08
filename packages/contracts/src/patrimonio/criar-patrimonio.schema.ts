@@ -32,7 +32,6 @@ const ParametrosDepreciacaoIniciaisSchema = z.strictObject(
       .optional(),
     valorResidual: Decimal19_7Schema,
     valorBaseInicial: Decimal19_7PositivoSchema,
-    dataInicio: DataCivilSchema,
   },
   {
     error: (issue) =>

@@ -11,6 +11,8 @@ import type {
   MotivoInelegibilidadeDepreciacao,
   ResultadoDepreciacaoIndividual,
   ResultadoDepreciacoesEmMassa,
+  ListarCompetenciasDepreciacaoResponse,
+  ResumoPendenciasDepreciacaoResponse,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { diaSaoPaulo } from "../../common/utils/datas-institucionais";
@@ -41,7 +43,7 @@ export class DepreciacoesService {
   async listarPendentes(
     query: ListarDepreciacoesPendentesQueryData,
   ): Promise<ResultadoPaginaPendentes> {
-    const competencia = this.validarCompetenciaCorrente(query.competencia);
+    const competencia = this.validarCompetenciaSelecionavel(query.competencia);
     const [linhas, resumo] = await Promise.all([
       this.depreciacoes.listarPendentes(
         competencia,
@@ -58,6 +60,43 @@ export class DepreciacoesService {
       pagina: query.pagina,
       ultimaPagina: Math.max(1, Math.ceil(total / query.limite)),
       limite: query.limite,
+    };
+  }
+
+  async listarCompetencias(): Promise<
+    ListarCompetenciasDepreciacaoResponse["dados"]
+  > {
+    const atualTexto = this.competenciaAtual(new Date());
+    const atual = this.paraCompetencia(atualTexto);
+    const linhas = await this.depreciacoes.listarCompetencias(atual);
+    return {
+      competenciaAtual: atualTexto,
+      competenciaMaisAntigaPendente: linhas[0]
+        ? this.competenciaTexto(linhas[0].competencia)
+        : null,
+      competencias: linhas.map((linha) => ({
+        competencia: this.competenciaTexto(linha.competencia),
+        quantidadePendente: Number(linha.quantidadePendente),
+        quantidadeBloqueadaPorAnterior: Number(
+          linha.quantidadeBloqueadaPorAnterior,
+        ),
+      })),
+    };
+  }
+
+  async resumoPendencias(): Promise<
+    ResumoPendenciasDepreciacaoResponse["dados"]
+  > {
+    const resumo = await this.depreciacoes.resumoPendencias(
+      this.paraCompetencia(this.competenciaAtual(new Date())),
+    );
+    return {
+      totalPendencias: Number(resumo.totalPendencias),
+      totalPatrimonios: Number(resumo.totalPatrimonios),
+      competenciaMaisAntiga:
+        resumo.competenciaMaisAntiga === null
+          ? null
+          : this.competenciaTexto(resumo.competenciaMaisAntiga),
     };
   }
 
@@ -168,7 +207,7 @@ export class DepreciacoesService {
     comissao: ComissaoBloqueadaDepreciacao;
   }> {
     const instante = new Date();
-    const competencia = this.validarCompetenciaCorrente(
+    const competencia = this.validarCompetenciaSelecionavel(
       dados.competencia,
       instante,
     );
@@ -186,7 +225,7 @@ export class DepreciacoesService {
     comissaoId: string;
   }): Promise<void> {
     const agora = new Date();
-    this.validarCompetenciaCorrente(dados.competencia, agora);
+    this.validarCompetenciaSelecionavel(dados.competencia, agora);
     try {
       await this.comissoes.consultarVigente(
         dados.comissaoId,
@@ -214,11 +253,25 @@ export class DepreciacoesService {
     if (linha.situacaoContabilId === null) this.falharEstadoContabil();
     if (linha.quantidadeParametrosVigentes > 1n) this.falharEstadoContabil();
     if (linha.status === "BAIXADO") return "BAIXADO";
+    if (!linha.depreciavel) return "NAO_DEPRECIAVEL";
+    if (linha.disponibilidadeId === null) return "INDISPONIVEL_PARA_USO";
     if (linha.parametroDepreciacaoId === null) return "SEM_PARAMETRO_VIGENTE";
     if (linha.dataInicio === null || linha.dataInicio >= competencia) {
       return "DATA_INICIO_NAO_ATINGIDA";
     }
     if (linha.jaDepreciadoNaCompetencia) {
+      return "JA_DEPRECIADO_NA_COMPETENCIA";
+    }
+    if (
+      linha.competenciaEsperada !== null &&
+      linha.competenciaEsperada < competencia
+    ) {
+      return "COMPETENCIA_ANTERIOR_PENDENTE";
+    }
+    if (
+      linha.competenciaEsperada !== null &&
+      linha.competenciaEsperada > competencia
+    ) {
       return "JA_DEPRECIADO_NA_COMPETENCIA";
     }
     const calculo = this.calcularOuFalhar(linha);
@@ -241,19 +294,18 @@ export class DepreciacoesService {
     }
   }
 
-  private validarCompetenciaCorrente(
+  private validarCompetenciaSelecionavel(
     competencia: string,
     agora = new Date(),
   ): Date {
-    if (competencia !== this.competenciaAtual(agora)) {
+    if (competencia > this.competenciaAtual(agora)) {
       throw new ConflictException({
-        codigo: "COMPETENCIA_NAO_CORRENTE",
-        mensagem: "Somente a competência civil corrente pode ser processada.",
+        codigo: "COMPETENCIA_FORA_INTERVALO",
+        mensagem: "A competência não pode ser futura.",
         erros: [],
       });
     }
-    const [ano, mes] = competencia.split("-").map(Number);
-    return new Date(Date.UTC(ano!, mes! - 1, 1));
+    return this.paraCompetencia(competencia);
   }
 
   private competenciaAtual(data: Date): string {
@@ -275,6 +327,9 @@ export class DepreciacoesService {
       dataInicioNaoAtingida: 0,
       jaDepreciadoNaCompetencia: 0,
       valorResidualAtingido: 0,
+      naoDepreciavel: 0,
+      indisponivelParaUso: 0,
+      competenciaAnteriorPendente: 0,
     };
   }
 
@@ -291,6 +346,9 @@ export class DepreciacoesService {
       DATA_INICIO_NAO_ATINGIDA: "dataInicioNaoAtingida",
       JA_DEPRECIADO_NA_COMPETENCIA: "jaDepreciadoNaCompetencia",
       VALOR_RESIDUAL_ATINGIDO: "valorResidualAtingido",
+      NAO_DEPRECIAVEL: "naoDepreciavel",
+      INDISPONIVEL_PARA_USO: "indisponivelParaUso",
+      COMPETENCIA_ANTERIOR_PENDENTE: "competenciaAnteriorPendente",
     };
     contagens[chaves[motivo]] += 1;
   }
@@ -334,5 +392,14 @@ export class DepreciacoesService {
       erro instanceof Prisma.PrismaClientKnownRequestError &&
       erro.code === codigo
     );
+  }
+
+  private paraCompetencia(competencia: string): Date {
+    const [ano, mes] = competencia.split("-").map(Number);
+    return new Date(Date.UTC(ano!, mes! - 1, 1));
+  }
+
+  private competenciaTexto(data: Date): string {
+    return data.toISOString().slice(0, 7);
   }
 }

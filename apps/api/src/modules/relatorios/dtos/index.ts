@@ -39,6 +39,12 @@ export class DepreciacoesQueryDto extends createZodDto(
 export class DepreciacoesPdfQueryDto extends createZodDto(
   queryPdfRelatorio("depreciacoes"),
 ) {}
+export class PendenciasDepreciacaoQueryDto extends createZodDto(
+  queryRelatorio("pendencias-depreciacao"),
+) {}
+export class PendenciasDepreciacaoPdfQueryDto extends createZodDto(
+  queryPdfRelatorio("pendencias-depreciacao"),
+) {}
 export class ReavaliacoesQueryDto extends createZodDto(
   queryRelatorio("reavaliacoes"),
 ) {}

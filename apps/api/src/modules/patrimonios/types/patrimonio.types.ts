@@ -72,6 +72,23 @@ export const patrimonioDetalheArgs = {
         valorBaseInicial: true,
         dataInicio: true,
         dataFim: true,
+        depreciacoes: {
+          orderBy: [
+            { dataCompetencia: "desc" as const },
+            { id: "desc" as const },
+          ],
+          take: 1,
+          select: { dataCompetencia: true },
+        },
+        _count: { select: { depreciacoes: true } },
+      },
+    },
+    disponibilidadeUso: {
+      select: {
+        id: true,
+        dataDisponibilidade: true,
+        createdAt: true,
+        createdBy: { select: { id: true, nome: true } },
       },
     },
   },
@@ -105,3 +122,10 @@ export type ListarPatrimoniosResultado = {
 };
 
 export type TipoNumeroParaGeracao = "OFICIAL" | "SEM_NUMERO_OFICIAL";
+
+export type DisponibilidadeUsoPayload = {
+  id: string;
+  dataDisponibilidade: Date;
+  createdAt: Date;
+  createdBy: { id: string; nome: string };
+};

@@ -16,6 +16,7 @@ import {
   type CriarPatrimonioResponse,
   type ListarPatrimoniosResponse,
   type SubstituirNumeroPatrimonialResponse,
+  type ConfirmarDisponibilidadeUsoResponse,
 } from "@repo/contracts";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { RequisicaoAutenticada } from "../auth/auth.types";
@@ -30,6 +31,8 @@ import {
   PatrimonioParamsDto,
   SubstituirNumeroPatrimonialBodyDto,
   SubstituirNumeroPatrimonialResponseDto,
+  ConfirmarDisponibilidadeUsoBodyDto,
+  ConfirmarDisponibilidadeUsoResponseDto,
 } from "./dtos";
 import { PatrimonioResponseMapper } from "./mappers";
 import { PatrimoniosService } from "./patrimonios.service";
@@ -109,6 +112,27 @@ export class PatrimoniosController {
       sucesso: true,
       mensagem: "Patrimônio criado com sucesso.",
       dados: PatrimonioResponseMapper.paraDetalhe(patrimonio),
+    };
+  }
+
+  @Post(":patrimonioId/disponibilidade-uso")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @HttpCode(HttpStatus.CREATED)
+  @ZodSerializerDto(ConfirmarDisponibilidadeUsoResponseDto)
+  async confirmarDisponibilidadeUso(
+    @Param() params: PatrimonioParamsDto,
+    @Body() body: ConfirmarDisponibilidadeUsoBodyDto,
+    @Req() request: RequisicaoAutenticada,
+  ): Promise<ConfirmarDisponibilidadeUsoResponse> {
+    return {
+      status: HttpStatus.CREATED,
+      sucesso: true,
+      mensagem: "Disponibilidade para uso confirmada com sucesso.",
+      dados: await this.patrimoniosService.confirmarDisponibilidadeUso(
+        params.patrimonioId,
+        body,
+        request.identidadeAutenticada!,
+      ),
     };
   }
 

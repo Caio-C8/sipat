@@ -76,6 +76,13 @@ const patrimonio = {
   processoCompra: null,
   cadastradoPor: { id, nome: "Operador" },
   parametroDepreciacaoAtual: null,
+  disponibilidadeUso: null,
+  resumoDepreciacao: {
+    primeiraCompetencia: null,
+    ultimaCompetenciaProcessada: null,
+    proximaCompetencia: null,
+    quantidadePendencias: 0,
+  },
   createdAt: "2026-10-18T12:00:00.000Z",
   updatedAt: null,
 } satisfies PatrimonioDetalhe;

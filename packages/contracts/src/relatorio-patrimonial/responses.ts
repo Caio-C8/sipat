@@ -28,6 +28,7 @@ export const titulosRelatorios = {
   movimentacoes: "Movimentações",
   manutencoes: "Manutenções",
   depreciacoes: "Depreciações",
+  "pendencias-depreciacao": "Pendências de depreciação",
   reavaliacoes: "Reavaliações",
   inventarios: "Inventário e inconsistências",
   emprestimos: "Empréstimos",
@@ -135,6 +136,26 @@ export const depreciacoesResumoSchema = z.strictObject({
       quotas: decimal,
     }),
   ),
+});
+export const pendenciasDepreciacaoLinhaSchema = z.strictObject({
+  id: z.uuid(),
+  patrimonioId: z.uuid(),
+  numeroPatrimonio: texto,
+  descricao: texto,
+  status: texto,
+  primeiraCompetencia: texto,
+  ultimaCompetenciaProcessada: texto.nullable(),
+  competenciaEsperada: texto,
+  quantidadePendencias: z.number().int().positive(),
+  valorLiquidoAtual: decimal,
+  valorResidual: decimal,
+  quotaPrevista: decimal,
+});
+export const pendenciasDepreciacaoResumoSchema = z.strictObject({
+  quantidade: z.number().int().nonnegative(),
+  bensDistintos: z.number().int().nonnegative(),
+  competenciaMaisAntiga: texto.nullable(),
+  quantidadeCompetencias: z.number().int().nonnegative(),
 });
 export const reavaliacoesLinhaSchema = z.strictObject({
   id: z.uuid(),
@@ -316,6 +337,16 @@ export const respostasTabulares = {
     meta: MetaPaginacaoSchema,
     consulta: ConsultaRelatorioSchema,
   }),
+  "pendencias-depreciacao": z.strictObject({
+    status: z.literal(200),
+    sucesso: z.literal(true),
+    mensagem: texto,
+    tipo: z.literal("pendencias-depreciacao"),
+    dados: z.array(pendenciasDepreciacaoLinhaSchema),
+    resumo: pendenciasDepreciacaoResumoSchema,
+    meta: MetaPaginacaoSchema,
+    consulta: ConsultaRelatorioSchema,
+  }),
   reavaliacoes: z.strictObject({
     status: z.literal(200),
     sucesso: z.literal(true),
@@ -362,6 +393,7 @@ export const RelatorioTabularResponseSchema = z.discriminatedUnion("tipo", [
   respostasTabulares.movimentacoes,
   respostasTabulares.manutencoes,
   respostasTabulares.depreciacoes,
+  respostasTabulares["pendencias-depreciacao"],
   respostasTabulares.reavaliacoes,
   respostasTabulares.inventarios,
   respostasTabulares.emprestimos,
@@ -522,7 +554,7 @@ export const CatalogoRelatoriosResponseSchema = criarRespostaSucessoSchema(
           pdf: z.boolean(),
         }),
       )
-      .length(9),
+      .length(10),
     limites: z.object({
       previaPadrao: z.number().int().positive(),
       previaMaxima: z.number().int().positive(),

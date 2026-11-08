@@ -50,6 +50,16 @@ function Depreciacoes({ query }: Props) {
   const estado = hooks.usePdfDepreciacoes();
   return <Botao estado={estado} query={query} nome="sipat-depreciacoes.pdf" />;
 }
+function PendenciasDepreciacao({ query }: Props) {
+  const estado = hooks.usePdfPendenciasDepreciacao();
+  return (
+    <Botao
+      estado={estado}
+      query={query}
+      nome="sipat-pendencias-depreciacao.pdf"
+    />
+  );
+}
 function Reavaliacoes({ query }: Props) {
   const estado = hooks.usePdfReavaliacoes();
   return <Botao estado={estado} query={query} nome="sipat-reavaliacoes.pdf" />;
@@ -75,6 +85,7 @@ const botoes = {
   movimentacoes: Movimentacoes,
   manutencoes: Manutencoes,
   depreciacoes: Depreciacoes,
+  "pendencias-depreciacao": PendenciasDepreciacao,
   reavaliacoes: Reavaliacoes,
   inventarios: Inventarios,
   emprestimos: Emprestimos,

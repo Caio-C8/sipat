@@ -49,7 +49,6 @@ function dados(
       percentualResidual: "10",
       valorResidual: "100",
       valorBaseInicial: "1000",
-      dataInicio: "2026-10-18",
     },
     ...sobrescritas,
   };
@@ -71,6 +70,12 @@ describe("PatrimoniosService", () => {
     buscarParaSubstituicao: jest.fn(),
     atualizarNumeroCondicional: jest.fn(),
     criarHistoricoSubstituicao: jest.fn(),
+    tentarBloquearChaveDisponibilidade: jest.fn(),
+    buscarIdempotenciaDisponibilidade: jest.fn(),
+    bloquearParaDisponibilidade: jest.fn(),
+    criarDisponibilidade: jest.fn(),
+    iniciarParametroVigente: jest.fn(),
+    salvarIdempotenciaDisponibilidade: jest.fn(),
   };
   const service = new PatrimoniosService(
     repository as unknown as PatrimoniosRepository,
@@ -99,6 +104,124 @@ describe("PatrimoniosService", () => {
     });
     repository.atualizarNumeroCondicional.mockResolvedValue(true);
     repository.criarHistoricoSubstituicao.mockResolvedValue(undefined);
+    repository.tentarBloquearChaveDisponibilidade.mockResolvedValue(true);
+    repository.buscarIdempotenciaDisponibilidade.mockResolvedValue(null);
+    repository.bloquearParaDisponibilidade.mockResolvedValue({
+      status: "ATIVO",
+      depreciavel: true,
+      disponibilidadeId: null,
+    });
+    repository.criarDisponibilidade.mockResolvedValue({
+      id: "77777777-7777-4777-8777-777777777777",
+      dataDisponibilidade: new Date("2026-10-18T00:00:00.000Z"),
+      createdAt: new Date("2026-10-18T12:00:00.000Z"),
+      createdBy: { id: DIRETOR_ID, nome: "Diretor" },
+    });
+    repository.iniciarParametroVigente.mockResolvedValue({ count: 1 });
+    repository.salvarIdempotenciaDisponibilidade.mockResolvedValue(undefined);
+  });
+
+  it("confirma disponibilidade e inicia o parâmetro depreciável atomicamente", async () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-10-20T12:00:00.000Z"));
+    try {
+      await expect(
+        service.confirmarDisponibilidadeUso(
+          "patrimonio",
+          {
+            dataDisponibilidade: "2026-10-18",
+            chaveIdempotencia: "00000000-0000-4000-8000-000000000010",
+          },
+          identidade,
+        ),
+      ).resolves.toMatchObject({
+        dataDisponibilidade: "2026-10-18",
+        primeiraCompetencia: "2026-11",
+      });
+      expect(repository.iniciarParametroVigente).toHaveBeenCalledWith(
+        "patrimonio",
+        new Date("2026-10-18T00:00:00.000Z"),
+      );
+      expect(
+        repository.salvarIdempotenciaDisponibilidade,
+      ).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("registra disponibilidade de bem não depreciável sem iniciar parâmetro", async () => {
+    repository.bloquearParaDisponibilidade.mockResolvedValueOnce({
+      status: "ATIVO",
+      depreciavel: false,
+      disponibilidadeId: null,
+    });
+
+    await expect(
+      service.confirmarDisponibilidadeUso(
+        "patrimonio",
+        {
+          dataDisponibilidade: "2026-10-18",
+          chaveIdempotencia: "00000000-0000-4000-8000-000000000011",
+        },
+        identidade,
+      ),
+    ).resolves.toMatchObject({ primeiraCompetencia: null });
+    expect(repository.iniciarParametroVigente).not.toHaveBeenCalled();
+  });
+
+  it("rejeita disponibilidade futura, baixada e duplicada sem escrita parcial", async () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-10-20T12:00:00.000Z"));
+    try {
+      await expect(
+        service.confirmarDisponibilidadeUso(
+          "patrimonio",
+          {
+            dataDisponibilidade: "2026-10-21",
+            chaveIdempotencia: "00000000-0000-4000-8000-000000000012",
+          },
+          identidade,
+        ),
+      ).rejects.toMatchObject({
+        response: { codigo: "DATA_DISPONIBILIDADE_FUTURA" },
+      });
+
+      repository.bloquearParaDisponibilidade.mockResolvedValueOnce({
+        status: "BAIXADO",
+        depreciavel: true,
+        disponibilidadeId: null,
+      });
+      await expect(
+        service.confirmarDisponibilidadeUso(
+          "patrimonio",
+          {
+            dataDisponibilidade: "2026-10-18",
+            chaveIdempotencia: "00000000-0000-4000-8000-000000000013",
+          },
+          identidade,
+        ),
+      ).rejects.toMatchObject({ response: { codigo: "PATRIMONIO_BAIXADO" } });
+
+      repository.bloquearParaDisponibilidade.mockResolvedValueOnce({
+        status: "ATIVO",
+        depreciavel: true,
+        disponibilidadeId: "disponibilidade",
+      });
+      await expect(
+        service.confirmarDisponibilidadeUso(
+          "patrimonio",
+          {
+            dataDisponibilidade: "2026-10-18",
+            chaveIdempotencia: "00000000-0000-4000-8000-000000000014",
+          },
+          identidade,
+        ),
+      ).rejects.toMatchObject({
+        response: { codigo: "DISPONIBILIDADE_JA_CONFIRMADA" },
+      });
+      expect(repository.criarDisponibilidade).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("lista com busca normalizada, filtros e paginação consistente", async () => {
@@ -312,14 +435,12 @@ describe("PatrimoniosService", () => {
         vidaUtilInicialMeses: 60,
         valorResidual: "100",
         valorBaseInicial: "1001",
-        dataInicio: "2026-10-18",
       },
       {
         metodo: "LINEAR",
         vidaUtilInicialMeses: 60,
         valorResidual: "101",
         valorBaseInicial: "100",
-        dataInicio: "2026-10-18",
       },
       {
         metodo: "LINEAR",
@@ -327,7 +448,6 @@ describe("PatrimoniosService", () => {
         percentualResidual: "101",
         valorResidual: "100",
         valorBaseInicial: "1000",
-        dataInicio: "2026-10-18",
       },
       {
         metodo: "LINEAR",
@@ -335,7 +455,6 @@ describe("PatrimoniosService", () => {
         percentualResidual: "10",
         valorResidual: "99",
         valorBaseInicial: "1000",
-        dataInicio: "2026-10-18",
       },
     ];
 

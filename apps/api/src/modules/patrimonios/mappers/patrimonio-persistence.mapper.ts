@@ -61,9 +61,7 @@ export class PatrimonioPersistenceMapper {
                   dados.parametrosDepreciacao.percentualResidual,
                 valorResidual: dados.parametrosDepreciacao.valorResidual,
                 valorBaseInicial: dados.parametrosDepreciacao.valorBaseInicial,
-                dataInicio: this.paraDataCivil(
-                  dados.parametrosDepreciacao.dataInicio,
-                ),
+                dataInicio: null,
               },
             },
           }

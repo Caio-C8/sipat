@@ -149,8 +149,10 @@ No estado atual:
 - `PatrimoniosModule` aplica o mesmo corte por camadas; somente
   `DIRETOR_PATRIMONIO` cria, os dois perfis consultam, e a API deriva numeração,
   status, normalização, situação contábil e auditoria dentro de uma transação;
-  toda criação exige e persiste o parâmetro inicial de depreciação, que somente
-  poderá ser substituído futuramente por reavaliação;
+  a criação declara se o bem é depreciável. Bens depreciáveis recebem parâmetro
+  inicial ainda sem início, enquanto bens não depreciáveis não recebem parâmetro;
+  o Diretor confirma a disponibilidade uma única vez pela operação pública
+  idempotente, que inicia o parâmetro na mesma transação;
 - `ProcessosCompraModule` permite aos dois perfis criar, listar, consultar e
   alterar processos; a criação recebe até 20 notas e PDFs, valida fornecedores
   ativos, assinatura dos documentos e persiste notas e auditoria na mesma
@@ -286,6 +288,8 @@ notas e anexos. A implementação de `COMPRAS-001` permanece em validação.
 
 ## Relatórios patrimoniais
 
-O novo módulo oferece catálogo, seletores, oito consultas tabulares e ficha
-com eventos reais, além de PDF autenticado dos nove tipos para ambos os perfis.
+O módulo oferece catálogo, seletores, nove consultas tabulares e ficha com
+eventos reais, além de PDF autenticado dos dez tipos para ambos os perfis. O
+relatório de pendências de depreciação compartilha a semântica do catálogo de
+competências e do resumo calculado pela API.
 [Semântica, rotas, limites e operação local](./relatorios-patrimoniais.md).

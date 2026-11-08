@@ -8,6 +8,13 @@ import { ComissoesRepository } from "../src/modules/comissoes/comissoes.reposito
 import { ComissoesService } from "../src/modules/comissoes/comissoes.service";
 import { DepreciacoesRepository } from "../src/modules/depreciacoes/depreciacoes.repository";
 import { DepreciacoesService } from "../src/modules/depreciacoes/depreciacoes.service";
+import { PatrimoniosRepository } from "../src/modules/patrimonios/patrimonios.repository";
+import { PatrimoniosService } from "../src/modules/patrimonios/patrimonios.service";
+import { RelatoriosPdfService } from "../src/modules/relatorios/pdf.service";
+import { RelatoriosRepository } from "../src/modules/relatorios/relatorios.repository";
+import { RelatoriosService } from "../src/modules/relatorios/relatorios.service";
+import { construirFonte } from "../src/modules/relatorios/types/fontes-tabulares";
+import type { FichaService } from "../src/modules/relatorios/ficha.service";
 
 const databaseUrl = process.env.DEPRECIACOES_INTEGRATION_DATABASE_URL;
 const describeComPostgres = databaseUrl ? describe : describe.skip;
@@ -15,6 +22,8 @@ const describeComPostgres = databaseUrl ? describe : describe.skip;
 describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
   let database: DatabaseClient;
   let service: DepreciacoesService;
+  let patrimoniosService: PatrimoniosService;
+  let relatoriosService: RelatoriosService;
   let identidade: IdentidadeAutenticada;
   let comissaoId: string;
   let especieId: string;
@@ -34,6 +43,15 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
   const inicioAnterior = new Date(
     Date.UTC(agora.getFullYear(), agora.getMonth() - 1, 1),
   );
+  const inicioQuatroMesesAntes = new Date(
+    Date.UTC(agora.getFullYear(), agora.getMonth() - 4, 1),
+  );
+  const competenciaMes = (data: Date) =>
+    `${data.getUTCFullYear().toString().padStart(4, "0")}-${(
+      data.getUTCMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}`;
 
   beforeAll(async () => {
     if (!databaseUrl?.includes("/sipat_depreciacoes001_test")) {
@@ -46,6 +64,12 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
     service = new DepreciacoesService(
       new DepreciacoesRepository(database),
       new ComissoesService(new ComissoesRepository(database)),
+    );
+    patrimoniosService = new PatrimoniosService(
+      new PatrimoniosRepository(database),
+    );
+    relatoriosService = new RelatoriosService(
+      new RelatoriosRepository(database),
     );
   });
 
@@ -120,8 +144,10 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
       vida?: number;
       dataInicio?: Date;
       comParametro?: boolean;
+      disponivel?: boolean;
     } = {},
   ) {
+    const dataInicio = opcoes.dataInicio ?? inicioAnterior;
     return database.patrimonio.create({
       data: {
         numeroPatrimonio: numero,
@@ -149,7 +175,16 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
                   vidaUtilInicialMeses: opcoes.vida ?? 10,
                   valorResidual: opcoes.residual ?? "100",
                   valorBaseInicial: opcoes.bruto ?? "1000",
-                  dataInicio: opcoes.dataInicio ?? inicioAnterior,
+                  dataInicio: opcoes.disponivel === false ? null : dataInicio,
+                },
+              },
+        disponibilidadeUso:
+          opcoes.comParametro === false || opcoes.disponivel === false
+            ? undefined
+            : {
+                create: {
+                  dataDisponibilidade: dataInicio,
+                  createdById: identidade.id,
                 },
               },
       },
@@ -162,11 +197,200 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
     comissaoId,
     confirmarIgnorarValorResidual,
   });
+  const bodyCompetencia = (competenciaSelecionada: string) => ({
+    competencia: competenciaSelecionada,
+    comissaoId,
+    confirmarIgnorarValorResidual: true,
+  });
+
+  it("confirma disponibilidade concorrente uma única vez e inicia o parâmetro", async () => {
+    const patrimonio = await criarPatrimonio("DISP-1", {
+      disponivel: false,
+      dataInicio: inicioQuatroMesesAntes,
+    });
+    const dados = (chaveIdempotencia: string) => ({
+      dataDisponibilidade: inicioQuatroMesesAntes.toISOString().slice(0, 10),
+      chaveIdempotencia,
+    });
+    const resultados = await Promise.allSettled([
+      patrimoniosService.confirmarDisponibilidadeUso(
+        patrimonio.id,
+        dados("10000000-0000-4000-8000-000000000001"),
+        identidade,
+      ),
+      patrimoniosService.confirmarDisponibilidadeUso(
+        patrimonio.id,
+        dados("10000000-0000-4000-8000-000000000002"),
+        identidade,
+      ),
+    ]);
+
+    expect(
+      resultados.filter((item) => item.status === "fulfilled"),
+    ).toHaveLength(1);
+    await expect(
+      database.disponibilidadeUsoPatrimonio.count({
+        where: { patrimonioId: patrimonio.id },
+      }),
+    ).resolves.toBe(1);
+    const parametro = await database.parametroDepreciacao.findFirstOrThrow({
+      where: { patrimonioId: patrimonio.id, dataFim: null },
+    });
+    expect(parametro.dataInicio?.toISOString().slice(0, 10)).toBe(
+      inicioQuatroMesesAntes.toISOString().slice(0, 10),
+    );
+  });
+
+  it("processa competências passadas uma a uma e impede lacunas", async () => {
+    const patrimonio = await criarPatrimonio("ORDEM-1", {
+      dataInicio: inicioQuatroMesesAntes,
+    });
+    const primeiraData = new Date(
+      Date.UTC(agora.getFullYear(), agora.getMonth() - 3, 1),
+    );
+    const segundaData = new Date(
+      Date.UTC(agora.getFullYear(), agora.getMonth() - 2, 1),
+    );
+    const anteriorPrimeira = competenciaMes(inicioQuatroMesesAntes);
+    const primeira = competenciaMes(primeiraData);
+    const segunda = competenciaMes(segundaData);
+
+    await expect(
+      service.executarIndividual(
+        patrimonio.id,
+        bodyCompetencia(segunda),
+        identidade,
+      ),
+    ).resolves.toEqual({
+      resultado: "INELEGIVEL",
+      motivo: "COMPETENCIA_ANTERIOR_PENDENTE",
+    });
+    await expect(
+      service.executarIndividual(
+        patrimonio.id,
+        bodyCompetencia(anteriorPrimeira),
+        identidade,
+      ),
+    ).resolves.toEqual({
+      resultado: "INELEGIVEL",
+      motivo: "DATA_INICIO_NAO_ATINGIDA",
+    });
+    await expect(
+      service.executarIndividual(
+        patrimonio.id,
+        bodyCompetencia(primeira),
+        identidade,
+      ),
+    ).resolves.toMatchObject({
+      resultado: "DEPRECIADO",
+      competencia: primeira,
+    });
+    await expect(
+      service.executarIndividual(
+        patrimonio.id,
+        bodyCompetencia(segunda),
+        identidade,
+      ),
+    ).resolves.toMatchObject({ resultado: "DEPRECIADO", competencia: segunda });
+    await expect(
+      database.depreciacaoPatrimonio.count({
+        where: { patrimonioId: patrimonio.id },
+      }),
+    ).resolves.toBe(2);
+  });
+
+  it("o banco recusa valores inválidos, lacunas e alteração de fatos", async () => {
+    const patrimonio = await criarPatrimonio("DB-CK-1", {
+      dataInicio: inicioQuatroMesesAntes,
+    });
+    const parametro = patrimonio.parametrosDepreciacao[0]!;
+    const segundaCompetencia = new Date(
+      Date.UTC(agora.getFullYear(), agora.getMonth() - 2, 1),
+    );
+
+    await expect(
+      database.parametroDepreciacao.update({
+        where: { id: parametro.id },
+        data: { vidaUtilInicialMeses: 0 },
+      }),
+    ).rejects.toThrow();
+
+    await expect(
+      database.$transaction(async (tx) => {
+        await tx.depreciacaoPatrimonio.create({
+          data: {
+            dataDepreciacao: new Date(),
+            dataCompetencia: segundaCompetencia,
+            valorContabilAnterior: "1000",
+            valorDepreciado: "90",
+            valorContabilNovo: "910",
+            patrimonioId: patrimonio.id,
+            parametroDepreciacaoId: parametro.id,
+            comissaoId,
+            createdById: identidade.id,
+          },
+        });
+        await tx.situacaoContabilPatrimonio.update({
+          where: { patrimonioId: patrimonio.id },
+          data: { depreciacaoAcumuladaAtual: "90" },
+        });
+      }),
+    ).rejects.toThrow(/competências depreciadas devem ser mensais/i);
+
+    await expect(
+      database.disponibilidadeUsoPatrimonio.update({
+        where: { patrimonioId: patrimonio.id },
+        data: { dataDisponibilidade: inicioAnterior },
+      }),
+    ).rejects.toThrow(/imutáveis/i);
+  });
+
+  it("gera relatório tabular e PDF de pendências com uma consulta finita", async () => {
+    await criarPatrimonio("REL-PEND-1", {
+      dataInicio: inicioQuatroMesesAntes,
+    });
+    const resposta = await relatoriosService.tabular("pendencias-depreciacao", {
+      pagina: 1,
+      limite: 20,
+    });
+
+    expect(resposta).toMatchObject({
+      status: 200,
+      tipo: "pendencias-depreciacao",
+      resumo: {
+        quantidade: 1,
+        bensDistintos: 1,
+        quantidadeCompetencias: 4,
+      },
+      meta: { total: 1 },
+    });
+    expect(resposta.dados[0]).toMatchObject({
+      numeroPatrimonio: "REL-PEND-1",
+      quantidadePendencias: 4,
+    });
+
+    const pdf = new RelatoriosPdfService(relatoriosService, {} as FichaService);
+    const bytes = await pdf.renderizar(
+      "pendencias-depreciacao",
+      resposta.dados,
+      resposta.resumo,
+      resposta.consulta,
+      identidade,
+      Date.now() + 20_000,
+    );
+    expect(bytes.subarray(0, 4).toString()).toBe("%PDF");
+
+    const fonte = construirFonte("pendencias-depreciacao", {}, new Date());
+    const plano = await database.$queryRaw<{ "QUERY PLAN": unknown }[]>(
+      Prisma.sql`EXPLAIN (ANALYZE, FORMAT JSON) ${fonte.sql}`,
+    );
+    expect(plano[0]?.["QUERY PLAN"]).toBeDefined();
+  });
 
   it("atualiza situação e cria histórico atomicamente sem atravessar o residual", async () => {
     const patrimonio = await criarPatrimonio("1", {
       bruto: "1",
-      acumulada: "0.6666666",
+      acumulada: "0",
       residual: "0",
       vida: 1,
     });
@@ -179,7 +403,7 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
 
     expect(resultado).toMatchObject({
       resultado: "DEPRECIADO",
-      valorDepreciado: "0.3333334",
+      valorDepreciado: "1",
       valorContabilNovo: "0",
     });
     await expect(
@@ -238,6 +462,32 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
         },
       }),
     ).resolves.toBe(1);
+  });
+
+  it("serializa duas execuções em massa sem duplicidade ou atualização perdida", async () => {
+    const primeiro = await criarPatrimonio("MASSA-1");
+    const segundo = await criarPatrimonio("MASSA-2");
+    const resultados = await Promise.allSettled([
+      service.executarEmMassa(body(), identidade),
+      service.executarEmMassa(body(), identidade),
+    ]);
+
+    expect(resultados.some((item) => item.status === "fulfilled")).toBe(true);
+    await expect(
+      database.depreciacaoPatrimonio.count({
+        where: {
+          patrimonioId: { in: [primeiro.id, segundo.id] },
+          dataCompetencia: inicioCompetencia,
+        },
+      }),
+    ).resolves.toBe(2);
+    for (const patrimonio of [primeiro, segundo]) {
+      const situacao =
+        await database.situacaoContabilPatrimonio.findUniqueOrThrow({
+          where: { patrimonioId: patrimonio.id },
+        });
+      expect(situacao.depreciacaoAcumuladaAtual.toString()).toBe("90");
+    }
   });
 
   it("a migration impede dois parâmetros vigentes para o mesmo patrimônio", async () => {
@@ -314,26 +564,27 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
 
   it("pagina e inspeciona o plano da consulta com volume representativo", async () => {
     const quantidade = 300;
-    await database.$executeRaw`
+    await database.$transaction(async (tx) => {
+      await tx.$executeRaw`
       INSERT INTO "patrimonios" (
         "id", "numero_patrimonio", "tipo_numero_patrimonial", "descricao",
-        "data_tombamento", "valor_incorporacao", "status", "especie_id",
+        "data_tombamento", "valor_incorporacao", "status", "depreciavel", "especie_id",
         "setor_atual_id", "created_by_id"
       )
       SELECT gen_random_uuid(), (10000 + g)::text, 'OFICIAL'::"TipoNumeroPatrimonial",
              'Carga depreciação ' || g, ${inicioAnterior}::date, 1000,
-             'ATIVO'::"StatusPatrimonio", ${especieId}::uuid, ${setorId}::uuid,
+             'ATIVO'::"StatusPatrimonio", true, ${especieId}::uuid, ${setorId}::uuid,
              ${identidade.id}::uuid
       FROM generate_series(1, ${quantidade}) g
     `;
-    await database.$executeRaw`
+      await tx.$executeRaw`
       INSERT INTO "situacoes_contabeis_patrimoniais" (
         "id", "valor_bruto_atual", "depreciacao_acumulada_atual", "patrimonio_id"
       )
       SELECT gen_random_uuid(), 1000, 0, p."id" FROM "patrimonios" p
       WHERE p."descricao" LIKE 'Carga depreciação %'
     `;
-    await database.$executeRaw`
+      await tx.$executeRaw`
       INSERT INTO "parametros_depreciacao" (
         "id", "metodo", "vida_util_inicial_meses", "valor_residual",
         "valor_base_inicial", "data_inicio", "patrimonio_id"
@@ -342,6 +593,14 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
              ${inicioAnterior}::date, p."id" FROM "patrimonios" p
       WHERE p."descricao" LIKE 'Carga depreciação %'
     `;
+      await tx.$executeRaw`
+        INSERT INTO "disponibilidades_uso_patrimonio" (
+          "id", "data_disponibilidade", "patrimonio_id", "created_by_id"
+        )
+        SELECT gen_random_uuid(), ${inicioAnterior}::date, p."id", ${identidade.id}::uuid
+        FROM "patrimonios" p WHERE p."descricao" LIKE 'Carga depreciação %'
+      `;
+    });
 
     const pagina = await service.listarPendentes({
       competencia,

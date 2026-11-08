@@ -4,6 +4,7 @@ import {
   criarCnpjSintetico,
   dataCivilSaoPaulo,
   deslocarDataCivil,
+  deslocarMesCivil,
 } from "./seed-geral.matriz";
 import { ChaveIdempotenciaSchema, CnpjFornecedorSchema } from "@repo/contracts";
 import {
@@ -55,6 +56,7 @@ describe("seed geral", () => {
       "2026-10-29",
     );
     expect(deslocarDataCivil("2026-10-30", -1)).toBe("2026-10-29");
+    expect(deslocarMesCivil("2026-03-31", -1)).toBe("2026-02-01");
   });
 
   it("produz CNPJs sintéticos distintos aceitos pelo contrato", () => {
@@ -80,10 +82,10 @@ describe("seed geral", () => {
   });
 
   it("recusa migration pendente ou build com histórico diferente", () => {
-    const concluidas = Array.from({ length: 27 }, (_, indice) => ({
+    const concluidas = Array.from({ length: 28 }, (_, indice) => ({
       migration_name:
-        indice === 26
-          ? "20261107120000_adiciona_classificacao_depreciavel_patrimonio"
+        indice === 27
+          ? "20261108120000_endurece_disponibilidade_competencias_depreciacao"
           : `migration-${indice}`,
       finished_at: new Date(),
       rolled_back_at: null,
@@ -100,8 +102,8 @@ describe("seed geral", () => {
       ]),
     ).toThrow("migrations esperadas");
     expect(() => exigirMigrationsAtuais(concluidas.slice(0, -1))).toThrow(
-      "Esperado: 27 migrations, última " +
-        "20261107120000_adiciona_classificacao_depreciavel_patrimonio",
+      "Esperado: 28 migrations, última " +
+        "20261108120000_endurece_disponibilidade_competencias_depreciacao",
     );
   });
 

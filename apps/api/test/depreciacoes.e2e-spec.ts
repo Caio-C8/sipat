@@ -3,7 +3,9 @@ import { Test } from "@nestjs/testing";
 import {
   CABECALHO_CSRF,
   ExecutarDepreciacoesEmMassaResponseSchema,
+  ListarCompetenciasDepreciacaoResponseSchema,
   ListarDepreciacoesPendentesResponseSchema,
+  ResumoPendenciasDepreciacaoResponseSchema,
 } from "@repo/contracts";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -33,6 +35,8 @@ describe("depreciações patrimoniais", () => {
     listarPendentes: jest.fn(),
     executarEmMassa: jest.fn(),
     executarIndividual: jest.fn(),
+    listarCompetencias: jest.fn(),
+    resumoPendencias: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -101,7 +105,20 @@ describe("depreciações patrimoniais", () => {
         dataInicioNaoAtingida: 0,
         jaDepreciadoNaCompetencia: 0,
         valorResidualAtingido: 0,
+        naoDepreciavel: 0,
+        indisponivelParaUso: 0,
+        competenciaAnteriorPendente: 0,
       },
+    });
+    service.listarCompetencias.mockResolvedValue({
+      competenciaAtual: "2026-10",
+      competenciaMaisAntigaPendente: null,
+      competencias: [],
+    });
+    service.resumoPendencias.mockResolvedValue({
+      totalPendencias: 0,
+      totalPatrimonios: 0,
+      competenciaMaisAntiga: null,
     });
   });
 
@@ -124,6 +141,36 @@ describe("depreciações patrimoniais", () => {
     expect(diretor.status).toBe(200);
     expect(
       ListarDepreciacoesPendentesResponseSchema.safeParse(diretor.body).success,
+    ).toBe(true);
+  });
+
+  it("restringe catálogo e resumo de competências ao diretor", async () => {
+    for (const rota of [
+      "/api/depreciacoes/competencias",
+      "/api/depreciacoes/pendencias/resumo",
+    ]) {
+      await expect(
+        request(app.getHttpServer()).get(rota),
+      ).resolves.toHaveProperty("status", 401);
+      await expect(
+        request(app.getHttpServer())
+          .get(rota)
+          .set("Cookie", cookie(tokenAdministrador)),
+      ).resolves.toHaveProperty("status", 403);
+    }
+
+    const catalogo = await request(app.getHttpServer())
+      .get("/api/depreciacoes/competencias")
+      .set("Cookie", cookie(tokenDiretor));
+    const resumo = await request(app.getHttpServer())
+      .get("/api/depreciacoes/pendencias/resumo")
+      .set("Cookie", cookie(tokenDiretor));
+    expect(
+      ListarCompetenciasDepreciacaoResponseSchema.safeParse(catalogo.body)
+        .success,
+    ).toBe(true);
+    expect(
+      ResumoPendenciasDepreciacaoResponseSchema.safeParse(resumo.body).success,
     ).toBe(true);
   });
 

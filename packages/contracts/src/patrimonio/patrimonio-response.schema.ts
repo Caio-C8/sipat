@@ -11,6 +11,11 @@ import {
   TipoIncorporacaoSchema,
   TipoNumeroPatrimonialSchema,
 } from "./patrimonio-fields.schema";
+import { DisponibilidadeUsoPatrimonioSchema } from "./disponibilidade-uso.schema";
+
+const CompetenciaResumoPatrimonioSchema = z
+  .string()
+  .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/);
 
 const DateTimeUtcResponseSchema = z.iso.datetime({ precision: 3 });
 const NomeRelacionadoSchema = z.string().trim().min(1).max(100);
@@ -62,7 +67,7 @@ const ParametroDepreciacaoPatrimonioResponseSchema = z.strictObject({
     .nullable(),
   valorResidual: Decimal19_7Schema,
   valorBaseInicial: Decimal19_7Schema,
-  dataInicio: DataCivilSchema,
+  dataInicio: DataCivilSchema.nullable(),
   dataFim: DataCivilSchema.nullable(),
 });
 
@@ -104,6 +109,13 @@ export const PatrimonioDetalheSchema = PatrimonioResumoSchema.safeExtend({
   cadastradoPor: UsuarioCadastroPatrimonioResponseSchema,
   parametroDepreciacaoAtual:
     ParametroDepreciacaoPatrimonioResponseSchema.nullable(),
+  disponibilidadeUso: DisponibilidadeUsoPatrimonioSchema.nullable(),
+  resumoDepreciacao: z.strictObject({
+    primeiraCompetencia: CompetenciaResumoPatrimonioSchema.nullable(),
+    ultimaCompetenciaProcessada: CompetenciaResumoPatrimonioSchema.nullable(),
+    proximaCompetencia: CompetenciaResumoPatrimonioSchema.nullable(),
+    quantidadePendencias: z.number().int().nonnegative(),
+  }),
   createdAt: DateTimeUtcResponseSchema,
   updatedAt: DateTimeUtcResponseSchema.nullable(),
 });

@@ -7,6 +7,8 @@ import type {
   DepreciacaoPersistida,
   LinhaDepreciacao,
   LinhaPendente,
+  CompetenciaDepreciacaoBanco,
+  ResumoPendenciasBanco,
 } from "./types";
 
 type ClienteDepreciacoes = DatabaseClient | Prisma.TransactionClient;
@@ -57,34 +59,40 @@ export class DepreciacoesRepository {
         FROM "parametros_depreciacao" pd
         WHERE pd."data_fim" IS NULL
         GROUP BY pd."patrimonio_id"
-      ), candidatos AS (
+      ), estados AS (
         SELECT p."id" AS "patrimonioId", p."numero_patrimonio" AS "numeroPatrimonio",
-               p."descricao", p."status", sc."id" AS "situacaoContabilId",
+               p."descricao", p."status", p."depreciavel", du."id" AS "disponibilidadeId",
+               sc."id" AS "situacaoContabilId",
                sc."valor_bruto_atual" AS "valorBrutoAtual",
                sc."depreciacao_acumulada_atual" AS "depreciacaoAcumuladaAtual",
                pd."id" AS "parametroDepreciacaoId",
                a.quantidade AS "quantidadeParametrosVigentes",
                pd."vida_util_inicial_meses" AS "vidaUtilInicialMeses",
                pd."valor_residual" AS "valorResidual", pd."data_inicio" AS "dataInicio",
-               (SELECT COUNT(*) FROM "depreciacoes_patrimoniais" d
-                 WHERE d."parametro_depreciacao_id" = pd."id")::bigint AS "quantidadeRealizada",
-               false AS "jaDepreciadoNaCompetencia"
+               h.quantidade AS "quantidadeRealizada",
+               h.ultima AS "ultimaCompetenciaProcessada",
+               (date_trunc('month', pd."data_inicio") + interval '1 month')::date AS "primeiraCompetencia",
+               ((date_trunc('month', pd."data_inicio") + interval '1 month')::date
+                 + h.quantidade * interval '1 month')::date AS "competenciaEsperada",
+               EXISTS (SELECT 1 FROM "depreciacoes_patrimoniais" d
+                 WHERE d."parametro_depreciacao_id" = pd."id"
+                   AND d."data_competencia" = ${competencia}::date) AS "jaDepreciadoNaCompetencia"
         FROM "patrimonios" p
         JOIN "situacoes_contabeis_patrimoniais" sc ON sc."patrimonio_id" = p."id"
         JOIN atuais a ON a."patrimonio_id" = p."id" AND a.quantidade = 1
         JOIN "parametros_depreciacao" pd ON pd."id" = a."parametroId"
+        JOIN "disponibilidades_uso_patrimonio" du ON du."patrimonio_id" = p."id"
+        CROSS JOIN LATERAL (
+          SELECT COUNT(*)::bigint AS quantidade, MAX(d."data_competencia") AS ultima
+          FROM "depreciacoes_patrimoniais" d
+          WHERE d."parametro_depreciacao_id" = pd."id"
+        ) h
         WHERE p."status" IN ('ATIVO', 'EMPRESTADO', 'EM_MANUTENCAO')
-          AND pd."data_inicio" < ${competencia}::date
+          AND p."depreciavel" AND pd."data_inicio" IS NOT NULL
           AND sc."valor_bruto_atual" - sc."depreciacao_acumulada_atual" > pd."valor_residual"
-          AND NOT EXISTS (
-            SELECT 1 FROM "depreciacoes_patrimoniais" d
-            WHERE d."patrimonio_id" = p."id"
-              AND d."parametro_depreciacao_id" = pd."id"
-              AND d."data_competencia" = ${competencia}::date
-          )
       )
-      SELECT candidatos.*
-      FROM candidatos
+      SELECT estados.* FROM estados
+      WHERE "competenciaEsperada" = ${competencia}::date
       ORDER BY "numeroPatrimonio", "patrimonioId"
       OFFSET ${skip} LIMIT ${take}
     `;
@@ -96,30 +104,93 @@ export class DepreciacoesRepository {
     const linhas = await this.database.$queryRaw<
       { totalPendentes: bigint; totalNoValorResidual: bigint }[]
     >`
-      SELECT
+      WITH estados AS (
+        SELECT p.id, sc.valor_bruto_atual, sc.depreciacao_acumulada_atual,
+               pd.valor_residual,
+               ((date_trunc('month', pd.data_inicio) + interval '1 month')::date
+                 + (SELECT COUNT(*) FROM depreciacoes_patrimoniais d
+                    WHERE d.parametro_depreciacao_id = pd.id) * interval '1 month')::date esperada
+        FROM patrimonios p
+        JOIN situacoes_contabeis_patrimoniais sc ON sc.patrimonio_id = p.id
+        JOIN parametros_depreciacao pd ON pd.patrimonio_id = p.id AND pd.data_fim IS NULL
+        JOIN disponibilidades_uso_patrimonio du ON du.patrimonio_id = p.id
+        WHERE p.depreciavel AND p.status IN ('ATIVO','EMPRESTADO','EM_MANUTENCAO')
+          AND pd.data_inicio IS NOT NULL
+      ) SELECT
         COUNT(*) FILTER (
-          WHERE sc."valor_bruto_atual" - sc."depreciacao_acumulada_atual" > pd."valor_residual"
-            AND NOT EXISTS (
-              SELECT 1 FROM "depreciacoes_patrimoniais" d
-              WHERE d."patrimonio_id" = p."id"
-                AND d."parametro_depreciacao_id" = pd."id"
-                AND d."data_competencia" = ${competencia}::date
-            )
+          WHERE valor_bruto_atual - depreciacao_acumulada_atual > valor_residual
+            AND esperada = ${competencia}::date
         )::bigint AS "totalPendentes",
         COUNT(*) FILTER (
-          WHERE sc."valor_bruto_atual" - sc."depreciacao_acumulada_atual" = pd."valor_residual"
+          WHERE valor_bruto_atual - depreciacao_acumulada_atual = valor_residual
         )::bigint AS "totalNoValorResidual"
-      FROM "patrimonios" p
-      JOIN "situacoes_contabeis_patrimoniais" sc ON sc."patrimonio_id" = p."id"
-      JOIN "parametros_depreciacao" pd
-        ON pd."patrimonio_id" = p."id" AND pd."data_fim" IS NULL
-      WHERE p."status" IN ('ATIVO', 'EMPRESTADO', 'EM_MANUTENCAO')
-        AND pd."data_inicio" < ${competencia}::date
+      FROM estados
     `;
     return {
       totalPendentes: Number(linhas[0]?.totalPendentes ?? 0n),
       totalNoValorResidual: Number(linhas[0]?.totalNoValorResidual ?? 0n),
     };
+  }
+
+  listarCompetencias(
+    competenciaAtual: Date,
+  ): Promise<CompetenciaDepreciacaoBanco[]> {
+    return this.database.$queryRaw<CompetenciaDepreciacaoBanco[]>`
+      WITH estados AS (
+        SELECT ((date_trunc('month', pd.data_inicio) + interval '1 month')::date
+                 + (SELECT COUNT(*) FROM depreciacoes_patrimoniais d
+                    WHERE d.parametro_depreciacao_id = pd.id) * interval '1 month')::date esperada
+        FROM patrimonios p
+        JOIN situacoes_contabeis_patrimoniais sc ON sc.patrimonio_id = p.id
+        JOIN parametros_depreciacao pd ON pd.patrimonio_id = p.id AND pd.data_fim IS NULL
+        JOIN disponibilidades_uso_patrimonio du ON du.patrimonio_id = p.id
+        WHERE p.depreciavel AND p.status IN ('ATIVO','EMPRESTADO','EM_MANUTENCAO')
+          AND pd.data_inicio IS NOT NULL
+          AND sc.valor_bruto_atual - sc.depreciacao_acumulada_atual > pd.valor_residual
+      ), meses AS (
+        SELECT generate_series(MIN(esperada), ${competenciaAtual}::date, interval '1 month')::date competencia
+        FROM estados WHERE esperada <= ${competenciaAtual}::date
+        LIMIT 1200
+      )
+      SELECT m.competencia,
+             COUNT(*) FILTER (WHERE e.esperada = m.competencia)::bigint AS "quantidadePendente",
+             COUNT(*) FILTER (WHERE e.esperada < m.competencia)::bigint AS "quantidadeBloqueadaPorAnterior"
+      FROM meses m CROSS JOIN estados e
+      WHERE e.esperada <= m.competencia
+      GROUP BY m.competencia ORDER BY m.competencia
+    `;
+  }
+
+  async resumoPendencias(
+    competenciaAtual: Date,
+  ): Promise<ResumoPendenciasBanco> {
+    const [linha] = await this.database.$queryRaw<ResumoPendenciasBanco[]>`
+      WITH estados AS (
+        SELECT ((date_trunc('month', pd.data_inicio) + interval '1 month')::date
+                 + (SELECT COUNT(*) FROM depreciacoes_patrimoniais d
+                    WHERE d.parametro_depreciacao_id = pd.id) * interval '1 month')::date esperada
+        FROM patrimonios p
+        JOIN situacoes_contabeis_patrimoniais sc ON sc.patrimonio_id = p.id
+        JOIN parametros_depreciacao pd ON pd.patrimonio_id = p.id AND pd.data_fim IS NULL
+        JOIN disponibilidades_uso_patrimonio du ON du.patrimonio_id = p.id
+        WHERE p.depreciavel AND p.status IN ('ATIVO','EMPRESTADO','EM_MANUTENCAO')
+          AND pd.data_inicio IS NOT NULL
+          AND sc.valor_bruto_atual - sc.depreciacao_acumulada_atual > pd.valor_residual
+      ) SELECT
+        COALESCE(SUM(((EXTRACT(YEAR FROM age(${competenciaAtual}::date, esperada)) * 12
+          + EXTRACT(MONTH FROM age(${competenciaAtual}::date, esperada)))::int + 1)
+          FILTER (WHERE esperada <= ${competenciaAtual}::date), 0)::bigint AS "totalPendencias",
+        COUNT(*) FILTER (WHERE esperada <= ${competenciaAtual}::date)::bigint AS "totalPatrimonios",
+        MIN(esperada) FILTER (WHERE esperada <= ${competenciaAtual}::date) AS "competenciaMaisAntiga"
+      FROM estados
+    `;
+    return (
+      linha ?? {
+        totalPendencias: 0n,
+        totalPatrimonios: 0n,
+        competenciaMaisAntiga: null,
+      }
+    );
   }
 
   async bloquearAcervo(
@@ -154,15 +225,21 @@ export class DepreciacoesRepository {
         GROUP BY pd."patrimonio_id"
       )
       SELECT p."id" AS "patrimonioId", p."numero_patrimonio" AS "numeroPatrimonio",
-             p."descricao", p."status", sc."id" AS "situacaoContabilId",
+             p."descricao", p."status", p."depreciavel",
+             du."id" AS "disponibilidadeId", sc."id" AS "situacaoContabilId",
              sc."valor_bruto_atual" AS "valorBrutoAtual",
              sc."depreciacao_acumulada_atual" AS "depreciacaoAcumuladaAtual",
              pd."id" AS "parametroDepreciacaoId",
              COALESCE(a.quantidade, 0)::bigint AS "quantidadeParametrosVigentes",
              pd."vida_util_inicial_meses" AS "vidaUtilInicialMeses",
              pd."valor_residual" AS "valorResidual", pd."data_inicio" AS "dataInicio",
-             (SELECT COUNT(*) FROM "depreciacoes_patrimoniais" d
-               WHERE d."parametro_depreciacao_id" = pd."id")::bigint AS "quantidadeRealizada",
+             h.quantidade AS "quantidadeRealizada",
+             h.ultima AS "ultimaCompetenciaProcessada",
+             CASE WHEN pd."data_inicio" IS NULL THEN NULL ELSE
+               (date_trunc('month', pd."data_inicio") + interval '1 month')::date END AS "primeiraCompetencia",
+             CASE WHEN pd."data_inicio" IS NULL THEN NULL ELSE
+               ((date_trunc('month', pd."data_inicio") + interval '1 month')::date
+                 + h.quantidade * interval '1 month')::date END AS "competenciaEsperada",
              EXISTS (
                SELECT 1 FROM "depreciacoes_patrimoniais" d
                WHERE d."patrimonio_id" = p."id"
@@ -173,6 +250,12 @@ export class DepreciacoesRepository {
       LEFT JOIN "situacoes_contabeis_patrimoniais" sc ON sc."patrimonio_id" = p."id"
       LEFT JOIN atuais a ON a."patrimonio_id" = p."id"
       LEFT JOIN "parametros_depreciacao" pd ON pd."id" = a."parametroId"
+      LEFT JOIN "disponibilidades_uso_patrimonio" du ON du."patrimonio_id" = p."id"
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::bigint AS quantidade, MAX(d."data_competencia") AS ultima
+        FROM "depreciacoes_patrimoniais" d
+        WHERE d."parametro_depreciacao_id" = pd."id"
+      ) h ON true
       WHERE (${filtroId}::uuid IS NULL OR p."id" = ${filtroId}::uuid)
       ORDER BY p."id"
     `;

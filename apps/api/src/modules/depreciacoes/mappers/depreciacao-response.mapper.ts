@@ -32,6 +32,12 @@ export class DepreciacaoResponseMapper {
       vidaUtilRestanteMeses: calculo.vidaUtilRestanteMeses,
       quotaPrevista: calculo.valorDepreciado.toString(),
       atingiraValorResidual: calculo.atingiraValorResidual,
+      primeiraCompetencia: this.competencia(linha.primeiraCompetencia),
+      ultimaCompetenciaProcessada:
+        linha.ultimaCompetenciaProcessada === null
+          ? null
+          : this.competencia(linha.ultimaCompetenciaProcessada),
+      competenciaEsperada: this.competencia(linha.competenciaEsperada),
     };
   }
 
@@ -52,5 +58,10 @@ export class DepreciacaoResponseMapper {
       createdById: depreciacao.createdById,
       createdAt: depreciacao.createdAt.toISOString(),
     };
+  }
+
+  private static competencia(data: Date | null): string {
+    if (data === null) throw new Error("Competência esperada ausente.");
+    return data.toISOString().slice(0, 7);
   }
 }

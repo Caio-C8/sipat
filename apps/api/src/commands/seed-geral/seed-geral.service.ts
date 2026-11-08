@@ -48,6 +48,7 @@ import {
   criarCnpjSintetico,
   dataCivilSaoPaulo,
   deslocarDataCivil,
+  deslocarMesCivil,
   ITENS_DEMO,
   NATUREZAS_ESPECIES_DEMO,
   SETORES_DEMO,
@@ -132,6 +133,8 @@ export class SeedGeralService {
       this.db.baixaPatrimonio.count(),
       this.db.depreciacaoPatrimonio.count(),
       this.db.reavaliacaoPatrimonio.count(),
+      this.db.disponibilidadeUsoPatrimonio.count(),
+      this.db.idempotenciaDisponibilidadeUso.count(),
     ]);
     exigirBancoDominioVazio(contagens);
   }
@@ -383,44 +386,50 @@ export class SeedGeralService {
       const [descricao, marca, modelo] = ITENS_DEMO[i % ITENS_DEMO.length]!;
       const valor = (1200 + i * 137).toFixed(7);
       const depreciavel = i % 5 !== 0;
-      resultado.push(
-        await this.patrimonios.criar(
-          CriarPatrimonioBodySchema.parse({
-            chaveIdempotencia: criarChaveIdempotenciaSeed(5, i + 1),
-            semNumeroOficial: i % 5 === 4,
-            dataTombamento: deslocarDataCivil(
-              this.dataBase,
-              -90 + Math.floor(i / 5),
-            ),
-            tipoIncorporacao: "AQUISICAO",
-            descricao: `${descricao} — unidade de demonstração ${String(i + 1).padStart(2, "0")}`,
-            marca,
-            modelo,
-            numeroSerie: `DEMO-${this.dataBase.replace(/-/g, "")}-${String(i + 1).padStart(4, "0")}`,
-            valorIncorporacao: valor,
-            especieId: especies[i % especies.length]!.id,
-            setorAtualId: setores[Math.floor(i / 5)]!.id,
-            processoCompraId: processos[Math.floor(i / 5)]!.id,
-            depreciavel,
-            ...(depreciavel
-              ? {
-                  parametrosDepreciacao: {
-                    metodo: "LINEAR",
-                    vidaUtilInicialMeses: 60,
-                    percentualResidual: "10.00",
-                    valorResidual: (Number(valor) * 0.1).toFixed(7),
-                    valorBaseInicial: valor,
-                    dataInicio: deslocarDataCivil(
-                      this.dataBase,
-                      -90 + Math.floor(i / 5),
-                    ),
-                  },
-                }
-              : {}),
-          }),
-          this.diretor,
-        ),
+      const patrimonio = await this.patrimonios.criar(
+        CriarPatrimonioBodySchema.parse({
+          chaveIdempotencia: criarChaveIdempotenciaSeed(5, i + 1),
+          semNumeroOficial: i % 5 === 4,
+          dataTombamento: deslocarDataCivil(
+            this.dataBase,
+            -90 + Math.floor(i / 5),
+          ),
+          tipoIncorporacao: "AQUISICAO",
+          descricao: `${descricao} — unidade de demonstração ${String(i + 1).padStart(2, "0")}`,
+          marca,
+          modelo,
+          numeroSerie: `DEMO-${this.dataBase.replace(/-/g, "")}-${String(i + 1).padStart(4, "0")}`,
+          valorIncorporacao: valor,
+          especieId: especies[i % especies.length]!.id,
+          setorAtualId: setores[Math.floor(i / 5)]!.id,
+          processoCompraId: processos[Math.floor(i / 5)]!.id,
+          depreciavel,
+          ...(depreciavel
+            ? {
+                parametrosDepreciacao: {
+                  metodo: "LINEAR",
+                  vidaUtilInicialMeses: 60,
+                  percentualResidual: "10.00",
+                  valorResidual: (Number(valor) * 0.1).toFixed(7),
+                  valorBaseInicial: valor,
+                },
+              }
+            : {}),
+        }),
+        this.diretor,
       );
+      resultado.push(patrimonio);
+      if (i < 30) {
+        const meses = i < 10 ? -4 : i < 20 ? -2 : -1;
+        await this.patrimonios.confirmarDisponibilidadeUso(
+          patrimonio.id,
+          {
+            dataDisponibilidade: deslocarMesCivil(this.dataBase, meses),
+            chaveIdempotencia: criarChaveIdempotenciaSeed(12, i + 1),
+          },
+          this.diretor,
+        );
+      }
     }
     return resultado;
   }
@@ -675,6 +684,13 @@ export class SeedGeralService {
       baixas,
       depreciacoes,
       reavaliacoes,
+      disponibilidades,
+      disponibilidadesDepreciaveis,
+      disponibilidadesNaoDepreciaveis,
+      depreciaveisIndisponiveis,
+      parametrosIniciados,
+      parametrosAguardando,
+      idempotenciasDisponibilidade,
     ] = await Promise.all([
       this.db.usuario.count(),
       this.db.responsavel.count(),
@@ -706,10 +722,25 @@ export class SeedGeralService {
       this.db.baixaPatrimonio.count(),
       this.db.depreciacaoPatrimonio.count(),
       this.db.reavaliacaoPatrimonio.count(),
+      this.db.disponibilidadeUsoPatrimonio.count(),
+      this.db.disponibilidadeUsoPatrimonio.count({
+        where: { patrimonio: { depreciavel: true } },
+      }),
+      this.db.disponibilidadeUsoPatrimonio.count({
+        where: { patrimonio: { depreciavel: false } },
+      }),
+      this.db.patrimonio.count({
+        where: { depreciavel: true, disponibilidadeUso: null },
+      }),
+      this.db.parametroDepreciacao.count({
+        where: { dataInicio: { not: null } },
+      }),
+      this.db.parametroDepreciacao.count({ where: { dataInicio: null } }),
+      this.db.idempotenciaDisponibilidadeUso.count(),
     ]);
     const esperado = [
       2, 10, 10, 5, 10, 5, 3, 9, 10, 20, 50, 40, 40, 10, 40, 10, 47, 3, 1, 50,
-      40, 7, 3, 2, 0, 0, 0, 0,
+      40, 7, 3, 2, 0, 0, 0, 0, 30, 24, 6, 16, 24, 16, 30,
     ];
     const obtido = [
       usuarios,
@@ -740,6 +771,13 @@ export class SeedGeralService {
       baixas,
       depreciacoes,
       reavaliacoes,
+      disponibilidades,
+      disponibilidadesDepreciaveis,
+      disponibilidadesNaoDepreciaveis,
+      depreciaveisIndisponiveis,
+      parametrosIniciados,
+      parametrosAguardando,
+      idempotenciasDisponibilidade,
     ];
     if (obtido.some((valor, i) => valor !== esperado[i]))
       throw new Error(`Auditoria final divergente: ${JSON.stringify(obtido)}.`);

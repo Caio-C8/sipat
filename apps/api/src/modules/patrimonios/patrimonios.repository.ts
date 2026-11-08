@@ -11,7 +11,9 @@ import {
   patrimonioResumoArgs,
   type PatrimonioResumoPayload,
   type TipoNumeroParaGeracao,
+  type DisponibilidadeUsoPayload,
 } from "./types";
+import { construirNamespaceLockIdempotencia } from "../../common/utils/idempotencia";
 
 type ClientePatrimonios = DatabaseClient | Prisma.TransactionClient;
 
@@ -45,8 +47,9 @@ export class PatrimoniosRepository {
       );
     }
 
-    return this.database.$transaction((transaction) =>
-      operacao(new PatrimoniosRepository(transaction)),
+    return this.database.$transaction(
+      (transaction) => operacao(new PatrimoniosRepository(transaction)),
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
   }
 
@@ -151,6 +154,81 @@ export class PatrimoniosRepository {
       where: { id: patrimonioId },
       ...patrimonioDetalheArgs,
     });
+  }
+
+  async tentarBloquearChaveDisponibilidade(
+    usuarioId: string,
+    chave: string,
+  ): Promise<boolean> {
+    const namespace = construirNamespaceLockIdempotencia(
+      "disponibilidade-uso",
+      usuarioId,
+      chave,
+    );
+    const [linha] = await this.database.$queryRaw<{ obtido: boolean }[]>`
+      SELECT pg_try_advisory_xact_lock(hashtextextended(${namespace}, 0)) AS obtido
+    `;
+    return linha?.obtido === true;
+  }
+
+  buscarIdempotenciaDisponibilidade(usuarioId: string, chave: string) {
+    return this.database.idempotenciaDisponibilidadeUso.findUnique({
+      where: { usuarioId_chave: { usuarioId, chave } },
+    });
+  }
+
+  async bloquearParaDisponibilidade(patrimonioId: string) {
+    const [patrimonio] = await this.database.$queryRaw<
+      {
+        id: string;
+        status: string;
+        depreciavel: boolean;
+        disponibilidadeId: string | null;
+      }[]
+    >`
+      SELECT p.id, p.status::text AS status, p.depreciavel,
+             d.id AS "disponibilidadeId"
+      FROM patrimonios p
+      LEFT JOIN disponibilidades_uso_patrimonio d ON d.patrimonio_id = p.id
+      WHERE p.id = ${patrimonioId}::uuid
+      FOR UPDATE OF p
+    `;
+    if (!patrimonio) return null;
+    await this.database.$queryRaw`
+      SELECT pd.id FROM parametros_depreciacao pd
+      WHERE pd.patrimonio_id = ${patrimonioId}::uuid AND pd.data_fim IS NULL
+      ORDER BY pd.id FOR UPDATE
+    `;
+    return patrimonio;
+  }
+
+  iniciarParametroVigente(patrimonioId: string, dataInicio: Date) {
+    return this.database.parametroDepreciacao.updateMany({
+      where: { patrimonioId, dataFim: null, dataInicio: null },
+      data: { dataInicio },
+    });
+  }
+
+  criarDisponibilidade(
+    patrimonioId: string,
+    dataDisponibilidade: Date,
+    createdById: string,
+  ): Promise<DisponibilidadeUsoPayload> {
+    return this.database.disponibilidadeUsoPatrimonio.create({
+      data: { patrimonioId, dataDisponibilidade, createdById },
+      select: {
+        id: true,
+        dataDisponibilidade: true,
+        createdAt: true,
+        createdBy: { select: { id: true, nome: true } },
+      },
+    });
+  }
+
+  salvarIdempotenciaDisponibilidade(
+    data: Prisma.IdempotenciaDisponibilidadeUsoUncheckedCreateInput,
+  ) {
+    return this.database.idempotenciaDisponibilidadeUso.create({ data });
   }
 
   buscarParaSubstituicao(

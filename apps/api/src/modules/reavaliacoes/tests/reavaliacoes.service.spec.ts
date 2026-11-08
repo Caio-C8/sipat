@@ -38,6 +38,8 @@ function estado(
     numeroPatrimonio: "123",
     descricao: "Bem de teste",
     status: "ATIVO",
+    depreciavel: true,
+    disponibilidadeId: "66666666-6666-4666-8666-666666666666",
     situacaoContabilId: "44444444-4444-4444-8444-444444444444",
     valorBrutoAtual: new Prisma.Decimal("1000"),
     depreciacaoAcumuladaAtual: new Prisma.Decimal("100"),
@@ -52,6 +54,7 @@ function estado(
     dataInicio: new Date("2026-01-01T00:00:00.000Z"),
     quantidadeRealizada: 10n,
     jaDepreciadoNaCompetencia: false,
+    competenciaEsperada: new Date("2026-10-01T00:00:00.000Z"),
     ...alteracoes,
   };
 }
@@ -98,7 +101,10 @@ describe("ReavaliacoesService", () => {
   it("usa o dia de São Paulo na virada do mês para validar a data", async () => {
     jest.setSystemTime(new Date("2026-11-01T02:30:00.000Z"));
     repository.consultarEstados.mockResolvedValue([
-      estado({ jaDepreciadoNaCompetencia: true }),
+      estado({
+        jaDepreciadoNaCompetencia: true,
+        competenciaEsperada: new Date("2026-11-01T00:00:00.000Z"),
+      }),
     ]);
     await expect(
       service.previa({ ...dados, dataReferencia: "2026-10-31" }, identidade),
@@ -179,7 +185,10 @@ describe("ReavaliacoesService", () => {
 
   it("calcula snapshots, residual e quota depois da depreciação corrente", async () => {
     repository.consultarEstados.mockResolvedValue([
-      estado({ jaDepreciadoNaCompetencia: true }),
+      estado({
+        jaDepreciadoNaCompetencia: true,
+        competenciaEsperada: new Date("2026-11-01T00:00:00.000Z"),
+      }),
     ]);
     const previa = await service.previa(dados, identidade);
     expect(previa.versaoPrevia).toMatch(/^[a-f0-9]{64}$/);

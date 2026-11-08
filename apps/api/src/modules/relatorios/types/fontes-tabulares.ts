@@ -89,6 +89,19 @@ export const camposDepreciacao = {
   valorContabilNovo: "r.valor_contabil_novo::text",
   ...autor,
 };
+export const camposPendenciaDepreciacao = {
+  id: "r.id",
+  ...bem,
+  status: "p.status::text",
+  primeiraCompetencia: "to_char(r.primeira_competencia,'YYYY-MM')",
+  ultimaCompetenciaProcessada:
+    "to_char(r.ultima_competencia_processada,'YYYY-MM')",
+  competenciaEsperada: "to_char(r.competencia_esperada,'YYYY-MM')",
+  quantidadePendencias: "r.quantidade_pendencias",
+  valorLiquidoAtual: "r.valor_liquido_atual::numeric(30,7)::text",
+  valorResidual: "r.valor_residual::numeric(19,7)::text",
+  quotaPrevista: "r.quota_prevista::numeric(19,7)::text",
+};
 export const camposReavaliacao = {
   id: "r.id",
   patrimonioId: "p.id",
@@ -293,6 +306,48 @@ export function construirFonte(
       criterio =
         "Competências civis de lançamentos efetivamente processados; somam-se somente quotas.";
       break;
+    case "pendencias-depreciacao": {
+      const competenciaAtual = `${diaSaoPaulo(agora).slice(0, 7)}-01`;
+      campos = camposPendenciaDepreciacao;
+      from = `(SELECT pd.id, p0.id AS patrimonio_id,
+                 (date_trunc('month',pd.data_inicio)+interval '1 month')::date AS primeira_competencia,
+                 h.ultima AS ultima_competencia_processada,
+                 ((date_trunc('month',pd.data_inicio)+interval '1 month')::date
+                   + h.quantidade * interval '1 month')::date AS competencia_esperada,
+                 ((EXTRACT(YEAR FROM age(DATE '${competenciaAtual}',
+                    ((date_trunc('month',pd.data_inicio)+interval '1 month')::date
+                      + h.quantidade * interval '1 month')::date))*12
+                   + EXTRACT(MONTH FROM age(DATE '${competenciaAtual}',
+                    ((date_trunc('month',pd.data_inicio)+interval '1 month')::date
+                      + h.quantidade * interval '1 month')::date)))::int + 1) AS quantidade_pendencias,
+                 sc.valor_bruto_atual-sc.depreciacao_acumulada_atual AS valor_liquido_atual,
+                 pd.valor_residual,
+                 least(sc.valor_bruto_atual-sc.depreciacao_acumulada_atual-pd.valor_residual,
+                   round((sc.valor_bruto_atual-sc.depreciacao_acumulada_atual-pd.valor_residual)
+                     / greatest(1,pd.vida_util_inicial_meses-h.quantidade::int),7)) AS quota_prevista
+               FROM patrimonios p0
+               JOIN situacoes_contabeis_patrimoniais sc ON sc.patrimonio_id=p0.id
+               JOIN parametros_depreciacao pd ON pd.patrimonio_id=p0.id AND pd.data_fim IS NULL
+               JOIN disponibilidades_uso_patrimonio du ON du.patrimonio_id=p0.id
+               CROSS JOIN LATERAL (SELECT count(*)::bigint quantidade,
+                 max(d.data_competencia) ultima FROM depreciacoes_patrimoniais d
+                 WHERE d.parametro_depreciacao_id=pd.id) h
+               WHERE p0.depreciavel
+                 AND pd.data_inicio IS NOT NULL
+                 AND sc.valor_bruto_atual-sc.depreciacao_acumulada_atual>pd.valor_residual
+                 AND ((date_trunc('month',pd.data_inicio)+interval '1 month')::date
+                   + h.quantidade * interval '1 month')::date <= DATE '${competenciaAtual}') r
+               JOIN patrimonios p ON p.id=r.patrimonio_id`;
+      ordem1 = "r.competencia_esperada::text";
+      ordem2 = "p.numero_patrimonio";
+      if (q.competencia)
+        cond.push(
+          sql`r.competencia_esperada = ${String(q.competencia) + "-01"}::date`,
+        );
+      criterio =
+        "Estado contábil atual; cada linha informa a próxima competência obrigatória e a quantidade em atraso até o mês corrente de São Paulo.";
+      break;
+    }
     case "reavaliacoes":
       campos = camposReavaliacao;
       from = `reavaliacoes_patrimoniais r JOIN patrimonios p ON p.id=r.patrimonio_id ${joinsAutor}`;
@@ -367,7 +422,10 @@ export function construirFonte(
         "Data civil da baixa; sem valor contábil histórico da baixa. Estorno não permitido pelas regras atuais.";
       break;
   }
-  const asc = tipo === "patrimonios" || tipo === "inventarios";
+  const asc =
+    tipo === "patrimonios" ||
+    tipo === "inventarios" ||
+    tipo === "pendencias-depreciacao";
   return {
     sql: sql`SELECT ${objeto(campos)} AS dados, ${raw(ordem1)} AS ordem1, ${raw(ordem2)} AS ordem2, ${raw(tipo === "patrimonios" ? "p.id" : "r.id")} AS id FROM ${raw(from)} WHERE ${Prisma.join(cond, " AND ")}`,
     ordem: raw(

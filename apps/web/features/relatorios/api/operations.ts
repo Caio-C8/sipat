@@ -49,6 +49,13 @@ export function criarOperacoesRelatorios(client: ApiClient) {
         responseSchema: respostasTabulares.depreciacoes,
         ...leitura(o),
       }),
+    "pendencias-depreciacao": (q: ApiQuery, o?: Opcoes) =>
+      client.request({
+        path: "/relatorios/pendencias-depreciacao",
+        query: queryRelatorio("pendencias-depreciacao").parse(q),
+        responseSchema: respostasTabulares["pendencias-depreciacao"],
+        ...leitura(o),
+      }),
     reavaliacoes: (q: ApiQuery, o?: Opcoes) =>
       client.request({
         path: "/relatorios/reavaliacoes",
@@ -107,6 +114,14 @@ export function criarOperacoesRelatorios(client: ApiClient) {
       client.request<Blob>({
         path: "/relatorios/depreciacoes/pdf",
         query: queryPdfRelatorio("depreciacoes").parse(q),
+        responseType: "pdf",
+        timeoutMs: 25000,
+        ...leitura(o),
+      }),
+    "pendencias-depreciacao": (q: ApiQuery, o?: Opcoes) =>
+      client.request<Blob>({
+        path: "/relatorios/pendencias-depreciacao/pdf",
+        query: queryPdfRelatorio("pendencias-depreciacao").parse(q),
         responseType: "pdf",
         timeoutMs: 25000,
         ...leitura(o),

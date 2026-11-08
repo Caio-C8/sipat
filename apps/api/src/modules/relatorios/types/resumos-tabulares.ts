@@ -26,6 +26,7 @@ export function resumoTabular(tipo: TipoTabular): Prisma.Sql {
     case "movimentacoes":
     case "reavaliacoes":
     case "depreciacoes":
+    case "pendencias-depreciacao":
       obj.bensDistintos = "count(DISTINCT dados->>'patrimonioId')::int";
       if (tipo === "reavaliacoes")
         obj.semReferencia = count("dados->>'dataReferencia' IS NULL");
@@ -33,6 +34,11 @@ export function resumoTabular(tipo: TipoTabular): Prisma.Sql {
         obj.quotas = soma("valorDepreciado");
         obj.porCompetencia =
           "coalesce((SELECT jsonb_agg(x ORDER BY x->>'competencia') FROM (SELECT jsonb_build_object('competencia',dados->>'competencia','quantidade',count(*)::int,'quotas',coalesce(sum((dados->>'valorDepreciado')::numeric),0)::numeric(38,7)::text) x FROM fonte GROUP BY dados->>'competencia') g),'[]'::jsonb)";
+      }
+      if (tipo === "pendencias-depreciacao") {
+        obj.competenciaMaisAntiga = "min(dados->>'competenciaEsperada')";
+        obj.quantidadeCompetencias =
+          "coalesce(sum((dados->>'quantidadePendencias')::int),0)::int";
       }
       break;
     case "manutencoes":

@@ -7,6 +7,8 @@ import {
 } from "../../contract-assertions";
 import {
   CriarPatrimonioBodySchema,
+  ConfirmarDisponibilidadeUsoBodySchema,
+  ConfirmarDisponibilidadeUsoResponseSchema,
   DataCivilSchema,
   Decimal19_7Schema,
   ListarPatrimoniosQuerySchema,
@@ -80,6 +82,19 @@ const patrimonioDetalhe = {
     dataInicio: "2026-10-18",
     dataFim: null,
   },
+  disponibilidadeUso: {
+    id: uuids.processo,
+    dataDisponibilidade: "2026-10-18",
+    primeiraCompetencia: "2026-11",
+    createdAt: "2026-10-18T12:00:00.000Z",
+    createdBy: { id: uuids.responsavel, nome: "Maria da Silva" },
+  },
+  resumoDepreciacao: {
+    primeiraCompetencia: "2026-11",
+    ultimaCompetenciaProcessada: null,
+    proximaCompetencia: "2026-11",
+    quantidadePendencias: 1,
+  },
   createdAt: "2026-10-18T12:00:00.000Z",
   updatedAt: null,
 } as const;
@@ -105,7 +120,6 @@ function criarBodyValido() {
       percentualResidual: "10.00",
       valorResidual: "1234.567",
       valorBaseInicial: "12345.6700000",
-      dataInicio: "2026-10-18",
     },
   };
 }
@@ -340,5 +354,48 @@ describe("contratos de patrimônios", () => {
       },
       "numeroPatrimonio",
     );
+  });
+
+  it("valida confirmação idempotente e fato imutável de disponibilidade", () => {
+    const body = {
+      dataDisponibilidade: "2026-10-18",
+      chaveIdempotencia: "00000000-0000-4000-8000-000000000010",
+    } as const;
+    assert.deepEqual(
+      parseValido(ConfirmarDisponibilidadeUsoBodySchema, body),
+      body,
+    );
+    esperaInvalidos(ConfirmarDisponibilidadeUsoBodySchema, [
+      { ...body, dataDisponibilidade: "2026-02-30" },
+      { ...body, chaveIdempotencia: "repeticao" },
+      { ...body, patrimonioId: uuids.patrimonio },
+    ]);
+
+    const response = {
+      status: 201,
+      sucesso: true,
+      mensagem: "Disponibilidade para uso confirmada.",
+      dados: {
+        id: "77777777-7777-4777-8777-777777777777",
+        dataDisponibilidade: "2026-10-18",
+        primeiraCompetencia: "2026-11",
+        createdAt: "2026-10-18T12:00:00.000Z",
+        createdBy: { id: uuids.responsavel, nome: "Diretor" },
+      },
+    } as const;
+    assert.deepEqual(
+      parseValido(ConfirmarDisponibilidadeUsoResponseSchema, response),
+      response,
+    );
+    esperaInvalidos(ConfirmarDisponibilidadeUsoResponseSchema, [
+      {
+        ...response,
+        dados: { ...response.dados, primeiraCompetencia: "2026-13" },
+      },
+      {
+        ...response,
+        dados: { ...response.dados, parametroId: uuids.patrimonio },
+      },
+    ]);
   });
 });

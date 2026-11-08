@@ -338,15 +338,15 @@ uma execução em homologação compartilhada ou remota. O wrapper de developmen
 foi validado estruturalmente e usa o mesmo entrypoint; não foi apontado ao banco
 de desenvolvimento existente do operador.
 
-## Evolução aprovada após a conclusão
+## Evolução implementada após a conclusão
 
-`CONTRACTS-018` deve primeiro adicionar a classificação ao patrimônio e adaptar
-a matriz para conter bens depreciáveis com parâmetros e não depreciáveis sem
-parâmetros. Depois, `DEPRECIACOES-002` deve atualizar este seed para manter
-depreciações e reavaliações zeradas, mas incluir patrimônios depreciáveis com e
-sem disponibilidade confirmada. Confirmações devem usar o service público do
-domínio e datas determinísticas; migrations esperadas, preflight, testes e
-auditoria final devem acompanhar o histórico vivo. Ver
+`CONTRACTS-018` adicionou a classificação ao patrimônio e adaptou a matriz.
+`DEPRECIACOES-002` passou a confirmar disponibilidade pelo service público do
+domínio, com datas determinísticas, mantendo depreciações e reavaliações
+zeradas. A auditoria isolada confirmou 24 bens depreciáveis disponíveis, 16
+depreciáveis indisponíveis, seis não depreciáveis disponíveis e quatro
+indisponíveis; somente os 24 primeiros possuem parâmetro iniciado. O preflight
+acompanha as 28 migrations atuais e a segunda execução continua recusada. Ver
 [CONTRACTS-018](./CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md#seed-geral)
 e
 [DEPRECIACOES-002](./DEPRECIACOES-002-disponibilidade-competencias-integridade.md#seed-geral).

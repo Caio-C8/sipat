@@ -143,9 +143,6 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText("Valor residual"), {
       target: { value: "600,00" },
     });
-    fireEvent.change(screen.getByLabelText("Início da depreciação *"), {
-      target: { value: "2026-10-01" },
-    });
 
     expect(
       (screen.getByLabelText("Valor de incorporação (R$)") as HTMLInputElement)
@@ -195,9 +192,6 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText("Valor residual"), {
       target: { value: "100,00" },
     });
-    fireEvent.change(screen.getByLabelText("Início da depreciação *"), {
-      target: { value: "2026-10-01" },
-    });
     fireEvent.click(
       screen.getByRole("button", { name: "Cadastrar patrimônio" }),
     );
@@ -235,7 +229,6 @@ describe("CadastroPatrimonio", () => {
         vidaUtilInicialMeses: 60,
         valorResidual: "549.00",
         valorBaseInicial: "5490.00",
-        dataInicio: "2026-10-01",
       },
     };
     mocks.pedido = pedido;

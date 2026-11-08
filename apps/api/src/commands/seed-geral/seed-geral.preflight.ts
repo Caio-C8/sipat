@@ -5,8 +5,8 @@ export interface EstadoMigrationSeed {
 }
 
 const ULTIMA_MIGRATION =
-  "20261107120000_adiciona_classificacao_depreciavel_patrimonio";
-const TOTAL_MIGRATIONS = 27;
+  "20261108120000_endurece_disponibilidade_competencias_depreciacao";
+const TOTAL_MIGRATIONS = 28;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],

@@ -11,6 +11,8 @@ function linha(alteracoes: Partial<LinhaDepreciacao> = {}): LinhaDepreciacao {
     numeroPatrimonio: "1",
     descricao: "Bem",
     status: "ATIVO",
+    depreciavel: true,
+    disponibilidadeId: "30000000-0000-4000-8000-000000000001",
     situacaoContabilId: "00000000-0000-4000-8000-000000000002",
     valorBrutoAtual: new Prisma.Decimal("1000"),
     depreciacaoAcumuladaAtual: new Prisma.Decimal("100"),
@@ -21,6 +23,9 @@ function linha(alteracoes: Partial<LinhaDepreciacao> = {}): LinhaDepreciacao {
     dataInicio: new Date("2026-01-01T00:00:00.000Z"),
     quantidadeRealizada: 2n,
     jaDepreciadoNaCompetencia: false,
+    primeiraCompetencia: new Date("2026-02-01T00:00:00.000Z"),
+    ultimaCompetenciaProcessada: new Date("2026-03-01T00:00:00.000Z"),
+    competenciaEsperada: new Date("2026-04-01T00:00:00.000Z"),
     ...alteracoes,
   };
 }
