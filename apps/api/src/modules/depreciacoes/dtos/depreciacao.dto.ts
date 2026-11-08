@@ -6,6 +6,8 @@ import {
   ListarDepreciacoesPendentesQuerySchema,
   ListarDepreciacoesPendentesResponseSchema,
   PatrimonioParamsSchema,
+  ListarCompetenciasDepreciacaoResponseSchema,
+  ResumoPendenciasDepreciacaoResponseSchema,
 } from "@repo/contracts";
 import { createZodDto } from "nestjs-zod";
 
@@ -29,4 +31,10 @@ export class ExecutarDepreciacoesEmMassaResponseDto extends createZodDto(
 ) {}
 export class ExecutarDepreciacaoPatrimonioResponseDto extends createZodDto(
   ExecutarDepreciacaoPatrimonioResponseSchema,
+) {}
+export class ListarCompetenciasDepreciacaoResponseDto extends createZodDto(
+  ListarCompetenciasDepreciacaoResponseSchema,
+) {}
+export class ResumoPendenciasDepreciacaoResponseDto extends createZodDto(
+  ResumoPendenciasDepreciacaoResponseSchema,
 ) {}

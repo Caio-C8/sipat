@@ -1614,7 +1614,7 @@ Especificação de execução:
 
 ## Evolução da depreciação — disponibilidade, competências e pendências
 
-**Status:** aprovada para implementação sequencial.
+**Status:** objetivos 1 e 2 concluídos; objetivo 3 pendente.
 
 Esta evolução substitui a data inicial livre pelo fato auditável de
 disponibilidade para uso, permite regularizar competências devidas em ordem e
@@ -1623,8 +1623,8 @@ backfill legado, mas o seed geral deve acompanhar o novo schema.
 
 | Ordem | Objetivo                                                                                          | Resultado                                                                  | Dependência                 |
 | ----- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------- |
-| 1     | [`CONTRACTS-018`](./tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)   | classificação no patrimônio ponta a ponta, incluindo banco, API e clientes | contratos e cadastro atuais |
-| 2     | [`DEPRECIACOES-002`](./tasks/DEPRECIACOES-002-disponibilidade-competencias-integridade.md)        | disponibilidade, competências, integridade, relatórios e seed              | objetivo 1 implementado     |
+| 1     | [`CONTRACTS-018`](./tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)   | classificação no patrimônio ponta a ponta, incluindo banco, API e clientes | concluído                   |
+| 2     | [`DEPRECIACOES-002`](./tasks/DEPRECIACOES-002-disponibilidade-competencias-integridade.md)        | disponibilidade, competências, integridade, relatórios e seed              | concluído                   |
 | 3     | [`WEB-DEPRECIACOES-002`](./tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md) | detalhe, seletor localizado, relatório e alerta no sino                    | objetivos 1–2 implementados |
 
 ### Resultado integrado esperado

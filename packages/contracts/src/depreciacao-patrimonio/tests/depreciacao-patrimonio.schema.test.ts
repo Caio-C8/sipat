@@ -17,10 +17,12 @@ import {
   ItemDepreciacaoPendenteSchema,
   ListarDepreciacoesPendentesQuerySchema,
   ListarDepreciacoesPendentesResponseSchema,
+  ListarCompetenciasDepreciacaoResponseSchema,
   MOTIVOS_INELEGIBILIDADE_DEPRECIACAO,
   MotivoInelegibilidadeDepreciacaoSchema,
   ResultadoDepreciacaoIndividualSchema,
   ResultadoDepreciacoesEmMassaSchema,
+  ResumoPendenciasDepreciacaoResponseSchema,
 } from "..";
 
 const ids = {
@@ -48,6 +50,9 @@ const itemPendente = {
   vidaUtilRestanteMeses: 24,
   quotaPrevista: "270.8281893",
   atingiraValorResidual: false,
+  primeiraCompetencia: "2026-01",
+  ultimaCompetenciaProcessada: "2026-09",
+  competenciaEsperada: "2026-10",
 } as const;
 
 const depreciacaoRealizada = {
@@ -86,6 +91,9 @@ const resultadoEmMassa = {
     dataInicioNaoAtingida: 1,
     jaDepreciadoNaCompetencia: 5,
     valorResidualAtingido: 6,
+    naoDepreciavel: 0,
+    indisponivelParaUso: 7,
+    competenciaAnteriorPendente: 8,
   },
 } as const;
 
@@ -314,6 +322,74 @@ describe("responses da depreciação patrimonial", () => {
       },
       { ...resultadoEmMassa, depreciacoes: [depreciacaoRealizada] },
       { ...resultadoEmMassa, patrimonioIds: [ids.patrimonio] },
+    ]);
+  });
+
+  it("mantém catálogo e resumo de competências finitos", () => {
+    const catalogo = {
+      status: 200,
+      sucesso: true,
+      mensagem: "Competências consultadas.",
+      dados: {
+        competenciaAtual: "2026-10",
+        competenciaMaisAntigaPendente: "2026-01",
+        competencias: [
+          {
+            competencia: "2026-01",
+            quantidadePendente: 3,
+            quantidadeBloqueadaPorAnterior: 0,
+          },
+          {
+            competencia: "2026-02",
+            quantidadePendente: 1,
+            quantidadeBloqueadaPorAnterior: 2,
+          },
+        ],
+      },
+    } as const;
+    assert.deepEqual(
+      parseValido(ListarCompetenciasDepreciacaoResponseSchema, catalogo),
+      catalogo,
+    );
+
+    const resumo = {
+      status: 200,
+      sucesso: true,
+      mensagem: "Resumo consultado.",
+      dados: {
+        totalPendencias: 5,
+        totalPatrimonios: 3,
+        competenciaMaisAntiga: "2026-01",
+      },
+    } as const;
+    assert.deepEqual(
+      parseValido(ResumoPendenciasDepreciacaoResponseSchema, resumo),
+      resumo,
+    );
+    esperaInvalidos(ListarCompetenciasDepreciacaoResponseSchema, [
+      {
+        ...catalogo,
+        dados: {
+          ...catalogo.dados,
+          competencias: [
+            {
+              competencia: "2026-13",
+              quantidadePendente: 1,
+              quantidadeBloqueadaPorAnterior: 0,
+            },
+          ],
+        },
+      },
+      {
+        ...catalogo,
+        dados: {
+          ...catalogo.dados,
+          competencias: Array.from(
+            { length: 1201 },
+            () => catalogo.dados.competencias[0],
+          ),
+        },
+      },
     ]);
   });
 });

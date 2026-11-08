@@ -158,7 +158,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const [vidaUtil, setVidaUtil] = useState("");
   const [residual, setResidual] = useState("");
   const [residualEmPercentual, setResidualEmPercentual] = useState(false);
-  const [inicioDepreciacao, setInicioDepreciacao] = useState("");
   const [manterDados, setManterDados] = useState(false);
   const [pedidoPendente, setPedidoPendente] =
     useState<CriarPatrimonioBodyData | null>(null);
@@ -212,8 +211,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
         parametrosAtuais.percentualResidual ?? parametrosAtuais.valorResidual
       ).replace(".", ",")
     : residual;
-  const inicioDepreciacaoAtual =
-    parametrosAtuais?.dataInicio ?? inicioDepreciacao;
   const listaEspecies = especiesDados ?? [];
   const listaSetores = setoresDados ?? [];
   const listaProcessos = processosDados ?? [];
@@ -255,7 +252,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
     setVidaUtil("");
     setResidual("");
     setResidualEmPercentual(false);
-    setInicioDepreciacao("");
     setErrosCampos({});
     setErro(null);
     setDecisao(null);
@@ -283,7 +279,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
         setDepreciavel(false);
         setVidaUtil("");
         setResidual("");
-        setInicioDepreciacao("");
       }
     } catch (erroCriacao) {
       const proximaDecisao = decidirAposFalha(erroCriacao);
@@ -335,7 +330,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                 : undefined,
               valorResidual: valorResidualNumerico.toFixed(2),
               valorBaseInicial: converterDecimal(valor),
-              dataInicio: inicioDepreciacao,
             },
           }
         : {}),
@@ -772,7 +766,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     setVidaUtil("");
                     setResidual("");
                     setResidualEmPercentual(false);
-                    setInicioDepreciacao("");
                   }}
                 />
                 <span>
@@ -780,8 +773,9 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                     Este bem é depreciável
                   </strong>
                   <small className="text-[#62748e]">
-                    Quando marcada, a vida útil, o residual e o início da
-                    depreciação são obrigatórios.
+                    Quando marcada, a vida útil e o residual são obrigatórios. A
+                    depreciação começa após a confirmação de disponibilidade
+                    para uso.
                   </small>
                 </span>
               </label>
@@ -833,16 +827,6 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                         required
                         value={residualAtual}
                         onChange={(e) => setResidual(e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      <Rotulo obrigatorio>Início da depreciação</Rotulo>
-                      <input
-                        className={campo}
-                        type="date"
-                        required
-                        value={inicioDepreciacaoAtual}
-                        onChange={(e) => setInicioDepreciacao(e.target.value)}
                       />
                     </label>
                     <div>

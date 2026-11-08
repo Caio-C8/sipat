@@ -91,7 +91,13 @@ async function main() {
         situacaoContabil: {
           create: {
             valorBrutoAtual: new Prisma.Decimal("1000"),
-            depreciacaoAcumuladaAtual: new Prisma.Decimal("10"),
+            depreciacaoAcumuladaAtual: new Prisma.Decimal("0"),
+          },
+        },
+        disponibilidadeUso: {
+          create: {
+            dataDisponibilidade: inicioAnterior,
+            createdById: usuario.id,
           },
         },
         parametrosDepreciacao: {
@@ -107,18 +113,24 @@ async function main() {
       include: { parametrosDepreciacao: true },
     });
     const parametro = bem.parametrosDepreciacao[0]!;
-    await db.depreciacaoPatrimonio.create({
-      data: {
-        dataDepreciacao: new Date(),
-        dataCompetencia: competencia,
-        valorContabilAnterior: new Prisma.Decimal("1000"),
-        valorDepreciado: new Prisma.Decimal("10"),
-        valorContabilNovo: new Prisma.Decimal("990"),
-        patrimonioId: bem.id,
-        parametroDepreciacaoId: parametro.id,
-        comissaoId: comissao.id,
-        createdById: usuario.id,
-      },
+    await db.$transaction(async (tx) => {
+      await tx.depreciacaoPatrimonio.create({
+        data: {
+          dataDepreciacao: new Date(),
+          dataCompetencia: competencia,
+          valorContabilAnterior: new Prisma.Decimal("1000"),
+          valorDepreciado: new Prisma.Decimal("10"),
+          valorContabilNovo: new Prisma.Decimal("990"),
+          patrimonioId: bem.id,
+          parametroDepreciacaoId: parametro.id,
+          comissaoId: comissao.id,
+          createdById: usuario.id,
+        },
+      });
+      await tx.situacaoContabilPatrimonio.update({
+        where: { patrimonioId: bem.id },
+        data: { depreciacaoAcumuladaAtual: new Prisma.Decimal("10") },
+      });
     });
     const pasta = path.resolve(process.cwd(), "apps/web/test-results");
     mkdirSync(pasta, { recursive: true });

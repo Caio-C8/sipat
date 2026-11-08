@@ -341,6 +341,13 @@ test.describe("Movimentações integradas — mocks estritos", () => {
             depreciacaoAcumuladaAtual: "0",
           },
           parametroDepreciacaoAtual: null,
+          disponibilidadeUso: null,
+          resumoDepreciacao: {
+            primeiraCompetencia: null,
+            ultimaCompetenciaProcessada: null,
+            proximaCompetencia: null,
+            quantidadePendencias: 0,
+          },
           cadastradoPor: {
             id: "00000000-0000-4000-8000-000000000001",
             nome: "Responsável pelo cadastro",

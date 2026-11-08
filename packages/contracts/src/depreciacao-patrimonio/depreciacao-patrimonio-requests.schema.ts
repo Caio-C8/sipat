@@ -16,6 +16,11 @@ export const ListarDepreciacoesPendentesQuerySchema =
     competencia: CompetenciaMensalSchema,
   });
 
+export const ListarCompetenciasDepreciacaoQuerySchema = z.strictObject({});
+export const ConsultarResumoPendenciasDepreciacaoQuerySchema = z.strictObject(
+  {},
+);
+
 export const ExecutarDepreciacoesEmMassaBodySchema = z.strictObject({
   competencia: CompetenciaMensalSchema,
   comissaoId: ComissaoDepreciacaoIdSchema,

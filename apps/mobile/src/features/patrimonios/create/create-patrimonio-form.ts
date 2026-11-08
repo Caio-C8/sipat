@@ -22,7 +22,6 @@ export type CreatePatrimonioForm = Readonly<{
   residualMode: ResidualMode;
   residualValue: string;
   residualPercentage: string;
-  depreciationStartDate: string;
 }>;
 
 export const EMPTY_CREATE_PATRIMONIO_FORM: CreatePatrimonioForm = {
@@ -42,7 +41,6 @@ export const EMPTY_CREATE_PATRIMONIO_FORM: CreatePatrimonioForm = {
   residualMode: "value",
   residualValue: "",
   residualPercentage: "",
-  depreciationStartDate: "",
 };
 
 export type FormErrors = Readonly<Record<string, string>>;
@@ -215,9 +213,6 @@ export function validateCreatePatrimonioStep(
       Number(form.residualPercentage.replace(",", ".")) > 100
     )
       errors.residual = "O percentual não pode superar 100%.";
-    if (!dateInputToIso(form.depreciationStartDate))
-      errors.depreciationStartDate =
-        "Informe uma data válida no formato DD/MM/AAAA.";
   }
   return errors;
 }
@@ -267,7 +262,6 @@ export function mapCreatePatrimonioForm(
               : {}),
             valorResidual: effectiveResidual(form)!,
             valorBaseInicial: base,
-            dataInicio: dateInputToIso(form.depreciationStartDate)!,
           },
         }
       : {}),

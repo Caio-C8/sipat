@@ -45,6 +45,9 @@ export const ItemDepreciacaoPendenteSchema = z.strictObject({
   vidaUtilRestanteMeses: z.number().int().min(1),
   quotaPrevista: Decimal19_7Schema,
   atingiraValorResidual: z.boolean(),
+  primeiraCompetencia: CompetenciaMensalSchema,
+  ultimaCompetenciaProcessada: CompetenciaMensalSchema.nullable(),
+  competenciaEsperada: CompetenciaMensalSchema,
 });
 
 export const ResumoDepreciacoesPendentesSchema = z.strictObject({
@@ -56,6 +59,30 @@ export const ListarDepreciacoesPendentesResponseSchema =
   criarRespostaSucessoPaginadaSchema(ItemDepreciacaoPendenteSchema).safeExtend({
     resumo: ResumoDepreciacoesPendentesSchema,
   });
+
+export const CompetenciaDepreciacaoSchema = z.strictObject({
+  competencia: CompetenciaMensalSchema,
+  quantidadePendente: ContagemDepreciacaoSchema,
+  quantidadeBloqueadaPorAnterior: ContagemDepreciacaoSchema,
+});
+
+export const ListarCompetenciasDepreciacaoResponseSchema =
+  criarRespostaSucessoSchema(
+    z.strictObject({
+      competenciaAtual: CompetenciaMensalSchema,
+      competenciaMaisAntigaPendente: CompetenciaMensalSchema.nullable(),
+      competencias: z.array(CompetenciaDepreciacaoSchema).max(1200),
+    }),
+  );
+
+export const ResumoPendenciasDepreciacaoResponseSchema =
+  criarRespostaSucessoSchema(
+    z.strictObject({
+      totalPendencias: ContagemDepreciacaoSchema,
+      totalPatrimonios: ContagemDepreciacaoSchema,
+      competenciaMaisAntiga: CompetenciaMensalSchema.nullable(),
+    }),
+  );
 
 const DepreciacaoRealizadaSchema = z.strictObject({
   resultado: z.literal("DEPRECIADO"),
@@ -93,6 +120,9 @@ export const ResultadoDepreciacoesEmMassaSchema = z.strictObject({
     dataInicioNaoAtingida: ContagemDepreciacaoSchema,
     jaDepreciadoNaCompetencia: ContagemDepreciacaoSchema,
     valorResidualAtingido: ContagemDepreciacaoSchema,
+    naoDepreciavel: ContagemDepreciacaoSchema,
+    indisponivelParaUso: ContagemDepreciacaoSchema,
+    competenciaAnteriorPendente: ContagemDepreciacaoSchema,
   }),
 });
 
@@ -122,4 +152,13 @@ export type ExecutarDepreciacaoPatrimonioResponse = z.output<
 >;
 export type ExecutarDepreciacoesEmMassaResponse = z.output<
   typeof ExecutarDepreciacoesEmMassaResponseSchema
+>;
+export type CompetenciaDepreciacao = z.output<
+  typeof CompetenciaDepreciacaoSchema
+>;
+export type ListarCompetenciasDepreciacaoResponse = z.output<
+  typeof ListarCompetenciasDepreciacaoResponseSchema
+>;
+export type ResumoPendenciasDepreciacaoResponse = z.output<
+  typeof ResumoPendenciasDepreciacaoResponseSchema
 >;

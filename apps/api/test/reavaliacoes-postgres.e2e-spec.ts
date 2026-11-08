@@ -158,7 +158,13 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
           situacaoContabil: {
             create: {
               valorBrutoAtual: new Prisma.Decimal("1000"),
-              depreciacaoAcumuladaAtual: new Prisma.Decimal("10"),
+              depreciacaoAcumuladaAtual: new Prisma.Decimal("0"),
+            },
+          },
+          disponibilidadeUso: {
+            create: {
+              dataDisponibilidade: inicioAnterior,
+              createdById: autorId,
             },
           },
           parametrosDepreciacao: {
@@ -175,18 +181,24 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
         include: { parametrosDepreciacao: true },
       });
       const parametro = bem.parametrosDepreciacao[0]!;
-      await db.depreciacaoPatrimonio.create({
-        data: {
-          dataDepreciacao: new Date(),
-          dataCompetencia: inicioCompetencia,
-          valorContabilAnterior: new Prisma.Decimal("1000"),
-          valorDepreciado: new Prisma.Decimal("10"),
-          valorContabilNovo: new Prisma.Decimal("990"),
-          patrimonioId: bem.id,
-          parametroDepreciacaoId: parametro.id,
-          comissaoId,
-          createdById: autorId,
-        },
+      await db.$transaction(async (tx) => {
+        await tx.depreciacaoPatrimonio.create({
+          data: {
+            dataDepreciacao: new Date(),
+            dataCompetencia: inicioCompetencia,
+            valorContabilAnterior: new Prisma.Decimal("1000"),
+            valorDepreciado: new Prisma.Decimal("10"),
+            valorContabilNovo: new Prisma.Decimal("990"),
+            patrimonioId: bem.id,
+            parametroDepreciacaoId: parametro.id,
+            comissaoId,
+            createdById: autorId,
+          },
+        });
+        await tx.situacaoContabilPatrimonio.update({
+          where: { patrimonioId: bem.id },
+          data: { depreciacaoAcumuladaAtual: new Prisma.Decimal("10") },
+        });
       });
       bens.push(bem);
     }
@@ -330,9 +342,9 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
       "PATRIMONIO_BAIXADO",
     );
     const valida = await post("/previa", body()).expect(200);
-    await db.situacaoContabilPatrimonio.update({
-      where: { patrimonioId: bens[0]!.id },
-      data: { depreciacaoAcumuladaAtual: new Prisma.Decimal("20") },
+    await db.patrimonio.update({
+      where: { id: bens[0]!.id },
+      data: { descricao: "Bem sintético alterado depois da prévia" },
     });
     await post("", {
       ...body(),
@@ -440,12 +452,14 @@ suite("reavaliações HTTP e PostgreSQL isolado", () => {
     const calculo = calcularDepreciacao(linha!);
     expect(calculo.valorDepreciado.toString()).toBe("17.5");
     expect(calculo.valorContabilNovo.toString()).toBe("1182.5");
-    await repository.persistirEmLote({
-      calculos: [calculo],
-      competencia: new Date(`${competencia}-01T00:00:00.000Z`),
-      instante: new Date(),
-      comissaoId,
-      usuarioId: diretor.id,
+    await db.$transaction(async (transacao) => {
+      await new DepreciacoesRepository(transacao).persistirEmLote({
+        calculos: [calculo],
+        competencia: new Date(`${competencia}-01T00:00:00.000Z`),
+        instante: new Date(),
+        comissaoId,
+        usuarioId: diretor.id,
+      });
     });
     expect(
       await db.depreciacaoPatrimonio.count({

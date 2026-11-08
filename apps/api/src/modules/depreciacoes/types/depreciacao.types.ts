@@ -6,6 +6,8 @@ export type LinhaDepreciacao = {
   numeroPatrimonio: string;
   descricao: string;
   status: StatusPatrimonio;
+  depreciavel: boolean;
+  disponibilidadeId: string | null;
   situacaoContabilId: string | null;
   valorBrutoAtual: Prisma.Decimal | null;
   depreciacaoAcumuladaAtual: Prisma.Decimal | null;
@@ -16,6 +18,9 @@ export type LinhaDepreciacao = {
   dataInicio: Date | null;
   quantidadeRealizada: bigint;
   jaDepreciadoNaCompetencia: boolean;
+  primeiraCompetencia: Date | null;
+  ultimaCompetenciaProcessada: Date | null;
+  competenciaEsperada: Date | null;
 };
 
 export type LinhaPendente = LinhaDepreciacao;
@@ -58,6 +63,18 @@ export type ResultadoPaginaPendentes = {
   pagina: number;
   ultimaPagina: number;
   limite: number;
+};
+
+export type CompetenciaDepreciacaoBanco = {
+  competencia: Date;
+  quantidadePendente: bigint;
+  quantidadeBloqueadaPorAnterior: bigint;
+};
+
+export type ResumoPendenciasBanco = {
+  totalPendencias: bigint;
+  totalPatrimonios: bigint;
+  competenciaMaisAntiga: Date | null;
 };
 
 export type DepreciacaoCalculadaComLinha = DepreciacaoCalculada & {

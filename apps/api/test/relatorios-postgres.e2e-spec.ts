@@ -67,27 +67,30 @@ const url = process.env.RELATORIOS_INTEGRATION_DATABASE_URL;
               competenciaFim: "2026-02",
               patrimonioId: f.bem.id,
             }
-          : tipo === "inventarios"
-            ? { inventarioId: f.inventario.id }
-            : tipo === "manutencoes"
-              ? { ...periodo, base: "ENVIO", patrimonioId: f.bem.id }
-              : tipo === "reavaliacoes"
-                ? { ...periodo, base: "REGISTRO", patrimonioId: f.bem.id }
-                : tipo === "emprestimos"
-                  ? { ...periodo, base: "SAIDA", patrimonioId: f.bem.id }
-                  : { ...periodo, patrimonioId: f.bem.id };
+          : tipo === "pendencias-depreciacao"
+            ? { competencia: "2026-03" }
+            : tipo === "inventarios"
+              ? { inventarioId: f.inventario.id }
+              : tipo === "manutencoes"
+                ? { ...periodo, base: "ENVIO", patrimonioId: f.bem.id }
+                : tipo === "reavaliacoes"
+                  ? { ...periodo, base: "REGISTRO", patrimonioId: f.bem.id }
+                  : tipo === "emprestimos"
+                    ? { ...periodo, base: "SAIDA", patrimonioId: f.bem.id }
+                    : { ...periodo, patrimonioId: f.bem.id };
     }
     const tipos: TipoTabular[] = [
       "patrimonios",
       "movimentacoes",
       "manutencoes",
       "depreciacoes",
+      "pendencias-depreciacao",
       "reavaliacoes",
       "inventarios",
       "emprestimos",
       "baixas",
     ];
-    it("oito relatórios reais em ambos os perfis, sem expor campos privados", async () => {
+    it("nove relatórios reais em ambos os perfis, sem expor campos privados", async () => {
       for (const tipo of tipos)
         for (const cookie of f.cookies) {
           const r = await request(app.getHttpServer())

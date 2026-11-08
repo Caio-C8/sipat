@@ -113,7 +113,6 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
         percentualResidual: "10",
         valorResidual: "100",
         valorBaseInicial: "1000",
-        dataInicio: "2026-10-18",
       },
     };
   }

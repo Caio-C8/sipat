@@ -13,6 +13,8 @@ import type {
   ExecutarDepreciacaoPatrimonioResponse,
   ExecutarDepreciacoesEmMassaResponse,
   ListarDepreciacoesPendentesResponse,
+  ListarCompetenciasDepreciacaoResponse,
+  ResumoPendenciasDepreciacaoResponse,
 } from "@repo/contracts";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { RequisicaoAutenticada } from "../auth/auth.types";
@@ -26,12 +28,38 @@ import {
   ListarDepreciacoesPendentesQueryDto,
   ListarDepreciacoesPendentesResponseDto,
   PatrimonioDepreciacaoParamsDto,
+  ListarCompetenciasDepreciacaoResponseDto,
+  ResumoPendenciasDepreciacaoResponseDto,
 } from "./dtos";
 import { DepreciacaoResponseMapper } from "./mappers";
 
 @Controller()
 export class DepreciacoesController {
   constructor(private readonly depreciacoes: DepreciacoesService) {}
+
+  @Get("depreciacoes/competencias")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(ListarCompetenciasDepreciacaoResponseDto)
+  async listarCompetencias(): Promise<ListarCompetenciasDepreciacaoResponse> {
+    return {
+      status: HttpStatus.OK,
+      sucesso: true,
+      mensagem: "Competências de depreciação consultadas com sucesso.",
+      dados: await this.depreciacoes.listarCompetencias(),
+    };
+  }
+
+  @Get("depreciacoes/pendencias/resumo")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(ResumoPendenciasDepreciacaoResponseDto)
+  async resumoPendencias(): Promise<ResumoPendenciasDepreciacaoResponse> {
+    return {
+      status: HttpStatus.OK,
+      sucesso: true,
+      mensagem: "Resumo de pendências consultado com sucesso.",
+      dados: await this.depreciacoes.resumoPendencias(),
+    };
+  }
 
   @Get("depreciacoes/pendentes")
   @PerfisPermitidos("DIRETOR_PATRIMONIO")

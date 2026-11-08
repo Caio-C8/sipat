@@ -52,13 +52,14 @@ da renderização. Cada relatório tem query estrita e ordenação fechada com U
 ## Interface HTTP e limites aprovados
 
 Prefixo /api/relatorios; somente GET autenticado, private, no-store.
-Catálogo na raiz; opções enumeradas em /opcoes/:catalogo; oito tipos tabulares
+Catálogo na raiz; opções enumeradas em /opcoes/:catalogo; nove tipos tabulares
 em /:tipo e /:tipo/pdf. Ficha em /ficha-bem/:patrimonioId, /eventos e /pdf.
 Opções permitidas por tipo: patrimônios, setores, responsáveis, naturezas,
 espécies, comissões, fornecedores e inventários. Não são seletores de tabelas.
 
 Prévia/opções: padrão 20, máximo 50; offset máximo 50.000. Históricos: até
-366 dias, exceto ficha e inventário; depreciações até 12 competências.
+366 dias, exceto ficha e inventário; depreciações e pendências de depreciação
+até 12 competências.
 PDF: 1.000 linhas/eventos, 200 páginas, 10 MiB; dataset normalizado 8 MiB.
 Uma emissão por usuário e duas por instância, sem fila; orçamento 20 s com
 timeout de banco menor. Excesso rejeita emissão inteira (422), sem truncamento.
@@ -95,17 +96,18 @@ Referências oficiais: [PDFKit](https://pdfkit.org/docs/getting_started.html),
 Todos os filtros opcionais usam igualdade por UUID ou enum fechado, salvo as
 buscas textuais limitadas a 200 caracteres. Paginação não integra a entrada PDF.
 
-| Tipo          | Filtros opcionais                                                                                                                              | Base / ordenação                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Patrimônios   | busca cadastral normalizada/número canônico, bem, setor/responsável atuais, espécie/natureza, status, tipo de número, tombamento inicial/final | número crescente ou tombamento crescente, UUID                |
-| Ficha         | tipo de evento e ocorrência inicial/final                                                                                                      | ocorrência crescente, tipo e UUID; datas desconhecidas ao fim |
-| Movimentações | bem, origem/destino, comissão, origem comum/correção                                                                                           | ocorrência decrescente e UUID                                 |
-| Manutenções   | pedido, bem, fornecedor do item, tipo e situação                                                                                               | envio/retorno decrescente, pedido e item                      |
-| Depreciações  | bem e comissão                                                                                                                                 | competência, processamento e UUID decrescentes                |
-| Reavaliações  | bem e comissão                                                                                                                                 | registro/referência, instante e UUID decrescentes             |
-| Inventários   | bem, setor esperado/encontrado, verificação, situação original, correções original/posterior                                                   | setor esperado, identificação atual e UUID crescentes         |
-| Empréstimos   | bem, grupo, destinatário, pendente/devolvido e atraso                                                                                          | saída/previsão/devolução decrescente e UUID                   |
-| Baixas        | bem, tipo e comissão                                                                                                                           | baixa, registro e UUID decrescentes                           |
+| Tipo                      | Filtros opcionais                                                                                                                              | Base / ordenação                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Patrimônios               | busca cadastral normalizada/número canônico, bem, setor/responsável atuais, espécie/natureza, status, tipo de número, tombamento inicial/final | número crescente ou tombamento crescente, UUID                |
+| Ficha                     | tipo de evento e ocorrência inicial/final                                                                                                      | ocorrência crescente, tipo e UUID; datas desconhecidas ao fim |
+| Movimentações             | bem, origem/destino, comissão, origem comum/correção                                                                                           | ocorrência decrescente e UUID                                 |
+| Manutenções               | pedido, bem, fornecedor do item, tipo e situação                                                                                               | envio/retorno decrescente, pedido e item                      |
+| Depreciações              | bem e comissão                                                                                                                                 | competência, processamento e UUID decrescentes                |
+| Pendências de depreciação | competência inicial/final, bem, setor e classificação da pendência                                                                             | competência esperada, número patrimonial e UUID crescentes    |
+| Reavaliações              | bem e comissão                                                                                                                                 | registro/referência, instante e UUID decrescentes             |
+| Inventários               | bem, setor esperado/encontrado, verificação, situação original, correções original/posterior                                                   | setor esperado, identificação atual e UUID crescentes         |
+| Empréstimos               | bem, grupo, destinatário, pendente/devolvido e atraso                                                                                          | saída/previsão/devolução decrescente e UUID                   |
+| Baixas                    | bem, tipo e comissão                                                                                                                           | baixa, registro e UUID decrescentes                           |
 
 Os contratos específicos em `packages/contracts/src/relatorio-patrimonial/`
 definem os campos completos de saída. A ficha oferece 14 variantes de eventos;
@@ -115,10 +117,11 @@ antes da transferência ao consumidor; contagens e somas são feitas no banco.
 
 ## Operação local e conferência manual
 
-O ambiente preparado nesta execução usa apenas o container
+O registro abaixo descreve a validação original de `RELATORIOS-001`. O ambiente
+preparado naquela execução usou apenas o container
 `sipat-relatorios-test`, PostgreSQL 17 em `127.0.0.1:55420`, banco
-`sipat_relatorios_test`. As 26 migrations existentes foram aplicadas nele.
-Nenhuma migration nova foi necessária. Configuração local em `.env.development`
+`sipat_relatorios_test`. As 26 migrations então existentes foram aplicadas
+nele; nenhuma migration nova era necessária naquele escopo. Configuração local em `.env.development`
 e dados/senhas de teste não são artefatos versionados.
 
 Com Node 24.22.1 e pnpm 11.28.8 disponíveis, execute `pnpm dev:api` e

@@ -1,6 +1,6 @@
 # `DEPRECIACOES-002` — Disponibilidade, competências e integridade contábil
 
-**Status:** aprovada; iniciar somente após `CONTRACTS-018` estar implementada
+**Status:** concluída em 8 de novembro de 2026, após `CONTRACTS-018`
 
 ## Objetivo
 
@@ -163,25 +163,37 @@ relatórios.
 
 ## Critérios de aceite
 
-- [ ] banco recusa valores, datas, relações e históricos estruturalmente
+- [x] banco recusa valores, datas, relações e históricos estruturalmente
       inconsistentes mesmo fora do controller;
-- [ ] bem sem disponibilidade nunca é elegível;
-- [ ] patrimônio não depreciável nunca recebe parâmetro ou depreciação;
-- [ ] disponibilidade duplicada ou concorrente produz um único fato e nenhum
+- [x] bem sem disponibilidade nunca é elegível;
+- [x] patrimônio não depreciável nunca recebe parâmetro ou depreciação;
+- [x] disponibilidade duplicada ou concorrente produz um único fato e nenhum
       parâmetro parcial;
-- [ ] primeira competência é exatamente o mês seguinte à disponibilidade;
-- [ ] abril pendente impede maio para o mesmo parâmetro; após abril, maio se
+- [x] primeira competência é exatamente o mês seguinte à disponibilidade;
+- [x] abril pendente impede maio para o mesmo parâmetro; após abril, maio se
       torna processável;
-- [ ] competência futura e anterior à primeira devida falham sem escrita;
-- [ ] reavaliação não encerra parâmetro com competência anterior pendente;
-- [ ] execução individual versus massa e duas massas concorrentes não criam
+- [x] competência futura e anterior à primeira devida falham sem escrita;
+- [x] reavaliação não encerra parâmetro com competência anterior pendente;
+- [x] execução individual versus massa e duas massas concorrentes não criam
       duplicidade, lacuna ou atualização perdida;
-- [ ] relatório tabular, PDF, catálogo de competências e resumo usam queries
+- [x] relatório tabular, PDF, catálogo de competências e resumo usam queries
       finitas, sem N+1, e respeitam seus perfis de acesso;
-- [ ] seed contém bens disponíveis e indisponíveis, depreciáveis e não
+- [x] seed contém bens disponíveis e indisponíveis, depreciáveis e não
       depreciáveis, sem lançar depreciação;
-- [ ] migration passa desde banco vazio e sobre o schema anterior descartável;
-- [ ] contratos, database, API, Web e mobile passam nas verificações aplicáveis.
+- [x] migration passa desde banco vazio e sobre o schema anterior descartável;
+- [x] contratos, database, API, Web e mobile passam nas verificações aplicáveis.
+
+## Evidências de conclusão
+
+- migration nova aplicada tanto desde banco vazio quanto sobre as 27 migrations
+  anteriores, com `prisma migrate status` sem pendência no banco descartável;
+- 12 cenários PostgreSQL específicos de depreciação, nove de relatórios e nove
+  de reavaliação aprovados, incluindo concorrência, rollback, constraints,
+  triggers diferidos e planos das consultas;
+- seed isolado produziu 24 bens depreciáveis disponíveis, 16 depreciáveis ainda
+  indisponíveis, seis não depreciáveis disponíveis e quatro indisponíveis, sem
+  depreciação ou reavaliação, e recusou a segunda execução;
+- a CI completa do repositório foi reproduzida localmente após a implementação.
 
 ## Arquivos ou módulos potencialmente afetados
 

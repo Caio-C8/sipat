@@ -112,7 +112,8 @@ export class ReavaliacoesRepository {
         GROUP BY pd.patrimonio_id
       )
       SELECT p.id AS "patrimonioId", p.numero_patrimonio AS "numeroPatrimonio",
-             p.descricao, p.status, sc.id AS "situacaoContabilId",
+             p.descricao, p.status, p.depreciavel,
+             du.id AS "disponibilidadeId", sc.id AS "situacaoContabilId",
              sc.valor_bruto_atual AS "valorBrutoAtual",
              sc.depreciacao_acumulada_atual AS "depreciacaoAcumuladaAtual",
              pd.id AS "parametroDepreciacaoId",
@@ -126,6 +127,11 @@ export class ReavaliacoesRepository {
              pd.data_inicio AS "dataInicio",
              (SELECT COUNT(*) FROM depreciacoes_patrimoniais d
                WHERE d.parametro_depreciacao_id = pd.id)::bigint AS "quantidadeRealizada",
+             CASE WHEN pd.data_inicio IS NULL THEN NULL ELSE
+               ((date_trunc('month', pd.data_inicio) + interval '1 month')::date
+                 + (SELECT COUNT(*) FROM depreciacoes_patrimoniais d
+                    WHERE d.parametro_depreciacao_id = pd.id) * interval '1 month')::date
+             END AS "competenciaEsperada",
              EXISTS (
                SELECT 1 FROM depreciacoes_patrimoniais d
                WHERE d.patrimonio_id = p.id
@@ -136,6 +142,7 @@ export class ReavaliacoesRepository {
       LEFT JOIN situacoes_contabeis_patrimoniais sc ON sc.patrimonio_id = p.id
       LEFT JOIN atuais a ON a.patrimonio_id = p.id
       LEFT JOIN parametros_depreciacao pd ON pd.id = a."parametroId"
+      LEFT JOIN disponibilidades_uso_patrimonio du ON du.patrimonio_id = p.id
       WHERE p.id = ANY(ARRAY[${Prisma.join(ids)}]::uuid[])
       ORDER BY p.id
     `;

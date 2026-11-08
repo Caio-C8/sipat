@@ -16,6 +16,13 @@ export function deslocarDataCivil(data: string, dias: number): string {
   return instante.toISOString().slice(0, 10);
 }
 
+export function deslocarMesCivil(data: string, meses: number): string {
+  const [ano, mes] = data.split("-").map(Number);
+  return new Date(Date.UTC(ano!, mes! - 1 + meses, 1))
+    .toISOString()
+    .slice(0, 10);
+}
+
 export function criarChaveIdempotenciaSeed(
   grupo: number,
   indice: number,

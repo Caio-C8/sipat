@@ -53,6 +53,9 @@ export function usePdfManutencoes() {
 export function usePdfDepreciacoes() {
   return usePdf(operacoes.pdf.depreciacoes);
 }
+export function usePdfPendenciasDepreciacao() {
+  return usePdf(operacoes.pdf["pendencias-depreciacao"]);
+}
 export function usePdfReavaliacoes() {
   return usePdf(operacoes.pdf.reavaliacoes);
 }

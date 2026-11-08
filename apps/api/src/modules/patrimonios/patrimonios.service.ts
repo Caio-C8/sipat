@@ -6,11 +6,14 @@ import {
 } from "@nestjs/common";
 import type {
   CriarPatrimonioBodyData,
+  ConfirmarDisponibilidadeUsoBodyData,
+  DisponibilidadeUsoPatrimonio,
   IdentidadeAutenticada,
   ListarPatrimoniosQueryData,
   SubstituirNumeroPatrimonialBodyData,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
+import { diaSaoPaulo } from "../../common/utils/datas-institucionais";
 import {
   calcularHashIdempotencia,
   construirConflitoIdempotencia,
@@ -28,6 +31,126 @@ export class PatrimoniosService {
 
   obterDashboard() {
     return this.patrimonios.obterDashboard();
+  }
+
+  async confirmarDisponibilidadeUso(
+    patrimonioId: string,
+    dados: ConfirmarDisponibilidadeUsoBodyData,
+    identidade: IdentidadeAutenticada,
+  ): Promise<DisponibilidadeUsoPatrimonio> {
+    const data = new Date(`${dados.dataDisponibilidade}T00:00:00.000Z`);
+    if (dados.dataDisponibilidade > diaSaoPaulo(new Date())) {
+      throw new UnprocessableEntityException({
+        codigo: "DATA_DISPONIBILIDADE_FUTURA",
+        mensagem: "A disponibilidade para uso não pode ser futura.",
+        erros: [],
+      });
+    }
+    const hash = calcularHashIdempotencia({
+      patrimonioId,
+      dataDisponibilidade: dados.dataDisponibilidade,
+    });
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+      try {
+        const disponibilidade = await this.patrimonios.executarTransacao(
+          async (repository) => {
+            if (
+              !(await repository.tentarBloquearChaveDisponibilidade(
+                identidade.id,
+                dados.chaveIdempotencia,
+              ))
+            )
+              throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+            const anterior = await repository.buscarIdempotenciaDisponibilidade(
+              identidade.id,
+              dados.chaveIdempotencia,
+            );
+            if (anterior) {
+              if (anterior.payloadHash !== hash)
+                throw this.conflitoIdempotencia(
+                  "CHAVE_IDEMPOTENCIA_REUTILIZADA",
+                );
+              throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
+            }
+            const patrimonio =
+              await repository.bloquearParaDisponibilidade(patrimonioId);
+            if (!patrimonio) throw this.patrimonioNaoEncontrado();
+            if (patrimonio.status === "BAIXADO") {
+              throw new ConflictException({
+                codigo: "PATRIMONIO_BAIXADO",
+                mensagem:
+                  "Patrimônio baixado não pode ter disponibilidade confirmada.",
+                erros: [],
+              });
+            }
+            if (patrimonio.disponibilidadeId !== null) {
+              throw new ConflictException({
+                codigo: "DISPONIBILIDADE_JA_CONFIRMADA",
+                mensagem: "A disponibilidade para uso já foi confirmada.",
+                erros: [],
+              });
+            }
+            const criada = await repository.criarDisponibilidade(
+              patrimonioId,
+              data,
+              identidade.id,
+            );
+            if (patrimonio.depreciavel) {
+              const atualizado = await repository.iniciarParametroVigente(
+                patrimonioId,
+                data,
+              );
+              if (atualizado.count !== 1) {
+                throw new ConflictException({
+                  codigo: "PARAMETRO_DEPRECIACAO_INCONSISTENTE",
+                  mensagem:
+                    "O parâmetro vigente não pôde ser iniciado com segurança.",
+                  erros: [],
+                });
+              }
+            }
+            await repository.salvarIdempotenciaDisponibilidade({
+              usuarioId: identidade.id,
+              chave: dados.chaveIdempotencia,
+              payloadHash: hash,
+              patrimonioId,
+            });
+            return { criada, depreciavel: patrimonio.depreciavel };
+          },
+        );
+        return {
+          id: disponibilidade.criada.id,
+          dataDisponibilidade: disponibilidade.criada.dataDisponibilidade
+            .toISOString()
+            .slice(0, 10),
+          primeiraCompetencia: disponibilidade.depreciavel
+            ? this.adicionarMes(
+                disponibilidade.criada.dataDisponibilidade
+                  .toISOString()
+                  .slice(0, 7),
+                1,
+              )
+            : null,
+          createdAt: disponibilidade.criada.createdAt.toISOString(),
+          createdBy: disponibilidade.criada.createdBy,
+        };
+      } catch (erro: unknown) {
+        if (this.ehErroPrisma(erro, "P2034") && tentativa < 2) continue;
+        if (
+          this.ehErroPrisma(erro, "P2034") ||
+          this.ehErroPrisma(erro, "P2002")
+        ) {
+          throw new ConflictException({
+            codigo: "CONFLITO_CONCORRENTE_DISPONIBILIDADE",
+            mensagem:
+              "A disponibilidade concorreu com outra alteração. Atualize os dados.",
+            erros: [],
+          });
+        }
+        throw erro;
+      }
+    }
+    throw new Error("Tentativas de disponibilidade esgotadas.");
   }
 
   async criar(
@@ -332,6 +455,13 @@ export class PatrimoniosService {
 
   private normalizarTexto(valor: string): string {
     return valor.normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
+  }
+
+  private adicionarMes(competencia: string, meses: number): string {
+    const [ano, mes] = competencia.split("-").map(Number);
+    return new Date(Date.UTC(ano!, mes! - 1 + meses, 1))
+      .toISOString()
+      .slice(0, 7);
   }
 
   private normalizarTextoOpcional(valor?: string): string | undefined {

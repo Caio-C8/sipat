@@ -5,6 +5,8 @@ export type EstadoReavaliacao = {
   numeroPatrimonio: string;
   descricao: string;
   status: StatusPatrimonio;
+  depreciavel: boolean;
+  disponibilidadeId: string | null;
   situacaoContabilId: string | null;
   valorBrutoAtual: Prisma.Decimal | null;
   depreciacaoAcumuladaAtual: Prisma.Decimal | null;
@@ -19,6 +21,7 @@ export type EstadoReavaliacao = {
   dataInicio: Date | null;
   quantidadeRealizada: bigint;
   jaDepreciadoNaCompetencia: boolean;
+  competenciaEsperada: Date | null;
 };
 
 export const reavaliacaoArgs = {

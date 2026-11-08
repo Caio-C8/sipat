@@ -108,7 +108,6 @@ describe("operações de patrimônios", () => {
         vidaUtilInicialMeses: 60,
         valorResidual: "549.00",
         valorBaseInicial: "5490.00",
-        dataInicio: "2026-10-01",
       },
     } as const;
 

@@ -280,7 +280,8 @@ export class ReavaliacoesService {
               percentualResidual: item.novo!.percentualResidualNovo,
               valorResidual: residual,
               valorBaseInicial: bruto,
-              dataInicio: dataReferencia,
+              dataInicio:
+                linha.disponibilidadeId === null ? null : dataReferencia,
               patrimonioId: item.patrimonioId,
               reavaliacaoId: registro.id,
             });
@@ -334,6 +335,13 @@ export class ReavaliacoesService {
           "Patrimônio não encontrado.",
         );
       } else {
+        if (!linha.depreciavel) {
+          erro(
+            "patrimonioId",
+            "PATRIMONIO_NAO_DEPRECIAVEL",
+            "Patrimônio não depreciável não pode ser reavaliado contabilmente.",
+          );
+        }
         if (linha.status === "BAIXADO") {
           erro(
             "patrimonioId",
@@ -383,9 +391,10 @@ export class ReavaliacoesService {
           !linha.valorResidual ||
           !linha.valorBaseInicial ||
           !linha.vidaUtilInicialMeses ||
-          !linha.dataInicio ||
           linha.metodo !== "LINEAR" ||
-          linha.dataInicio > this.dataCivil(dados.dataReferencia)
+          (linha.disponibilidadeId !== null && !linha.dataInicio) ||
+          (linha.dataInicio !== null &&
+            linha.dataInicio > this.dataCivil(dados.dataReferencia))
         ) {
           erro(
             "patrimonioId",
@@ -413,14 +422,14 @@ export class ReavaliacoesService {
               "Valores contábeis inconsistentes.",
             );
           } else if (
-            linha.dataInicio < competencia &&
-            !linha.jaDepreciadoNaCompetencia &&
+            linha.competenciaEsperada !== null &&
+            linha.competenciaEsperada <= competencia &&
             liquido.greaterThan(linha.valorResidual)
           ) {
             erro(
               "patrimonioId",
               "DEPRECIACAO_CORRENTE_PENDENTE",
-              "Deprecie este patrimônio na competência corrente antes de reavaliá-lo.",
+              "Regularize as competências devidas antes de reavaliar este patrimônio.",
             );
           }
         }

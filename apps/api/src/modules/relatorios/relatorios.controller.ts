@@ -53,6 +53,11 @@ export class RelatoriosController {
   depreciacoes(@Query() q: Dto.DepreciacoesQueryDto) {
     return this.service.tabular("depreciacoes", { ...q });
   }
+  @Get("pendencias-depreciacao")
+  @Header("Cache-Control", "private, no-store")
+  pendenciasDepreciacao(@Query() q: Dto.PendenciasDepreciacaoQueryDto) {
+    return this.service.tabular("pendencias-depreciacao", { ...q });
+  }
   @Get("reavaliacoes")
   @Header("Cache-Control", "private, no-store")
   reavaliacoes(@Query() q: Dto.ReavaliacoesQueryDto) {
@@ -142,6 +147,22 @@ export class RelatoriosController {
     res.once("close", () => cancel.abort());
     return this.pdf.emitir(
       "depreciacoes",
+      { ...q },
+      req.identidadeAutenticada!,
+      cancel.signal,
+    );
+  }
+  @Get("pendencias-depreciacao/pdf")
+  @Header("Cache-Control", "private, no-store")
+  pendenciasDepreciacaoPdf(
+    @Query() q: Dto.PendenciasDepreciacaoPdfQueryDto,
+    @Req() req: RequisicaoAutenticada,
+    @Res({ passthrough: true }) res: RespostaCancelavel,
+  ) {
+    const cancel = new AbortController();
+    res.once("close", () => cancel.abort());
+    return this.pdf.emitir(
+      "pendencias-depreciacao",
       { ...q },
       req.identidadeAutenticada!,
       cancel.signal,

@@ -157,7 +157,11 @@ export function ValoresTab({
           />
           <DetailRow
             label="Início"
-            value={formatCivilDate(depreciation.dataInicio)}
+            value={
+              depreciation.dataInicio
+                ? formatCivilDate(depreciation.dataInicio)
+                : "Aguardando disponibilidade"
+            }
           />
           <DetailRow
             label="Fim"

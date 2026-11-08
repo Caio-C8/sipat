@@ -164,6 +164,8 @@ model Usuario {
   revisoesOrcamentoManutencao           RevisaoOrcamentoManutencao[]
   documentosManutencao                  DocumentoManutencao[]
   idempotenciasManutencao               IdempotenciaManutencao[]
+  disponibilidadesUsoCriadas            DisponibilidadeUsoPatrimonio[]
+  idempotenciasDisponibilidadeUso       IdempotenciaDisponibilidadeUso[]
 
   @@map("usuarios")
 }
@@ -467,20 +469,22 @@ model Patrimonio {
   chaveCriacao String?   @map("chave_criacao") @db.Uuid
   hashCriacao  String?   @map("hash_criacao") @db.Char(64)
 
-  especie               Especie                         @relation(fields: [especieId], references: [id])
-  setorAtual            Setor                           @relation(fields: [setorAtualId], references: [id])
-  processoCompra        ProcessoCompra?                 @relation(fields: [processoCompraId], references: [id])
-  createdBy             Usuario                         @relation(fields: [createdById], references: [id])
-  situacaoContabil      SituacaoContabilPatrimonio?
-  parametrosDepreciacao ParametroDepreciacao[]
-  depreciacoes          DepreciacaoPatrimonio[]
-  reavaliacoes          ReavaliacaoPatrimonio[]
-  transferencias        TransferenciaPatrimonio[]
-  emprestimos           EmprestimoPatrimonio[]
-  itensManutencao       ItemManutencao[]
-  itensInventario       ItemInventario[]
-  baixas                BaixaPatrimonio[]
-  substituicoesNumero   SubstituicaoNumeroPatrimonial[]
+  especie                         Especie                          @relation(fields: [especieId], references: [id])
+  setorAtual                      Setor                            @relation(fields: [setorAtualId], references: [id])
+  processoCompra                  ProcessoCompra?                  @relation(fields: [processoCompraId], references: [id])
+  createdBy                       Usuario                          @relation(fields: [createdById], references: [id])
+  situacaoContabil                SituacaoContabilPatrimonio?
+  parametrosDepreciacao           ParametroDepreciacao[]
+  depreciacoes                    DepreciacaoPatrimonio[]
+  reavaliacoes                    ReavaliacaoPatrimonio[]
+  transferencias                  TransferenciaPatrimonio[]
+  emprestimos                     EmprestimoPatrimonio[]
+  itensManutencao                 ItemManutencao[]
+  itensInventario                 ItemInventario[]
+  baixas                          BaixaPatrimonio[]
+  substituicoesNumero             SubstituicaoNumeroPatrimonial[]
+  disponibilidadeUso              DisponibilidadeUsoPatrimonio?
+  idempotenciasDisponibilidadeUso IdempotenciaDisponibilidadeUso[]
 
   @@unique([createdById, chaveCriacao], map: "patrimonios_created_by_chave_criacao_key")
   @@map("patrimonios")
@@ -907,7 +911,7 @@ model ParametroDepreciacao {
   percentualResidual   Decimal?          @map("percentual_residual") @db.Decimal(5, 2)
   valorResidual        Decimal           @map("valor_residual") @db.Decimal(19, 7)
   valorBaseInicial     Decimal           @map("valor_base_inicial") @db.Decimal(19, 7)
-  dataInicio           DateTime          @map("data_inicio") @db.Date
+  dataInicio           DateTime?         @map("data_inicio") @db.Date
   dataFim              DateTime?         @map("data_fim") @db.Date
   reavaliacaoId        String?           @unique @map("reavaliacao_id") @db.Uuid
   patrimonioId         String            @map("patrimonio_id") @db.Uuid
@@ -921,6 +925,7 @@ model ParametroDepreciacao {
   depreciacoes           DepreciacaoPatrimonio[]
 
   @@unique([patrimonioId], map: "parametros_depreciacao_patrimonio_vigente_uidx", where: { dataFim: null })
+  @@unique([id, patrimonioId], map: "parametros_depreciacao_id_patrimonio_key")
   @@map("parametros_depreciacao")
 }
 
@@ -940,13 +945,41 @@ model DepreciacaoPatrimonio {
   createdById String   @map("created_by_id") @db.Uuid
 
   patrimonio           Patrimonio           @relation(fields: [patrimonioId], references: [id])
-  parametroDepreciacao ParametroDepreciacao @relation(fields: [parametroDepreciacaoId], references: [id])
+  parametroDepreciacao ParametroDepreciacao @relation(fields: [parametroDepreciacaoId, patrimonioId], references: [id, patrimonioId], onDelete: Restrict, map: "depreciacoes_parametro_patrimonio_fkey")
   comissao             Comissao             @relation(fields: [comissaoId], references: [id])
   createdBy            Usuario              @relation(fields: [createdById], references: [id])
 
   @@unique([patrimonioId, parametroDepreciacaoId, dataCompetencia])
   @@index([comissaoId], map: "depreciacoes_patrimoniais_comissao_id_idx")
   @@map("depreciacoes_patrimoniais")
+}
+
+model DisponibilidadeUsoPatrimonio {
+  id                  String   @id @default(uuid()) @db.Uuid
+  dataDisponibilidade DateTime @map("data_disponibilidade") @db.Date
+  patrimonioId        String   @unique(map: "disponibilidades_uso_patrimonio_id_key") @map("patrimonio_id") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdById         String   @map("created_by_id") @db.Uuid
+
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id], onDelete: Restrict)
+  createdBy  Usuario    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@map("disponibilidades_uso_patrimonio")
+}
+
+model IdempotenciaDisponibilidadeUso {
+  usuarioId    String   @map("usuario_id") @db.Uuid
+  chave        String   @db.Uuid
+  payloadHash  String   @map("payload_hash") @db.Char(64)
+  patrimonioId String   @map("patrimonio_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  usuario    Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id], onDelete: Restrict)
+
+  @@id([usuarioId, chave])
+  @@index([patrimonioId], map: "idempotencias_disponibilidade_patrimonio_id_idx")
+  @@map("idempotencias_disponibilidade_uso")
 }
 
 model ReavaliacaoPatrimonio {

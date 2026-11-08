@@ -5,7 +5,12 @@ import {
   queryPdfRelatorio,
   OpcoesRelatorioQuerySchema,
 } from "./queries";
-import { patrimoniosResumoSchema, EventoFichaSchema } from "./responses";
+import {
+  patrimoniosResumoSchema,
+  pendenciasDepreciacaoLinhaSchema,
+  pendenciasDepreciacaoResumoSchema,
+  EventoFichaSchema,
+} from "./responses";
 
 test("relatórios rejeitam filtros desconhecidos, períodos inválidos e excesso de paginação", () => {
   const schema = queryRelatorio("movimentacoes");
@@ -54,6 +59,47 @@ test("competências até doze meses e bases enumeradas por domínio", () => {
   assert.equal(
     OpcoesRelatorioQuerySchema.safeParse({ tipo: "sql" }).success,
     false,
+  );
+  assert.equal(
+    queryRelatorio("pendencias-depreciacao").safeParse({
+      competencia: "2026-10",
+    }).success,
+    true,
+  );
+  assert.equal(
+    queryRelatorio("pendencias-depreciacao").safeParse({
+      competencia: "2026-13",
+    }).success,
+    false,
+  );
+});
+
+test("relatório de pendências expõe apenas estado contábil derivado", () => {
+  assert.equal(
+    pendenciasDepreciacaoLinhaSchema.safeParse({
+      id: "7041c62b-5f83-432c-a178-889977d839b1",
+      patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
+      numeroPatrimonio: "123",
+      descricao: "Notebook",
+      status: "ATIVO",
+      primeiraCompetencia: "2026-01",
+      ultimaCompetenciaProcessada: "2026-08",
+      competenciaEsperada: "2026-09",
+      quantidadePendencias: 2,
+      valorLiquidoAtual: "900.0000000",
+      valorResidual: "100.0000000",
+      quotaPrevista: "10.0000000",
+    }).success,
+    true,
+  );
+  assert.equal(
+    pendenciasDepreciacaoResumoSchema.safeParse({
+      quantidade: 2,
+      bensDistintos: 1,
+      competenciaMaisAntiga: "2026-09",
+      quantidadeCompetencias: 2,
+    }).success,
+    true,
   );
 });
 test("lacunas contábeis são nulas, totais têm sete casas sem limite individual", () => {

@@ -168,6 +168,11 @@ import {
   MotivoInelegibilidadeDepreciacaoSchema,
   ResultadoDepreciacaoIndividualSchema,
   ResultadoDepreciacoesEmMassaSchema,
+  ConfirmarDisponibilidadeUsoBodySchema,
+  ConfirmarDisponibilidadeUsoResponseSchema,
+  DisponibilidadeUsoPatrimonioSchema,
+  ListarCompetenciasDepreciacaoResponseSchema,
+  ResumoPendenciasDepreciacaoResponseSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -246,12 +251,15 @@ describe("@repo/contracts — API pública", () => {
       CriarPatrimonioBodySchema,
       ListarPatrimoniosQuerySchema,
       SubstituirNumeroPatrimonialBodySchema,
+      ConfirmarDisponibilidadeUsoBodySchema,
       PatrimonioResumoSchema,
       PatrimonioDetalheSchema,
       ListarPatrimoniosResponseSchema,
       CriarPatrimonioResponseSchema,
       ConsultarPatrimonioResponseSchema,
       SubstituirNumeroPatrimonialResponseSchema,
+      DisponibilidadeUsoPatrimonioSchema,
+      ConfirmarDisponibilidadeUsoResponseSchema,
     ];
 
     for (const schema of schemas) {
@@ -411,6 +419,8 @@ describe("@repo/contracts — API pública", () => {
       ResultadoDepreciacaoIndividualSchema,
       ResultadoDepreciacoesEmMassaSchema,
       ListarDepreciacoesPendentesResponseSchema,
+      ListarCompetenciasDepreciacaoResponseSchema,
+      ResumoPendenciasDepreciacaoResponseSchema,
       ExecutarDepreciacaoPatrimonioResponseSchema,
       ExecutarDepreciacoesEmMassaResponseSchema,
     ]) {

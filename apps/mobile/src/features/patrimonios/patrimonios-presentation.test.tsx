@@ -67,6 +67,22 @@ const patrimonio = {
     dataInicio: "2026-02-01",
     dataFim: null,
   },
+  disponibilidadeUso: {
+    id: "88888888-8888-4888-8888-888888888888",
+    dataDisponibilidade: "2026-02-01",
+    primeiraCompetencia: "2026-03",
+    createdAt: "2026-02-01T12:00:00.000Z",
+    createdBy: {
+      id: "77777777-7777-4777-8777-777777777777",
+      nome: "Diretor de Patrimônio",
+    },
+  },
+  resumoDepreciacao: {
+    primeiraCompetencia: "2026-03",
+    ultimaCompetenciaProcessada: "2026-10",
+    proximaCompetencia: "2026-11",
+    quantidadePendencias: 1,
+  },
   createdAt: "2026-01-27T12:00:00.000Z",
   updatedAt: null,
 } as const satisfies PatrimonioDetalhe;

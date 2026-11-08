@@ -7,6 +7,7 @@ export const TipoRelatorioSchema = z.enum([
   "movimentacoes",
   "manutencoes",
   "depreciacoes",
+  "pendencias-depreciacao",
   "reavaliacoes",
   "inventarios",
   "emprestimos",
@@ -74,6 +75,10 @@ export const filtrosRelatorios = {
     ...comissao,
     competenciaInicio: mes,
     competenciaFim: mes,
+  }),
+  "pendencias-depreciacao": z.strictObject({
+    ...comum,
+    competencia: mes.optional(),
   }),
   reavaliacoes: z.strictObject({
     ...comum,
@@ -182,6 +187,9 @@ const queriesRelatorios = {
   depreciacoes: filtrosRelatorios["depreciacoes"]
     .extend(PaginacaoQuerySchema.shape)
     .superRefine((q, ctx) => refinar("depreciacoes", q, ctx)),
+  "pendencias-depreciacao": filtrosRelatorios["pendencias-depreciacao"]
+    .extend(PaginacaoQuerySchema.shape)
+    .superRefine((q, ctx) => refinar("pendencias-depreciacao", q, ctx)),
   reavaliacoes: filtrosRelatorios["reavaliacoes"]
     .extend(PaginacaoQuerySchema.shape)
     .superRefine((q, ctx) => refinar("reavaliacoes", q, ctx)),
@@ -211,6 +219,9 @@ const queriesPdfRelatorios = {
   depreciacoes: filtrosRelatorios["depreciacoes"].superRefine((q, ctx) =>
     refinar("depreciacoes", q, ctx),
   ),
+  "pendencias-depreciacao": filtrosRelatorios[
+    "pendencias-depreciacao"
+  ].superRefine((q, ctx) => refinar("pendencias-depreciacao", q, ctx)),
   reavaliacoes: filtrosRelatorios["reavaliacoes"].superRefine((q, ctx) =>
     refinar("reavaliacoes", q, ctx),
   ),
@@ -261,6 +272,7 @@ export const opcoesPorRelatorio: Record<
   movimentacoes: ["patrimonios", "setores", "comissoes"],
   manutencoes: ["patrimonios", "fornecedores"],
   depreciacoes: ["patrimonios", "comissoes"],
+  "pendencias-depreciacao": ["patrimonios"],
   reavaliacoes: ["patrimonios", "comissoes"],
   inventarios: ["patrimonios", "setores", "inventarios"],
   emprestimos: ["patrimonios"],

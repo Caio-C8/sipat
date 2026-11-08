@@ -17,6 +17,7 @@ type ValorCanonico =
 
 export type DominioLockIdempotencia =
   | "comissao"
+  | "disponibilidade-uso"
   | "emprestimo"
   | "fornecedor"
   | "inventario"

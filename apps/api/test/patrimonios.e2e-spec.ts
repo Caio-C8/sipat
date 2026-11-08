@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import {
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
+  ConfirmarDisponibilidadeUsoResponseSchema,
   CriarPatrimonioResponseSchema,
   DashboardPatrimonialResponseSchema,
   ListarPatrimoniosResponseSchema,
@@ -56,6 +57,12 @@ describe("patrimônios", () => {
       updateMany: jest.fn(),
     },
     substituicaoNumeroPatrimonial: { create: jest.fn() },
+    idempotenciaDisponibilidadeUso: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
+    disponibilidadeUsoPatrimonio: { create: jest.fn() },
+    parametroDepreciacao: { updateMany: jest.fn() },
   };
 
   function patrimonioPersistido(numeroPatrimonio = "1") {
@@ -99,6 +106,7 @@ describe("patrimônios", () => {
         depreciacaoAcumuladaAtual: new Prisma.Decimal(0),
       },
       parametrosDepreciacao: [],
+      disponibilidadeUso: null,
     };
   }
 
@@ -149,6 +157,17 @@ describe("patrimônios", () => {
       if (sql.includes('FROM "setores"')) {
         return [{ ativo: true }];
       }
+      if (sql.includes("LEFT JOIN disponibilidades_uso_patrimonio")) {
+        return [
+          {
+            id: PATRIMONIO_ID,
+            status: "ATIVO",
+            depreciavel: true,
+            disponibilidadeId: null,
+          },
+        ];
+      }
+      if (sql.includes("FROM parametros_depreciacao")) return [];
       if (sql.includes("patrimonios_numero_oficial_seq")) {
         return [{ valor: proximoOficial++ }];
       }
@@ -216,6 +235,15 @@ describe("patrimônios", () => {
         return { id: "historico" };
       },
     );
+    database.idempotenciaDisponibilidadeUso.findUnique.mockResolvedValue(null);
+    database.idempotenciaDisponibilidadeUso.create.mockResolvedValue({});
+    database.disponibilidadeUsoPatrimonio.create.mockResolvedValue({
+      id: "77777777-7777-4777-8777-777777777777",
+      dataDisponibilidade: new Date("2026-11-01T00:00:00.000Z"),
+      createdAt: new Date("2026-11-08T12:00:00.000Z"),
+      createdBy: { id: DIRETOR_ID, nome: "Diretor" },
+    });
+    database.parametroDepreciacao.updateMany.mockResolvedValue({ count: 1 });
 
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(DATABASE_CLIENT)
@@ -259,7 +287,6 @@ describe("patrimônios", () => {
         percentualResidual: "10",
         valorResidual: "100",
         valorBaseInicial: "1000",
-        dataInicio: "2026-10-18",
       },
     };
   }
@@ -412,6 +439,33 @@ describe("patrimônios", () => {
     );
     expect(ausente.status).toBe(404);
     expect(ausente.body.codigo).toBe("PATRIMONIO_NAO_ENCONTRADO");
+  });
+
+  it("protege e confirma disponibilidade para uso somente como diretor", async () => {
+    const rota = `/api/patrimonios/${PATRIMONIO_ID}/disponibilidade-uso`;
+    const dados = {
+      dataDisponibilidade: "2026-11-01",
+      chaveIdempotencia: "00000000-0000-4000-8000-000000000020",
+    };
+    const administrador = await request(app.getHttpServer())
+      .post(rota)
+      .set("Cookie", `sipat_session=${tokenAdministrador}`)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .send(dados);
+    const diretor = await request(app.getHttpServer())
+      .post(rota)
+      .set("Cookie", `sipat_session=${tokenDiretor}`)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .send(dados);
+
+    expect(administrador.status).toBe(403);
+    expect(diretor.status).toBe(201);
+    expect(
+      ConfirmarDisponibilidadeUsoResponseSchema.safeParse(diretor.body).success,
+    ).toBe(true);
+    expect(database.parametroDepreciacao.updateMany).toHaveBeenCalledTimes(1);
   });
 
   it("aplica autenticação, perfil e CSRF reais", async () => {

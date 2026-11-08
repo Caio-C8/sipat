@@ -53,6 +53,7 @@ const seletores: Record<TipoRelatorio, Seletor[]> = {
     },
   ],
   depreciacoes: [patrimonio, comissao],
+  "pendencias-depreciacao": [patrimonio],
   reavaliacoes: [patrimonio, comissao],
   inventarios: [
     {
@@ -86,6 +87,7 @@ const escolhas: Record<TipoRelatorio, Record<string, string[]>> = {
     situacao: ["PENDENTE", "RETORNADO"],
   },
   depreciacoes: {},
+  "pendencias-depreciacao": {},
   reavaliacoes: { base: ["REGISTRO", "REFERENCIA"] },
   inventarios: {
     verificacao: ["VERIFICADO", "PENDENTE"],

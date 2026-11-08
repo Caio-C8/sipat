@@ -99,7 +99,7 @@ export async function fixtureRelatorios(
           textoBusca: tag.toUpperCase(),
           dataTombamento: new Date("2026-01-01"),
           valorIncorporacao: "1000.1234567",
-          depreciavel: false,
+          depreciavel: i === 0,
           especieId: especie.id,
           setorAtualId: setor.id,
           createdById: u.id,
@@ -109,22 +109,41 @@ export async function fixtureRelatorios(
               : {
                   create: {
                     valorBrutoAtual: "1000.1234567",
-                    depreciacaoAcumuladaAtual: "0.1234567",
+                    depreciacaoAcumuladaAtual: i === 0 ? "0" : "0.1234567",
                   },
                 },
+          parametrosDepreciacao:
+            i === 0
+              ? {
+                  create: {
+                    metodo: "LINEAR",
+                    vidaUtilInicialMeses: 120,
+                    valorResidual: "100",
+                    valorBaseInicial: "1000.1234567",
+                    dataInicio: null,
+                  },
+                }
+              : undefined,
         },
       }),
     );
   const bem = bens[0]!;
-  const parametro = await db.parametroDepreciacao.create({
-    data: {
-      patrimonioId: bem.id,
-      metodo: "LINEAR",
-      vidaUtilInicialMeses: 120,
-      valorResidual: "100",
-      valorBaseInicial: "1000.1234567",
-      dataInicio: new Date("2026-01-01"),
-    },
+  const parametro = await db.parametroDepreciacao.findFirstOrThrow({
+    where: { patrimonioId: bem.id, dataFim: null },
+  });
+  const dataDisponibilidade = new Date("2025-12-01");
+  await db.$transaction(async (tx) => {
+    await tx.disponibilidadeUsoPatrimonio.create({
+      data: {
+        patrimonioId: bem.id,
+        dataDisponibilidade,
+        createdById: u.id,
+      },
+    });
+    await tx.parametroDepreciacao.update({
+      where: { id: parametro.id },
+      data: { dataInicio: dataDisponibilidade },
+    });
   });
   const comum = {
     patrimonioId: bem.id,
@@ -157,16 +176,33 @@ export async function fixtureRelatorios(
       dataTransferencia: new Date("2026-01-02T02:59:59.999Z"),
     },
   });
-  await db.depreciacaoPatrimonio.createMany({
-    data: [1, 2].map((m) => ({
-      ...comum,
-      parametroDepreciacaoId: parametro.id,
-      dataCompetencia: new Date(`2026-0${m}-01`),
-      dataDepreciacao: new Date(`2026-0${m}-28T12:00:00Z`),
-      valorContabilAnterior: "1000",
-      valorDepreciado: "10.1234567",
-      valorContabilNovo: "989.8765433",
-    })),
+  await db.$transaction(async (tx) => {
+    await tx.depreciacaoPatrimonio.createMany({
+      data: [
+        {
+          ...comum,
+          parametroDepreciacaoId: parametro.id,
+          dataCompetencia: new Date("2026-01-01"),
+          dataDepreciacao: new Date("2026-01-28T12:00:00Z"),
+          valorContabilAnterior: "1000.1234567",
+          valorDepreciado: "10.1234567",
+          valorContabilNovo: "990.0000000",
+        },
+        {
+          ...comum,
+          parametroDepreciacaoId: parametro.id,
+          dataCompetencia: new Date("2026-02-01"),
+          dataDepreciacao: new Date("2026-02-28T12:00:00Z"),
+          valorContabilAnterior: "990.0000000",
+          valorDepreciado: "10.1234567",
+          valorContabilNovo: "979.8765433",
+        },
+      ],
+    });
+    await tx.situacaoContabilPatrimonio.update({
+      where: { patrimonioId: bem.id },
+      data: { depreciacaoAcumuladaAtual: "20.2469134" },
+    });
   });
   await db.reavaliacaoPatrimonio.create({
     data: {

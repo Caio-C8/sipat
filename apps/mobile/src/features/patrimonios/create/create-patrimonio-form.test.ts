@@ -31,7 +31,6 @@ const form: CreatePatrimonioForm = {
   residualMode: "value",
   residualValue: "600,00",
   residualPercentage: "",
-  depreciationStartDate: "01/10/2026",
 };
 
 describe("formulário de criação patrimonial", () => {
@@ -78,7 +77,6 @@ describe("formulário de criação patrimonial", () => {
         vidaUtilInicialMeses: 60,
         valorResidual: "600.00",
         valorBaseInicial: "6000.00",
-        dataInicio: "2026-10-01",
       },
     });
   });
@@ -89,7 +87,6 @@ describe("formulário de criação patrimonial", () => {
       depreciable: false,
       usefulLifeMonths: "",
       residualValue: "",
-      depreciationStartDate: "",
     };
 
     expect(validateCreatePatrimonioStep(nonDepreciable, 4)).toEqual({});
@@ -143,8 +140,5 @@ describe("formulário de criação patrimonial", () => {
     expect(
       validateCreatePatrimonioStep({ ...form, residualValue: "" }, 4),
     ).toHaveProperty("residual");
-    expect(
-      validateCreatePatrimonioStep({ ...form, depreciationStartDate: "" }, 4),
-    ).toHaveProperty("depreciationStartDate");
   });
 });
