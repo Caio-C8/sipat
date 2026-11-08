@@ -19,6 +19,7 @@ export class PatrimonioResponseMapper {
       modelo: patrimonio.modelo,
       numeroSerie: patrimonio.numeroSerie,
       status: patrimonio.status,
+      depreciavel: patrimonio.depreciavel,
       situacaoContabil: {
         valorBrutoAtual: patrimonio.situacaoContabil.valorBrutoAtual.toString(),
         depreciacaoAcumuladaAtual:

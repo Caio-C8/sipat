@@ -70,6 +70,7 @@ describe("patrimônios", () => {
       modelo: "OPTICO",
       numeroSerie: "SERIE-1",
       status: "ATIVO" as const,
+      depreciavel: true,
       dataTombamento: new Date("2026-10-18T00:00:00.000Z"),
       tipoIncorporacao: "AQUISICAO" as const,
       valorIncorporacao: new Prisma.Decimal("1000"),
@@ -161,6 +162,7 @@ describe("patrimônios", () => {
         modelo: data.modelo ?? null,
         numeroSerie: data.numeroSerie ?? null,
         status: data.status,
+        depreciavel: data.depreciavel,
         dataTombamento: data.dataTombamento,
         tipoIncorporacao: data.tipoIncorporacao,
         valorIncorporacao: new Prisma.Decimal(String(data.valorIncorporacao)),
@@ -250,6 +252,7 @@ describe("patrimônios", () => {
       valorIncorporacao: "1000.00",
       especieId: ESPECIE_ID,
       setorAtualId: SETOR_ID,
+      depreciavel: true,
       parametrosDepreciacao: {
         metodo: "LINEAR",
         vidaUtilInicialMeses: 60,
@@ -448,6 +451,7 @@ describe("patrimônios", () => {
         modelo: "OPTICO",
         numeroSerie: "SERIE-1",
         status: "ATIVO",
+        depreciavel: true,
       }),
     );
     expect(database.patrimonio.create).toHaveBeenCalledWith(
@@ -510,6 +514,36 @@ describe("patrimônios", () => {
       ]),
     );
     expect(database.patrimonio.create).not.toHaveBeenCalled();
+  });
+
+  it("cria bem não depreciável sem parâmetro e rejeita as combinações inversas", async () => {
+    const naoDepreciavel = {
+      ...body(),
+      depreciavel: false,
+    } as Record<string, unknown>;
+    delete naoDepreciavel.parametrosDepreciacao;
+
+    const criado = await postAutenticado(tokenDiretor).send(naoDepreciavel);
+    expect(criado.status).toBe(201);
+    expect(criado.body.dados.depreciavel).toBe(false);
+    expect(database.patrimonio.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({
+          parametrosDepreciacao: expect.anything(),
+        }),
+      }),
+    );
+
+    const falseComParametros = await postAutenticado(tokenDiretor).send({
+      ...body(),
+      depreciavel: false,
+    });
+    expect(falseComParametros.status).toBe(400);
+
+    const semClassificacao = { ...body() } as Record<string, unknown>;
+    delete semClassificacao.depreciavel;
+    const ausente = await postAutenticado(tokenDiretor).send(semClassificacao);
+    expect(ausente.status).toBe(400);
   });
 
   it("protege a substituição com autenticação, perfil e CSRF reais", async () => {

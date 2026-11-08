@@ -34,7 +34,6 @@ const NaturezaPatrimonioResponseSchema = z.strictObject({
 const EspeciePatrimonioResponseSchema = z.strictObject({
   id: z.uuid(),
   nome: NomeRelacionadoSchema,
-  depreciavel: z.boolean(),
   natureza: NaturezaPatrimonioResponseSchema,
 });
 
@@ -63,14 +62,8 @@ const ParametroDepreciacaoPatrimonioResponseSchema = z.strictObject({
     .nullable(),
   valorResidual: Decimal19_7Schema,
   valorBaseInicial: Decimal19_7Schema,
-  dataInicio: DataCivilSchema.nullable(),
+  dataInicio: DataCivilSchema,
   dataFim: DataCivilSchema.nullable(),
-});
-
-export const DisponibilidadeUsoPatrimonioSchema = z.strictObject({
-  dataDisponivelUso: DataCivilSchema,
-  confirmadoPor: UsuarioCadastroPatrimonioResponseSchema,
-  confirmadoEm: DateTimeUtcResponseSchema,
 });
 
 export const PatrimonioResumoSchema = z
@@ -83,6 +76,7 @@ export const PatrimonioResumoSchema = z
     modelo: z.string().min(1).max(100).nullable(),
     numeroSerie: z.string().min(1).max(100).nullable(),
     status: StatusPatrimonioSchema,
+    depreciavel: z.boolean(),
     situacaoContabil: SituacaoContabilPatrimonioResponseSchema,
     setorAtual: SetorPatrimonioResponseSchema,
     especie: EspeciePatrimonioResponseSchema,
@@ -108,7 +102,6 @@ export const PatrimonioDetalheSchema = PatrimonioResumoSchema.safeExtend({
   valorIncorporacao: Decimal19_7Schema,
   processoCompra: ProcessoCompraPatrimonioResponseSchema.nullable(),
   cadastradoPor: UsuarioCadastroPatrimonioResponseSchema,
-  disponibilidadeUso: DisponibilidadeUsoPatrimonioSchema.nullable(),
   parametroDepreciacaoAtual:
     ParametroDepreciacaoPatrimonioResponseSchema.nullable(),
   createdAt: DateTimeUtcResponseSchema,
@@ -128,9 +121,6 @@ export const SubstituirNumeroPatrimonialResponseSchema =
 
 export type PatrimonioResumo = z.output<typeof PatrimonioResumoSchema>;
 export type PatrimonioDetalhe = z.output<typeof PatrimonioDetalheSchema>;
-export type DisponibilidadeUsoPatrimonio = z.output<
-  typeof DisponibilidadeUsoPatrimonioSchema
->;
 export type ListarPatrimoniosResponse = z.output<
   typeof ListarPatrimoniosResponseSchema
 >;

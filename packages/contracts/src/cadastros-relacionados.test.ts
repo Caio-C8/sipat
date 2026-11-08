@@ -47,7 +47,6 @@ describe("contratos dos cadastros patrimoniais relacionados", () => {
     esperaInvalido(CriarEspecieSchema, {
       nome: "Notebook",
       naturezaId: UUID,
-      depreciavel: true,
       createdById: OUTRO_UUID,
     });
     esperaInvalido(CriarSetorSchema, {
@@ -101,25 +100,12 @@ describe("contratos dos cadastros patrimoniais relacionados", () => {
   });
 
   it("exige os vínculos de espécie e setor e permite alterá-los", () => {
-    esperaInvalido(
-      CriarEspecieSchema,
-      { nome: "Notebook", depreciavel: true },
-      "naturezaId",
-    );
-    esperaInvalido(
-      CriarEspecieSchema,
-      { nome: "Notebook", naturezaId: UUID },
-      "depreciavel",
-    );
+    esperaInvalido(CriarEspecieSchema, { nome: "Notebook" }, "naturezaId");
     esperaInvalido(CriarSetorSchema, { nome: "Patrimônio" }, "responsavelId");
 
     assert.equal(
       parseValido(AlterarEspecieSchema, { naturezaId: UUID }).naturezaId,
       UUID,
-    );
-    assert.equal(
-      parseValido(AlterarEspecieSchema, { depreciavel: false }).depreciavel,
-      false,
     );
     assert.equal(
       parseValido(AlterarSetorSchema, { responsavelId: UUID }).responsavelId,
@@ -179,7 +165,6 @@ describe("contratos dos cadastros patrimoniais relacionados", () => {
     const especie = {
       id: UUID,
       nome: "Notebook",
-      depreciavel: true,
       descricao: null,
       nomeNormalizado: "notebook",
       natureza: { id: UUID, nome: "Informática" },

@@ -456,6 +456,7 @@ model Patrimonio {
   dataTombamento        DateTime              @map("data_tombamento") @db.Date
   valorIncorporacao     Decimal               @map("valor_incorporacao") @db.Decimal(19, 7)
   status                StatusPatrimonio      @default(ATIVO)
+  depreciavel           Boolean
   especieId             String                @map("especie_id") @db.Uuid
   setorAtualId          String                @map("setor_atual_id") @db.Uuid
   processoCompraId      String?               @map("processo_compra_id") @db.Uuid

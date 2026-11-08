@@ -880,98 +880,141 @@ function DirectorFlow({
       </>
     ) : (
       <>
-        <Derived
-          label="Parâmetros obrigatórios"
-          value="Depois do cadastro, estes dados só podem ser alterados por uma reavaliação."
-        />
-        <Derived label="Método" value="Linear · processamento automático" />
-        <Field
-          error={errors.usefulLifeMonths}
-          label="Vida útil inicial (meses) *"
-          numeric
-          onChange={(usefulLifeMonths) =>
+        <Pressable
+          accessibilityLabel="Este bem é depreciável"
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: form.depreciable }}
+          onPress={() =>
             update({
-              usefulLifeMonths: formatIntegerInput(usefulLifeMonths, 4),
+              depreciable: !form.depreciable,
+              usefulLifeMonths: "",
+              residualMode: "value",
+              residualValue: "",
+              residualPercentage: "",
+              depreciationStartDate: "",
             })
           }
-          value={form.usefulLifeMonths}
-        />
-        <Text style={styles.label}>Informar o residual em</Text>
-        <View style={styles.segmented}>
-          {(["value", "percentage"] as const).map((mode) => (
-            <Pressable
-              accessibilityRole="radio"
-              accessibilityState={{ checked: form.residualMode === mode }}
-              key={mode}
-              onPress={() => update({ residualMode: mode })}
-              style={[
-                styles.segment,
-                form.residualMode === mode && styles.segmentActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.segmentText,
-                  form.residualMode === mode && styles.segmentTextActive,
-                ]}
-              >
-                {mode === "value" ? "Valor (R$)" : "Percentual (%)"}
+          style={styles.checkRow}
+        >
+          <View style={[styles.checkbox, form.depreciable && styles.checked]}>
+            {form.depreciable ? (
+              <Lucide
+                accessible={false}
+                color="#ffffff"
+                name="check"
+                size={14}
+              />
+            ) : null}
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.checkTitle}>Este bem é depreciável</Text>
+            <Text style={styles.muted}>
+              Quando marcado, vida útil, residual e início são obrigatórios.
+            </Text>
+          </View>
+        </Pressable>
+        {form.depreciable ? (
+          <>
+            <Derived
+              label="Parâmetros obrigatórios"
+              value="Depois do cadastro, estes dados só podem ser alterados por uma reavaliação."
+            />
+            <Derived label="Método" value="Linear · processamento automático" />
+            <Field
+              error={errors.usefulLifeMonths}
+              label="Vida útil inicial (meses) *"
+              numeric
+              onChange={(usefulLifeMonths) =>
+                update({
+                  usefulLifeMonths: formatIntegerInput(usefulLifeMonths, 4),
+                })
+              }
+              value={form.usefulLifeMonths}
+            />
+            <Text style={styles.label}>Informar o residual em</Text>
+            <View style={styles.segmented}>
+              {(["value", "percentage"] as const).map((mode) => (
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: form.residualMode === mode }}
+                  key={mode}
+                  onPress={() => update({ residualMode: mode })}
+                  style={[
+                    styles.segment,
+                    form.residualMode === mode && styles.segmentActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      form.residualMode === mode && styles.segmentTextActive,
+                    ]}
+                  >
+                    {mode === "value" ? "Valor (R$)" : "Percentual (%)"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            {form.residualMode === "value" ? (
+              <Field
+                error={errors.residual}
+                label="Valor residual (R$) *"
+                numeric
+                onChange={(residualValue) =>
+                  update({
+                    residualValue: formatCurrencyInput(
+                      residualValue,
+                      form.residualValue,
+                    ),
+                  })
+                }
+                value={form.residualValue}
+              />
+            ) : (
+              <Field
+                error={errors.residual}
+                label="Percentual residual (%) *"
+                numeric
+                onChange={(residualPercentage) =>
+                  update({
+                    residualPercentage:
+                      formatPercentageInput(residualPercentage),
+                  })
+                }
+                value={form.residualPercentage}
+              />
+            )}
+            {effectiveResidual(form) ? (
+              <Derived
+                label="Valor residual efetivo"
+                value={formatCurrency(effectiveResidual(form)!)}
+              />
+            ) : null}
+            <Field
+              error={errors.depreciationStartDate}
+              label="Início da depreciação *"
+              numeric
+              onChange={(depreciationStartDate) =>
+                update({
+                  depreciationStartDate: formatDateInput(depreciationStartDate),
+                })
+              }
+              placeholder="DD/MM/AAAA"
+              value={form.depreciationStartDate}
+            />
+            {monthlyDepreciationPreview(form) ? (
+              <Text style={styles.preview}>
+                Depreciação mensal estimada:{" "}
+                {formatCurrency(monthlyDepreciationPreview(form)!)}
               </Text>
-            </Pressable>
-          ))}
-        </View>
-        {form.residualMode === "value" ? (
-          <Field
-            error={errors.residual}
-            label="Valor residual (R$) *"
-            numeric
-            onChange={(residualValue) =>
-              update({
-                residualValue: formatCurrencyInput(
-                  residualValue,
-                  form.residualValue,
-                ),
-              })
-            }
-            value={form.residualValue}
-          />
+            ) : null}
+          </>
         ) : (
-          <Field
-            error={errors.residual}
-            label="Percentual residual (%) *"
-            numeric
-            onChange={(residualPercentage) =>
-              update({
-                residualPercentage: formatPercentageInput(residualPercentage),
-              })
-            }
-            value={form.residualPercentage}
+          <Derived
+            label="Sem parâmetros de depreciação"
+            value="O cadastro será enviado como bem não depreciável."
           />
         )}
-        {effectiveResidual(form) ? (
-          <Derived
-            label="Valor residual efetivo"
-            value={formatCurrency(effectiveResidual(form)!)}
-          />
-        ) : null}
-        <Field
-          error={errors.depreciationStartDate}
-          label="Início da depreciação *"
-          numeric
-          onChange={(depreciationStartDate) =>
-            update({
-              depreciationStartDate: formatDateInput(depreciationStartDate),
-            })
-          }
-          placeholder="DD/MM/AAAA"
-          value={form.depreciationStartDate}
-        />
-        {monthlyDepreciationPreview(form) ? (
-          <Text style={styles.preview}>
-            Depreciação mensal estimada:{" "}
-            {formatCurrency(monthlyDepreciationPreview(form)!)}
-          </Text>
-        ) : null}
       </>
     );
 
@@ -1035,10 +1078,14 @@ function DirectorFlow({
             setReview(false);
           }}
           title="Depreciação"
-          lines={[
-            `Linear · ${form.usefulLifeMonths} meses · Residual: ${formatCurrency(effectiveResidual(form)!)}`,
-            `Início em ${form.depreciationStartDate}`,
-          ]}
+          lines={
+            form.depreciable
+              ? [
+                  `Bem depreciável · Linear · ${form.usefulLifeMonths} meses · Residual: ${formatCurrency(effectiveResidual(form)!)}`,
+                  `Início em ${form.depreciationStartDate}`,
+                ]
+              : ["Bem não depreciável · sem parâmetros de depreciação"]
+          }
         />
         <Derived
           label="Antes de concluir"
@@ -1261,6 +1308,11 @@ const styles = StyleSheet.create({
     borderColor: mobilePatrimonios.action,
   },
   checkText: { color: mobilePatrimonios.text, flex: 1, fontSize: 14 },
+  checkTitle: {
+    color: mobilePatrimonios.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
   chips: { gap: spacing.sm },
   chip: {
     borderColor: mobilePatrimonios.border,

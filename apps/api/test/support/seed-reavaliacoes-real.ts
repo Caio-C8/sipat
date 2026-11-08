@@ -84,6 +84,7 @@ async function main() {
         dataTombamento: inicioAnterior,
         valorIncorporacao: new Prisma.Decimal("1000"),
         status: "ATIVO",
+        depreciavel: true,
         especieId: especie.id,
         setorAtualId: setor.id,
         createdById: usuario.id,
@@ -93,18 +94,19 @@ async function main() {
             depreciacaoAcumuladaAtual: new Prisma.Decimal("10"),
           },
         },
+        parametrosDepreciacao: {
+          create: {
+            metodo: "LINEAR",
+            vidaUtilInicialMeses: 90,
+            valorResidual: new Prisma.Decimal("100"),
+            valorBaseInicial: new Prisma.Decimal("1000"),
+            dataInicio: inicioAnterior,
+          },
+        },
       },
+      include: { parametrosDepreciacao: true },
     });
-    const parametro = await db.parametroDepreciacao.create({
-      data: {
-        metodo: "LINEAR",
-        vidaUtilInicialMeses: 90,
-        valorResidual: new Prisma.Decimal("100"),
-        valorBaseInicial: new Prisma.Decimal("1000"),
-        dataInicio: inicioAnterior,
-        patrimonioId: bem.id,
-      },
-    });
+    const parametro = bem.parametrosDepreciacao[0]!;
     await db.depreciacaoPatrimonio.create({
       data: {
         dataDepreciacao: new Date(),

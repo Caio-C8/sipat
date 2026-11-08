@@ -98,18 +98,13 @@ gerenciem a própria senha com segurança.
 
 **Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e altere espécies de bens.
 
-**Informações:** Nome da espécie, nome normalizado, descrição, natureza vinculada, indicação de que seus bens são depreciáveis e informações de auditoria.
+**Informações:** Nome da espécie, nome normalizado, descrição, natureza vinculada e informações de auditoria.
 
 **Regras:**
 
 - Cada espécie deve estar vinculada a uma única natureza.
 - O nome normalizado deve ser utilizado para evitar duplicidade de espécies com o mesmo nome.
 - O patrimônio deve possuir uma espécie e sua natureza será obtida pela espécie vinculada.
-- Todo cadastro de espécie deve declarar explicitamente se seus bens são
-  depreciáveis; não deve existir valor implícito no contrato público.
-- A classificação depreciável pode ser corrigida enquanto a espécie não estiver
-  vinculada a patrimônio. Depois do primeiro uso, sua alteração direta deve ser
-  bloqueada para não invalidar parâmetros, disponibilidades ou históricos.
 
 ### RF08: Gestão de Fornecedores
 
@@ -148,9 +143,12 @@ gerenciem a própria senha com segurança.
 - Bens com numeração oficial devem usar a sequência numérica, armazenada sem zeros à esquerda, por exemplo `1`.
 - Descrição, marca, modelo e número de série devem ser armazenados normalizados em letras maiúsculas e sem acentuação.
 - O sistema deve manter um texto de busca composto pelos principais campos textuais do patrimônio para apoiar consultas.
-- A espécie deve declarar se seus bens são depreciáveis. Patrimônio de espécie
-  depreciável deve receber parâmetros iniciais no mesmo cadastro; patrimônio de
-  espécie não depreciável não deve receber parâmetro de depreciação.
+- O Diretor deve declarar explicitamente no cadastro se o patrimônio é
+  depreciável. A classificação pertence ao bem individual e não deve ser
+  inferida da espécie, natureza ou presença de parâmetros.
+- Patrimônio marcado como depreciável deve receber parâmetros iniciais no mesmo
+  cadastro; patrimônio marcado como não depreciável não deve receber parâmetro
+  de depreciação.
 - O parâmetro inicial de um bem depreciável deve ser criado sem data de início.
   A data somente é definida pela operação posterior e auditável que confirma a
   disponibilidade do bem para uso.
@@ -294,7 +292,7 @@ correções está registrada em RF19.
   cálculo proporcional por dias no primeiro mês.
 - Cadastro, tombamento, nota fiscal, entrega física sem aceite ou parâmetro
   informado não substituem a confirmação de disponibilidade para uso.
-- Bem sem disponibilidade confirmada ou de espécie não depreciável não possui
+- Bem sem disponibilidade confirmada ou marcado como não depreciável não possui
   competência devida e não pode ser processado.
 - Para cada parâmetro, as competências devem ser processadas em ordem
   cronológica e sem lacunas. Uma competência posterior é inelegível enquanto
@@ -805,12 +803,12 @@ não poderá ser processada enquanto existir competência anterior devida e não
 processada. Regularizações devem produzir um lançamento por competência, sem
 consolidar vários meses em uma única quota.
 
-### RN22: Classificação de espécies depreciáveis
+### RN22: Classificação depreciável do patrimônio
 
-**Descrição:** Cada espécie deve informar se seus patrimônios são depreciáveis.
-Bens de espécie não depreciável não recebem parâmetros nem lançamentos de
-depreciação; a alteração dessa classificação não pode invalidar patrimônios ou
-históricos existentes e exige regra própria quando a espécie já estiver em uso.
+**Descrição:** Cada patrimônio deve declarar explicitamente se é depreciável.
+Bem marcado como não depreciável não recebe parâmetros nem lançamentos de
+depreciação. A classificação não é inferida pela espécie, e sua alteração depois
+do cadastro exige fluxo próprio ainda não definido.
 
 ## Casos de Uso
 
@@ -1048,9 +1046,9 @@ senha, suas sessões anteriores deixam de autenticar e um novo login é exigido.
 1. O Diretor acessa o cadastro de patrimônio.
 2. O Diretor informa os dados do bem e marca se ele não possui número patrimonial oficial.
 3. O Diretor seleciona setor, espécie e processo de compra.
-4. Para espécie depreciável, o Diretor informa os parâmetros de depreciação;
-   para espécie não depreciável, o sistema não apresenta nem aceita esses
-   campos.
+4. O Diretor marca se o patrimônio é depreciável. Quando marcado, informa os
+   parâmetros de depreciação; quando desmarcado, o sistema não apresenta nem
+   aceita esses campos.
 5. O sistema normaliza os campos de busca, valida unicidades e gera o próximo identificador da sequência oficial ou `SP-`, conforme a marcação.
 6. O sistema salva o patrimônio com status inicial ATIVO e associa o
    identificador gerado. O cadastro não confirma disponibilidade nem cria
@@ -1388,7 +1386,7 @@ não estar baixado e ainda não possuir disponibilidade confirmada.
 3. O Diretor aciona a confirmação de disponibilidade e informa a data civil em
    que o bem ficou no local e em condição de funcionamento.
 4. O sistema apresenta a primeira competência de depreciação calculada como o
-   mês seguinte, quando o bem e sua espécie forem depreciáveis.
+   mês seguinte, quando o patrimônio estiver marcado como depreciável.
 5. O Diretor confirma a operação.
 6. O sistema revalida o estado, registra disponibilidade, autoria e instante e
    inicia o parâmetro vigente na mesma transação.
@@ -1402,8 +1400,8 @@ não estar baixado e ainda não possuir disponibilidade confirmada.
   de reutilização.
 - Bem baixado ou alterado concorrentemente: o sistema rejeita sem estado
   parcial.
-- Espécie não depreciável: a disponibilidade operacional é registrada, mas não
-  cria parâmetro nem competência de depreciação.
+- Patrimônio não depreciável: a disponibilidade operacional é registrada, mas
+  não cria parâmetro nem competência de depreciação.
 
 **Pós-condição:** O patrimônio possui um fato imutável e auditável de
 disponibilidade; se depreciável, sua primeira competência devida pode ser
@@ -1421,7 +1419,7 @@ determinada sem entrada manual do usuário.
 | RF04                | RN18, RN19                                     | UC04                    |
 | RF05                | RN11                                           | UC05                    |
 | RF06                | -                                              | UC06                    |
-| RF07                | RN16, RN17, RN22                               | UC07                    |
+| RF07                | RN16, RN17                                     | UC07                    |
 | RF08                | -                                              | UC08                    |
 | RF09                | -                                              | UC09                    |
 | RF10                | RN06, RN07, RN08, RN16, RN18, RN19, RN20, RN22 | UC10, UC22              |

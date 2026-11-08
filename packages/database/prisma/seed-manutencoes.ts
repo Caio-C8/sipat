@@ -129,6 +129,7 @@ async function main() {
               status: "ATIVO",
               dataTombamento: new Date("2026-10-28T00:00:00.000Z"),
               valorIncorporacao: valor,
+              depreciavel: false,
               especieId: DEMO.especie,
               setorAtualId: DEMO.setor,
               createdById,

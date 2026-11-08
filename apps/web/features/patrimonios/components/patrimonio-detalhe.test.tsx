@@ -19,6 +19,7 @@ const patrimonio = {
   modelo: null,
   numeroSerie: "SERIE-1",
   status: "ATIVO",
+  depreciavel: false,
   situacaoContabil: {
     valorBrutoAtual: "1000.0000000",
     depreciacaoAcumuladaAtual: "100.0000000",
@@ -63,6 +64,23 @@ const historicoVazio = {
 } satisfies EventosFichaResponse;
 
 describe("PatrimonioDetalheView", () => {
+  it("exibe a classificação não depreciável sem tratar a ausência como cadastro incompleto", () => {
+    render(
+      <PatrimonioDetalheView
+        patrimonio={patrimonio}
+        eventos={historicoVazio}
+        erroEventos={null}
+        valores={{ aba: "dados" }}
+        diretor={false}
+        usuarioId={id}
+      />,
+    );
+
+    expect(screen.getByText("Bem depreciável")).toBeTruthy();
+    expect(screen.getByText("Não", { selector: "dd" })).toBeTruthy();
+    expect(screen.getByText("Não se aplica")).toBeTruthy();
+  });
+
   it("diferencia um histórico consultado sem registros", () => {
     render(
       <PatrimonioDetalheView

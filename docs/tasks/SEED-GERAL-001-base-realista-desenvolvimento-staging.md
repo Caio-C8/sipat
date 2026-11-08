@@ -340,11 +340,13 @@ de desenvolvimento existente do operador.
 
 ## Evolução aprovada após a conclusão
 
-`DEPRECIACOES-002` altera espécie, parâmetro inicial e disponibilidade para uso
-e deve atualizar este seed na mesma entrega. A nova matriz deve manter
-depreciações e reavaliações zeradas, mas passar a conter espécies e patrimônios
-depreciáveis e não depreciáveis, além de patrimônios depreciáveis com e sem
-disponibilidade confirmada. Confirmações devem usar o service público do domínio
-e datas determinísticas; migration esperada, preflight, testes e auditoria final
-devem acompanhar o histórico vivo. Ver
+`CONTRACTS-018` deve primeiro adicionar a classificação ao patrimônio e adaptar
+a matriz para conter bens depreciáveis com parâmetros e não depreciáveis sem
+parâmetros. Depois, `DEPRECIACOES-002` deve atualizar este seed para manter
+depreciações e reavaliações zeradas, mas incluir patrimônios depreciáveis com e
+sem disponibilidade confirmada. Confirmações devem usar o service público do
+domínio e datas determinísticas; migrations esperadas, preflight, testes e
+auditoria final devem acompanhar o histórico vivo. Ver
+[CONTRACTS-018](./CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md#seed-geral)
+e
 [DEPRECIACOES-002](./DEPRECIACOES-002-disponibilidade-competencias-integridade.md#seed-geral).

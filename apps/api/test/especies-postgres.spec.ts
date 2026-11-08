@@ -118,6 +118,7 @@ describeComPostgres("espécies no PostgreSQL", () => {
         descricao: "Notebook de teste",
         valorIncorporacao: "1000.00",
         dataTombamento: new Date("2026-10-19T00:00:00.000Z"),
+        depreciavel: false,
         especieId: especie.id,
         setorAtualId: setor.id,
         createdById: identidade.id,

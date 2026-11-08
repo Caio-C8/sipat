@@ -37,8 +37,6 @@ import {
   UsuarioParamsSchema,
   UsuarioResumoSchema,
   CriarPatrimonioBodySchema,
-  ConfirmarDisponibilidadeUsoBodySchema,
-  ConfirmarDisponibilidadeUsoResponseSchema,
   CriarPatrimonioResponseSchema,
   ConsultarPatrimonioResponseSchema,
   StatusPatrimonioSchema,
@@ -156,10 +154,7 @@ import {
   ConsultarBaixaPatrimonioResponseSchema,
   TipoBaixaPatrimonioSchema,
   CodigoErroDepreciacaoPatrimonioSchema,
-  CatalogoCompetenciasDepreciacaoSchema,
-  CompetenciaDepreciacaoDevidaSchema,
   CompetenciaMensalSchema,
-  ConsultarResumoPendenciasDepreciacaoResponseSchema,
   ExecutarDepreciacaoPatrimonioBodySchema,
   ExecutarDepreciacaoPatrimonioResponseSchema,
   ExecutarDepreciacoesEmMassaBodySchema,
@@ -170,16 +165,9 @@ import {
   ItemDepreciacaoPendenteSchema,
   ListarDepreciacoesPendentesQuerySchema,
   ListarDepreciacoesPendentesResponseSchema,
-  ListarCompetenciasDepreciacaoResponseSchema,
   MotivoInelegibilidadeDepreciacaoSchema,
   ResultadoDepreciacaoIndividualSchema,
   ResultadoDepreciacoesEmMassaSchema,
-  TipoRelatorioSchema,
-  RelatorioTabularResponseSchema,
-  pendenciasDepreciacaoLinhaSchema,
-  pendenciasDepreciacaoResumoSchema,
-  queryPdfRelatorio,
-  queryRelatorio,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
@@ -256,8 +244,6 @@ describe("@repo/contracts — API pública", () => {
       TipoIncorporacaoSchema,
       PatrimonioParamsSchema,
       CriarPatrimonioBodySchema,
-      ConfirmarDisponibilidadeUsoBodySchema,
-      ConfirmarDisponibilidadeUsoResponseSchema,
       ListarPatrimoniosQuerySchema,
       SubstituirNumeroPatrimonialBodySchema,
       PatrimonioResumoSchema,
@@ -416,8 +402,6 @@ describe("@repo/contracts — API pública", () => {
   it("exporta os contratos públicos das depreciações patrimoniais", () => {
     for (const schema of [
       CompetenciaMensalSchema,
-      CatalogoCompetenciasDepreciacaoSchema,
-      CompetenciaDepreciacaoDevidaSchema,
       MotivoInelegibilidadeDepreciacaoSchema,
       CodigoErroDepreciacaoPatrimonioSchema,
       ListarDepreciacoesPendentesQuerySchema,
@@ -427,31 +411,10 @@ describe("@repo/contracts — API pública", () => {
       ResultadoDepreciacaoIndividualSchema,
       ResultadoDepreciacoesEmMassaSchema,
       ListarDepreciacoesPendentesResponseSchema,
-      ListarCompetenciasDepreciacaoResponseSchema,
-      ConsultarResumoPendenciasDepreciacaoResponseSchema,
       ExecutarDepreciacaoPatrimonioResponseSchema,
       ExecutarDepreciacoesEmMassaResponseSchema,
     ]) {
       assert.equal(typeof schema.safeParse, "function");
     }
-  });
-
-  it("exporta o relatório público de pendências de depreciação", () => {
-    for (const schema of [
-      TipoRelatorioSchema,
-      RelatorioTabularResponseSchema,
-      pendenciasDepreciacaoLinhaSchema,
-      pendenciasDepreciacaoResumoSchema,
-    ]) {
-      assert.equal(typeof schema.safeParse, "function");
-    }
-    assert.equal(
-      typeof queryRelatorio("pendencias-depreciacao").safeParse,
-      "function",
-    );
-    assert.equal(
-      typeof queryPdfRelatorio("pendencias-depreciacao").safeParse,
-      "function",
-    );
   });
 });

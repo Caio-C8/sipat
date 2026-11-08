@@ -24,6 +24,7 @@ async function main() {
         setorAtualId: f.setores[0]!.id,
         dataTombamento: new Date("2026-01-01"),
         valorIncorporacao: 100,
+        depreciavel: false,
         createdById: f.diretor.id,
         situacaoContabil: {
           create: { valorBrutoAtual: 100, depreciacaoAcumuladaAtual: 0 },

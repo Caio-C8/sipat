@@ -1621,16 +1621,15 @@ disponibilidade para uso, permite regularizar competências devidas em ordem e
 torna pendências visíveis. O banco ainda não possui dados de produção; não há
 backfill legado, mas o seed geral deve acompanhar o novo schema.
 
-| Ordem | Objetivo                                                                                          | Resultado                                                               | Dependência      |
-| ----- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- |
-| 1     | [`CONTRACTS-018`](./tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)   | boundaries de classificação, disponibilidade, competências e pendências | contratos atuais |
-| 2     | [`DEPRECIACOES-002`](./tasks/DEPRECIACOES-002-disponibilidade-competencias-integridade.md)        | constraints, migration, API, ordem contábil, relatórios e seed          | objetivo 1       |
-| 3     | [`WEB-DEPRECIACOES-002`](./tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md) | detalhe, seletor localizado, relatório e alerta no sino                 | objetivos 1–2    |
-| 4     | [`MOBILE-PATRIMONIOS-003`](./tasks/MOBILE-PATRIMONIOS-003-classificacao-depreciavel.md)           | compatibilidade do cadastro mobile com espécie depreciável              | objetivos 1–2    |
+| Ordem | Objetivo                                                                                          | Resultado                                                                  | Dependência                 |
+| ----- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------- |
+| 1     | [`CONTRACTS-018`](./tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)   | classificação no patrimônio ponta a ponta, incluindo banco, API e clientes | contratos e cadastro atuais |
+| 2     | [`DEPRECIACOES-002`](./tasks/DEPRECIACOES-002-disponibilidade-competencias-integridade.md)        | disponibilidade, competências, integridade, relatórios e seed              | objetivo 1 implementado     |
+| 3     | [`WEB-DEPRECIACOES-002`](./tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md) | detalhe, seletor localizado, relatório e alerta no sino                    | objetivos 1–2 implementados |
 
 ### Resultado integrado esperado
 
-- espécie declara explicitamente se é depreciável;
+- patrimônio declara explicitamente se é depreciável;
 - bem pode ser cadastrado sem disponibilidade e sem competência devida;
 - Diretor confirma disponibilidade uma única vez nos detalhes do bem;
 - primeira quota integral é devida no mês seguinte à disponibilidade;

@@ -22,9 +22,14 @@ const identidade: IdentidadeAutenticada = {
   trocaSenhaObrigatoria: false,
 };
 
+type DadosPatrimonioDepreciavel = Extract<
+  CriarPatrimonioBodyData,
+  { depreciavel: true }
+>;
+
 function dados(
-  sobrescritas: Partial<CriarPatrimonioBodyData> = {},
-): CriarPatrimonioBodyData {
+  sobrescritas: Partial<DadosPatrimonioDepreciavel> = {},
+): DadosPatrimonioDepreciavel {
   return {
     chaveIdempotencia: "00000000-0000-4000-8000-000000000009",
     semNumeroOficial: false,
@@ -37,6 +42,7 @@ function dados(
     valorIncorporacao: "1000.00",
     especieId: "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab",
     setorAtualId: "fbcb9251-7ad8-4d64-ad1f-1fd3b5545fc8",
+    depreciavel: true,
     parametrosDepreciacao: {
       metodo: "LINEAR",
       vidaUtilInicialMeses: 60,
@@ -193,6 +199,7 @@ describe("PatrimoniosService", () => {
         numeroSerie: "SERIE-A1",
         textoBusca: "CAMERA FOTOGRAFICA SAO JOSE OPTICO SERIE-A1",
         status: "ATIVO",
+        depreciavel: true,
         createdBy: { connect: { id: DIRETOR_ID } },
         situacaoContabil: {
           create: {
@@ -209,6 +216,44 @@ describe("PatrimoniosService", () => {
         },
       }),
     );
+  });
+
+  it("cria patrimônio não depreciável sem parâmetros", async () => {
+    const entrada = {
+      ...dados(),
+      depreciavel: false as const,
+    } as Record<string, unknown>;
+    delete entrada.parametrosDepreciacao;
+
+    await service.criar(entrada as CriarPatrimonioBodyData, identidade);
+
+    expect(repository.criar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        depreciavel: false,
+      }),
+    );
+    expect(repository.criar.mock.calls[0]?.[0]).not.toHaveProperty(
+      "parametrosDepreciacao",
+    );
+  });
+
+  it("rejeita combinações incoerentes mesmo sem passar pelo DTO", async () => {
+    const semParametros = {
+      ...dados(),
+      parametrosDepreciacao: undefined,
+    } as unknown as CriarPatrimonioBodyData;
+    const parametrosIndevidos = {
+      ...dados(),
+      depreciavel: false,
+    } as unknown as CriarPatrimonioBodyData;
+
+    await expect(
+      service.criar(semParametros, identidade),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    await expect(
+      service.criar(parametrosIndevidos, identidade),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+    expect(repository.executarTransacao).not.toHaveBeenCalled();
   });
 
   it("usa a sequence independente para patrimônio sem número oficial", async () => {
@@ -261,7 +306,7 @@ describe("PatrimoniosService", () => {
   });
 
   it("valida base, residual e percentual antes de abrir a transação", async () => {
-    const casos: CriarPatrimonioBodyData["parametrosDepreciacao"][] = [
+    const casos: DadosPatrimonioDepreciavel["parametrosDepreciacao"][] = [
       {
         metodo: "LINEAR",
         vidaUtilInicialMeses: 60,

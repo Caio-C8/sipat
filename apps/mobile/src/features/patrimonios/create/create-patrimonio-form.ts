@@ -17,6 +17,7 @@ export type CreatePatrimonioForm = Readonly<{
   purchaseProcessId: string;
   registryDate: string;
   incorporationValue: string;
+  depreciable: boolean;
   usefulLifeMonths: string;
   residualMode: ResidualMode;
   residualValue: string;
@@ -36,6 +37,7 @@ export const EMPTY_CREATE_PATRIMONIO_FORM: CreatePatrimonioForm = {
   purchaseProcessId: "",
   registryDate: "",
   incorporationValue: "",
+  depreciable: false,
   usefulLifeMonths: "",
   residualMode: "value",
   residualValue: "",
@@ -199,6 +201,7 @@ export function validateCreatePatrimonioStep(
         "Informe um valor monetário válido e maior que zero.";
   }
   if (step === 4) {
+    if (!form.depreciable) return errors;
     const months = Number(form.usefulLifeMonths);
     if (!Number.isInteger(months) || months < 1 || months > 1_200)
       errors.usefulLifeMonths = "Informe de 1 a 1200 meses.";
@@ -253,13 +256,20 @@ export function mapCreatePatrimonioForm(
     especieId: form.speciesId,
     setorAtualId: form.sectorId,
     ...(purchaseProcessId ? { processoCompraId: purchaseProcessId } : {}),
-    parametrosDepreciacao: {
-      metodo: "LINEAR",
-      vidaUtilInicialMeses: Number(form.usefulLifeMonths),
-      ...(residualPercentage ? { percentualResidual: residualPercentage } : {}),
-      valorResidual: effectiveResidual(form)!,
-      valorBaseInicial: base,
-      dataInicio: dateInputToIso(form.depreciationStartDate)!,
-    },
+    depreciavel: form.depreciable,
+    ...(form.depreciable
+      ? {
+          parametrosDepreciacao: {
+            metodo: "LINEAR",
+            vidaUtilInicialMeses: Number(form.usefulLifeMonths),
+            ...(residualPercentage
+              ? { percentualResidual: residualPercentage }
+              : {}),
+            valorResidual: effectiveResidual(form)!,
+            valorBaseInicial: base,
+            dataInicio: dateInputToIso(form.depreciationStartDate)!,
+          },
+        }
+      : {}),
   });
 }

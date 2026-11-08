@@ -23,7 +23,6 @@ export const CriarEspecieSchema = z.strictObject({
   nome: NomeEspecieSchema,
   descricao: DescricaoEspecieSchema.optional(),
   naturezaId: z.uuid({ error: "Informe uma natureza válida." }),
-  depreciavel: z.boolean(),
 });
 
 export const AlterarEspecieSchema = z
@@ -31,7 +30,6 @@ export const AlterarEspecieSchema = z
     nome: NomeEspecieSchema.optional(),
     descricao: DescricaoEspecieSchema.nullable().optional(),
     naturezaId: z.uuid({ error: "Informe uma natureza válida." }).optional(),
-    depreciavel: z.boolean().optional(),
   })
   .refine(
     (dados) => Object.values(dados).some((valor) => valor !== undefined),
@@ -48,7 +46,6 @@ export const ListarEspeciesQuerySchema = PaginacaoQuerySchema.extend({
 export const EspecieResumoSchema = z.strictObject({
   id: z.uuid(),
   nome: NomeEspecieSchema,
-  depreciavel: z.boolean(),
   natureza: NaturezaVinculadaSchema,
 });
 

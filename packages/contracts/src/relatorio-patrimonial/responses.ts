@@ -5,8 +5,6 @@ import {
   criarRespostaSucessoPaginadaSchema,
 } from "../common/resposta.schema";
 import { TipoRelatorioSchema, TipoEventoRelatorioSchema } from "./queries";
-import { CompetenciaMensalSchema } from "../depreciacao-patrimonio/depreciacao-patrimonio-fields.schema";
-import { DataCivilSchema } from "../patrimonio/patrimonio-fields.schema";
 const texto = z.string();
 const decimal = z.string().regex(/^-?\d+\.\d{7}$/);
 export const LimitesRelatorios = {
@@ -30,7 +28,6 @@ export const titulosRelatorios = {
   movimentacoes: "Movimentações",
   manutencoes: "Manutenções",
   depreciacoes: "Depreciações",
-  "pendencias-depreciacao": "Pendências de depreciação",
   reavaliacoes: "Reavaliações",
   inventarios: "Inventário e inconsistências",
   emprestimos: "Empréstimos",
@@ -138,24 +135,6 @@ export const depreciacoesResumoSchema = z.strictObject({
       quotas: decimal,
     }),
   ),
-});
-export const pendenciasDepreciacaoLinhaSchema = z.strictObject({
-  patrimonioId: z.uuid(),
-  competencia: CompetenciaMensalSchema,
-  numeroPatrimonio: texto,
-  descricao: texto,
-  especie: texto,
-  setor: texto,
-  dataDisponivelUso: DataCivilSchema,
-  primeiraCompetencia: CompetenciaMensalSchema,
-  proximaCompetenciaDevida: CompetenciaMensalSchema,
-  quotaPrevista: decimal,
-});
-export const pendenciasDepreciacaoResumoSchema = z.strictObject({
-  quantidadeBens: z.number().int().nonnegative(),
-  quantidadeCompetencias: z.number().int().nonnegative(),
-  competenciaMaisAntiga: CompetenciaMensalSchema.nullable(),
-  referenciaEm: z.iso.datetime(),
 });
 export const reavaliacoesLinhaSchema = z.strictObject({
   id: z.uuid(),
@@ -337,18 +316,6 @@ export const respostasTabulares = {
     meta: MetaPaginacaoSchema,
     consulta: ConsultaRelatorioSchema,
   }),
-  "pendencias-depreciacao": z.strictObject({
-    status: z.literal(200),
-    sucesso: z.literal(true),
-    mensagem: texto,
-    tipo: z.literal("pendencias-depreciacao"),
-    dados: z
-      .array(pendenciasDepreciacaoLinhaSchema)
-      .max(LimitesRelatorios.previaMaxima),
-    resumo: pendenciasDepreciacaoResumoSchema,
-    meta: MetaPaginacaoSchema,
-    consulta: ConsultaRelatorioSchema,
-  }),
   reavaliacoes: z.strictObject({
     status: z.literal(200),
     sucesso: z.literal(true),
@@ -395,7 +362,6 @@ export const RelatorioTabularResponseSchema = z.discriminatedUnion("tipo", [
   respostasTabulares.movimentacoes,
   respostasTabulares.manutencoes,
   respostasTabulares.depreciacoes,
-  respostasTabulares["pendencias-depreciacao"],
   respostasTabulares.reavaliacoes,
   respostasTabulares.inventarios,
   respostasTabulares.emprestimos,
@@ -556,7 +522,7 @@ export const CatalogoRelatoriosResponseSchema = criarRespostaSucessoSchema(
           pdf: z.boolean(),
         }),
       )
-      .length(10),
+      .length(9),
     limites: z.object({
       previaPadrao: z.number().int().positive(),
       previaMaxima: z.number().int().positive(),

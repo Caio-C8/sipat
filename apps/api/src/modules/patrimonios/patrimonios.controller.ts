@@ -10,11 +10,12 @@ import {
   Query,
   Req,
 } from "@nestjs/common";
-import type {
-  ConsultarPatrimonioResponse,
-  CriarPatrimonioResponse,
-  ListarPatrimoniosResponse,
-  SubstituirNumeroPatrimonialResponse,
+import {
+  CriarPatrimonioBodySchema,
+  type ConsultarPatrimonioResponse,
+  type CriarPatrimonioResponse,
+  type ListarPatrimoniosResponse,
+  type SubstituirNumeroPatrimonialResponse,
 } from "@repo/contracts";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { RequisicaoAutenticada } from "../auth/auth.types";
@@ -99,7 +100,7 @@ export class PatrimoniosController {
     @Req() request: RequisicaoAutenticada,
   ): Promise<CriarPatrimonioResponse> {
     const patrimonio = await this.patrimoniosService.criar(
-      body,
+      CriarPatrimonioBodySchema.parse(body),
       request.identidadeAutenticada!,
     );
 

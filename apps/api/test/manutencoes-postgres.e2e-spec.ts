@@ -138,6 +138,7 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
         descricao: `Bem HTTP ${numero}`,
         dataTombamento: new Date("2025-01-01T00:00:00.000Z"),
         valorIncorporacao: "1000",
+        depreciavel: false,
         especieId,
         setorAtualId: setorId,
         createdById,

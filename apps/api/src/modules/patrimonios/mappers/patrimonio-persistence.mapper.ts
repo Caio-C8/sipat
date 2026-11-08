@@ -37,6 +37,7 @@ export class PatrimonioPersistenceMapper {
       dataTombamento: this.paraDataCivil(dados.dataTombamento),
       valorIncorporacao: dados.valorIncorporacao,
       status: "ATIVO",
+      depreciavel: dados.depreciavel,
       especie: { connect: { id: dados.especieId } },
       setorAtual: { connect: { id: dados.setorAtualId } },
       ...(dados.processoCompraId === undefined
@@ -49,19 +50,24 @@ export class PatrimonioPersistenceMapper {
           depreciacaoAcumuladaAtual: "0",
         },
       },
-      parametrosDepreciacao: {
-        create: {
-          metodo: dados.parametrosDepreciacao.metodo,
-          vidaUtilInicialMeses:
-            dados.parametrosDepreciacao.vidaUtilInicialMeses,
-          percentualResidual: dados.parametrosDepreciacao.percentualResidual,
-          valorResidual: dados.parametrosDepreciacao.valorResidual,
-          valorBaseInicial: dados.parametrosDepreciacao.valorBaseInicial,
-          dataInicio: this.paraDataCivil(
-            dados.parametrosDepreciacao.dataInicio,
-          ),
-        },
-      },
+      ...(dados.depreciavel
+        ? {
+            parametrosDepreciacao: {
+              create: {
+                metodo: dados.parametrosDepreciacao.metodo,
+                vidaUtilInicialMeses:
+                  dados.parametrosDepreciacao.vidaUtilInicialMeses,
+                percentualResidual:
+                  dados.parametrosDepreciacao.percentualResidual,
+                valorResidual: dados.parametrosDepreciacao.valorResidual,
+                valorBaseInicial: dados.parametrosDepreciacao.valorBaseInicial,
+                dataInicio: this.paraDataCivil(
+                  dados.parametrosDepreciacao.dataInicio,
+                ),
+              },
+            },
+          }
+        : {}),
     };
   }
 

@@ -1,6 +1,6 @@
 # `DEPRECIACOES-002` — Disponibilidade, competências e integridade contábil
 
-**Status:** aprovada
+**Status:** aprovada; iniciar somente após `CONTRACTS-018` estar implementada
 
 ## Objetivo
 
@@ -12,7 +12,8 @@ relatórios.
 ## Contexto e referências
 
 - Requisitos: [RF07, RF10, RF15, RN20–RN22, UC15 e UC22](../requisitos-SIPAT.md).
-- Dependência: [CONTRACTS-018](./CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md).
+- Dependência implementada e validada:
+  [CONTRACTS-018](./CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md).
 - Estado atual: [DEPRECIACOES-001](./DEPRECIACOES-001-consultar-executar-depreciacoes.md),
   [PATRIMONIOS-001](./PATRIMONIOS-001-cadastrar-patrimonios.md),
   [REAVALIACOES-001](./REAVALIACOES-001-api-persistencia-reavaliacoes.md) e
@@ -26,35 +27,33 @@ relatórios.
 
 ## Ordem de execução
 
-1. Confirmar worktree, migrations, schema, contratos concluídos e todos os
-   consumidores de espécie, patrimônio, reavaliação, relatórios e seed.
-2. Auditar o desenho SQL e criar uma migration nova; não editar migrations
+1. Confirmar worktree, migrations e que `CONTRACTS-018` entregou
+   `Patrimonio.depreciavel` no contrato, banco, API, seed, Web e mobile.
+2. Definir e testar os novos contratos de disponibilidade, competências e
+   pendências junto com seus consumidores nesta mesma tarefa.
+3. Auditar o desenho SQL e criar uma migration nova; não editar migrations
    aplicadas.
-3. Gerar o Prisma Client e atualizar repositories/mappers de espécies e
-   patrimônios.
-4. Implementar a operação idempotente de disponibilidade para uso.
-5. Evoluir consulta e execução de depreciação para competências ordenadas.
-6. Adaptar reavaliação, relatório de pendências e resumo derivado.
-7. Atualizar o seed geral e seu preflight.
-8. Validar migration, banco real, concorrência, contratos, API e consumidores.
+4. Gerar o Prisma Client e atualizar repositories/mappers de patrimônios.
+5. Implementar a operação idempotente de disponibilidade para uso.
+6. Evoluir consulta e execução de depreciação para competências ordenadas.
+7. Adaptar reavaliação, relatório de pendências e resumo derivado.
+8. Atualizar o seed geral e seu preflight.
+9. Validar migration, banco real, concorrência, contratos, API e consumidores.
 
 ## Escopo
 
 ### Persistência e invariantes locais
 
-- adicionar `Especie.depreciavel` obrigatório e sem default de domínio no
-  contrato; como não há dados de produção, a migration não precisa inferir ou
-  preservar classificação legada;
+- consumir `Patrimonio.depreciavel` já persistido por `CONTRACTS-018`, sem
+  adicionar ou inferir classificação na espécie;
 - criar `DisponibilidadeUsoPatrimonio` como relação um-para-um imutável com
   patrimônio, contendo data civil, `createdAt` e `createdById`; o registro é a
   fonte de verdade, sem duplicar a data em `Patrimonio`;
 - tornar `ParametroDepreciacao.dataInicio` anulável: parâmetro inicial de bem
   ainda indisponível fica nulo; disponibilidade confirma e inicia o parâmetro
   vigente na mesma transação;
-- espécie depreciável exige parâmetro inicial; espécie não depreciável proíbe
-  parâmetro em criação e reavaliação;
-- bloquear alteração de `Especie.depreciavel` depois do primeiro patrimônio
-  vinculado;
+- patrimônio depreciável exige parâmetro inicial; patrimônio não depreciável
+  proíbe parâmetro em criação e reavaliação;
 - preservar no máximo um parâmetro vigente e uma situação contábil por bem;
 - adicionar chave única composta em parâmetro e FK composta em depreciação para
   provar no banco que o parâmetro pertence ao mesmo patrimônio;
@@ -73,10 +72,20 @@ relatórios.
 - manter FKs históricas com `ON DELETE RESTRICT` para disponibilidade,
   parâmetros, depreciações, comissão e autoria;
 - não usar `CHECK` que consulte outra tabela. Restrições entre disponibilidade,
-  espécie, parâmetro, residual, histórico e situação contábil devem usar FK,
-  transação e constraint trigger documentada e testada no PostgreSQL;
+  classificação do patrimônio, parâmetro, residual, histórico e situação
+  contábil devem usar FK, transação e constraint trigger documentada e testada
+  no PostgreSQL;
 - impedir `UPDATE` e `DELETE` dos fatos de disponibilidade e depreciação pelo
   caminho operacional; correção/estorno não faz parte desta tarefa.
+
+### Contratos compartilhados desta evolução
+
+- implementar nesta mesma tarefa os contratos de disponibilidade, catálogo de
+  competências, resumo e relatório de pendências descritos abaixo;
+- atualizar API, Web e fixtures consumidoras antes de exigir typecheck global;
+- não reabrir o contrato de classificação entregue por `CONTRACTS-018`;
+- manter competências como `AAAA-MM` na integração e localização somente na
+  apresentação.
 
 ### API e concorrência
 
@@ -85,8 +94,9 @@ relatórios.
   pelos contratos de idempotência existentes;
 - rejeitar data futura, bem baixado, confirmação duplicada e mudança
   concorrente, sem registro ou parâmetro parcial;
-- disponibilidade de bem depreciável define `dataInicio` do parâmetro vigente e
-  deriva a primeira competência como o mês seguinte; em bem não depreciável,
+- disponibilidade de patrimônio depreciável define `dataInicio` do parâmetro
+  vigente e deriva a primeira competência como o mês seguinte; em patrimônio
+  não depreciável,
   registra somente o fato operacional;
 - reavaliação de bem ainda indisponível mantém `dataInicio = null`; reavaliação
   de bem disponível inicia o novo parâmetro na data de referência aprovada;
@@ -115,9 +125,8 @@ relatórios.
 
 - atualizar a matriz, payloads, módulos importados, testes, auditoria final e
   constantes de preflight afetadas pela nova migration;
-- cadastrar espécies depreciáveis e não depreciáveis de forma explícita;
-- criar patrimônios depreciáveis com parâmetros iniciais e não depreciáveis sem
-  parâmetros;
+- preservar a matriz de patrimônios depreciáveis com parâmetros e não
+  depreciáveis sem parâmetros entregue por `CONTRACTS-018`;
 - confirmar disponibilidade pela operação pública/service de domínio em parte
   dos patrimônios e manter parte deles sem disponibilidade para exercitar os
   estados de espera;
@@ -157,7 +166,7 @@ relatórios.
 - [ ] banco recusa valores, datas, relações e históricos estruturalmente
       inconsistentes mesmo fora do controller;
 - [ ] bem sem disponibilidade nunca é elegível;
-- [ ] espécie não depreciável nunca recebe parâmetro ou depreciação;
+- [ ] patrimônio não depreciável nunca recebe parâmetro ou depreciação;
 - [ ] disponibilidade duplicada ou concorrente produz um único fato e nenhum
       parâmetro parcial;
 - [ ] primeira competência é exatamente o mês seguinte à disponibilidade;
@@ -177,11 +186,11 @@ relatórios.
 ## Arquivos ou módulos potencialmente afetados
 
 - `packages/database/prisma/schema.prisma` e nova migration;
-- `packages/contracts/src/especie/`, `patrimonio/`,
-  `depreciacao-patrimonio/` e `relatorio-patrimonial/`;
-- `apps/api/src/modules/especies/`, `patrimonios/`, `depreciacoes/`,
-  `reavaliacoes/` e `relatorios/`;
-- `apps/api/src/seed-geral/`, testes E2E e PostgreSQL;
+- `packages/contracts/src/patrimonio/`, `depreciacao-patrimonio/` e
+  `relatorio-patrimonial/`;
+- `apps/api/src/modules/patrimonios/`, `depreciacoes/`, `reavaliacoes/` e
+  `relatorios/`;
+- `apps/api/src/commands/seed-geral/`, testes E2E e PostgreSQL;
 - `docs/apps/api/README.md`, `docs/apps/api/relatorios-patrimoniais.md`,
   roadmaps e esta tarefa somente após verificação.
 

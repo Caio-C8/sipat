@@ -130,6 +130,7 @@ describeComPostgres("depreciações patrimoniais no PostgreSQL", () => {
         dataTombamento: inicioAnterior,
         valorIncorporacao: opcoes.bruto ?? "1000",
         status: opcoes.status ?? "ATIVO",
+        depreciavel: opcoes.comParametro !== false,
         especieId,
         setorAtualId: setorId,
         createdById: identidade.id,

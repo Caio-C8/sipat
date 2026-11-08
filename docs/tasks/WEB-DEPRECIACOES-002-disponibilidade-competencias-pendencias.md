@@ -10,8 +10,10 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 
 ## Contexto e referências
 
-- Dependências: [CONTRACTS-018](./CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)
-  e [DEPRECIACOES-002](./DEPRECIACOES-002-disponibilidade-competencias-integridade.md).
+- Dependências implementadas: classificação patrimonial de
+  [CONTRACTS-018](./CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)
+  e API/contratos de
+  [DEPRECIACOES-002](./DEPRECIACOES-002-disponibilidade-competencias-integridade.md).
 - Estado atual: [WEB-DEPRECIACOES-001](./WEB-DEPRECIACOES-001-interface-processamento.md),
   [WEB-PATRIMONIOS-001](./WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md) e
   [WEB-RELATORIOS-001](./WEB-RELATORIOS-001-interface.md).
@@ -21,8 +23,8 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 ## Ordem de execução
 
 1. Confirmar contratos, endpoints, permissões e componentes existentes.
-2. Adaptar cadastro/edição de espécie e cadastro patrimonial à classificação
-   depreciável.
+2. Confirmar que o detalhe já consome `Patrimonio.depreciavel` entregue por
+   `CONTRACTS-018`.
 3. Implementar confirmação de disponibilidade no detalhe do bem.
 4. Substituir competência fixa por seletor de competências devidas.
 5. Integrar avisos no detalhe, relatório e menu de notificações.
@@ -31,13 +33,10 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 
 ## Escopo
 
-### Cadastros e detalhe
+### Detalhe e disponibilidade
 
-- exigir escolha explícita “depreciável” ou “não depreciável” no formulário de
-  espécie e exibir a classificação em lista/detalhe;
-- no cadastro patrimonial, mostrar vida útil e residual somente para espécie
-  depreciável; não enviar parâmetros para espécie não depreciável;
-- remover o campo livre “Início da depreciação” do cadastro patrimonial;
+- consumir a classificação do patrimônio, nunca da espécie nem da presença de
+  parâmetros;
 - no detalhe, exibir estado `Aguardando disponibilidade`, data/autor da
   confirmação ou `Não depreciável`, sem confundir com status patrimonial;
 - Administrador e Diretor podem consultar o fato no detalhe, mas somente o
@@ -96,8 +95,7 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 
 ## Critérios de aceite
 
-- [ ] campo livre de início desaparece e espécie controla a presença dos
-      parâmetros no cadastro;
+- [ ] detalhe usa `Patrimonio.depreciavel` e não infere classificação;
 - [ ] Diretor registra disponibilidade uma vez e vê primeira competência;
 - [ ] Administrador consulta o fato, mas não recebe a ação;
 - [ ] datas futuras, conflito, sessão expirada, estado incerto e duplo clique
@@ -114,8 +112,6 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 
 ## Arquivos ou módulos potencialmente afetados
 
-- `apps/web/features/cadastros/` e rotas de espécies;
-- `apps/web/features/patrimonios/components/cadastro-patrimonio.tsx`;
 - `apps/web/features/patrimonios/components/patrimonio-detalhe.tsx`;
 - `apps/web/features/depreciacoes/` e `apps/web/app/(sistema)/depreciacao/`;
 - `apps/web/features/relatorios/` e rota de relatórios;

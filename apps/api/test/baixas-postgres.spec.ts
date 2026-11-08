@@ -105,6 +105,7 @@ describeComPostgres("baixas patrimoniais no PostgreSQL", () => {
         dataTombamento: new Date("2026-01-01T00:00:00.000Z"),
         valorIncorporacao: 1000,
         status: "ATIVO",
+        depreciavel: false,
         especieId: especie.id,
         setorAtualId: setor.id,
         createdById: usuario.id,

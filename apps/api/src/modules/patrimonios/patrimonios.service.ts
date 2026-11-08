@@ -34,6 +34,7 @@ export class PatrimoniosService {
     dados: CriarPatrimonioBodyData,
     identidade: IdentidadeAutenticada,
   ): Promise<PatrimonioDetalhePayload> {
+    this.validarCoerenciaClassificacao(dados);
     const normalizados = {
       ...dados,
       descricao: this.normalizarTexto(dados.descricao),
@@ -42,7 +43,9 @@ export class PatrimoniosService {
       numeroSerie: this.normalizarTextoOpcional(dados.numeroSerie),
     };
 
-    this.validarParametrosDepreciacao(normalizados);
+    if (normalizados.depreciavel) {
+      this.validarParametrosDepreciacao(normalizados);
+    }
     const { chaveIdempotencia, ...conteudo } = normalizados;
     const hashCriacao = calcularHashIdempotencia(conteudo);
 
@@ -272,6 +275,7 @@ export class PatrimoniosService {
   }
 
   private validarParametrosDepreciacao(dados: CriarPatrimonioBodyData): void {
+    if (!dados.depreciavel) return;
     const parametros = dados.parametrosDepreciacao;
     const valorIncorporacao = new Prisma.Decimal(dados.valorIncorporacao);
     const base = new Prisma.Decimal(parametros.valorBaseInicial);
@@ -307,6 +311,22 @@ export class PatrimoniosService {
           "O valor residual deve corresponder ao percentual informado sobre a base inicial.",
         );
       }
+    }
+  }
+
+  private validarCoerenciaClassificacao(dados: CriarPatrimonioBodyData): void {
+    const parametros = (dados as { parametrosDepreciacao?: unknown })
+      .parametrosDepreciacao;
+    if (
+      (dados.depreciavel && parametros === undefined) ||
+      (!dados.depreciavel && parametros !== undefined)
+    ) {
+      throw this.parametroInvalido(
+        "parametrosDepreciacao",
+        dados.depreciavel
+          ? "Patrimônio depreciável exige parâmetros iniciais de depreciação."
+          : "Patrimônio não depreciável não pode receber parâmetros de depreciação.",
+      );
     }
   }
 

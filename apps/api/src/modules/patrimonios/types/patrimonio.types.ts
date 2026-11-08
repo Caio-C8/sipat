@@ -10,6 +10,7 @@ export const patrimonioResumoArgs = {
     modelo: true,
     numeroSerie: true,
     status: true,
+    depreciavel: true,
     situacaoContabil: {
       select: {
         valorBrutoAtual: true,

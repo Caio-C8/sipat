@@ -1,13 +1,14 @@
 # Roadmap do `@repo/contracts`
 
-## CONTRACTS-018 — Disponibilidade e pendências de depreciação
+## CONTRACTS-018 — Classificação depreciável do patrimônio ponta a ponta
 
-**Status:** aprovada; executar antes de `DEPRECIACOES-002`.
+**Status:** aprovada para reexecução; executar antes de `DEPRECIACOES-002`.
 
-Evolui espécies, patrimônio, depreciações e relatórios para representar
-classificação depreciável, disponibilidade auditável, competências passadas
-devidas e pendências agregadas. Mantém `AAAA-MM` como formato canônico e não
-promove cálculo ou auditoria a input do cliente.
+Adiciona `depreciavel` ao patrimônio e implementa a mudança como fatia vertical
+em contratos, banco, API, seed, Web e mobile. Não deve ser executada apenas no
+package compartilhado. Disponibilidade, competências e pendências foram movidas
+para `DEPRECIACOES-002` para eliminar o estado intermediário inválido que causou
+a falha da versão anterior.
 [Tarefa e critérios](../tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md).
 
 ## CONTRACTS-016 — Idempotência de operações críticas
