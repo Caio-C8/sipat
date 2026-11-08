@@ -157,10 +157,6 @@ function fieldErrorsFromApi(error: unknown) {
       field: "residual",
       step: 4,
     },
-    "parametrosDepreciacao.dataInicio": {
-      field: "depreciationStartDate",
-      step: 4,
-    },
   };
   const errors: Record<string, string> = {};
   let firstStep: Step = 4;
@@ -891,7 +887,6 @@ function DirectorFlow({
               residualMode: "value",
               residualValue: "",
               residualPercentage: "",
-              depreciationStartDate: "",
             })
           }
           style={styles.checkRow}
@@ -909,7 +904,8 @@ function DirectorFlow({
           <View style={styles.flex}>
             <Text style={styles.checkTitle}>Este bem é depreciável</Text>
             <Text style={styles.muted}>
-              Quando marcado, vida útil, residual e início são obrigatórios.
+              Quando marcado, vida útil e residual são obrigatórios. A
+              depreciação começa após a confirmação de disponibilidade para uso.
             </Text>
           </View>
         </Pressable>
@@ -990,18 +986,6 @@ function DirectorFlow({
                 value={formatCurrency(effectiveResidual(form)!)}
               />
             ) : null}
-            <Field
-              error={errors.depreciationStartDate}
-              label="Início da depreciação *"
-              numeric
-              onChange={(depreciationStartDate) =>
-                update({
-                  depreciationStartDate: formatDateInput(depreciationStartDate),
-                })
-              }
-              placeholder="DD/MM/AAAA"
-              value={form.depreciationStartDate}
-            />
             {monthlyDepreciationPreview(form) ? (
               <Text style={styles.preview}>
                 Depreciação mensal estimada:{" "}
@@ -1082,7 +1066,7 @@ function DirectorFlow({
             form.depreciable
               ? [
                   `Bem depreciável · Linear · ${form.usefulLifeMonths} meses · Residual: ${formatCurrency(effectiveResidual(form)!)}`,
-                  `Início em ${form.depreciationStartDate}`,
+                  "Início após a confirmação de disponibilidade para uso",
                 ]
               : ["Bem não depreciável · sem parâmetros de depreciação"]
           }
