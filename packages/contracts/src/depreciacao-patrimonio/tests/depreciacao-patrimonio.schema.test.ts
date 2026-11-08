@@ -8,8 +8,11 @@ import {
 import { PatrimonioParamsSchema } from "../../patrimonio";
 import {
   CODIGOS_ERRO_DEPRECIACAO_PATRIMONIO,
+  CatalogoCompetenciasDepreciacaoSchema,
   CodigoErroDepreciacaoPatrimonioSchema,
+  CompetenciaDepreciacaoDevidaSchema,
   CompetenciaMensalSchema,
+  ConsultarResumoPendenciasDepreciacaoResponseSchema,
   ExecutarDepreciacaoPatrimonioBodySchema,
   ExecutarDepreciacaoPatrimonioResponseSchema,
   ExecutarDepreciacoesEmMassaBodySchema,
@@ -17,6 +20,7 @@ import {
   ItemDepreciacaoPendenteSchema,
   ListarDepreciacoesPendentesQuerySchema,
   ListarDepreciacoesPendentesResponseSchema,
+  ListarCompetenciasDepreciacaoResponseSchema,
   MOTIVOS_INELEGIBILIDADE_DEPRECIACAO,
   MotivoInelegibilidadeDepreciacaoSchema,
   ResultadoDepreciacaoIndividualSchema,
@@ -41,6 +45,9 @@ const itemPendente = {
   numeroPatrimonio: "12345",
   descricao: "Notebook para uso administrativo",
   status: "ATIVO",
+  dataDisponivelUso: "2026-01-15",
+  primeiraCompetencia: "2026-02",
+  proximaCompetenciaDevida: "2026-10",
   valorBrutoAtual: "10000.0000000",
   depreciacaoAcumuladaAtual: "2500.1234567",
   valorLiquidoAtual: "7499.8765433",
@@ -84,6 +91,10 @@ const resultadoEmMassa = {
     baixado: 2,
     semParametroVigente: 4,
     dataInicioNaoAtingida: 1,
+    bemNaoDepreciavel: 7,
+    disponibilidadeUsoNaoConfirmada: 8,
+    primeiraCompetenciaNaoAtingida: 9,
+    competenciaAnteriorPendente: 10,
     jaDepreciadoNaCompetencia: 5,
     valorResidualAtingido: 6,
   },
@@ -236,6 +247,59 @@ describe("responses da depreciação patrimonial", () => {
         meta: { total: 1, pagina: 1, ultimaPagina: 1, limite: 1 },
       },
     ]);
+  });
+
+  it("publica catálogo finito e resumo derivado das pendências", () => {
+    const competencia = {
+      competencia: "2026-10",
+      quantidadePendente: 12,
+      atual: true,
+    } as const;
+    assert.deepEqual(
+      parseValido(CompetenciaDepreciacaoDevidaSchema, competencia),
+      competencia,
+    );
+
+    const catalogo = {
+      status: 200,
+      sucesso: true,
+      mensagem: "Competências consultadas.",
+      dados: [competencia],
+    } as const;
+    assert.deepEqual(
+      parseValido(ListarCompetenciasDepreciacaoResponseSchema, catalogo),
+      catalogo,
+    );
+    esperaInvalidos(CatalogoCompetenciasDepreciacaoSchema, [
+      [
+        competencia,
+        { competencia: "2026-09", quantidadePendente: 1, atual: false },
+      ],
+      [
+        { competencia: "2026-09", quantidadePendente: 1, atual: true },
+        competencia,
+      ],
+    ]);
+
+    const resumo = {
+      status: 200,
+      sucesso: true,
+      mensagem: "Resumo consultado.",
+      dados: {
+        quantidadeBens: 10,
+        quantidadeCompetencias: 3,
+        competenciaMaisAntiga: "2026-08",
+        referenciaEm: "2026-10-27T15:30:00.000Z",
+      },
+    } as const;
+    assert.deepEqual(
+      parseValido(ConsultarResumoPendenciasDepreciacaoResponseSchema, resumo),
+      resumo,
+    );
+    esperaInvalido(ConsultarResumoPendenciasDepreciacaoResponseSchema, {
+      ...resumo,
+      dados: { ...resumo.dados, itens: [itemPendente] },
+    });
   });
 
   it("discrimina depreciação criada de um único motivo de inelegibilidade", () => {

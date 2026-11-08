@@ -4,6 +4,7 @@ import {
   criarRespostaSucessoSchema,
 } from "../common";
 import {
+  DataCivilSchema,
   Decimal19_7Schema,
   NumeroPatrimonialSchema,
   StatusPatrimonioSchema,
@@ -38,6 +39,9 @@ export const ItemDepreciacaoPendenteSchema = z.strictObject({
   numeroPatrimonio: NumeroPatrimonialSchema,
   descricao: z.string().trim().min(1).max(1_000),
   status: StatusPatrimonioDepreciavelSchema,
+  dataDisponivelUso: DataCivilSchema,
+  primeiraCompetencia: CompetenciaMensalSchema,
+  proximaCompetenciaDevida: CompetenciaMensalSchema,
   valorBrutoAtual: Decimal19_7Schema,
   depreciacaoAcumuladaAtual: Decimal19_7Schema,
   valorLiquidoAtual: Decimal19_7Schema,
@@ -51,6 +55,55 @@ export const ResumoDepreciacoesPendentesSchema = z.strictObject({
   totalElegiveis: ContagemDepreciacaoSchema,
   totalNoValorResidual: ContagemDepreciacaoSchema,
 });
+
+export const CompetenciaDepreciacaoDevidaSchema = z.strictObject({
+  competencia: CompetenciaMensalSchema,
+  quantidadePendente: ContagemDepreciacaoSchema,
+  atual: z.boolean(),
+});
+
+export const CatalogoCompetenciasDepreciacaoSchema = z
+  .array(CompetenciaDepreciacaoDevidaSchema)
+  .max(1_200)
+  .superRefine((competencias, contexto) => {
+    let encontrouAtual = false;
+
+    for (const [indice, item] of competencias.entries()) {
+      const anterior = competencias[indice - 1];
+      if (anterior && anterior.competencia >= item.competencia) {
+        contexto.addIssue({
+          code: "custom",
+          path: [indice, "competencia"],
+          message:
+            "As competências devem ser únicas e ordenadas da mais antiga para a mais recente.",
+        });
+      }
+      if (item.atual) {
+        if (encontrouAtual || indice !== competencias.length - 1) {
+          contexto.addIssue({
+            code: "custom",
+            path: [indice, "atual"],
+            message:
+              "Somente a competência mais recente pode ser indicada como atual.",
+          });
+        }
+        encontrouAtual = true;
+      }
+    }
+  });
+
+export const ListarCompetenciasDepreciacaoResponseSchema =
+  criarRespostaSucessoSchema(CatalogoCompetenciasDepreciacaoSchema);
+
+export const ResumoPendenciasDepreciacaoSchema = z.strictObject({
+  quantidadeBens: ContagemDepreciacaoSchema,
+  quantidadeCompetencias: ContagemDepreciacaoSchema,
+  competenciaMaisAntiga: CompetenciaMensalSchema.nullable(),
+  referenciaEm: DateTimeUtcDepreciacaoSchema,
+});
+
+export const ConsultarResumoPendenciasDepreciacaoResponseSchema =
+  criarRespostaSucessoSchema(ResumoPendenciasDepreciacaoSchema);
 
 export const ListarDepreciacoesPendentesResponseSchema =
   criarRespostaSucessoPaginadaSchema(ItemDepreciacaoPendenteSchema).safeExtend({
@@ -91,6 +144,10 @@ export const ResultadoDepreciacoesEmMassaSchema = z.strictObject({
     baixado: ContagemDepreciacaoSchema,
     semParametroVigente: ContagemDepreciacaoSchema,
     dataInicioNaoAtingida: ContagemDepreciacaoSchema,
+    bemNaoDepreciavel: ContagemDepreciacaoSchema,
+    disponibilidadeUsoNaoConfirmada: ContagemDepreciacaoSchema,
+    primeiraCompetenciaNaoAtingida: ContagemDepreciacaoSchema,
+    competenciaAnteriorPendente: ContagemDepreciacaoSchema,
     jaDepreciadoNaCompetencia: ContagemDepreciacaoSchema,
     valorResidualAtingido: ContagemDepreciacaoSchema,
   }),
@@ -107,6 +164,21 @@ export type ItemDepreciacaoPendente = z.output<
 >;
 export type ResumoDepreciacoesPendentes = z.output<
   typeof ResumoDepreciacoesPendentesSchema
+>;
+export type CompetenciaDepreciacaoDevida = z.output<
+  typeof CompetenciaDepreciacaoDevidaSchema
+>;
+export type CatalogoCompetenciasDepreciacao = z.output<
+  typeof CatalogoCompetenciasDepreciacaoSchema
+>;
+export type ListarCompetenciasDepreciacaoResponse = z.output<
+  typeof ListarCompetenciasDepreciacaoResponseSchema
+>;
+export type ResumoPendenciasDepreciacao = z.output<
+  typeof ResumoPendenciasDepreciacaoSchema
+>;
+export type ConsultarResumoPendenciasDepreciacaoResponse = z.output<
+  typeof ConsultarResumoPendenciasDepreciacaoResponseSchema
 >;
 export type ListarDepreciacoesPendentesResponse = z.output<
   typeof ListarDepreciacoesPendentesResponseSchema

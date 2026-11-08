@@ -128,6 +128,17 @@ contratos já existentes. A lista detalhada de bens no valor residual e o
 histórico de processamentos ficam fora desta entrega, pois não possuem
 consultas correspondentes na API. [Escopo e aceite](../../tasks/WEB-DEPRECIACOES-001-interface-processamento.md).
 
+### WEB-DEPRECIACOES-002 — Disponibilidade, competências e avisos
+
+**Status:** aprovada; depende de `CONTRACTS-018` e `DEPRECIACOES-002`.
+
+Substitui o início livre pela confirmação auditável de disponibilidade nos
+detalhes do bem, permite selecionar competências devidas com rótulos como
+`Abril de 2026` e expõe pendências na tela de depreciações, no detalhe, em
+relatório próprio e na seção de pendências do sino. O alerta é derivado e não
+implementa caixa postal, lido/não lido ou canais externos.
+[Escopo e aceite](../../tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md).
+
 ### WEB-SHELL-001 — Padronizar o shell autenticado por perfil
 
 **Status:** implementado em 26 de outubro de 2026.

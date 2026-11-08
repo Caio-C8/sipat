@@ -337,3 +337,14 @@ A execução Compose comprova a integração local da configuração de staging,
 uma execução em homologação compartilhada ou remota. O wrapper de development
 foi validado estruturalmente e usa o mesmo entrypoint; não foi apontado ao banco
 de desenvolvimento existente do operador.
+
+## Evolução aprovada após a conclusão
+
+`DEPRECIACOES-002` altera espécie, parâmetro inicial e disponibilidade para uso
+e deve atualizar este seed na mesma entrega. A nova matriz deve manter
+depreciações e reavaliações zeradas, mas passar a conter espécies e patrimônios
+depreciáveis e não depreciáveis, além de patrimônios depreciáveis com e sem
+disponibilidade confirmada. Confirmações devem usar o service público do domínio
+e datas determinísticas; migration esperada, preflight, testes e auditoria final
+devem acompanhar o histórico vivo. Ver
+[DEPRECIACOES-002](./DEPRECIACOES-002-disponibilidade-competencias-integridade.md#seed-geral).

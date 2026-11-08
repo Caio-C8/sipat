@@ -7,6 +7,8 @@ import {
 } from "../../contract-assertions";
 import {
   CriarPatrimonioBodySchema,
+  ConfirmarDisponibilidadeUsoBodySchema,
+  ConfirmarDisponibilidadeUsoResponseSchema,
   DataCivilSchema,
   Decimal19_7Schema,
   ListarPatrimoniosQuerySchema,
@@ -49,6 +51,7 @@ const patrimonioResumo = {
   especie: {
     id: uuids.especie,
     nome: "Computador",
+    depreciavel: true,
     natureza: {
       id: uuids.natureza,
       nome: "Equipamento de processamento de dados",
@@ -69,6 +72,14 @@ const patrimonioDetalhe = {
   cadastradoPor: {
     id: uuids.responsavel,
     nome: "Maria da Silva",
+  },
+  disponibilidadeUso: {
+    dataDisponivelUso: "2026-10-18",
+    confirmadoPor: {
+      id: uuids.responsavel,
+      nome: "Maria da Silva",
+    },
+    confirmadoEm: "2026-10-18T12:30:00.000Z",
   },
   parametroDepreciacaoAtual: {
     metodo: "LINEAR",
@@ -103,7 +114,6 @@ function criarBodyValido() {
       percentualResidual: "10.00",
       valorResidual: "1234.567",
       valorBaseInicial: "12345.6700000",
-      dataInicio: "2026-10-18",
     },
   };
 }
@@ -117,20 +127,13 @@ describe("contratos de patrimônios", () => {
     assert.equal(resultado.valorIncorporacao, "12345.6700000");
   });
 
-  it("exige o bloco inicial de depreciação", () => {
+  it("representa presença ou ausência do bloco inicial de depreciação", () => {
     const entrada: Partial<ReturnType<typeof criarBodyValido>> =
       criarBodyValido();
     delete entrada.parametrosDepreciacao;
 
-    esperaInvalido(CriarPatrimonioBodySchema, entrada, "parametrosDepreciacao");
-    const resultado = CriarPatrimonioBodySchema.safeParse(entrada);
-    assert.equal(resultado.success, false);
-    if (!resultado.success) {
-      assert.equal(
-        resultado.error.issues[0]?.message,
-        "Os parâmetros iniciais de depreciação são obrigatórios.",
-      );
-    }
+    const resultado = parseValido(CriarPatrimonioBodySchema, entrada);
+    assert.equal(resultado.parametrosDepreciacao, undefined);
   });
 
   it("rejeita campos controlados pelo servidor e propriedades extras", () => {
@@ -242,6 +245,49 @@ describe("contratos de patrimônios", () => {
     esperaInvalido(PatrimonioParamsSchema, { patrimonioId: "invalido" });
   });
 
+  it("mantém a confirmação de disponibilidade estrita e derivada pelo servidor", () => {
+    const body = {
+      chaveIdempotencia: uuids.patrimonio,
+      dataDisponivelUso: "2026-10-18",
+    } as const;
+    assert.deepEqual(
+      parseValido(ConfirmarDisponibilidadeUsoBodySchema, body),
+      body,
+    );
+    for (const campo of [
+      "dataInicio",
+      "primeiraCompetencia",
+      "confirmadoPor",
+      "confirmadoEm",
+    ] as const) {
+      esperaInvalido(ConfirmarDisponibilidadeUsoBodySchema, {
+        ...body,
+        [campo]: "controlado-pelo-servidor",
+      });
+    }
+
+    const response = {
+      status: 201,
+      sucesso: true,
+      mensagem: "Disponibilidade confirmada.",
+      dados: {
+        disponibilidadeUso: patrimonioDetalhe.disponibilidadeUso,
+        primeiraCompetencia: "2026-11",
+      },
+    } as const;
+    assert.deepEqual(
+      parseValido(ConfirmarDisponibilidadeUsoResponseSchema, response),
+      response,
+    );
+    assert.equal(
+      ConfirmarDisponibilidadeUsoResponseSchema.safeParse({
+        ...response,
+        dados: { ...response.dados, primeiraCompetencia: null },
+      }).success,
+      true,
+    );
+  });
+
   it("valida responses resumida e detalhada como allowlists estritas", () => {
     assert.deepEqual(
       parseValido(PatrimonioResumoSchema, patrimonioResumo),
@@ -260,6 +306,22 @@ describe("contratos de patrimônios", () => {
       ...patrimonioDetalhe,
       createdById: uuids.responsavel,
     });
+  });
+
+  it("distingue indisponibilidade e parâmetro ainda não iniciado", () => {
+    const indisponivel = {
+      ...patrimonioDetalhe,
+      disponibilidadeUso: null,
+      parametroDepreciacaoAtual: {
+        ...patrimonioDetalhe.parametroDepreciacaoAtual,
+        dataInicio: null,
+      },
+    };
+
+    assert.deepEqual(
+      parseValido(PatrimonioDetalheSchema, indisponivel),
+      indisponivel,
+    );
   });
 
   it("mantém número canônico coerente com o tipo explícito da response", () => {

@@ -32,7 +32,6 @@ const ParametrosDepreciacaoIniciaisSchema = z.strictObject(
       .optional(),
     valorResidual: Decimal19_7Schema,
     valorBaseInicial: Decimal19_7PositivoSchema,
-    dataInicio: DataCivilSchema,
   },
   {
     error: (issue) =>
@@ -61,7 +60,7 @@ export const CriarPatrimonioBodySchema = z.strictObject({
   especieId: z.uuid(),
   setorAtualId: z.uuid(),
   processoCompraId: z.uuid().optional(),
-  parametrosDepreciacao: ParametrosDepreciacaoIniciaisSchema,
+  parametrosDepreciacao: ParametrosDepreciacaoIniciaisSchema.optional(),
 });
 
 export type CriarPatrimonioBodyInput = z.input<
