@@ -130,7 +130,7 @@ consultas correspondentes na API. [Escopo e aceite](../../tasks/WEB-DEPRECIACOES
 
 ### WEB-DEPRECIACOES-002 — Disponibilidade, competências e avisos
 
-**Status:** aprovada; depende de `CONTRACTS-018` e `DEPRECIACOES-002`.
+**Status:** implementada em 8 de novembro de 2026.
 
 Substitui o início livre pela confirmação auditável de disponibilidade nos
 detalhes do bem, permite selecionar competências devidas com rótulos como

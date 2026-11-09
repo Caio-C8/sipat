@@ -149,6 +149,13 @@ export function FormularioRelatorios({
     setDirty(true);
   };
   const opcionalPeriodo = tipo === "patrimonios" || tipo === "ficha-bem";
+  const competenciaOpcional = tipo === "pendencias-depreciacao";
+  const camposTemporais =
+    tipo === "depreciacoes"
+      ? ["competenciaInicio", "competenciaFim"]
+      : competenciaOpcional
+        ? ["competencia"]
+        : ["inicio", "fim"];
   const extraTexto =
     tipo === "patrimonios"
       ? ["busca"]
@@ -194,25 +201,29 @@ export function FormularioRelatorios({
             ? "Cadastro e valores atuais, incluindo bens baixados. Tombamento não reconstrói posição em data passada."
             : tipo === "inventarios"
               ? "Escolha o inventário. Conferência incompleta não significa ausência de inconsistências."
-              : "Nomes sem snapshot são cadastrais atuais; lacunas históricas permanecem identificadas."}
+              : tipo === "pendencias-depreciacao"
+                ? "Exibe somente obrigações ainda não processadas. A competência é opcional e usa o formato canônico AAAA-MM."
+                : "Nomes sem snapshot são cadastrais atuais; lacunas históricas permanecem identificadas."}
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tipo !== "inventarios" &&
-            (tipo === "depreciacoes"
-              ? ["competenciaInicio", "competenciaFim"]
-              : ["inicio", "fim"]
-            ).map((nome) => (
+            camposTemporais.map((nome) => (
               <label key={nome} className="text-sm">
                 {rotulo(nome)}
-                {opcionalPeriodo
-                  ? " (opcional, informe ambos)"
-                  : " (obrigatório)"}
+                {competenciaOpcional
+                  ? " (opcional)"
+                  : opcionalPeriodo
+                    ? " (opcional, informe ambos)"
+                    : " (obrigatório)"}
                 <input
                   className={campo}
                   name={nome}
-                  type={tipo === "depreciacoes" ? "month" : "date"}
-                  required={!opcionalPeriodo}
-                  value={q[nome] ?? (opcionalPeriodo ? "" : padrao(nome))}
+                  type={nome.startsWith("competencia") ? "month" : "date"}
+                  required={!opcionalPeriodo && !competenciaOpcional}
+                  value={
+                    q[nome] ??
+                    (opcionalPeriodo || competenciaOpcional ? "" : padrao(nome))
+                  }
                   onChange={(e) => mudar(nome, e.target.value)}
                 />
               </label>

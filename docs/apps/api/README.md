@@ -134,9 +134,11 @@ No estado atual:
 - `BaixasModule` restringe criação, consulta e download ao
   `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com locks
   de patrimônio e comissão e mantém policy e trigger contra inventário aberto;
-- `DepreciacoesModule` restringe consulta e execução ao
-  `DIRETOR_PATRIMONIO`, revalida competência e comissão, serializa execuções
-  individuais e em massa e atualiza situação e histórico em lote;
+- `DepreciacoesModule` restringe consulta operacional e execução ao
+  `DIRETOR_PATRIMONIO`, expõe catálogo finito de competências devidas e resumo
+  agregado de pendências, revalida competência e comissão, impede saltos sobre
+  meses anteriores e serializa execuções individuais e em massa. Pendências
+  também possuem relatório tabular e PDF para Administrador e Diretor;
 - a conferência preserva o snapshot cadastral, diferencia ausência por
   empréstimo ou manutenção vigente, cria transferência somente na correção
   cadastral e mantém o fato histórico da divergência; itens encontrados fora do

@@ -60,9 +60,11 @@ código interno da API.
   com contagens reais; o resumo refaz setor e pendências, apresenta corretos,
   divergências e não localizados e não expõe finalização global do inventário;
 - `/cadastro/patrimonio` oferece ao Diretor quatro etapas, revisão e confirmação
-  de cadastro unitário, com máscaras de data civil e moeda e parâmetros
-  iniciais de depreciação obrigatórios; a confirmação preserva uma chave de
-  idempotência em resultados incertos e distingue os três conflitos públicos;
+  de cadastro unitário, com máscaras de data civil e moeda. A classificação
+  depreciável pertence ao patrimônio: quando marcada, exige parâmetros
+  iniciais; quando desmarcada, limpa e não envia esses parâmetros. A confirmação
+  preserva uma chave de idempotência em resultados incertos e distingue os três
+  conflitos públicos;
   o Administrador recebe `Cadastro restrito` sem montar o formulário nem
   consultar catálogos;
 - tokens semânticos mínimos sustentam a base visual compartilhada;

@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
+  CompetenciaMensalSchema,
   ListarDepreciacoesPendentesQuerySchema,
   type ComissaoOpcaoReavaliacao,
+  type CompetenciaDepreciacao,
   type ListarDepreciacoesPendentesResponse,
 } from "@repo/contracts";
 import { ProcessamentoDepreciacoes } from "@/features/depreciacoes/components/processamento-depreciacoes";
@@ -15,19 +17,8 @@ import { isApiError } from "@/lib/api/core/api-error";
 export const metadata: Metadata = {
   title: "Depreciação",
   description:
-    "Consulte e processe a depreciação patrimonial da competência atual.",
+    "Consulte e processe competências de depreciação patrimonial pendentes.",
 };
-
-function competenciaAtualSaoPaulo() {
-  const partes = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-  }).formatToParts(new Date());
-  const ano = partes.find((parte) => parte.type === "year")?.value;
-  const mes = partes.find((parte) => parte.type === "month")?.value;
-  return `${ano}-${mes}`;
-}
 
 function erroLeitura(erro: unknown, fallback: string) {
   if (isApiError(erro)) {
@@ -50,10 +41,96 @@ export default async function DepreciacaoPage({
     redirect("/dashboard");
   }
 
-  const competencia = competenciaAtualSaoPaulo();
   const recebidos = await searchParams;
+  const competenciaRecebida =
+    typeof recebidos.competencia === "string"
+      ? recebidos.competencia
+      : undefined;
   const pagina =
     typeof recebidos.pagina === "string" ? recebidos.pagina : undefined;
+  const cookie = (await headers()).get("cookie") ?? "";
+
+  let competencias: CompetenciaDepreciacao[];
+  let competenciaAtual: string;
+  let competenciaMaisAntigaPendente: string | null;
+  try {
+    const resposta = await serverDepreciacaoOperations.listarCompetencias({
+      cookie,
+    });
+    competencias = resposta.dados.competencias;
+    competenciaAtual = resposta.dados.competenciaAtual;
+    competenciaMaisAntigaPendente =
+      resposta.dados.competenciaMaisAntigaPendente;
+  } catch (erro) {
+    return (
+      <main className="p-6 text-[#17253d]">
+        <h1 className="text-2xl font-bold">Depreciação</h1>
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+        >
+          {erroLeitura(
+            erro,
+            "Não foi possível consultar as competências devidas.",
+          )}
+        </p>
+      </main>
+    );
+  }
+
+  if (competencias.length === 0) {
+    return (
+      <main className="mx-auto grid w-full max-w-[1900px] gap-5 p-6 text-[#17253d]">
+        <h1 className="text-2xl font-bold">Depreciação</h1>
+        <section
+          role="status"
+          className="rounded-lg border border-[#dfe7f1] bg-white p-8 text-center"
+        >
+          <h2 className="font-bold text-[#203b61]">
+            Nenhuma competência pendente
+          </h2>
+          <p className="mt-2 text-sm text-[#7188a5]">
+            Não há obrigação de depreciação a processar até {competenciaAtual}.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  const competenciaPadrao =
+    competenciaMaisAntigaPendente ??
+    competencias.find((item) => item.competencia === competenciaAtual)
+      ?.competencia ??
+    competencias[0]!.competencia;
+  if (!competenciaRecebida) {
+    redirect(`/depreciacao?competencia=${competenciaPadrao}`);
+  }
+  const competenciaValidada =
+    CompetenciaMensalSchema.safeParse(competenciaRecebida);
+  const competenciaDisponivel = competenciaValidada.success
+    ? competencias.some((item) => item.competencia === competenciaValidada.data)
+    : false;
+  if (!competenciaValidada.success || !competenciaDisponivel) {
+    return (
+      <main className="p-6 text-[#17253d]">
+        <h1 className="text-2xl font-bold">Depreciação</h1>
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+        >
+          A competência informada não está disponível ou outra competência deve
+          ser processada antes.
+        </p>
+        <a
+          className="mt-4 inline-block underline"
+          href={`/depreciacao?competencia=${competenciaPadrao}`}
+        >
+          Consultar a competência pendente mais antiga
+        </a>
+      </main>
+    );
+  }
+  const competencia = competenciaValidada.data;
   const query = ListarDepreciacoesPendentesQuerySchema.safeParse({
     competencia,
     ...(pagina ? { pagina } : {}),
@@ -74,7 +151,6 @@ export default async function DepreciacaoPage({
     );
   }
 
-  const cookie = (await headers()).get("cookie") ?? "";
   const [resultadoPendentes, resultadoComissoes] = await Promise.allSettled([
     serverDepreciacaoOperations.listarPendentes(
       { competencia, pagina, limite: "20" },
@@ -106,7 +182,7 @@ export default async function DepreciacaoPage({
   const resposta: ListarDepreciacoesPendentesResponse =
     resultadoPendentes.value;
   if (resposta.meta.pagina > resposta.meta.ultimaPagina) {
-    redirect("/depreciacao");
+    redirect(`/depreciacao?competencia=${competencia}`);
   }
   const comissoes: ComissaoOpcaoReavaliacao[] =
     resultadoComissoes.status === "fulfilled"
@@ -126,6 +202,8 @@ export default async function DepreciacaoPage({
       competencia={competencia}
       comissoes={comissoes}
       erroComissoes={erroComissoes}
+      competencias={competencias}
+      competenciaMaisAntigaPendente={competenciaMaisAntigaPendente}
     />
   );
 }

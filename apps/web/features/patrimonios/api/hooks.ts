@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { CriarPatrimonioBodyInput } from "@repo/contracts";
+import type {
+  ConfirmarDisponibilidadeUsoBodyData,
+  CriarPatrimonioBodyInput,
+} from "@repo/contracts";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 import { useMutacaoSemRepeticao } from "@/lib/api/client/use-mutacao-sem-repeticao";
 import { criarOperacoesPatrimonios } from "./patrimonio-operations";
@@ -73,4 +76,10 @@ const criarPatrimonio = (body: CriarPatrimonioBodyInput) =>
 
 export function useCriarPatrimonio() {
   return useMutacaoSemRepeticao(criarPatrimonio);
+}
+
+export function useConfirmarDisponibilidadeUso(patrimonioId: string) {
+  return useMutacaoSemRepeticao((body: ConfirmarDisponibilidadeUsoBodyData) =>
+    operacoes.confirmarDisponibilidadeUso(patrimonioId, body),
+  );
 }

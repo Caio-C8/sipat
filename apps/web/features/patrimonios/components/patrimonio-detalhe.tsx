@@ -8,8 +8,10 @@ import {
   Wallet,
 } from "lucide-react";
 import type { EventosFichaResponse, PatrimonioDetalhe } from "@repo/contracts";
+import { rotuloCompetencia } from "@/features/depreciacoes/apresentacao";
 import { apresentarEvento, formatarData, rotulosEvento } from "../apresentacao";
 import { PatrimonioAcoes } from "./patrimonio-acoes";
+import { DisponibilidadeUso } from "./disponibilidade-uso";
 
 const pagina =
   "mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-4 text-[#17253d] sm:px-7 sm:py-6";
@@ -183,6 +185,7 @@ export function PatrimonioDetalheView({
   valores,
   diretor,
   usuarioId,
+  hoje,
 }: {
   patrimonio: PatrimonioDetalhe;
   eventos: EventosFichaResponse | null;
@@ -190,6 +193,7 @@ export function PatrimonioDetalheView({
   valores: Record<string, string>;
   diretor: boolean;
   usuarioId: string;
+  hoje: string;
 }) {
   const liquido =
     Number(patrimonio.situacaoContabil.valorBrutoAtual) -
@@ -254,6 +258,11 @@ export function PatrimonioDetalheView({
       {diretor ? (
         <PatrimonioAcoes patrimonio={patrimonio} usuarioId={usuarioId} />
       ) : null}
+      <DisponibilidadeUso
+        patrimonio={patrimonio}
+        diretor={diretor}
+        hoje={hoje}
+      />
       <nav
         className="flex gap-2 rounded-lg border border-[#dce5f0] bg-white px-3"
         aria-label="Seções do patrimônio"
@@ -390,6 +399,65 @@ export function PatrimonioDetalheView({
                 {patrimonio.depreciavel ? "Não informado" : "Não se aplica"}
               </p>
             )}
+          </section>
+          <section className={`${cartao} lg:col-span-3`}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="font-bold">Competências de depreciação</h2>
+                <p className="mt-1 text-sm text-[#7188a5]">
+                  {patrimonio.depreciavel
+                    ? `${patrimonio.resumoDepreciacao.quantidadePendencias} competência(s) pendente(s).`
+                    : "Não se aplica a bem não depreciável."}
+                </p>
+              </div>
+              {patrimonio.resumoDepreciacao.proximaCompetencia ? (
+                <Link
+                  className={botao}
+                  href={`/depreciacao?competencia=${patrimonio.resumoDepreciacao.proximaCompetencia}`}
+                >
+                  Consultar pendência
+                </Link>
+              ) : null}
+            </div>
+            <dl className="mt-4 grid gap-5 sm:grid-cols-3">
+              <Dado
+                titulo="Primeira competência"
+                valor={
+                  patrimonio.resumoDepreciacao.primeiraCompetencia
+                    ? rotuloCompetencia(
+                        patrimonio.resumoDepreciacao.primeiraCompetencia,
+                      )
+                    : patrimonio.depreciavel
+                      ? "Aguardando disponibilidade"
+                      : "Não se aplica"
+                }
+              />
+              <Dado
+                titulo="Última competência processada"
+                valor={
+                  patrimonio.resumoDepreciacao.ultimaCompetenciaProcessada
+                    ? rotuloCompetencia(
+                        patrimonio.resumoDepreciacao
+                          .ultimaCompetenciaProcessada,
+                      )
+                    : patrimonio.depreciavel
+                      ? "Nenhuma"
+                      : "Não se aplica"
+                }
+              />
+              <Dado
+                titulo="Próxima competência"
+                valor={
+                  patrimonio.resumoDepreciacao.proximaCompetencia
+                    ? rotuloCompetencia(
+                        patrimonio.resumoDepreciacao.proximaCompetencia,
+                      )
+                    : patrimonio.resumoDepreciacao.quantidadePendencias === 0
+                      ? "Sem pendência"
+                      : null
+                }
+              />
+            </dl>
           </section>
         </div>
       )}

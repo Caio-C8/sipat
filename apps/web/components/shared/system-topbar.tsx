@@ -24,7 +24,7 @@ export function SystemTopbar({
             disabled
           />
         </label>
-        <NotificationsMenu />
+        <NotificationsMenu perfil={identidade.perfil} />
         <UserMenu identidade={identidade} />
       </div>
     </header>

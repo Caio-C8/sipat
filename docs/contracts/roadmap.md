@@ -2,13 +2,13 @@
 
 ## CONTRACTS-018 — Classificação depreciável do patrimônio ponta a ponta
 
-**Status:** aprovada para reexecução; executar antes de `DEPRECIACOES-002`.
+**Status:** concluída e validada em 8 de novembro de 2026.
 
 Adiciona `depreciavel` ao patrimônio e implementa a mudança como fatia vertical
 em contratos, banco, API, seed, Web e mobile. Não deve ser executada apenas no
-package compartilhado. Disponibilidade, competências e pendências foram movidas
-para `DEPRECIACOES-002` para eliminar o estado intermediário inválido que causou
-a falha da versão anterior.
+package compartilhado. A entrega foi concluída antes de `DEPRECIACOES-002`, que
+implementou disponibilidade, competências e pendências sobre a classificação
+persistida no patrimônio.
 [Tarefa e critérios](../tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md).
 
 ## CONTRACTS-016 — Idempotência de operações críticas
@@ -233,7 +233,8 @@ pertencem ao servidor e não podem ser promovidos acidentalmente a inputs.
   necessários às operações;
 - params UUID do patrimônio;
 - body estrito de cadastro com a indicação `semNumeroOficial`, dados cadastrais,
-  vínculos e parâmetros iniciais de depreciação obrigatórios;
+  vínculos, classificação depreciável e parâmetros iniciais obrigatórios apenas
+  para patrimônio depreciável;
 - query de listagem baseada no contrato comum de paginação, com padrão 20,
   máximo 50, busca e filtros por status, setor, espécie, natureza e tipo de
   numeração;
@@ -244,6 +245,10 @@ pertencem ao servidor e não podem ser promovidos acidentalmente a inputs.
   de precisão;
 - testes de limites, propriedades extras, transformações, API pública e ausência
   dos campos controlados pelo servidor nos inputs.
+
+**Evolução vigente:** `CONTRACTS-018` adicionou `depreciavel` ao patrimônio e
+tornou os parâmetros iniciais obrigatórios somente quando essa classificação é
+verdadeira; patrimônio não depreciável não envia parâmetros.
 
 **Consumidores afetados**
 

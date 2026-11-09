@@ -83,6 +83,12 @@ export default async function PatrimonioDetalhePage({
         </p>
       </main>
     );
+  const hoje = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
   return (
     <PatrimonioDetalheView
       patrimonio={detalhe.dados}
@@ -97,6 +103,7 @@ export default async function PatrimonioDetalhePage({
       valores={valores}
       diretor={identidade.perfil === "DIRETOR_PATRIMONIO"}
       usuarioId={identidade.id}
+      hoje={hoje}
     />
   );
 }

@@ -416,7 +416,10 @@ test.describe("Autenticação Web", () => {
     await expect(
       panel.getByRole("heading", { name: "Últimas operações" }),
     ).toBeVisible();
-    await expect(panel.getByText("Não implementado")).toHaveCount(2);
+    await expect(
+      panel.getByText("Nenhum alerta disponível para este perfil."),
+    ).toBeVisible();
+    await expect(panel.getByText("Não implementado")).toHaveCount(1);
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
     await expect(notifications).toBeFocused();
