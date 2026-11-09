@@ -6,6 +6,7 @@ import type { EventosFichaResponse, PatrimonioDetalhe } from "@repo/contracts";
 import { PatrimonioDetalheView } from "./patrimonio-detalhe";
 
 vi.mock("./patrimonio-acoes", () => ({ PatrimonioAcoes: () => null }));
+vi.mock("./disponibilidade-uso", () => ({ DisponibilidadeUso: () => null }));
 
 afterEach(cleanup);
 
@@ -80,12 +81,13 @@ describe("PatrimonioDetalheView", () => {
         valores={{ aba: "dados" }}
         diretor={false}
         usuarioId={id}
+        hoje="2026-11-08"
       />,
     );
 
     expect(screen.getByText("Bem depreciável")).toBeTruthy();
     expect(screen.getByText("Não", { selector: "dd" })).toBeTruthy();
-    expect(screen.getByText("Não se aplica")).toBeTruthy();
+    expect(screen.getAllByText("Não se aplica").length).toBeGreaterThan(0);
   });
 
   it("diferencia um histórico consultado sem registros", () => {
@@ -97,6 +99,7 @@ describe("PatrimonioDetalheView", () => {
         valores={{ aba: "historico" }}
         diretor={false}
         usuarioId={id}
+        hoje="2026-11-08"
       />,
     );
 
@@ -115,6 +118,7 @@ describe("PatrimonioDetalheView", () => {
         valores={{ aba: "historico" }}
         diretor={false}
         usuarioId={id}
+        hoje="2026-11-08"
       />,
     );
 

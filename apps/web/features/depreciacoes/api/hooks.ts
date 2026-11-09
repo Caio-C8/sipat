@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ExecutarDepreciacaoPatrimonioResponse,
   ExecutarDepreciacoesEmMassaResponse,
@@ -61,4 +61,36 @@ export function useExecutarDepreciacaoIndividual() {
     [],
   );
   return { pendingId, executar };
+}
+
+export function useResumoPendenciasDepreciacao() {
+  const [dados, setDados] = useState<
+    | Awaited<ReturnType<typeof operacoes.consultarResumoPendencias>>["dados"]
+    | null
+  >(null);
+  const [erro, setErro] = useState<unknown>(null);
+  const [loading, setLoading] = useState(false);
+  const controller = useRef<AbortController | null>(null);
+
+  const carregar = useCallback(async () => {
+    if (controller.current) return;
+    const atual = new AbortController();
+    controller.current = atual;
+    setLoading(true);
+    setErro(null);
+    try {
+      const resposta = await operacoes.consultarResumoPendencias({
+        signal: atual.signal,
+      });
+      setDados(resposta.dados);
+    } catch (falha) {
+      if (!atual.signal.aborted) setErro(falha);
+    } finally {
+      if (controller.current === atual) controller.current = null;
+      if (!atual.signal.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => () => controller.current?.abort(), []);
+  return { dados, erro, loading, carregar };
 }

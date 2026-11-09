@@ -5,9 +5,13 @@ import {
   ExecutarDepreciacaoPatrimonioResponseSchema,
   ExecutarDepreciacoesEmMassaBodySchema,
   ExecutarDepreciacoesEmMassaResponseSchema,
+  ListarCompetenciasDepreciacaoQuerySchema,
+  ListarCompetenciasDepreciacaoResponseSchema,
   ListarDepreciacoesPendentesQuerySchema,
   ListarDepreciacoesPendentesResponseSchema,
   PatrimonioParamsSchema,
+  ConsultarResumoPendenciasDepreciacaoQuerySchema,
+  ResumoPendenciasDepreciacaoResponseSchema,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
 
@@ -21,6 +25,22 @@ const csrf = { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF };
 
 export function criarOperacoesDepreciacoes(client: ApiClient) {
   return {
+    listarCompetencias(opcoes?: OpcoesLeitura) {
+      return client.request({
+        path: "/depreciacoes/competencias",
+        query: ListarCompetenciasDepreciacaoQuerySchema.parse({}),
+        responseSchema: ListarCompetenciasDepreciacaoResponseSchema,
+        ...leitura(opcoes),
+      });
+    },
+    consultarResumoPendencias(opcoes?: OpcoesLeitura) {
+      return client.request({
+        path: "/depreciacoes/pendencias/resumo",
+        query: ConsultarResumoPendenciasDepreciacaoQuerySchema.parse({}),
+        responseSchema: ResumoPendenciasDepreciacaoResponseSchema,
+        ...leitura(opcoes),
+      });
+    },
     listarPendentes(
       query: { competencia: string; pagina?: string; limite?: string },
       opcoes?: OpcoesLeitura,

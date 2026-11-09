@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Bell } from "lucide-react";
+import type { PerfilUsuario } from "@repo/contracts";
+import { rotuloCompetencia } from "@/features/depreciacoes/apresentacao";
+import { useResumoPendenciasDepreciacao } from "@/features/depreciacoes/api/hooks";
 
-export function NotificationsMenu() {
+export function NotificationsMenu({ perfil }: { perfil: PerfilUsuario }) {
   const [open, setOpen] = useState(false);
+  const resumo = useResumoPendenciasDepreciacao();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -50,7 +55,15 @@ export function NotificationsMenu() {
         aria-controls="notifications-panel"
         aria-expanded={open}
         aria-haspopup="dialog"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() =>
+          setOpen((value) => {
+            const proximo = !value;
+            if (proximo && perfil === "DIRETOR_PATRIMONIO") {
+              void resumo.carregar();
+            }
+            return proximo;
+          })
+        }
       >
         <Bell size={18} aria-hidden="true" />
       </button>
@@ -68,7 +81,45 @@ export function NotificationsMenu() {
             <h3 className="text-[11px]" id="pending-notifications-title">
               Pendências recentes
             </h3>
-            <p className="mt-1 text-[11px] text-[#62748e]">Não implementado</p>
+            {perfil !== "DIRETOR_PATRIMONIO" ? (
+              <p className="mt-1 text-[11px] text-[#62748e]">
+                Nenhum alerta disponível para este perfil.
+              </p>
+            ) : resumo.loading ? (
+              <p role="status" className="mt-1 text-[11px] text-[#62748e]">
+                Consultando pendências…
+              </p>
+            ) : resumo.erro ? (
+              <p role="alert" className="mt-1 text-[11px] text-red-800">
+                Não foi possível consultar as pendências. O restante da
+                navegação continua disponível.
+              </p>
+            ) : resumo.dados?.totalPendencias ? (
+              <div className="mt-2 grid gap-2 text-[11px] text-[#314d73]">
+                <p>
+                  {resumo.dados.totalPendencias} pendência(s) em{" "}
+                  {resumo.dados.totalPatrimonios} patrimônio(s).
+                  {resumo.dados.competenciaMaisAntiga
+                    ? ` Mais antiga: ${rotuloCompetencia(resumo.dados.competenciaMaisAntiga)}.`
+                    : ""}
+                </p>
+                <Link
+                  className="font-semibold text-[#245bca] underline"
+                  href={
+                    resumo.dados.competenciaMaisAntiga
+                      ? `/depreciacao?competencia=${resumo.dados.competenciaMaisAntiga}`
+                      : "/depreciacao"
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  Consultar depreciações
+                </Link>
+              </div>
+            ) : (
+              <p role="status" className="mt-1 text-[11px] text-[#62748e]">
+                Não há pendências de depreciação.
+              </p>
+            )}
           </section>
           <section
             className="border-t border-[#dfe7f1] py-2.5"

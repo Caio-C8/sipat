@@ -3,6 +3,7 @@ import {
   BaixarPatrimonioResponseSchema,
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
+  ConfirmarDisponibilidadeUsoResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
   ListarPatrimoniosResponseSchema,
@@ -229,6 +230,27 @@ describe("operações de patrimônios", () => {
       body: { numeroPatrimonioAtual: "123" },
       headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
       responseSchema: SubstituirNumeroPatrimonialResponseSchema,
+    });
+  });
+
+  it("confirma disponibilidade com data civil, idempotência, CSRF e response validada", async () => {
+    const request = vi.fn().mockResolvedValue({});
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+    const body = {
+      dataDisponibilidade: "2026-11-08",
+      chaveIdempotencia: "00000000-0000-4000-8000-000000000010",
+    };
+
+    await operacoes.confirmarDisponibilidadeUso(patrimonioId, body);
+
+    expect(request).toHaveBeenCalledExactlyOnceWith({
+      path: `/patrimonios/${patrimonioId}/disponibilidade-uso`,
+      method: "POST",
+      body,
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      responseSchema: ConfirmarDisponibilidadeUsoResponseSchema,
     });
   });
 });

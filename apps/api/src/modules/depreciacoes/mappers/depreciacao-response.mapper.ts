@@ -32,12 +32,18 @@ export class DepreciacaoResponseMapper {
       vidaUtilRestanteMeses: calculo.vidaUtilRestanteMeses,
       quotaPrevista: calculo.valorDepreciado.toString(),
       atingiraValorResidual: calculo.atingiraValorResidual,
-      primeiraCompetencia: this.competencia(linha.primeiraCompetencia),
+      primeiraCompetencia: DepreciacaoResponseMapper.competencia(
+        linha.primeiraCompetencia,
+      ),
       ultimaCompetenciaProcessada:
         linha.ultimaCompetenciaProcessada === null
           ? null
-          : this.competencia(linha.ultimaCompetenciaProcessada),
-      competenciaEsperada: this.competencia(linha.competenciaEsperada),
+          : DepreciacaoResponseMapper.competencia(
+              linha.ultimaCompetenciaProcessada,
+            ),
+      competenciaEsperada: DepreciacaoResponseMapper.competencia(
+        linha.competenciaEsperada,
+      ),
     };
   }
 

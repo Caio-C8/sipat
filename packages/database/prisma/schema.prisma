@@ -955,14 +955,14 @@ model DepreciacaoPatrimonio {
 }
 
 model DisponibilidadeUsoPatrimonio {
-  id                  String   @id @default(uuid()) @db.Uuid
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   dataDisponibilidade DateTime @map("data_disponibilidade") @db.Date
   patrimonioId        String   @unique(map: "disponibilidades_uso_patrimonio_id_key") @map("patrimonio_id") @db.Uuid
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
   createdById         String   @map("created_by_id") @db.Uuid
 
-  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id], onDelete: Restrict)
-  createdBy  Usuario    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id], onDelete: Restrict, map: "disponibilidades_uso_patrimonio_id_fkey")
+  createdBy  Usuario    @relation(fields: [createdById], references: [id], onDelete: Restrict, map: "disponibilidades_uso_created_by_id_fkey")
 
   @@map("disponibilidades_uso_patrimonio")
 }
@@ -974,8 +974,8 @@ model IdempotenciaDisponibilidadeUso {
   patrimonioId String   @map("patrimonio_id") @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  usuario    Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
-  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id], onDelete: Restrict)
+  usuario    Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Restrict, map: "idempotencias_disponibilidade_usuario_id_fkey")
+  patrimonio Patrimonio @relation(fields: [patrimonioId], references: [id], onDelete: Restrict, map: "idempotencias_disponibilidade_patrimonio_id_fkey")
 
   @@id([usuarioId, chave])
   @@index([patrimonioId], map: "idempotencias_disponibilidade_patrimonio_id_idx")

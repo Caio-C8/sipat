@@ -17,7 +17,17 @@ cookie `HttpOnly`, CSRF e redirects conforme a matriz de
 
 `WEB-SHELL-001` está implementado no grupo `(sistema)`. As opções futuras da
 sidebar permanecem visíveis somente para os perfis permitidos. Opções sem página
-não recebem `href`; busca e feed de notificações continuam explicitamente não implementados.
+não recebem `href`; a busca e as últimas operações do feed continuam
+explicitamente não implementadas. A seção de pendências do sino consulta sob
+demanda o resumo de depreciações somente para o Diretor.
+
+`WEB-DEPRECIACOES-002` integra competências devidas, disponibilidade para uso,
+resumo no detalhe, relatório de pendências e alerta derivado no sino. A seleção
+usa `AAAA-MM` na URL e rótulo localizado sem timezone implícito. A confirmação
+de disponibilidade preserva a chave idempotente em resultado incerto e trata
+os três conflitos públicos sem replay de sucesso. O percurso Chromium cobre
+seleção, ordem, estado vazio, sino, reflow em 390 px e axe; a homologação manual
+com leitor de tela permanece necessária.
 
 `/movimentacoes` e `/movimentacoes/[movimentacaoId]` consultam transferências
 comuns/correções para ambos os perfis; `/movimentacoes/nova` é exclusivo do
@@ -74,8 +84,8 @@ pnpm format:check
 
 ## Relatórios patrimoniais
 
-`/relatorios` está integrado aos nove tipos aprovados, incluindo ficha com
-eventos reais e download PDF binário pelo cliente central.
+`/relatorios` está integrado aos dez tipos aprovados, incluindo pendências de
+depreciação, ficha com eventos reais e download PDF binário pelo cliente central.
 [Contrato de execução e evidências](../../tasks/WEB-RELATORIOS-001-interface.md).
 A stack local foi deixada em execução nas portas 3000/3001, com banco Docker
 isolado em 55420; não foram alterados dados operacionais nem criados commits.

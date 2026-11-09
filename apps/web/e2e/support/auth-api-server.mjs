@@ -34,6 +34,30 @@ const patrimonioTotals = {
   EM_MANUTENCAO: 1,
 };
 
+const comissaoDepreciacao = {
+  id: "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab",
+  nome: "Comissão patrimonial vigente",
+  dataVigenciaInicio: "2026-01-01",
+  dataVigenciaFim: "2026-12-31",
+};
+
+const pendenteDepreciacao = {
+  patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
+  numeroPatrimonio: "1",
+  descricao: "Notebook para depreciação",
+  status: "ATIVO",
+  valorBrutoAtual: "1200.0000000",
+  depreciacaoAcumuladaAtual: "100.0000000",
+  valorLiquidoAtual: "1100.0000000",
+  valorResidual: "120.0000000",
+  vidaUtilRestanteMeses: 55,
+  quotaPrevista: "20.0000000",
+  atingiraValorResidual: false,
+  primeiraCompetencia: "2026-10",
+  ultimaCompetenciaProcessada: null,
+  competenciaEsperada: "2026-10",
+};
+
 function json(response, status, body) {
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -210,6 +234,80 @@ const server = createServer((request, response) => {
       mensagem: "Movimentação não encontrada.",
       erros: [],
       requisicaoId: "mov-e2e",
+    });
+    return;
+  }
+  if (
+    request.method === "GET" &&
+    requestUrl.pathname === "/api/depreciacoes/competencias"
+  ) {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (session !== "director") {
+      json(response, 403, {
+        status: 403,
+        sucesso: false,
+        codigo: "PERFIL_NAO_AUTORIZADO",
+        mensagem: "Perfil não autorizado.",
+        erros: [],
+      });
+      return;
+    }
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Competências consultadas.",
+      dados: {
+        competenciaAtual: "2026-11",
+        competenciaMaisAntigaPendente: "2026-10",
+        competencias: [
+          {
+            competencia: "2026-10",
+            quantidadePendente: 1,
+            quantidadeBloqueadaPorAnterior: 0,
+          },
+          {
+            competencia: "2026-11",
+            quantidadePendente: 1,
+            quantidadeBloqueadaPorAnterior: 1,
+          },
+        ],
+      },
+    });
+    return;
+  }
+  if (
+    request.method === "GET" &&
+    requestUrl.pathname === "/api/depreciacoes/pendentes"
+  ) {
+    const competencia = requestUrl.searchParams.get("competencia");
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Pendências consultadas.",
+      dados: competencia === "2026-10" ? [pendenteDepreciacao] : [],
+      meta: {
+        total: competencia === "2026-10" ? 1 : 0,
+        pagina: 1,
+        limite: 20,
+        ultimaPagina: 1,
+      },
+      resumo: {
+        totalElegiveis: competencia === "2026-10" ? 1 : 0,
+        totalNoValorResidual: 0,
+      },
+    });
+    return;
+  }
+  if (
+    request.method === "GET" &&
+    requestUrl.pathname === "/api/reavaliacoes/opcoes/comissoes"
+  ) {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Comissões consultadas.",
+      dados: [comissaoDepreciacao],
+      meta: { total: 1, pagina: 1, limite: 50, ultimaPagina: 1 },
     });
     return;
   }

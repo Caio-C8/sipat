@@ -5,6 +5,8 @@ import {
   ConsultarPatrimonioResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
+  ConfirmarDisponibilidadeUsoBodySchema,
+  ConfirmarDisponibilidadeUsoResponseSchema,
   ListarEspeciesQuerySchema,
   ListarEspeciesResponseSchema,
   ListarOpcoesComissoesBaixaQuerySchema,
@@ -16,7 +18,6 @@ import {
   ListarSetoresQuerySchema,
   ListarSetoresResponseSchema,
   PatrimonioParamsSchema,
-  STATUS_PATRIMONIO,
   SubstituirNumeroPatrimonialBodySchema,
   SubstituirNumeroPatrimonialResponseSchema,
   VALOR_CABECALHO_CSRF,
@@ -138,6 +139,20 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
     });
   }
 
+  function confirmarDisponibilidadeUso(
+    patrimonioId: string,
+    body: { dataDisponibilidade: string; chaveIdempotencia: string },
+  ) {
+    const params = PatrimonioParamsSchema.parse({ patrimonioId });
+    return apiClient.request({
+      path: `/patrimonios/${params.patrimonioId}/disponibilidade-uso`,
+      method: "POST",
+      body: ConfirmarDisponibilidadeUsoBodySchema.parse(body),
+      headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+      responseSchema: ConfirmarDisponibilidadeUsoResponseSchema,
+    });
+  }
+
   return {
     listar,
     especies(query: ListarEspeciesQueryInput, signal?: AbortSignal) {
@@ -186,6 +201,7 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
     listarOpcoesComissoesBaixa,
     baixar,
     substituirNumero,
+    confirmarDisponibilidadeUso,
     obterResumoDashboard,
   };
 }

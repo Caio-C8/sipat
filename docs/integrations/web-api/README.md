@@ -95,11 +95,21 @@ atualiza apenas a leitura relacionada e oferece a navegação existente, sem
 replay de sucesso, polling ou retry automático. Consulte
 [WEB-IDEMPOTENCIA-001](../../tasks/WEB-IDEMPOTENCIA-001-adaptar-conflitos-operacoes.md).
 
-`/depreciacao` consulta `GET /depreciacoes/pendentes` no Server com competência
-corrente, paginação, cookie encaminhado e cache desabilitado. A comissão
-vigente vem do endpoint existente de opções da reavaliação. As execuções
-individual e em lote validam contratos compartilhados, enviam CSRF e não
-repetem automaticamente uma mutação cujo resultado não foi confirmado.
+`/depreciacao` consulta `GET /depreciacoes/competencias` e preserva a seleção
+canônica `AAAA-MM` na URL; a pendência mais antiga é o padrão. A lista de
+`GET /depreciacoes/pendentes` usa a competência selecionada, paginação, cookie
+encaminhado e cache desabilitado. A comissão vigente vem do endpoint de opções
+da reavaliação. As execuções individual e em lote validam contratos
+compartilhados, enviam CSRF e não repetem automaticamente uma mutação cujo
+resultado não foi confirmado.
+
+O detalhe confirma `POST /patrimonios/:id/disponibilidade-uso` somente para o
+Diretor, com data civil, CSRF e chave idempotente preservada enquanto o
+resultado estiver incerto. Administrador e Diretor consultam o fato e o resumo
+contábil retornados no detalhe. O sino do Diretor consulta
+`GET /depreciacoes/pendencias/resumo` apenas ao abrir; falha desse aviso não
+bloqueia o shell. O relatório `pendencias-depreciacao` continua separado do
+histórico de depreciações e usa as operações tabular e PDF existentes.
 
 ## Transporte HTTP
 

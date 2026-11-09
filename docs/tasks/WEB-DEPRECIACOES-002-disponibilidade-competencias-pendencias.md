@@ -1,6 +1,6 @@
 # `WEB-DEPRECIACOES-002` — Disponibilidade, competências e avisos na Web
 
-**Status:** aprovada
+**Status:** implementada em 8 de novembro de 2026
 
 ## Objetivo
 
@@ -48,6 +48,8 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
   tratar os três conflitos públicos de idempotência;
 - após sucesso, atualizar detalhe, histórico e indicadores sem presumir estado
   local que a response não confirmou.
+- após concluir uma competência, consultar novamente o catálogo e abrir a
+  próxima competência pendente, sem manter na URL uma competência indisponível.
 
 ### Competência e pendências
 
@@ -95,20 +97,39 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 
 ## Critérios de aceite
 
-- [ ] detalhe usa `Patrimonio.depreciavel` e não infere classificação;
-- [ ] Diretor registra disponibilidade uma vez e vê primeira competência;
-- [ ] Administrador consulta o fato, mas não recebe a ação;
-- [ ] datas futuras, conflito, sessão expirada, estado incerto e duplo clique
+- [x] detalhe usa `Patrimonio.depreciavel` e não infere classificação;
+- [x] Diretor registra disponibilidade uma vez e vê primeira competência;
+- [x] Administrador consulta o fato, mas não recebe a ação;
+- [x] datas futuras, conflito, sessão expirada, estado incerto e duplo clique
       possuem feedback seguro;
-- [ ] seletor exibe `Abril de 2026`, preserva `2026-04` na URL e nunca oferece
+- [x] seletor exibe `Abril de 2026`, preserva `2026-04` na URL e nunca oferece
       mês futuro;
-- [ ] padrão seleciona a pendência mais antiga e mudança de competência atualiza
+- [x] padrão seleciona a pendência mais antiga e mudança de competência atualiza
       lista, resumo e paginação;
-- [ ] detalhe, relatório e sino apontam para a mesma semântica de pendência;
-- [ ] indisponível, não depreciável, sem pendência e erro não são confundidos;
-- [ ] teclado, foco, leitor de tela, zoom e viewports estreita/ampla são
-      verificados;
-- [ ] lint, typecheck, testes, build e integração Web–API passam.
+- [x] detalhe, relatório e sino apontam para a mesma semântica de pendência;
+- [x] indisponível, não depreciável, sem pendência e erro não são confundidos;
+- [x] teclado, foco, axe e viewports estreita/ampla são verificados; a
+      homologação manual com leitor de tela permanece fora da automação;
+- [x] lint, typecheck, testes, build e o boundary Web–API com mocks estritos
+      passam.
+
+## Handoff de implementação
+
+- a confirmação de disponibilidade usa data civil limitada ao dia atual em
+  `America/Sao_Paulo`, mostra a primeira competência e revalida o detalhe;
+- o seletor consulta o catálogo da API, mantém a competência na URL e comunica
+  bloqueio por competência anterior sem criar seleção arbitrária de bens;
+- o relatório `Pendências de depreciação` possui filtro mensal opcional,
+  paginação, estado vazio e PDF próprios;
+- o sino consulta o resumo somente ao abrir e mantém `Últimas operações` como
+  não implementado;
+- testes unitários cobrem apresentação sem timezone, operações HTTP e
+  preservação da tentativa idempotente; Playwright cobre o fluxo principal,
+  reflow em 390 px e axe;
+- a CI padrão foi reproduzida integralmente; os cenários `*-real.e2e.ts`,
+  condicionados a uma infraestrutura descartável própria, permaneceram
+  ignorados como previsto. O fluxo desta interface contra API e PostgreSQL
+  reais ainda requer execução opt-in.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -130,4 +151,5 @@ depreciações, no detalhe, em relatório próprio e no menu de notificações.
 
 ## Pendências ou decisões bloqueantes
 
-- Nenhuma.
+- Nenhuma pendência de implementação. Permanecem como homologação a execução
+  opt-in Web–API–PostgreSQL real e a avaliação manual com leitor de tela.

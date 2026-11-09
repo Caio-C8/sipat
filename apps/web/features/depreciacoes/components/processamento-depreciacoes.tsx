@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   Check,
   CircleAlert,
   Search,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import type {
   ComissaoOpcaoReavaliacao,
+  CompetenciaDepreciacao,
   ListarDepreciacoesPendentesResponse,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
   useExecutarDepreciacaoIndividual,
   useExecutarDepreciacoesEmMassa,
 } from "../api/hooks";
+import { rotuloCompetencia } from "../apresentacao";
 
 type ItemPendente = ListarDepreciacoesPendentesResponse["dados"][number];
 type AlvoConfirmacao =
@@ -57,14 +58,16 @@ function mensagemErro(erro: unknown) {
       return "Sua sessão expirou. Entre novamente para continuar.";
     if (erro.status === 403)
       return "Seu perfil não tem permissão para processar depreciações.";
-    if (erro.codigo === "COMPETENCIA_NAO_CORRENTE")
-      return "A competência mudou. Atualize a página para consultar o mês atual.";
+    if (erro.codigo === "COMPETENCIA_FORA_INTERVALO")
+      return "A competência não pode ser futura nem anterior ao início da obrigação.";
+    if (erro.codigo === "COMPETENCIA_FORA_ORDEM")
+      return "Existe uma competência anterior pendente. Processe-a antes de continuar.";
     if (erro.codigo === "COMISSAO_INVALIDA")
       return "A comissão selecionada não está vigente. Atualize a página e escolha uma comissão vigente.";
     if (erro.codigo === "CONFIRMACAO_VALOR_RESIDUAL_NECESSARIA")
       return "Confirme que os bens que já chegaram ao valor residual serão ignorados e tente novamente.";
     if (erro.codigo === "ESTADO_CONTABIL_INCONSISTENTE")
-      return "A API encontrou dados contábeis inconsistentes. Nenhum processamento parcial foi mantido.";
+      return "Foram encontrados dados contábeis inconsistentes. Nenhuma alteração foi concluída.";
     if (erro.codigo === "CONFLITO_CONCORRENTE")
       return "Outro processamento alterou os bens ao mesmo tempo. Atualize a consulta antes de tentar novamente.";
     if (
@@ -89,6 +92,9 @@ function motivoInelegibilidade(motivo: string) {
       "A depreciação começa no mês seguinte ao cadastro dos parâmetros",
     JA_DEPRECIADO_NA_COMPETENCIA: "Já depreciado nesta competência",
     VALOR_RESIDUAL_ATINGIDO: "Valor residual já atingido",
+    NAO_DEPRECIAVEL: "Bem não depreciável",
+    INDISPONIVEL_PARA_USO: "Disponibilidade para uso não confirmada",
+    COMPETENCIA_ANTERIOR_PENDENTE: "Competência anterior pendente",
   };
   return motivos[motivo] ?? "O patrimônio não é elegível nesta competência.";
 }
@@ -98,13 +104,18 @@ export function ProcessamentoDepreciacoes({
   competencia,
   comissoes,
   erroComissoes,
+  competencias,
+  competenciaMaisAntigaPendente,
 }: {
   resposta: ListarDepreciacoesPendentesResponse;
   competencia: string;
   comissoes: ComissaoOpcaoReavaliacao[];
   erroComissoes: string;
+  competencias: CompetenciaDepreciacao[];
+  competenciaMaisAntigaPendente: string | null;
 }) {
   const router = useRouter();
+  const [navegando, iniciarNavegacao] = useTransition();
   const lote = useExecutarDepreciacoesEmMassa();
   const individual = useExecutarDepreciacaoIndividual();
   const mutacaoEmAndamento = useRef(false);
@@ -136,6 +147,7 @@ export function ProcessamentoDepreciacoes({
     setErro("");
     setSucesso("");
     try {
+      let avancarCompetencia = alvo.tipo === "LOTE";
       if (alvo.tipo === "LOTE") {
         const resultado = await lote.executar({
           competencia,
@@ -152,6 +164,9 @@ export function ProcessamentoDepreciacoes({
           `Parâmetro ainda não iniciado: ${dados.quantidadesInelegiveis.dataInicioNaoAtingida}`,
           `Já depreciados nesta competência: ${dados.quantidadesInelegiveis.jaDepreciadoNaCompetencia}`,
           `Já no valor residual: ${dados.quantidadesInelegiveis.valorResidualAtingido}`,
+          `Não depreciáveis: ${dados.quantidadesInelegiveis.naoDepreciavel}`,
+          `Sem disponibilidade: ${dados.quantidadesInelegiveis.indisponivelParaUso}`,
+          `Com competência anterior pendente: ${dados.quantidadesInelegiveis.competenciaAnteriorPendente}`,
         ]);
       } else {
         const resultado = await individual.executar(alvo.item.patrimonioId, {
@@ -160,6 +175,7 @@ export function ProcessamentoDepreciacoes({
           confirmarIgnorarValorResidual: false,
         });
         if (resultado.dados.resultado === "DEPRECIADO") {
+          avancarCompetencia = resposta.resumo.totalElegiveis === 1;
           setSucesso(
             `${alvo.item.numeroPatrimonio} processado: ${moeda(resultado.dados.valorContabilAnterior)} − ${moeda(resultado.dados.valorDepreciado)} = ${moeda(resultado.dados.valorContabilNovo)}.`,
           );
@@ -171,7 +187,11 @@ export function ProcessamentoDepreciacoes({
       }
       setAlvo(null);
       setConfirmarResidual(false);
-      router.refresh();
+      if (avancarCompetencia) {
+        iniciarNavegacao(() => router.replace("/depreciacao"));
+      } else {
+        router.refresh();
+      }
     } catch (falha) {
       setErro(mensagemErro(falha));
       setAlvo(null);
@@ -180,14 +200,10 @@ export function ProcessamentoDepreciacoes({
     }
   }
 
-  const tituloCompetencia = (() => {
-    const [ano, mes] = competencia.split("-").map(Number);
-    return new Intl.DateTimeFormat("pt-BR", {
-      month: "long",
-      year: "numeric",
-      timeZone: "UTC",
-    }).format(new Date(Date.UTC(ano!, mes! - 1, 1)));
-  })();
+  const tituloCompetencia = rotuloCompetencia(competencia);
+  const competenciaSelecionada = competencias.find(
+    (item) => item.competencia === competencia,
+  )!;
 
   return (
     <>
@@ -196,7 +212,7 @@ export function ProcessamentoDepreciacoes({
           <h1 className="text-2xl font-bold text-[#111d34] sm:text-3xl">
             Depreciação
           </h1>
-          <p className="mt-1 text-sm text-[#7188a5]">
+          <p className="mt-1 text-sm text-[#526b8c]">
             Consulte os bens elegíveis e processe a competência de{" "}
             {tituloCompetencia}, individualmente ou em lote.
           </p>
@@ -208,44 +224,74 @@ export function ProcessamentoDepreciacoes({
         >
           <label className="grid gap-2 text-xs font-medium text-[#526b8c]">
             Competência
-            <input
+            <select
               className={campo}
-              type="month"
               value={competencia}
-              readOnly
-              aria-readonly="true"
-            />
+              disabled={pendente || navegando}
+              onChange={(evento) =>
+                iniciarNavegacao(() =>
+                  router.push(
+                    `/depreciacao?competencia=${evento.target.value}`,
+                  ),
+                )
+              }
+            >
+              {competencias.map((item) => (
+                <option key={item.competencia} value={item.competencia}>
+                  {rotuloCompetencia(item.competencia)} —{" "}
+                  {item.quantidadePendente} pendente(s)
+                </option>
+              ))}
+            </select>
+            {navegando ? (
+              <span role="status">Carregando competência…</span>
+            ) : null}
           </label>
           <div>
             <h2 className="font-bold text-[#203b61]">
               Método linear · cálculo automático
             </h2>
-            <p className="mt-2 text-sm text-[#7188a5]">
-              Os parâmetros vêm do cadastro do patrimônio. A competência
-              processável é sempre o mês atual.
+            <p className="mt-2 text-sm text-[#526b8c]">
+              Os valores são calculados automaticamente com base nos parâmetros
+              cadastrados para cada patrimônio.
             </p>
           </div>
         </section>
+
+        {competenciaSelecionada.quantidadeBloqueadaPorAnterior > 0 ? (
+          <div
+            role="status"
+            className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+          >
+            {competenciaSelecionada.quantidadeBloqueadaPorAnterior} bem(ns)
+            dependem de uma competência anterior. Processe primeiro{" "}
+            {competenciaMaisAntigaPendente
+              ? rotuloCompetencia(competenciaMaisAntigaPendente)
+              : "a pendência mais antiga"}
+            .
+          </div>
+        ) : null}
 
         <section
           className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
           aria-label="Resumo da competência"
         >
           <article className="rounded-lg border border-[#dfe7f1] bg-white p-4">
-            <p className="text-xs text-[#7188a5]">Bens elegíveis</p>
+            <p className="text-xs text-[#526b8c]">Bens elegíveis</p>
             <p className="mt-1 text-2xl font-bold text-[#203b61]">
               {resposta.resumo.totalElegiveis}
             </p>
-            <p className="mt-1 text-xs text-[#7188a5]">
-              A API revalida todo o acervo ao confirmar o lote.
+            <p className="mt-1 text-xs text-[#526b8c]">
+              Todos os bens desta competência serão conferidos novamente antes
+              da conclusão.
             </p>
           </article>
           <article className="rounded-lg border border-[#dfe7f1] bg-white p-4">
-            <p className="text-xs text-[#7188a5]">Na página atual</p>
+            <p className="text-xs text-[#526b8c]">Na página atual</p>
             <p className="mt-1 text-2xl font-bold text-[#2863ec]">
               {resposta.dados.length}
             </p>
-            <p className="mt-1 text-xs text-[#7188a5]">
+            <p className="mt-1 text-xs text-[#526b8c]">
               A quota prevista aparece por patrimônio na lista.
             </p>
           </article>
@@ -299,9 +345,9 @@ export function ProcessamentoDepreciacoes({
               </p>
             ) : null}
           </div>
-          <p className="text-xs leading-5 text-[#7188a5]">
-            A comissão é obrigatória e será validada novamente pela API antes de
-            gravar o processamento.
+          <p className="text-xs leading-5 text-[#526b8c]">
+            A comissão é obrigatória e precisa estar vigente na data do
+            processamento.
           </p>
         </section>
 
@@ -342,13 +388,13 @@ export function ProcessamentoDepreciacoes({
               <h2 id="bens-elegiveis-heading" className="text-lg font-bold">
                 Bens elegíveis para depreciação
               </h2>
-              <p className="mt-1 text-sm text-[#7188a5]">
+              <p className="mt-1 text-sm text-[#526b8c]">
                 {resposta.meta.total} bem(ns) nesta competência
               </p>
             </div>
             <label className="relative w-full sm:max-w-sm">
               <span className="sr-only">Pesquisar nesta página</span>
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#7188a5]" />
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#526b8c]" />
               <input
                 className={`${campo} pl-9`}
                 type="search"
@@ -361,7 +407,7 @@ export function ProcessamentoDepreciacoes({
           {elegiveis.length === 0 ? (
             <p
               role="status"
-              className="rounded-md bg-[#f7f9fc] p-8 text-center text-sm text-[#7188a5]"
+              className="rounded-md bg-[#f7f9fc] p-8 text-center text-sm text-[#526b8c]"
             >
               {resposta.dados.length
                 ? "Nenhum bem desta página corresponde à busca."
@@ -375,7 +421,7 @@ export function ProcessamentoDepreciacoes({
               tabIndex={0}
             >
               <table className="w-full min-w-[980px] text-left text-sm">
-                <thead className="bg-[#f7f9fc] text-xs uppercase text-[#7188a5]">
+                <thead className="bg-[#f7f9fc] text-xs uppercase text-[#526b8c]">
                   <tr>
                     <th scope="col" className="p-3">
                       Patrimônio / bem
@@ -407,7 +453,7 @@ export function ProcessamentoDepreciacoes({
                         <strong className="text-[#203b61]">
                           {item.descricao}
                         </strong>
-                        <small className="mt-1 block text-[#7188a5]">
+                        <small className="mt-1 block text-[#526b8c]">
                           {item.numeroPatrimonio}
                         </small>
                       </td>
@@ -417,7 +463,7 @@ export function ProcessamentoDepreciacoes({
                       </td>
                       <td className="p-3 font-bold text-[#2863ec]">
                         {moeda(item.quotaPrevista)}
-                        <small className="mt-1 block font-normal text-[#7188a5]">
+                        <small className="mt-1 block font-normal text-[#526b8c]">
                           {item.vidaUtilRestanteMeses} meses restantes
                         </small>
                       </td>
@@ -449,7 +495,7 @@ export function ProcessamentoDepreciacoes({
             </div>
           )}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4ebf4] pt-4">
-            <p className="max-w-2xl text-xs leading-5 text-[#7188a5]">
+            <p className="max-w-2xl text-xs leading-5 text-[#526b8c]">
               O processamento em lote inclui todos os bens elegíveis da
               competência, mesmo os que não aparecem nesta página. A operação é
               confirmada como uma unidade.
@@ -463,7 +509,7 @@ export function ProcessamentoDepreciacoes({
                   {resposta.meta.pagina > 1 ? (
                     <Link
                       className="underline"
-                      href={`/depreciacao?pagina=${resposta.meta.pagina - 1}`}
+                      href={`/depreciacao?competencia=${competencia}&pagina=${resposta.meta.pagina - 1}`}
                     >
                       Anterior
                     </Link>
@@ -476,7 +522,7 @@ export function ProcessamentoDepreciacoes({
                   {resposta.meta.pagina < resposta.meta.ultimaPagina ? (
                     <Link
                       className="underline"
-                      href={`/depreciacao?pagina=${resposta.meta.pagina + 1}`}
+                      href={`/depreciacao?competencia=${competencia}&pagina=${resposta.meta.pagina + 1}`}
                     >
                       Próxima
                     </Link>
@@ -519,21 +565,6 @@ export function ProcessamentoDepreciacoes({
             </label>
           ) : null}
         </section>
-
-        <aside className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[#eef5ff] p-4 text-sm text-[#38577f]">
-          <div>
-            <h2 className="font-semibold">Parâmetros de depreciação</h2>
-            <p className="mt-1">
-              A reavaliação é a operação que altera valor bruto, residual e vida
-              útil do bem.
-            </p>
-          </div>
-          <Button asChild variant="outline" className="min-h-10 gap-2">
-            <Link href="/reavaliacoes">
-              Consultar reavaliações <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-        </aside>
       </main>
 
       <Dialog
@@ -551,7 +582,7 @@ export function ProcessamentoDepreciacoes({
             </DialogTitle>
             <DialogDescription>
               {alvo?.tipo === "LOTE"
-                ? `A API recalculará todos os bens elegíveis da competência ${competencia} e registrará o resultado atomicamente.`
+                ? `Todos os bens elegíveis de ${tituloCompetencia} serão conferidos novamente e processados juntos.`
                 : `Será registrada a quota da competência ${competencia} para ${alvo?.tipo === "INDIVIDUAL" ? `${alvo.item.numeroPatrimonio} · ${alvo.item.descricao}` : "o bem selecionado"}.`}
             </DialogDescription>
           </DialogHeader>

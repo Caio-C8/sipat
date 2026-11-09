@@ -42,8 +42,11 @@ fronteiras entre UI, contratos e integração HTTP.
   prévia e confirmação na API real; o percurso Chromium com PostgreSQL
   isolado está em
   [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md);
-- `/depreciacao` consulta os bens elegíveis da competência atual e permite ao
-  Diretor executar depreciações individuais ou em lote pela API;
+- `/depreciacao` seleciona pela URL as competências devidas, prioriza a mais
+  antiga e permite ao Diretor executar depreciações individuais ou em lote;
+- o detalhe patrimonial confirma e exibe a disponibilidade para uso, resume
+  primeira, última e próxima competência e liga para a pendência; o relatório
+  e o sino do Diretor usam a mesma semântica derivada de pendências;
 - `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
   devolução parcial na API real; o percurso com PostgreSQL isolado está em
   [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md);
