@@ -82,6 +82,14 @@ navegador em 390×844 e comparados quanto a hierarquia, cards e ações. A
 comparação visual da implementação executada, tecnologias assistivas e
 dispositivos reais permanecem pendentes.
 
+`MOBILE-PATRIMONIOS-003` foi concluída dentro de
+[CONTRACTS-018](../../tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md).
+O cadastro e a revisão agora enviam a classificação obrigatória do patrimônio;
+a seleção depreciável exige vida útil e residual, enquanto a seleção não
+depreciável limpa e omite os parâmetros. O detalhe exibe a classificação
+persistida sem inferi-la da espécie. A entrega integrada passou nas verificações
+de contratos, API e mobile registradas na tarefa.
+
 `MOBILE-IDEMPOTENCIA-001` protegeu a confirmação desse cadastro com uma chave
 UUID por tentativa lógica. Timeout, rede, response inválida e operação ainda em
 processamento preservam a chave; somente uma edição posterior a erro conclusivo

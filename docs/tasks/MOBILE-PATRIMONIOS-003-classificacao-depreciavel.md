@@ -1,6 +1,6 @@
 # `MOBILE-PATRIMONIOS-003` — Classificação depreciável incorporada
 
-**Status:** incorporada a `CONTRACTS-018`; não executar separadamente
+**Status:** concluída em 8 de novembro de 2026 por incorporação a `CONTRACTS-018`
 
 ## Motivo
 
@@ -34,5 +34,6 @@ fatia vertical de
 - Estado anterior: [MOBILE-PATRIMONIOS-002](./MOBILE-PATRIMONIOS-002-cadastrar-patrimonio.md).
 - Integração: [Mobile–API](../integrations/mobile-api/README.md).
 
-Este arquivo permanece apenas para rastreabilidade. O implementador não deve
-abrir uma entrega ou validação independente para `MOBILE-PATRIMONIOS-003`.
+Este arquivo permanece apenas para rastreabilidade. O escopo foi implementado e
+validado dentro de `CONTRACTS-018`; não existe entrega independente pendente
+para `MOBILE-PATRIMONIOS-003`.
