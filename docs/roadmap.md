@@ -1549,6 +1549,10 @@ subconjuntos e a resposta em massa contém somente agregados. Lint, typecheck e
 Especificação de execução:
 [CONTRACTS-011](./tasks/CONTRACTS-011-contratos-depreciacoes-patrimoniais.md).
 
+**Evolução vigente:** `DEPRECIACOES-002` substituiu a limitação à competência
+corrente por competências devidas até o mês atual, sempre processadas em ordem,
+e acrescentou os contratos de disponibilidade e pendências.
+
 ## DEPRECIACOES-001 — Consultar e executar depreciações na API
 
 **Status:** concluído
@@ -1612,22 +1616,26 @@ plano da consulta com volume representativo.
 Especificação de execução:
 [DEPRECIACOES-001](./tasks/DEPRECIACOES-001-consultar-executar-depreciacoes.md).
 
+**Evolução vigente:** as garantias de cálculo, atomicidade e concorrência desta
+entrega foram preservadas, mas `DEPRECIACOES-002` passou a exigir disponibilidade
+para uso e permite regularizar competências passadas devidas sem saltos.
+
 ## Evolução da depreciação — disponibilidade, competências e pendências
 
-**Status:** objetivos 1 e 2 concluídos; objetivo 3 pendente.
+**Status:** concluída em 8 de novembro de 2026.
 
 Esta evolução substitui a data inicial livre pelo fato auditável de
 disponibilidade para uso, permite regularizar competências devidas em ordem e
 torna pendências visíveis. O banco ainda não possui dados de produção; não há
 backfill legado, mas o seed geral deve acompanhar o novo schema.
 
-| Ordem | Objetivo                                                                                          | Resultado                                                                  | Dependência                 |
-| ----- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------- |
-| 1     | [`CONTRACTS-018`](./tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)   | classificação no patrimônio ponta a ponta, incluindo banco, API e clientes | concluído                   |
-| 2     | [`DEPRECIACOES-002`](./tasks/DEPRECIACOES-002-disponibilidade-competencias-integridade.md)        | disponibilidade, competências, integridade, relatórios e seed              | concluído                   |
-| 3     | [`WEB-DEPRECIACOES-002`](./tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md) | detalhe, seletor localizado, relatório e alerta no sino                    | objetivos 1–2 implementados |
+| Ordem | Objetivo                                                                                          | Resultado                                                                  | Status    |
+| ----- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------- |
+| 1     | [`CONTRACTS-018`](./tasks/CONTRACTS-018-disponibilidade-competencias-pendencias-depreciacao.md)   | classificação no patrimônio ponta a ponta, incluindo banco, API e clientes | concluído |
+| 2     | [`DEPRECIACOES-002`](./tasks/DEPRECIACOES-002-disponibilidade-competencias-integridade.md)        | disponibilidade, competências, integridade, relatórios e seed              | concluído |
+| 3     | [`WEB-DEPRECIACOES-002`](./tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md) | detalhe, seletor localizado, relatório e alerta no sino                    | concluído |
 
-### Resultado integrado esperado
+### Resultado integrado entregue
 
 - patrimônio declara explicitamente se é depreciável;
 - bem pode ser cadastrado sem disponibilidade e sem competência devida;
