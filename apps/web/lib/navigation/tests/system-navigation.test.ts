@@ -15,6 +15,7 @@ describe("catálogo de navegação do sistema", () => {
       "/patrimonios/novo",
       "/cadastros",
       "/movimentacoes",
+      "/inventarios",
       "/emprestimos",
       "/manutencoes",
       "/reavaliacoes",

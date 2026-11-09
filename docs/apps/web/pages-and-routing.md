@@ -15,6 +15,8 @@ A aplicação Web do SIPAT expõe:
   patrimoniais para os dois perfis;
 - `/depreciacao`: consulta paginada da competência atual e execução individual
   ou em lote, exclusiva do Diretor de Patrimônio;
+- `/inventarios` e `/inventarios/[inventarioId]`: consulta para Administrador e
+  Diretor; abertura global e correções de divergências somente pelo Diretor;
 - `/cadastros`: processos de compra e notas fiscais integrados para consulta
   e edição; o Administrador também pode incluir notas novas;
 - `/cadastros/especies`, `/cadastros/naturezas`, `/cadastros/comissoes` e
@@ -68,6 +70,12 @@ recebem link. Movimentações está marcado como implementado e inclui suas pág
 `WEB-DASHBOARD-001` adicionou `loading.tsx` ao segmento e integrou os totais
 geral e por status por uma operação Server. Erro de integração e zero registros
 são estados distintos da página.
+
+Na Web, inventários são apresentados em escopo global, conforme o contrato de
+criação: setores ativos e bens ativos são incluídos no momento da abertura. A
+conferência e a conclusão continuam no aplicativo móvel. Correções pendentes
+podem ser registradas pelo Diretor enquanto o inventário não estiver
+finalizado.
 
 ## Matriz implementada por WEB-AUTH-002
 

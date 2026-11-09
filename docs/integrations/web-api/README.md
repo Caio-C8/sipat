@@ -103,6 +103,14 @@ da reavaliação. As execuções individual e em lote validam contratos
 compartilhados, enviam CSRF e não repetem automaticamente uma mutação cujo
 resultado não foi confirmado.
 
+Em inventários, as páginas Server consultam lista, detalhe e itens com o cookie
+encaminhado e cache desabilitado. A abertura usa `POST /inventarios`, contrato
+compartilhado e chave idempotente preservada ao repetir o mesmo formulário; a
+API inclui setores e bens ativos globalmente no momento da criação. Correções
+usam `POST /inventarios/:id/itens/:itemId/correcoes` com CSRF. A Web permite
+essa mutação apenas ao Diretor e bloqueia inventários finalizados; conferência
+e conclusão de setores ficam no aplicativo móvel.
+
 O detalhe confirma `POST /patrimonios/:id/disponibilidade-uso` somente para o
 Diretor, com data civil, CSRF e chave idempotente preservada enquanto o
 resultado estiver incerto. Administrador e Diretor consultam o fato e o resumo
