@@ -108,8 +108,10 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     label: "Inventário",
     icon: ClipboardList,
     grupo: "principal",
-    perfis: APENAS_DIRETOR,
-    implementado: false,
+    perfis: TODOS_PERFIS,
+    implementado: true,
+    href: "/inventarios",
+    breadcrumb: ["Inventários", "Visão geral"],
   },
   {
     id: "emprestimos",
@@ -281,6 +283,7 @@ export function encontrarNavegacaoPorCaminho(
       (item.href === "/movimentacoes" &&
         pathname.startsWith("/movimentacoes/")) ||
       (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")) ||
+      (item.href === "/inventarios" && pathname.startsWith("/inventarios/")) ||
       (item.href === "/cadastros/setores" &&
         pathname.startsWith("/cadastros/setores/")) ||
       (item.href === "/configuracoes" &&

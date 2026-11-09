@@ -44,6 +44,10 @@ fronteiras entre UI, contratos e integração HTTP.
   [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md);
 - `/depreciacao` seleciona pela URL as competências devidas, prioriza a mais
   antiga e permite ao Diretor executar depreciações individuais ou em lote;
+- `/inventarios` permite a Administrador e Diretor consultar inventários; o
+  Diretor pode abrir inventários globais e resolver divergências pendentes.
+  A conferência de bens e setores permanece no aplicativo móvel; inventário
+  finalizado é somente leitura na Web;
 - o detalhe patrimonial confirma e exibe a disponibilidade para uso, resume
   primeira, última e próxima competência e liga para a pendência; o relatório
   e o sino do Diretor usam a mesma semântica derivada de pendências;
