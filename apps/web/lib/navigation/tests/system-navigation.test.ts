@@ -20,6 +20,7 @@ describe("catálogo de navegação do sistema", () => {
       "/reavaliacoes",
       "/depreciacao",
       "/relatorios",
+      "/usuarios",
       "/cadastros/responsaveis",
       "/cadastros/setores",
       "/cadastros/comissoes",

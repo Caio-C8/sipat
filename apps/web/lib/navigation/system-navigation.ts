@@ -182,7 +182,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: UserRoundCog,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/usuarios",
+    breadcrumb: ["Configurações", "Usuários"],
   },
   {
     id: "responsaveis",

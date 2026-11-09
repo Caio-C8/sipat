@@ -22,6 +22,8 @@ A aplicação Web do SIPAT expõe:
 - `/cadastros/setores`, `/cadastros/setores/novo` e
   `/cadastros/setores/[setorId]`: consulta, criação, edição, situação e bens
   vinculados reais, sob a proteção administrativa existente;
+- `/usuarios`, `/usuarios/novo`, `/usuarios/[usuarioId]` e
+  `/usuarios/[usuarioId]/editar`: gestão administrativa integrada de usuários;
 - `/movimentacoes` e `/movimentacoes/[movimentacaoId]`: consulta para ambos os perfis;
 - `/movimentacoes/nova`: registro em três etapas somente pelo diretor;
 - `/api/health`: health check da camada Web;

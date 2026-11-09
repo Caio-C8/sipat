@@ -87,10 +87,12 @@ geral ilustrativa para `/dashboard`, protegida para os dois perfis.
 `WEB-SHELL-001` moveu a proteção e a composição visual das páginas autenticadas
 para o layout do grupo `(sistema)` sem alterar a URL pública.
 
-Os contratos e endpoints administrativos de usuários existem no backend, mas
-ainda não possuem consumidor Web. Login, logout, primeiro acesso e consumo de
-`/auth/me` já possuem integração; gestão de usuários permanece no objetivo
-`WEB-USERS-001`.
+`/usuarios`, `/usuarios/novo`, `/usuarios/[usuarioId]` e
+`/usuarios/[usuarioId]/editar` integram listagem paginada, filtros, consulta,
+criação, edição e situação à API administrativa. O acesso é restrito ao
+Administrador e a API continua sendo a autoridade final. O contrato de criação
+recebe nome, e-mail, senha inicial e perfil; vínculo com funcionário/setor não
+existe nesse contrato.
 
 ## Princípios
 

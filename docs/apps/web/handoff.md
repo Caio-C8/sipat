@@ -9,8 +9,10 @@ acesso, health check, proxy para a API, clientes HTTP, configuração pública,
 segurança, observabilidade, primitives visuais e testes de infraestrutura,
 autenticação e dashboard.
 
-A gestão Web de usuários continua pendente. Movimentações possui fluxo operacional integrado. Os contratos e endpoints administrativos
-de usuários estão prontos no backend, mas não possuem consumidor Web. Login,
+`WEB-USERS-001` integra listagem, filtros, consulta, criação, edição e situação
+de usuários na Web, restritos ao Administrador. A validação automática e visual
+da entrega permanece pendente porque Node.js, pnpm e dependências não estão
+disponíveis no ambiente. Movimentações possui fluxo operacional integrado. Login,
 logout, `/auth/me` e conclusão do primeiro acesso são consumidos pela Web com
 cookie `HttpOnly`, CSRF e redirects conforme a matriz de
 [WEB-AUTH-001](../../tasks/WEB-AUTH-001-integrar-autenticacao.md). Para a tela de login, a comparação visual direta com Figma e seu E2E real específico continuam como pendências históricas.

@@ -108,15 +108,16 @@ Contrato de execução e evidências:
 
 ### WEB-USERS-001 — Gestão de usuários
 
-**Status:** planejado; depende de `WEB-AUTH-001`.
+**Status:** implementado em 4 de novembro de 2026 sobre a autenticação de
+`WEB-AUTH-001`.
 
 Página `/usuarios` exclusiva do administrador, com listagem, filtros, criação,
-edição, ativação e inativação. Os contratos e endpoints do backend já estão
-implementados, mas ainda não existe consumidor Web.
-
-A Web não substitui a autorização da API. Antes de `WEB-AUTH-001`, a gestão de
-usuários poderá ser validada com mocks estritos e testes controlados, mas não
-deve ser apresentada como fluxo operacional concluído.
+edição, ativação e inativação. O consumidor Web usa os contratos e endpoints
+existentes, encaminha o cookie
+nas consultas e envia CSRF nas mutações. Os campos de funcionário e setor
+presentes no protótipo visual não fazem parte do contrato persistido de usuário.
+O lint, a checagem de tipos, os testes e a validação visual ainda estão pendentes
+porque Node.js, pnpm e as dependências não estão disponíveis neste ambiente.
 
 ### WEB-DEPRECIACOES-001 — Interface de processamento
 
