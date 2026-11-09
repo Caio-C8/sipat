@@ -3,12 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Check,
-  CircleAlert,
-  Search,
-  TrendingDown,
-} from "lucide-react";
+import { Check, CircleAlert, Search, TrendingDown } from "lucide-react";
 import type {
   ComissaoOpcaoReavaliacao,
   CompetenciaDepreciacao,
