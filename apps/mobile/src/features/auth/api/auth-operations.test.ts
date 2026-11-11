@@ -36,7 +36,7 @@ describe("operações de autenticação mobile", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      createAuthOperations("https://api.example.test").login({
+      createAuthOperations("https://api.example.test/api").login({
         email: identity.email,
         senha: "senha",
       }),
@@ -74,7 +74,7 @@ describe("operações de autenticação mobile", () => {
     );
 
     await expect(
-      createAuthOperations("https://api.example.test").login({
+      createAuthOperations("https://api.example.test/api").login({
         email: identity.email,
         senha: "senha",
       }),
@@ -85,7 +85,7 @@ describe("operações de autenticação mobile", () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await createAuthOperations("https://api.example.test").logout(
+    await createAuthOperations("https://api.example.test/api").logout(
       credentials.refreshToken,
     );
 
@@ -114,9 +114,11 @@ describe("operações de autenticação mobile", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      createAuthOperations("https://api.example.test").requestPasswordReset({
-        email: "  PESSOA@EXAMPLE.INVALID  ",
-      }),
+      createAuthOperations("https://api.example.test/api").requestPasswordReset(
+        {
+          email: "  PESSOA@EXAMPLE.INVALID  ",
+        },
+      ),
     ).resolves.toEqual({
       status: 202,
       sucesso: true,
@@ -151,9 +153,11 @@ describe("operações de autenticação mobile", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      createAuthOperations("https://api.example.test").requestPasswordReset({
-        email: identity.email,
-      }),
+      createAuthOperations("https://api.example.test/api").requestPasswordReset(
+        {
+          email: identity.email,
+        },
+      ),
     ).rejects.toMatchObject({ kind: "invalid-response" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

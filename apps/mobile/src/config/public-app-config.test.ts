@@ -17,7 +17,7 @@ describe("getPublicAppConfig", () => {
         getPublicAppConfig(
           "SIPAT Mobile",
           environment,
-          "https://api.example.test/",
+          "https://sipat.example.test/api/backend/",
           undefined,
           undefined,
         ),
@@ -25,8 +25,8 @@ describe("getPublicAppConfig", () => {
         appName: "SIPAT Mobile",
         appVersion: "1.2.3",
         environment,
-        apiBaseUrl: "https://api.example.test",
-        apiHealthUrl: "https://api.example.test/api/health",
+        apiBaseUrl: "https://sipat.example.test/api/backend",
+        apiHealthUrl: "https://sipat.example.test/api/backend/health",
       });
     },
   );
@@ -44,7 +44,7 @@ describe("getPublicAppConfig", () => {
       appName: "SIPAT",
       appVersion: "1.2.3",
       environment: "development",
-      apiBaseUrl: "http://192.168.1.20:3100",
+      apiBaseUrl: "http://192.168.1.20:3100/api",
       apiHealthUrl: "http://192.168.1.20:3100/api/health",
     });
   });

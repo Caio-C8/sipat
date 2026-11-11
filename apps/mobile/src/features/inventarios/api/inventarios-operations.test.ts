@@ -149,7 +149,9 @@ describe("createInventariosOperations", () => {
         jsonResponse(paginated([inventario()], meta(11, 2, 2, 10))),
       );
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.listar(
@@ -177,7 +179,9 @@ describe("createInventariosOperations", () => {
       .fn()
       .mockResolvedValue(jsonResponse(paginated([setor()], meta(1, 1, 1, 20))));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await operations.listarSetores(
       INVENTARIO_ID,
@@ -199,7 +203,9 @@ describe("createInventariosOperations", () => {
         jsonResponse(paginated([setor()], meta(51, 2, 2, 50))),
       );
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.consultarSetor(INVENTARIO_ID, SETOR_ID, {
@@ -214,7 +220,9 @@ describe("createInventariosOperations", () => {
       .fn()
       .mockResolvedValue(jsonResponse(success(setor("EM_ANDAMENTO"))));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.iniciarSetor(INVENTARIO_ID, SETOR_ID, {
@@ -262,7 +270,9 @@ describe("createInventariosOperations", () => {
         jsonResponse(success({ tipo: "CONFERENCIA_REGISTRADA", item })),
       );
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.verificarItem(INVENTARIO_ID, SETOR_ID, "1001", {
@@ -282,7 +292,9 @@ describe("createInventariosOperations", () => {
   it("rejeita número patrimonial inválido antes da mutation", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.verificarItem(INVENTARIO_ID, SETOR_ID, "001", {
@@ -299,7 +311,9 @@ describe("createInventariosOperations", () => {
         jsonResponse(paginated([divergentItem()], meta(11, 2, 2, 10))),
       );
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await operations.listarItens(
       INVENTARIO_ID,
@@ -325,7 +339,9 @@ describe("createInventariosOperations", () => {
       .fn()
       .mockResolvedValue(jsonResponse(success(divergentItem(true))));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.corrigirItem(
@@ -359,7 +375,9 @@ describe("createInventariosOperations", () => {
       .fn()
       .mockResolvedValue(jsonResponse(success(setor("CONCLUIDO"))));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.concluirSetor(INVENTARIO_ID, SETOR_ID, {
@@ -379,7 +397,9 @@ describe("createInventariosOperations", () => {
   it("rejeita UUIDs inválidos antes da rede", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.iniciarSetor("invalido", SETOR_ID, { accessToken: "token" }),
@@ -399,7 +419,9 @@ describe("createInventariosOperations", () => {
         .fn()
         .mockResolvedValue(jsonResponse(publicError(status, code), status)),
     );
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.iniciarSetor(INVENTARIO_ID, SETOR_ID, {
@@ -413,7 +435,9 @@ describe("createInventariosOperations", () => {
       "fetch",
       vi.fn().mockResolvedValue(jsonResponse({ dados: [inventario()] })),
     );
-    const operations = createInventariosOperations("https://api.example.test");
+    const operations = createInventariosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.listar({ status: "PENDENTE" }, { accessToken: "token" }),

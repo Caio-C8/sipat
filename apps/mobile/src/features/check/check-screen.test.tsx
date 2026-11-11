@@ -14,7 +14,7 @@ vi.mock("../../config/public-app-config", () => ({
     appName: "SIPAT",
     appVersion: "1.2.3",
     environment: "development",
-    apiBaseUrl: "https://api.example.test",
+    apiBaseUrl: "https://api.example.test/api",
     apiHealthUrl: "https://api.example.test/api/health",
   },
 }));

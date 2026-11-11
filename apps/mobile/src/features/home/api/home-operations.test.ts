@@ -67,7 +67,7 @@ describe("createHomeOperations", () => {
       .mockResolvedValueOnce(jsonResponse(paginated(4)))
       .mockResolvedValueOnce(jsonResponse(paginated(128)));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
 
     await expect(
       operations.contarSetores({ accessToken: "token-setores" }),
@@ -105,7 +105,7 @@ describe("createHomeOperations", () => {
       .mockResolvedValueOnce(jsonResponse(paginated(1)))
       .mockResolvedValueOnce(jsonResponse(paginated(4, 50)));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
 
     await expect(
       operations.obterInventarios({ accessToken: "token" }),
@@ -156,7 +156,7 @@ describe("createHomeOperations", () => {
       .mockResolvedValueOnce(jsonResponse(first))
       .mockResolvedValueOnce(jsonResponse(second));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
 
     const result = await operations.obterInventarios({ accessToken: "token" });
 
@@ -171,7 +171,7 @@ describe("createHomeOperations", () => {
       "fetch",
       vi.fn().mockResolvedValue(jsonResponse({ total: 12 })),
     );
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
 
     await expect(
       operations.contarPatrimonios({ accessToken: "token" }),
@@ -195,7 +195,7 @@ describe("createHomeOperations", () => {
         ),
       ),
     );
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
 
     await expect(
       operations.contarSetores({ accessToken: "token" }),
@@ -215,7 +215,7 @@ describe("createHomeOperations", () => {
           }),
       ),
     );
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
     const request = operations.contarPatrimonios({ accessToken: "token" });
     const expectation = expect(request).rejects.toMatchObject({
       kind: "timeout",
@@ -239,7 +239,7 @@ describe("createHomeOperations", () => {
           }),
       ),
     );
-    const operations = createHomeOperations("https://api.example.test");
+    const operations = createHomeOperations("https://api.example.test/api");
     const request = operations.contarPatrimonios({
       accessToken: "token",
       signal: controller.signal,

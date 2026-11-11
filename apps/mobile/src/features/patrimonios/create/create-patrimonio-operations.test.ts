@@ -129,7 +129,7 @@ describe("operações do cadastro patrimonial", () => {
     const fetchMock = vi.fn().mockResolvedValue(response(paginated([sector])));
     vi.stubGlobal("fetch", fetchMock);
     await expect(
-      createCreatePatrimonioOperations("https://api.test").listSectors(
+      createCreatePatrimonioOperations("https://api.test/api").listSectors(
         { page: 1, search: "tec" },
         { accessToken: "token" },
       ),
@@ -146,7 +146,7 @@ describe("operações do cadastro patrimonial", () => {
       .mockResolvedValue(response(success(created(), 201), 201));
     vi.stubGlobal("fetch", fetchMock);
     await expect(
-      createCreatePatrimonioOperations("https://api.test").create(
+      createCreatePatrimonioOperations("https://api.test/api").create(
         mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY),
         { accessToken: "token" },
       ),
@@ -214,7 +214,7 @@ describe("operações do cadastro patrimonial", () => {
 
     await manager.authorizedRequest(
       (accessToken) =>
-        createCreatePatrimonioOperations("https://api.test").create(body, {
+        createCreatePatrimonioOperations("https://api.test/api").create(body, {
           accessToken,
         }),
       false,
@@ -253,7 +253,7 @@ describe("operações do cadastro patrimonial", () => {
         )
         .mockResolvedValueOnce(response(success({ id: ITEM }, 201), 201)),
     );
-    const operations = createCreatePatrimonioOperations("https://api.test");
+    const operations = createCreatePatrimonioOperations("https://api.test/api");
     await expect(
       operations.create(mapCreatePatrimonioForm(form, IDEMPOTENCY_KEY), {
         accessToken: "token",

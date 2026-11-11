@@ -18,7 +18,7 @@ vi.mock("expo-crypto", () => ({
 }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock("../../../config/public-app-config", () => ({
-  publicAppConfig: { apiBaseUrl: "https://api.test" },
+  publicAppConfig: { apiBaseUrl: "https://api.test/api" },
 }));
 vi.mock("../../auth/session/session-context", () => ({
   useSession: () => ({

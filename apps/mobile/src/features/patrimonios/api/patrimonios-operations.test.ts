@@ -65,7 +65,9 @@ describe("createPatrimoniosOperations", () => {
       .fn()
       .mockResolvedValue(jsonResponse(paginated([summary()])));
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createPatrimoniosOperations("https://api.example.test");
+    const operations = createPatrimoniosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.listar(
@@ -109,7 +111,9 @@ describe("createPatrimoniosOperations", () => {
         ),
       ),
     );
-    const operations = createPatrimoniosOperations("https://api.example.test");
+    const operations = createPatrimoniosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.consultar(ID, { accessToken: "token" }),
@@ -119,7 +123,9 @@ describe("createPatrimoniosOperations", () => {
   it("rejeita UUID inválido antes da rede", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createPatrimoniosOperations("https://api.example.test");
+    const operations = createPatrimoniosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.consultar("invalido", { accessToken: "token" }),
@@ -132,7 +138,9 @@ describe("createPatrimoniosOperations", () => {
       "fetch",
       vi.fn().mockResolvedValue(jsonResponse({ dados: [summary()] })),
     );
-    const operations = createPatrimoniosOperations("https://api.example.test");
+    const operations = createPatrimoniosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.listar({}, { accessToken: "token" }),
@@ -169,7 +177,9 @@ describe("createPatrimoniosOperations", () => {
         }),
       );
     vi.stubGlobal("fetch", fetchMock);
-    const operations = createPatrimoniosOperations("https://api.example.test");
+    const operations = createPatrimoniosOperations(
+      "https://api.example.test/api",
+    );
 
     await expect(
       operations.listarCatalogos({ accessToken: "token" }),
