@@ -10,7 +10,7 @@ vi.mock("@react-native-vector-icons/lucide", () => ({
 }));
 
 vi.mock("../../../config/public-app-config", () => ({
-  publicAppConfig: { apiBaseUrl: "https://api.example.test" },
+  publicAppConfig: { apiBaseUrl: "https://api.example.test/api" },
 }));
 
 vi.mock("expo-router", () => ({

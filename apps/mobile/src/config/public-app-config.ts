@@ -45,7 +45,7 @@ function getDevelopmentApiUrl(
 
   try {
     const metroUrl = new URL(`http://${hostUri}`);
-    return `http://${metroUrl.hostname}:${port}`;
+    return `http://${metroUrl.hostname}:${port}/api`;
   } catch {
     return undefined;
   }
@@ -78,7 +78,7 @@ export function getPublicAppConfig(
     environment: normalizedEnvironment,
     apiBaseUrl: resolvedApiBaseUrl,
     apiHealthUrl: resolvedApiBaseUrl
-      ? `${resolvedApiBaseUrl}/api/health`
+      ? `${resolvedApiBaseUrl}/health`
       : undefined,
   });
 }

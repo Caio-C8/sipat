@@ -36,7 +36,7 @@ export async function apiRequest<T = void>({
 
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}/api${path}`, {
+    response = await fetch(`${baseUrl}${path}`, {
       method,
       headers: {
         Accept: "application/json",
