@@ -122,6 +122,15 @@ O serviço `mobile-web` pertence ao profile homônimo do Compose. Os scripts
 `stack:staging:*` e `stack:production:*` já habilitam esse profile; o stack de
 desenvolvimento não o habilita porque usa o Metro para hot reload.
 
+## Migrations em homologação e produção
+
+Os comandos `pnpm db:migrate:staging` e `pnpm db:migrate:production` executam o
+serviço one-shot `migrate` do Compose. Esse serviço constrói a imagem com as
+migrations versionadas, aguarda o PostgreSQL ficar saudável e acessa o banco
+por `db:5432` na rede interna. Portanto, o PostgreSQL não precisa publicar uma
+porta no host, e o `DATABASE_URL` local desses ambientes não é usado pela
+migration.
+
 Para uso somente local, prefira `BIND_ADDRESS=127.0.0.1`. Em um deploy real,
 substitua `WEB_URL`, `MOBILE_WEB_URL`, `EXPO_PUBLIC_API_URL` e `CORS_ORIGINS`
 pelos domínios HTTPS públicos e mantenha as portas dos containers protegidas
