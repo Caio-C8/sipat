@@ -45,7 +45,7 @@ export function ListaSetores({
           </Link>
         )}
       </header>
-      <AbasCadastros secao="setores" />
+      <AbasCadastros secao="setores" mostrarFornecedores />
       <form
         action="/cadastros/setores"
         className={
@@ -132,7 +132,7 @@ export function NovoSetor() {
   return (
     <main className={pagina}>
       <h1 className="text-xl font-bold">Cadastrar setor</h1>
-      <AbasCadastros secao="setores" />
+      <AbasCadastros secao="setores" mostrarFornecedores />
       <FormularioSetor />
     </main>
   );
@@ -162,7 +162,7 @@ export function DetalheSetor({
           Voltar aos setores
         </Link>
       </header>
-      <AbasCadastros secao="setores" />
+      <AbasCadastros secao="setores" mostrarFornecedores />
       {salvo && (
         <p role="status" className="rounded-md bg-emerald-50 p-3 text-sm">
           Setor salvo com sucesso.

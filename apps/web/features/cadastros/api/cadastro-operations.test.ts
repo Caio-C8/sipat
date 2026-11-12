@@ -10,6 +10,7 @@ describe("operações de cadastros", () => {
     "especies",
     "responsaveis",
     "setores",
+    "fornecedores",
     "comissoes",
     "processos",
     "notas",
@@ -29,6 +30,44 @@ describe("operações de cadastros", () => {
     );
     expect(() => api[dominio].consultar("../invalido")).toThrow();
     expect(request).toHaveBeenCalledTimes(1);
+  });
+  it("usa os contratos e endpoints próprios de fornecedores", async () => {
+    const request = vi.fn().mockResolvedValue({ dados: { id } });
+    const api = criarOperacoesCadastros({ request } as ApiClient);
+    await api.fornecedores.criar({
+      chaveIdempotencia: id,
+      razaoSocial: "Fornecedor real",
+    });
+    await api.fornecedores.alterar(id, {
+      nomeFantasia: null,
+      email: "CONTATO@EXAMPLE.TEST",
+    });
+    await api.fornecedores.situacao(id, false);
+    expect(request).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        path: "/fornecedores",
+        method: "POST",
+        body: { chaveIdempotencia: id, razaoSocial: "Fornecedor real" },
+        headers: { "X-SIPAT-CSRF": "1" },
+      }),
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        path: "/fornecedores/" + id,
+        method: "PATCH",
+        body: { nomeFantasia: null, email: "contato@example.test" },
+      }),
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        path: "/fornecedores/" + id + "/situacao",
+        method: "PATCH",
+        body: { ativo: false },
+      }),
+    );
   });
   it("rejeita response fora do contrato sem retornar lista vazia", async () => {
     const api = criarOperacoesCadastros(

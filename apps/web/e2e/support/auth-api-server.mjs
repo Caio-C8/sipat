@@ -58,6 +58,41 @@ const pendenteDepreciacao = {
   competenciaEsperada: "2026-10",
 };
 
+let fornecedorCrud = null;
+
+async function lerJson(request) {
+  const partes = [];
+  for await (const parte of request) partes.push(parte);
+  return JSON.parse(Buffer.concat(partes).toString("utf8"));
+}
+
+function fornecedorCrudAtivo(cookie = "") {
+  return cookie.includes("sipat_fornecedores_scenario=crud");
+}
+
+function detalheFornecedor(dados, anterior = {}) {
+  const agora = new Date().toISOString();
+  const valorOpcional = (campo) =>
+    Object.hasOwn(dados, campo) ? dados[campo] : (anterior[campo] ?? null);
+  return {
+    id: anterior.id ?? "7041c62b-5f83-432c-a178-889977d839b1",
+    razaoSocial: dados.razaoSocial ?? anterior.razaoSocial,
+    nomeFantasia: valorOpcional("nomeFantasia"),
+    nomeRepresentante: valorOpcional("nomeRepresentante"),
+    cnpj:
+      dados.cnpj === null
+        ? null
+        : (dados.cnpj ?? anterior.cnpj ?? null)?.replace(/[./-]/g, ""),
+    email: valorOpcional("email"),
+    telefone: valorOpcional("telefone"),
+    endereco: valorOpcional("endereco"),
+    ativo: dados.ativo ?? anterior.ativo ?? true,
+    createdById: anterior.createdById ?? "28df5e9c-3e60-4a8e-a4d4-8ca70221f4f0",
+    createdAt: anterior.createdAt ?? agora,
+    updatedAt: anterior.id ? agora : null,
+  };
+}
+
 function json(response, status, body) {
   response.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -79,7 +114,7 @@ function dashboardScenarioFromCookie(cookie = "") {
   return match?.[1];
 }
 
-const server = createServer((request, response) => {
+const server = createServer(async (request, response) => {
   const requestUrl = new URL(
     request.url ?? "/",
     `http://${request.headers.host}`,
@@ -111,6 +146,144 @@ const server = createServer((request, response) => {
       sucesso: true,
       mensagem: "Identidade autenticada consultada com sucesso.",
       dados: identity,
+    });
+    return;
+  }
+
+  if (
+    request.method === "GET" &&
+    requestUrl.pathname === "/api/fornecedores" &&
+    fornecedorCrudAtivo(request.headers.cookie)
+  ) {
+    const ativo = requestUrl.searchParams.get("ativo");
+    const busca = requestUrl.searchParams.get("busca")?.toLocaleLowerCase();
+    const dados = fornecedorCrud
+      ? [fornecedorCrud]
+          .filter((item) => ativo === null || String(item.ativo) === ativo)
+          .filter(
+            (item) =>
+              !busca ||
+              [item.razaoSocial, item.nomeFantasia, item.cnpj].some((valor) =>
+                valor?.toLocaleLowerCase().includes(busca),
+              ),
+          )
+          .map(({ id, razaoSocial, nomeFantasia, cnpj, ativo }) => ({
+            id,
+            razaoSocial,
+            nomeFantasia,
+            cnpj,
+            ativo,
+          }))
+      : [];
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Fornecedores listados com sucesso.",
+      dados,
+      meta: {
+        total: dados.length,
+        pagina: Number(requestUrl.searchParams.get("pagina") ?? 1),
+        limite: Number(requestUrl.searchParams.get("limite") ?? 20),
+        ultimaPagina: 1,
+      },
+    });
+    return;
+  }
+
+  if (
+    request.method === "GET" &&
+    /^\/api\/fornecedores\/[0-9a-f-]+$/.test(requestUrl.pathname) &&
+    fornecedorCrudAtivo(request.headers.cookie)
+  ) {
+    if (!fornecedorCrud) {
+      json(response, 404, {
+        status: 404,
+        sucesso: false,
+        codigo: "FORNECEDOR_NAO_ENCONTRADO",
+        mensagem: "Fornecedor não encontrado.",
+        erros: [],
+        requisicaoId: "fornecedores-e2e",
+      });
+      return;
+    }
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Fornecedor encontrado com sucesso.",
+      dados: fornecedorCrud,
+    });
+    return;
+  }
+
+  if (
+    ["POST", "PATCH"].includes(request.method ?? "") &&
+    /^\/api\/fornecedores(?:\/[0-9a-f-]+(?:\/situacao)?)?$/.test(
+      requestUrl.pathname,
+    ) &&
+    fornecedorCrudAtivo(request.headers.cookie)
+  ) {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (session !== "active") {
+      json(response, 403, {
+        status: 403,
+        sucesso: false,
+        codigo: "PERFIL_NAO_AUTORIZADO",
+        mensagem: "Perfil não autorizado.",
+        erros: [],
+        requisicaoId: "fornecedores-e2e",
+      });
+      return;
+    }
+    if (request.headers["x-sipat-csrf"] !== "1") {
+      json(response, 403, {
+        status: 403,
+        sucesso: false,
+        codigo: "CSRF_INVALIDO",
+        mensagem: "Sinal CSRF inválido.",
+        erros: [],
+        requisicaoId: "fornecedores-e2e",
+      });
+      return;
+    }
+    const body = await lerJson(request);
+    const cnpj = body.cnpj?.replace(/[./-]/g, "");
+    if (
+      request.method === "POST" &&
+      fornecedorCrud?.cnpj &&
+      fornecedorCrud.cnpj === cnpj
+    ) {
+      json(response, 409, {
+        status: 409,
+        sucesso: false,
+        codigo: "CNPJ_FORNECEDOR_JA_EXISTENTE",
+        mensagem: "Já existe um fornecedor com o CNPJ informado.",
+        erros: [
+          {
+            campo: "cnpj",
+            codigo: "VALOR_JA_EXISTENTE",
+            mensagem: "Já existe um fornecedor com este CNPJ.",
+          },
+        ],
+        requisicaoId: "fornecedores-e2e",
+      });
+      return;
+    }
+    const situacao = requestUrl.pathname.endsWith("/situacao");
+    fornecedorCrud = detalheFornecedor(
+      situacao ? { ativo: body.ativo } : { ...body, cnpj },
+      request.method === "POST" ? {} : (fornecedorCrud ?? {}),
+    );
+    json(response, request.method === "POST" ? 201 : 200, {
+      status: request.method === "POST" ? 201 : 200,
+      sucesso: true,
+      mensagem: situacao
+        ? body.ativo
+          ? "Fornecedor ativado com sucesso."
+          : "Fornecedor inativado com sucesso."
+        : request.method === "POST"
+          ? "Fornecedor criado com sucesso."
+          : "Fornecedor alterado com sucesso.",
+      dados: fornecedorCrud,
     });
     return;
   }

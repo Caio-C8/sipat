@@ -11,9 +11,10 @@ fronteiras entre UI, contratos e integração HTTP.
 ## Estado atual
 
 - `/cadastros`, `/cadastros/especies`, `/cadastros/naturezas`,
-  `/cadastros/comissoes`, `/cadastros/responsaveis` e as três rotas de
-  setores consomem a API existente: consultas paginadas, criação, edição,
-  situação de responsáveis/setores, integrantes e documentos fiscais.
+  `/cadastros/comissoes`, `/cadastros/responsaveis`,
+  `/cadastros/fornecedores` e as três rotas de setores consomem a API
+  existente: consultas paginadas, criação, edição, situação de
+  responsáveis/setores/fornecedores, integrantes e documentos fiscais.
   A inclusão de notas novas fica disponível somente ao Administrador, por
   decisão registrada em
   [WEB-CADASTROS-001](./roadmap.md#web-cadastros-001--integrar-cadastros-à-api-existente).

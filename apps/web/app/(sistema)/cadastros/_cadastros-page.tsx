@@ -12,6 +12,7 @@ import {
   FormularioEspecie,
   FormularioResponsavel,
 } from "@/features/cadastros/components/formularios-basicos";
+import { FormularioFornecedor } from "@/features/cadastros/components/formulario-fornecedor";
 import { FormularioComissao } from "@/features/cadastros/components/formulario-comissao";
 import { FormularioProcesso } from "@/features/cadastros/components/formulario-processo";
 import {
@@ -34,11 +35,16 @@ const ParamsSchema = z.object({
     .regex(/^[1-9]\d*$/)
     .optional(),
   salvo: z.literal("1").optional(),
+  situacao: z.enum(["todos", "ativos", "inativos"]).optional(),
 });
 type Lista<T> = {
   dados: T[];
   meta: { total: number; pagina: number; ultimaPagina: number };
 };
+const formatarCnpj = (cnpj: string | null) =>
+  cnpj
+    ? `${cnpj.slice(0, 2)}.${cnpj.slice(2, 5)}.${cnpj.slice(5, 8)}/${cnpj.slice(8, 12)}-${cnpj.slice(12)}`
+    : null;
 async function carregar<
   T extends { id: string },
   D extends { id: string },
@@ -53,6 +59,7 @@ async function carregar<
   consultar: (id: string, opcoes?: Leitura) => Promise<{ dados: D }>;
   resumo: (item: T) => { titulo: string; detalhe: string };
   formulario: (dado?: D) => ReactNode;
+  mostrarFornecedores: boolean;
 }) {
   const { params, secao, cookie } = config;
   const lista = await config.listar(
@@ -74,8 +81,10 @@ async function carregar<
       registros={lista.dados.map((x) => ({ id: x.id, ...config.resumo(x) }))}
       meta={lista.meta}
       busca={params.busca}
+      situacao={params.situacao}
       id={params.id}
       salvo={params.salvo === "1"}
+      mostrarFornecedores={config.mostrarFornecedores}
     >
       <div key={registro ? JSON.stringify(registro) : "novo"}>
         {config.formulario(registro)}
@@ -113,7 +122,12 @@ export async function CadastrosPage({
       </main>
     );
   const cookie = (await headers()).get("cookie") ?? "";
-  const base = { secao, params: parsed.data, cookie };
+  const base = {
+    secao,
+    params: parsed.data,
+    cookie,
+    mostrarFornecedores: identidade.perfil === "ADMINISTRADOR",
+  };
   try {
     switch (secao) {
       case "naturezas":
@@ -140,6 +154,36 @@ export async function CadastrosPage({
           }),
           formulario: (registro) => (
             <FormularioResponsavel registro={registro} />
+          ),
+        });
+      case "fornecedores":
+        return await carregar({
+          ...base,
+          listar: (query, options) =>
+            serverCadastros.fornecedores.listar(
+              {
+                ...query,
+                ativo:
+                  parsed.data.situacao === "ativos"
+                    ? "true"
+                    : parsed.data.situacao === "inativos"
+                      ? "false"
+                      : undefined,
+              },
+              options,
+            ),
+          consultar: serverCadastros.fornecedores.consultar,
+          resumo: (x) => ({
+            titulo: x.razaoSocial,
+            detalhe:
+              [x.nomeFantasia, formatarCnpj(x.cnpj)]
+                .filter(Boolean)
+                .join(" · ") +
+              (x.nomeFantasia || x.cnpj ? " · " : "") +
+              (x.ativo ? "Ativo" : "Inativo"),
+          }),
+          formulario: (registro) => (
+            <FormularioFornecedor registro={registro} />
           ),
         });
       case "comissoes":

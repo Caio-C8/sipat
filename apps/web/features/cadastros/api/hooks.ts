@@ -157,6 +157,22 @@ export function useAlterarSituacaoSetor() {
     browserCadastros.setores.situacao(input.id, input.ativo),
   );
 }
+export function useCriarFornecedor() {
+  return useMutacaoSemRepeticao(browserCadastros.fornecedores.criar);
+}
+export function useAlterarFornecedor() {
+  return useMutacaoSemRepeticao(
+    (input: {
+      id: string;
+      body: z.input<typeof import("@repo/contracts").AlterarFornecedorSchema>;
+    }) => browserCadastros.fornecedores.alterar(input.id, input.body),
+  );
+}
+export function useAlterarSituacaoFornecedor() {
+  return useMutacaoSemRepeticao((input: { id: string; ativo: boolean }) =>
+    browserCadastros.fornecedores.situacao(input.id, input.ativo),
+  );
+}
 export function useCriarComissao() {
   return useMutacaoSemRepeticao(browserCadastros.comissoes.criar);
 }

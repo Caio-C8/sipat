@@ -20,6 +20,7 @@ test("administrador navega pelos cadastros integrados e distingue listas vazias"
     ["/cadastros/naturezas", "Cadastrar natureza"],
     ["/cadastros/comissoes", "Cadastrar comissão"],
     ["/cadastros/responsaveis", "Cadastrar responsável"],
+    ["/cadastros/fornecedores", "Cadastrar fornecedor"],
   ] as const) {
     await page.goto(rota);
     await expect(
@@ -31,7 +32,7 @@ test("administrador navega pelos cadastros integrados e distingue listas vazias"
     ).toHaveCount(0);
     await expect(
       page.getByRole("button", {
-        name: /^Salvar (processo|espécie|natureza|comissão|responsável)$/,
+        name: /^Salvar (processo|espécie|natureza|comissão|responsável|fornecedor)$/,
       }),
     ).toBeEnabled();
   }
@@ -53,6 +54,67 @@ test("administrador consulta setores reais e abre formulário habilitado", async
     page.getByRole("button", { name: "Salvar setor" }),
   ).toBeEnabled();
 });
+test("administrador filtra fornecedores por situação na URL", async ({
+  page,
+}) => {
+  await sessao(page);
+  await page.goto("/cadastros/fornecedores");
+  await page
+    .getByRole("combobox", { name: "Situação" })
+    .selectOption("inativos");
+  await page.getByRole("button", { name: "Consultar", exact: true }).click();
+  await expect(page).toHaveURL(/situacao=inativos/);
+  await expect(page.getByText("Nenhum registro encontrado.")).toBeVisible();
+});
+test("administrador cria, altera, inativa e corrige conflito de fornecedor", async ({
+  page,
+}) => {
+  await sessao(page);
+  await page.context().addCookies([
+    {
+      name: "sipat_fornecedores_scenario",
+      value: "crud",
+      url: test.info().project.use.baseURL ?? "http://localhost:3100",
+    },
+  ]);
+  await page.goto("/cadastros/fornecedores");
+  await page.getByLabel("Razão social *").fill("Fornecedor E2E");
+  await page.getByLabel("CNPJ").fill("11.444.777/0001-61");
+  await page.getByRole("button", { name: "Salvar fornecedor" }).click();
+  await expect(page).toHaveURL(/id=7041c62b-5f83-432c-a178-889977d839b1/);
+  await expect(
+    page.getByRole("heading", { name: "Editar fornecedor" }),
+  ).toBeVisible();
+  await page.getByLabel("Nome fantasia").fill("Fornecedor atualizado");
+  const alteracao = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PATCH" &&
+      /\/api\/backend\/fornecedores\/[0-9a-f-]+$/.test(
+        new URL(response.url()).pathname,
+      ),
+  );
+  await page.getByRole("button", { name: "Salvar fornecedor" }).click();
+  expect((await alteracao).status()).toBe(200);
+  await expect(
+    page.getByRole("button", { name: "Salvar fornecedor" }),
+  ).toBeEnabled();
+  await expect(page.getByLabel("Nome fantasia")).toHaveValue(
+    "Fornecedor atualizado",
+  );
+  await page.getByRole("button", { name: "Inativar cadastro" }).click();
+  await page.getByRole("button", { name: "Confirmar situação" }).click();
+  await expect(page.getByText("Situação atual:")).toContainText("Inativo");
+  await page.goto("/cadastros/fornecedores");
+  await page.getByLabel("Razão social *").fill("Fornecedor duplicado");
+  await page.getByLabel("CNPJ").fill("11.444.777/0001-61");
+  await page.getByRole("button", { name: "Salvar fornecedor" }).click();
+  await expect(
+    page.getByRole("form", { name: "Novo fornecedor" }).getByRole("alert"),
+  ).toContainText("Já existe um fornecedor");
+  await expect(page.getByLabel("Razão social *")).toHaveValue(
+    "Fornecedor duplicado",
+  );
+});
 test("diretor cria processo sem notas novas e não acessa cadastros administrativos", async ({
   page,
 }) => {
@@ -69,6 +131,9 @@ test("diretor cria processo sem notas novas e não acessa cadastros administrati
   await expect(
     page.getByRole("button", { name: "Adicionar nota fiscal" }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Fornecedores", exact: true }),
+  ).toHaveCount(0);
   for (const rota of [
     "/cadastros/especies",
     "/cadastros/naturezas",
@@ -76,6 +141,7 @@ test("diretor cria processo sem notas novas e não acessa cadastros administrati
     "/cadastros/responsaveis",
     "/cadastros/setores",
     "/cadastros/setores/novo",
+    "/cadastros/fornecedores",
   ]) {
     await page.goto(rota);
     await expect(
