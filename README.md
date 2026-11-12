@@ -109,7 +109,7 @@ sendo as fontes de verdade.
 | Toolchain       | Node.js 24.22.1 · pnpm 11.28.8                                              |
 | API e contratos | NestJS 11.2.7 · Prisma 7.10.1 · Zod 4.6.7 · Nodemailer 10.2.1               |
 | Web             | Next.js 16.4.3 · React/React DOM 19.3.1 · Zod 4.6.7                         |
-| Mobile          | Expo SDK 58.0.19 · Expo Router 58.0.26 · React Native 0.88.0 · React 19.3.0 |
+| Mobile          | Expo SDK 58.0.24 · Expo Router 58.0.31 · React Native 0.88.1 · React 19.3.0 |
 | Testes com Vite | Vitest 5.0.5 · Vite 8.3.5 resolvido por override de segurança               |
 
 As resoluções transitivas e os patches que ainda não possuem substituição
