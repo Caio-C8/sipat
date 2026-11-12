@@ -181,7 +181,7 @@ de uma entrega em parte permanente da infraestrutura comum.
 
 ### Cadastros contra API e banco reais
 
-`e2e/cadastros-real.e2e.ts` cobre os seis cadastros, integrantes, situações,
+`e2e/cadastros-real.e2e.ts` cobre os sete cadastros, integrantes, situações,
 notas e PDFs nos dois perfis, além de axe e reflow. A execução é opt-in:
 
 1. prepare um PostgreSQL descartável em `127.0.0.1:55434/sipat_cadastros`,

@@ -15,6 +15,7 @@ const habilitado = Boolean(
   new URL(real).pathname === "/sipat_cadastros",
 );
 const tag = randomUUID().slice(0, 8);
+const cnpjFornecedor = criarCnpjValido();
 let processoId = "";
 test.describe("cadastros Web → API → PostgreSQL isolado", () => {
   test.describe.configure({ mode: "serial" });
@@ -22,7 +23,7 @@ test.describe("cadastros Web → API → PostgreSQL isolado", () => {
     !habilitado,
     "Exige banco sipat_cadastros isolado e fixture em test-results/cadastros-real-fixture.json.",
   );
-  test("administrador grava e altera os seis cadastros, membros e PDFs", async ({
+  test("administrador grava e altera os sete cadastros, membros e PDFs", async ({
     page,
   }, info) => {
     test.setTimeout(180000);
@@ -113,6 +114,64 @@ test.describe("cadastros Web → API → PostgreSQL isolado", () => {
     await expect(
       page.getByText("Situação atual:", { exact: false }),
     ).toContainText("Ativo");
+    await page.goto("/cadastros/fornecedores");
+    await page
+      .getByLabel("Razão social *", { exact: true })
+      .fill("Fornecedor Web " + tag);
+    await page.getByLabel("CNPJ", { exact: true }).fill(cnpjFornecedor);
+    await salvarCadastro(page, "Salvar fornecedor", "fornecedores", "POST");
+    await expect(page).toHaveURL(/id=/);
+    await page
+      .getByLabel("Nome fantasia", { exact: true })
+      .fill("Fantasia " + tag);
+    await salvarCadastro(page, "Salvar fornecedor", "fornecedores", "PATCH");
+    await expect(
+      page.getByRole("button", { name: "Salvar fornecedor", exact: true }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("link", { name: new RegExp("Fornecedor Web " + tag) }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Inativar cadastro", exact: true })
+      .click();
+    const inativada = page.waitForResponse(
+      (r) =>
+        r.request().method() === "PATCH" &&
+        new URL(r.url()).pathname.endsWith("/situacao"),
+    );
+    await page
+      .getByRole("button", { name: "Confirmar situação", exact: true })
+      .click();
+    expect((await inativada).status()).toBe(200);
+    await expect(
+      page.getByText("Situação atual:", { exact: false }),
+    ).toContainText("Inativo");
+    await page.goto("/cadastros/fornecedores");
+    await page
+      .getByRole("combobox", { name: "Situação" })
+      .selectOption("inativos");
+    await page.getByRole("button", { name: "Consultar", exact: true }).click();
+    await expect(page).toHaveURL(/situacao=inativos/);
+    await expect(
+      page.getByRole("link", { name: new RegExp("Fornecedor Web " + tag) }),
+    ).toBeVisible();
+    await page.goto("/cadastros/fornecedores");
+    await page
+      .getByLabel("Razão social *", { exact: true })
+      .fill("Fornecedor duplicado " + tag);
+    await page.getByLabel("CNPJ", { exact: true }).fill(cnpjFornecedor);
+    const conflitoCnpj = page.waitForResponse(
+      (r) =>
+        r.request().method() === "POST" &&
+        new URL(r.url()).pathname.endsWith("/api/backend/fornecedores"),
+    );
+    await page
+      .getByRole("button", { name: "Salvar fornecedor", exact: true })
+      .click();
+    expect((await conflitoCnpj).status()).toBe(409);
+    await expect(
+      page.getByRole("form", { name: "Novo fornecedor" }).getByRole("alert"),
+    ).toContainText("Já existe um fornecedor");
     await page.goto("/cadastros/comissoes");
     await page
       .getByLabel("Nome da comissão *", { exact: true })
@@ -238,6 +297,10 @@ test.describe("cadastros Web → API → PostgreSQL isolado", () => {
     processoId = new URL(page.url()).searchParams.get("id")!;
     await expect(
       page.getByRole("heading", { name: "Editar processo de compra" }),
+    ).toBeVisible();
+    await page.goto("/cadastros/fornecedores");
+    await expect(
+      page.getByRole("heading", { name: "Acesso não permitido" }),
     ).toBeVisible();
     const link = page.getByRole("link", {
       name: "Abrir PDF da nota NF-" + tag,
@@ -377,4 +440,20 @@ async function salvarCadastro(
   );
   await page.getByRole("button", { name: rotulo, exact: true }).click();
   expect((await concluida).status()).toBe(method === "POST" ? 201 : 200);
+}
+
+function criarCnpjValido() {
+  const base = randomUUID().replace(/\D/g, "").padEnd(12, "1").slice(0, 12);
+  const digito = (valor: string) => {
+    let peso = 2;
+    let soma = 0;
+    for (let indice = valor.length - 1; indice >= 0; indice -= 1) {
+      soma += Number(valor[indice]) * peso;
+      peso = peso === 9 ? 2 : peso + 1;
+    }
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const primeiro = digito(base);
+  return `${base}${primeiro}${digito(`${base}${primeiro}`)}`;
 }

@@ -13,6 +13,7 @@ import {
   FormularioResponsavel,
 } from "./formularios-basicos";
 import { FormularioCadastro } from "./formulario-cadastro";
+import { FormularioFornecedor } from "./formulario-fornecedor";
 import { ApiError } from "@/lib/api/core/api-error";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
@@ -34,6 +35,7 @@ describe("cadastros integrados", () => {
         meta={{ total: 25, pagina: 1, ultimaPagina: 2 }}
         busca="Natureza"
         id={id}
+        mostrarFornecedores
       >
         <p>Formulário</p>
       </CadastrosTelas>,
@@ -135,6 +137,59 @@ describe("cadastros integrados", () => {
         }),
       ),
     );
+  });
+  it("omite opcionais na criação de fornecedor e limpa-os por null na edição", async () => {
+    vi.mocked(browserApiClient.request).mockResolvedValue({ dados: { id } });
+    const { unmount } = render(<FormularioFornecedor />);
+    fireEvent.change(screen.getByLabelText("Razão social *"), {
+      target: { value: " Fornecedor real " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar fornecedor" }));
+    await waitFor(() => expect(browserApiClient.request).toHaveBeenCalled());
+    expect(browserApiClient.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: "/fornecedores",
+        method: "POST",
+        body: expect.objectContaining({ razaoSocial: "Fornecedor real" }),
+      }),
+    );
+    expect(
+      vi.mocked(browserApiClient.request).mock.calls[0]![0].body,
+    ).not.toHaveProperty("nomeFantasia");
+    unmount();
+    vi.clearAllMocks();
+    render(
+      <FormularioFornecedor
+        registro={{
+          id,
+          razaoSocial: "Fornecedor real",
+          nomeFantasia: "Fantasia",
+          nomeRepresentante: null,
+          cnpj: null,
+          email: null,
+          telefone: null,
+          endereco: null,
+          ativo: true,
+          createdById: id,
+          createdAt: "2026-11-02T00:00:00.000Z",
+          updatedAt: null,
+        }}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Nome fantasia"), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar fornecedor" }));
+    await waitFor(() => expect(browserApiClient.request).toHaveBeenCalled());
+    expect(browserApiClient.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: "/fornecedores/" + id,
+        method: "PATCH",
+        body: expect.objectContaining({ nomeFantasia: null }),
+      }),
+    );
+    expect(screen.getAllByText("Ativo", { exact: true })).toHaveLength(2);
+    expect(screen.getByText("Sem alteração registrada")).not.toBeNull();
   });
   it("preserva a mesma chave e o formulário em timeout e falha conclusiva posterior", async () => {
     const salvar = vi

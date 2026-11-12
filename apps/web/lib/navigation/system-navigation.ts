@@ -244,7 +244,9 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Truck,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    implementado: false,
+    implementado: true,
+    href: "/cadastros/fornecedores",
+    breadcrumb: ["Cadastros", "Fornecedores"],
   },
   {
     id: "configuracoes",

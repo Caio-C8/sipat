@@ -27,6 +27,7 @@ describe("catálogo de navegação do sistema", () => {
       "/cadastros/comissoes",
       "/cadastros/naturezas",
       "/cadastros/especies",
+      "/cadastros/fornecedores",
       "/configuracoes",
     ]);
     expect(
@@ -81,8 +82,10 @@ describe("catálogo de navegação do sistema", () => {
     expect(diretor).toContain("Processos de compra");
     expect(administrador).toContain("Espécies");
     expect(administrador).toContain("Setores");
+    expect(administrador).toContain("Fornecedores");
     expect(diretor).not.toContain("Espécies");
     expect(diretor).not.toContain("Setores");
+    expect(diretor).not.toContain("Fornecedores");
   });
 
   it("resolve o breadcrumb pelo caminho catalogado", () => {
@@ -105,5 +108,8 @@ describe("catálogo de navegação do sistema", () => {
       encontrarNavegacaoPorCaminho("/cadastros/setores/gabinete-02")
         ?.breadcrumb,
     ).toEqual(["Cadastros", "Setores"]);
+    expect(
+      encontrarNavegacaoPorCaminho("/cadastros/fornecedores")?.breadcrumb,
+    ).toEqual(["Cadastros", "Fornecedores"]);
   });
 });

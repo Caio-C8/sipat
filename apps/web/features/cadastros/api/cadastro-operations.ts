@@ -58,6 +58,16 @@ import {
   ConsultarNotaFiscalResponseSchema,
   AlterarNotaFiscalBodySchema,
   AlterarNotaFiscalResponseSchema,
+  ListarFornecedoresQuerySchema,
+  ListarFornecedoresResponseSchema,
+  FornecedorParamsSchema,
+  ConsultarFornecedorResponseSchema,
+  CriarFornecedorSchema,
+  CriarFornecedorResponseSchema,
+  AlterarFornecedorSchema,
+  AlterarFornecedorResponseSchema,
+  AlterarSituacaoFornecedorSchema,
+  AlterarSituacaoFornecedorResponseSchema,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
 export type Leitura = { cookie?: string; signal?: AbortSignal };
@@ -246,6 +256,56 @@ export function criarOperacoesCadastros(client: ApiClient) {
           body: AlterarSituacaoSetorSchema.parse({ ativo }),
           headers: csrf,
           responseSchema: AlterarSituacaoSetorResponseSchema,
+        });
+      },
+    },
+    fornecedores: {
+      listar(
+        query: z.input<typeof ListarFornecedoresQuerySchema>,
+        options?: Leitura,
+      ) {
+        return client.request({
+          path: "/fornecedores",
+          query: ListarFornecedoresQuerySchema.parse(query),
+          responseSchema: ListarFornecedoresResponseSchema,
+          ...leitura(options),
+        });
+      },
+      consultar(id: string, options?: Leitura) {
+        const params = FornecedorParamsSchema.parse({ fornecedorId: id });
+        return client.request({
+          path: `/fornecedores/${params.fornecedorId}`,
+          responseSchema: ConsultarFornecedorResponseSchema,
+          ...leitura(options),
+        });
+      },
+      criar(body: z.input<typeof CriarFornecedorSchema>) {
+        return client.request({
+          path: "/fornecedores",
+          method: "POST",
+          body: CriarFornecedorSchema.parse(body),
+          headers: csrf,
+          responseSchema: CriarFornecedorResponseSchema,
+        });
+      },
+      alterar(id: string, body: z.input<typeof AlterarFornecedorSchema>) {
+        const params = FornecedorParamsSchema.parse({ fornecedorId: id });
+        return client.request({
+          path: `/fornecedores/${params.fornecedorId}`,
+          method: "PATCH",
+          body: AlterarFornecedorSchema.parse(body),
+          headers: csrf,
+          responseSchema: AlterarFornecedorResponseSchema,
+        });
+      },
+      situacao(id: string, ativo: boolean) {
+        const params = FornecedorParamsSchema.parse({ fornecedorId: id });
+        return client.request({
+          path: `/fornecedores/${params.fornecedorId}/situacao`,
+          method: "PATCH",
+          body: AlterarSituacaoFornecedorSchema.parse({ ativo }),
+          headers: csrf,
+          responseSchema: AlterarSituacaoFornecedorResponseSchema,
         });
       },
     },

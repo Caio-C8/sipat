@@ -126,6 +126,24 @@ presentes no protótipo visual não fazem parte do contrato persistido de usuár
 O lint, a checagem de tipos, os testes e a validação visual ainda estão pendentes
 porque Node.js, pnpm e as dependências não estão disponíveis neste ambiente.
 
+### WEB-FORNECEDORES-001 — Gestão Web de fornecedores
+
+**Status:** implementada em 12 de novembro de 2026; validação visual no Figma
+e percurso opt-in contra PostgreSQL descartável pendentes.
+
+Entregar `/cadastros/fornecedores` exclusivamente ao Administrador, integrando
+listagem, consulta, criação, alteração, ativação e inativação às cinco rotas e
+aos contratos já existentes. Banco, API e contratos permanecem inalterados,
+salvo divergência comprovada em relação a RF08/UC08 e decisão posterior.
+
+A implementação deve abrir a página `Telas PC` com `@Figma` e reproduzir com
+fidelidade o padrão visual dos cadastros administrativos. A inspeção de 12 de
+novembro de 2026 não encontrou um frame específico de fornecedores; por isso,
+até existir um, os frames de responsáveis e setores definem o padrão visual e
+os contratos de fornecedores definem campos e comportamento.
+
+[Contrato de execução, referência visual e aceite](../../tasks/WEB-FORNECEDORES-001-gestao-fornecedores.md).
+
 ### WEB-DEPRECIACOES-001 — Interface de processamento
 
 **Status:** em execução; branch `codex/depreciacao-web`.

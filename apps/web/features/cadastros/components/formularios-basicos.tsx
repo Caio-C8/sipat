@@ -114,7 +114,7 @@ export function FormularioEspecie({ registro }: { registro?: EspecieDetalhe }) {
     </FormularioCadastro>
   );
 }
-function SituacaoCadastro({
+export function SituacaoCadastro({
   ativo,
   pending,
   alterar,
@@ -128,7 +128,7 @@ function SituacaoCadastro({
   const [erro, setErro] = useState<string | null>(null);
   return (
     <div className="grid gap-3 rounded-md border border-[#dfe7f1] p-4 text-sm">
-      <p>
+      <p aria-live="polite">
         Situação atual: <strong>{ativo ? "Ativo" : "Inativo"}</strong>
       </p>
       {erro && (

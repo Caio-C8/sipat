@@ -5,6 +5,7 @@ import {
   MapPin,
   Package,
   Tag,
+  Truck,
   UsersRound,
 } from "lucide-react";
 
@@ -14,6 +15,7 @@ export type SecaoAbas =
   | "naturezas"
   | "comissoes"
   | "responsaveis"
+  | "fornecedores"
   | "setores";
 
 const abas = [
@@ -47,16 +49,31 @@ const abas = [
     href: "/cadastros/responsaveis",
     icon: BadgeCheck,
   },
+  {
+    id: "fornecedores",
+    nome: "Fornecedores",
+    href: "/cadastros/fornecedores",
+    icon: Truck,
+  },
   { id: "setores", nome: "Setores", href: "/cadastros/setores", icon: MapPin },
 ] as const;
 
-export function AbasCadastros({ secao }: { secao: SecaoAbas }) {
+export function AbasCadastros({
+  secao,
+  mostrarFornecedores,
+}: {
+  secao: SecaoAbas;
+  mostrarFornecedores: boolean;
+}) {
+  const abasVisiveis = mostrarFornecedores
+    ? abas
+    : abas.filter((aba) => aba.id !== "fornecedores");
   return (
     <nav
-      className="grid grid-cols-2 gap-1 rounded-lg border border-[#dfe7f1] bg-white p-1 sm:grid-cols-3 xl:grid-cols-6"
+      className={`grid grid-cols-2 gap-1 rounded-lg border border-[#dfe7f1] bg-white p-1 sm:grid-cols-3 ${mostrarFornecedores ? "xl:grid-cols-7" : "xl:grid-cols-6"}`}
       aria-label="Seções dos cadastros"
     >
-      {abas.map(({ id, nome, href, icon: Icone }) => (
+      {abasVisiveis.map(({ id, nome, href, icon: Icone }) => (
         <Link
           key={id}
           href={href}

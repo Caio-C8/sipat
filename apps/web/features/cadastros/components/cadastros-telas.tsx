@@ -46,22 +46,33 @@ export const paginasCadastros = {
     href: "/cadastros/responsaveis",
     subtitulo: "Cadastre os funcionários responsáveis pelos bens.",
   },
+  fornecedores: {
+    titulo: "Cadastrar fornecedor",
+    lista: "Fornecedores cadastrados",
+    novo: "Novo fornecedor",
+    href: "/cadastros/fornecedores",
+    subtitulo: "Gerencie os fornecedores vinculados ao patrimônio.",
+  },
 } as const;
 export function CadastrosTelas({
   secao,
   registros,
   meta,
   busca,
+  situacao,
   id,
   salvo,
+  mostrarFornecedores,
   children,
 }: {
   secao: SecaoCadastro;
   registros: { id: string; titulo: string; detalhe: string }[];
   meta: { total: number; pagina: number; ultimaPagina: number };
   busca?: string;
+  situacao?: "todos" | "ativos" | "inativos";
   id?: string;
   salvo?: boolean;
+  mostrarFornecedores: boolean;
   children: ReactNode;
 }) {
   const config = paginasCadastros[secao];
@@ -70,6 +81,7 @@ export function CadastrosTelas({
     "?" +
     new URLSearchParams({
       ...(busca ? { busca } : {}),
+      ...(situacao ? { situacao } : {}),
       pagina: String(p),
     }).toString();
   return (
@@ -83,7 +95,7 @@ export function CadastrosTelas({
         </div>
         <span className="text-xs text-[#62748e]">* Campos obrigatórios</span>
       </header>
-      <AbasCadastros secao={secao} />
+      <AbasCadastros secao={secao} mostrarFornecedores={mostrarFornecedores} />
       {salvo && (
         <p
           role="status"
@@ -115,6 +127,20 @@ export function CadastrosTelas({
                 }
               />
             </label>
+            {secao === "fornecedores" && (
+              <label className="text-sm">
+                Situação
+                <select
+                  className={campo}
+                  name="situacao"
+                  defaultValue={situacao ?? "todos"}
+                >
+                  <option value="todos">Todos</option>
+                  <option value="ativos">Ativos</option>
+                  <option value="inativos">Inativos</option>
+                </select>
+              </label>
+            )}
             <button type="submit" className={botao}>
               Consultar
             </button>
@@ -135,6 +161,7 @@ export function CadastrosTelas({
                     new URLSearchParams({
                       id: item.id,
                       ...(busca ? { busca } : {}),
+                      ...(situacao ? { situacao } : {}),
                       pagina: String(meta.pagina),
                     }).toString()
                   }
