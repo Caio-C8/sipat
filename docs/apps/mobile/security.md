@@ -104,7 +104,7 @@ rota normalizados, com baixa cardinalidade.
 - revise config plugins, permissões e código gerado;
 - preserve lockfile e versões de Node/pnpm do EAS;
 - mantenha os patches transitivos registrados em `pnpm-workspace.yaml` enquanto
-  `node-forge` e o Zod 3 da cadeia de build não tiverem atualização oficial
+  `deepmerge` e as linhas 10/13 de `glob` não tiverem atualização oficial
   compatível;
 - execute `pnpm security:patches` após instalar dependências e remova cada patch
   assim que uma versão oficial corrigida puder substituí-lo;
@@ -113,19 +113,36 @@ rota normalizados, com baixa cardinalidade.
 - verifique o artefato assinado e a origem do build antes de distribuir.
 
 As correções oficiais transitivas atualmente fixadas por `overrides` incluem
-`fast-uri@3.1.9`, `body-parser@2.4.0`, `multer@2.5.0`, `vite@8.3.5`,
+`node-forge@1.4.3`, `fast-uri@3.1.9`, `body-parser@2.4.0`, `multer@2.5.0`, `vite@8.3.5`,
 `source-map-js@1.2.2` e `uuid@11.1.1`, além das linhas corrigidas de
 `brace-expansion`. A fonte de verdade permanece `pnpm-workspace.yaml`, e o
 `pnpm-lock.yaml` registra as versões efetivamente resolvidas.
 
-Os patches atuais validam a quantidade de elementos ASN.1 aninhados no
-`node-forge` e fazem o Zod 3 rejeitar arrays e sets que excedem um limite
-superior antes de percorrer seus elementos. Eles mitigam, respectivamente,
-[GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) e
-[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+O patch atual de `deepmerge@4.3.1` descarta `__proto__` antes de copiar ou
+combinar propriedades e mitiga
+[GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4),
+para o qual ainda não existe versão oficial corrigida. Os patches de
+`glob@10.5.0` e `glob@13.0.6` interrompem imediatamente os quatro caminhos de
+walk após cancelamento e fazem o backport mínimo da correção de
+[GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4);
+a versão oficial corrigida começa em `14.0.2`, fora das faixas ainda exigidas
+por Jest e Nest CLI.
 
-Na reavaliação de 24 de outubro de 2026, `node-forge@1.4.0` continuava sendo a
-versão mais recente publicada e sem release oficial corrigida.
+Em 12 de novembro de 2026, `node-forge@1.4.3` passou a fornecer as correções
+oficiais dos advisories restantes da linha `1.4.2`, substituindo o override
+anterior. A atualização compatível de `shadcn` para `4.23.0` também removeu a
+última cadeia de Zod 3; toda a árvore agora usa Zod `4.6.7`, posterior à correção
+de [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5),
+e o patch local de Zod foi removido.
+
+`minimatch@10.2.6` permanece transitivo no tooling do Expo/Jest. O advisory
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)
+possui correção somente na major 11, enquanto os consumidores atuais declaram a
+major 10. Não aplique override global silencioso: a mudança remove APIs e muda
+o formato de export. Reavalie quando Expo, Jest e dependências associadas
+publicarem faixas compatíveis; até lá, não exponha padrões de glob controlados
+por usuário nesses processos de build e teste.
+
 `decode-uri-component@0.5.1` já possuía a correção, mas migrou para ESM e ficava
 fora do intervalo `^0.2.2` consumido por `query-string@7.1.3` no antigo Expo
 Router 57. A migração para Expo Router 58 removeu essa cadeia da árvore
@@ -143,14 +160,9 @@ inspecionam o conteúdo dos patches locais. Não ignore nem encerre os avisos se
 registrar a existência dos patches e a execução bem-sucedida de
 `pnpm security:patches`.
 
-O Expo CLI 58.1.15 ainda declara `zod@^3.25.76`; forçar Zod 4 por override
-quebraria o contrato de major do consumidor. O commit oficial da correção atua
-na implementação V4, por isso o patch local faz o backport mínimo equivalente
-na implementação V3 realmente consumida. `pnpm security:patches` comprova que
-arrays com `max`/`length` e sets com `max` não validam seus elementos depois de
-uma violação do limite. Remova esse patch quando o Expo CLI adotar uma versão
-oficial corrigida e a árvore instalada comprovar que o Zod 3 deixou de ser
-necessário.
+`pnpm security:patches` valida as versões oficiais fixadas, a ausência do Zod 3,
+o conteúdo aplicado dos dois patches de `glob` e o comportamento protegido de
+`deepmerge` e `node-forge`.
 
 ## Checklist de uma feature protegida
 
