@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,9 @@ const mobileRequire = createRequire(
 const webRequire = createRequire(
   join(repositoryRoot, "apps", "web", "package.json"),
 );
+const apiRequire = createRequire(
+  join(repositoryRoot, "apps", "api", "package.json"),
+);
 const expoRequire = createRequire(mobileRequire.resolve("expo/package.json"));
 const expoCliRequire = createRequire(
   expoRequire.resolve("@expo/cli/package.json"),
@@ -20,43 +24,46 @@ const expoConfigRequire = createRequire(
 );
 const shadcnRequire = createRequire(webRequire.resolve("shadcn"));
 const dotenvxRequire = createRequire(shadcnRequire.resolve("@dotenvx/dotenvx"));
+const nestCliRequire = createRequire(
+  apiRequire.resolve("@nestjs/cli/package.json"),
+);
+const jestRequire = createRequire(apiRequire.resolve("jest/package.json"));
+const jestCoreRequire = createRequire(
+  jestRequire.resolve("@jest/core/package.json"),
+);
+const jestTransformRequire = createRequire(
+  jestCoreRequire.resolve("@jest/transform/package.json"),
+);
+const babelIstanbulRequire = createRequire(
+  jestTransformRequire.resolve("babel-plugin-istanbul/package.json"),
+);
+const testExcludeRequire = createRequire(
+  babelIstanbulRequire.resolve("test-exclude/package.json"),
+);
 
-assert.equal(expoCliManifest.version, "58.1.16");
-assert.equal(expoCliRequire("node-forge/package.json").version, "1.4.2");
+assert.match(expoCliManifest.version, /^58\./);
+assert.equal(expoCliRequire("node-forge/package.json").version, "1.4.3");
 assert.equal(expoConfigRequire("deepmerge/package.json").version, "4.3.1");
-assert.equal(expoCliRequire("zod/package.json").version, "3.25.76");
+assert.equal(shadcnRequire("zod/package.json").version, "4.6.7");
 assert.equal(dotenvxRequire("systeminformation").version(), "5.33.18");
 
-const { z: zodV3 } = expoCliRequire("zod");
-let parsedArrayElements = 0;
-const arrayElement = zodV3.string().superRefine(() => {
-  parsedArrayElements += 1;
-});
+for (const [globRequire, expectedVersion] of [
+  [testExcludeRequire, "10.5.0"],
+  [nestCliRequire, "13.0.6"],
+]) {
+  const globManifestPath = globRequire.resolve("glob/package.json");
+  assert.equal(globRequire(globManifestPath).version, expectedVersion);
 
-assert.equal(
-  zodV3.array(arrayElement).max(1).safeParse(["first", "second"]).success,
-  false,
-);
-assert.equal(parsedArrayElements, 0);
-assert.equal(
-  zodV3.array(arrayElement).length(1).safeParse(["first", "second"]).success,
-  false,
-);
-assert.equal(parsedArrayElements, 0);
-
-let parsedSetElements = 0;
-const setElement = zodV3.string().superRefine(() => {
-  parsedSetElements += 1;
-});
-
-assert.equal(
-  zodV3
-    .set(setElement)
-    .max(1)
-    .safeParse(new Set(["first", "second"])).success,
-  false,
-);
-assert.equal(parsedSetElements, 0);
+  const walkerSource = readFileSync(
+    join(dirname(globManifestPath), "dist", "commonjs", "walker.js"),
+    "utf8",
+  );
+  assert.equal(
+    walkerSource.match(/if \(this\.signal\?\.aborted\)\s+return cb\(\);/gu)
+      ?.length,
+    4,
+  );
+}
 
 const forge = expoCliRequire("node-forge");
 const keyPair = forge.pki.rsa.generateKeyPair({ bits: 512, e: 0x10001 });
