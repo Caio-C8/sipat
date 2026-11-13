@@ -50,6 +50,7 @@ test.describe("reavaliação Web → API → PostgreSQL descartável", () => {
     const bem = page.getByRole("listitem").filter({ hasText: fixture.numero });
     await expect(bem).toBeVisible();
     await bem.getByRole("button", { name: "Selecionar" }).click();
+    await page.getByRole("button", { name: "Preencher parâmetros" }).click();
     const grupo = page.getByRole("group", { name: new RegExp(fixture.numero) });
     await expect(grupo).toBeVisible();
     await page
@@ -64,7 +65,7 @@ test.describe("reavaliação Web → API → PostgreSQL descartável", () => {
     await grupo
       .getByRole("textbox", { name: "Novo residual (R$)" })
       .fill("150");
-    await page.getByRole("button", { name: "Calcular prévia" }).click();
+    await page.getByRole("button", { name: "Revisar reavaliação" }).click();
     await expect(
       page.getByRole("heading", { name: "3. Revisar antes de confirmar" }),
     ).toBeVisible();
@@ -98,25 +99,53 @@ test.describe("reavaliação Web → API → PostgreSQL descartável", () => {
       }),
     ).toBeVisible();
     const original = gravado as unknown as { dados: { id: string }[] };
-    await page.goto(`/reavaliacoes/${original.dados[0]!.id}`);
-    await expect(page).toHaveURL(/\/reavaliacoes\/[0-9a-f-]+$/);
-    await expect(page.getByText(fixture.numero)).toBeVisible();
+    await page.goto(
+      `/reavaliacoes?busca=${encodeURIComponent(fixture.numero)}`,
+    );
+    await page
+      .getByRole("row", { name: new RegExp(fixture.numero) })
+      .getByRole("link", { name: "Detalhes" })
+      .click();
+    await expect(page).toHaveURL(
+      new RegExp(`/reavaliacoes/${original.dados[0]!.id}\\?retorno=`),
+    );
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
     await expect(
-      page.getByRole("row", { name: /Valor bruto/ }).getByRole("cell", {
+      dialog.getByText(fixture.numero, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("row", { name: /Valor bruto/ }).getByRole("cell", {
         name: "R$ 1.200,0000000",
       }),
     ).toBeVisible();
-    await page.setViewportSize({ width: 390, height: 844 });
-    await expect(
-      page.getByRole("heading", { name: "Detalhes da reavaliação" }),
-    ).toBeVisible();
-    const largura = await page.evaluate(
-      () => document.documentElement.scrollWidth,
-    );
-    expect(largura).toBeLessThanOrEqual(390);
+    for (const viewport of [
+      { width: 1536, height: 960 },
+      { width: 900, height: 900 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(
+        dialog.getByRole("heading", { name: "Reavaliação · Detalhes" }),
+      ).toBeVisible();
+      const largura = await page.evaluate(
+        () => document.documentElement.scrollWidth,
+      );
+      expect(largura).toBeLessThanOrEqual(viewport.width);
+    }
     const acessibilidade = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
     expect(acessibilidade.violations).toEqual([]);
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(
+      new RegExp(`/reavaliacoes\\?busca=${fixture.numero}$`),
+    );
+    await page.goBack();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.goForward();
+    await expect(page).toHaveURL(
+      new RegExp(`/reavaliacoes\\?busca=${fixture.numero}$`),
+    );
   });
 });

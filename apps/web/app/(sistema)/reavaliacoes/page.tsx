@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight, Eye, Plus } from "lucide-react";
 import { ListarReavaliacoesQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
 import { obterIdentidadeAtual } from "@/lib/auth/server-session";
@@ -15,14 +16,13 @@ import {
 
 export const metadata: Metadata = { title: "Reavaliações" };
 
-export default async function ReavaliacoesPage({
-  searchParams,
+async function ReavaliacoesContent({
+  parametros,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  parametros: Record<string, string | string[] | undefined>;
 }) {
   const identidade = await obterIdentidadeAtual();
   if (!identidade) return null;
-  const parametros = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(parametros).filter(
       ([, valor]) => typeof valor === "string" && valor !== "",
@@ -44,18 +44,26 @@ export default async function ReavaliacoesPage({
   }
   const hrefPagina = (pagina: number) =>
     `/reavaliacoes?${new URLSearchParams({ ...valores, pagina: String(pagina) }).toString()}`;
+  const consultaAtual = new URLSearchParams(valores).toString();
+  const retornoDetalhe = consultaAtual
+    ? `/reavaliacoes?${consultaAtual}`
+    : "/reavaliacoes";
   return (
-    <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
+    <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Reavaliações</h1>
-          <p className="mt-2 text-sm text-[#526580]">
-            Consulte os registros individuais de reavaliação patrimonial.
+          <h1 className="text-2xl font-bold tracking-tight">Reavaliações</h1>
+          <p className="mt-1 text-sm text-[#526580]">
+            Consulte os registros e inicie uma nova reavaliação patrimonial.
           </p>
         </div>
         {identidade.perfil === "DIRETOR_PATRIMONIO" ? (
-          <Button asChild>
+          <Button
+            asChild
+            className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+          >
             <Link prefetch={false} href="/reavaliacoes/nova">
+              <Plus aria-hidden="true" className="size-4" />
               Nova reavaliação
             </Link>
           </Button>
@@ -78,11 +86,18 @@ export default async function ReavaliacoesPage({
           className={painelReavaliacao}
           aria-labelledby="registros-reavaliacao-title"
         >
-          <div className="mb-4 flex flex-wrap justify-between gap-2">
-            <h2 id="registros-reavaliacao-title" className="font-bold">
-              Registros
-            </h2>
-            <p className="text-sm">{resposta.meta.total} registro(s)</p>
+          <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b border-[#e4eaf2] pb-4">
+            <div>
+              <h2 id="registros-reavaliacao-title" className="font-bold">
+                Reavaliações registradas
+              </h2>
+              <p className="mt-1 text-xs text-[#526580]">
+                Registros individuais, do mais recente para o mais antigo.
+              </p>
+            </div>
+            <p className="text-xs text-[#526580]">
+              {resposta.meta.total} registro(s)
+            </p>
           </div>
           {resposta.dados.length ? (
             <div
@@ -95,7 +110,7 @@ export default async function ReavaliacoesPage({
                 <caption className="sr-only">
                   Reavaliações mais recentes primeiro
                 </caption>
-                <thead className="bg-[#f7f9fc] text-xs text-[#526580]">
+                <thead className="bg-[#f7f9fc] text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
                   <tr>
                     <th scope="col" className="px-3 py-3">
                       Patrimônio
@@ -117,32 +132,33 @@ export default async function ReavaliacoesPage({
                 <tbody>
                   {resposta.dados.map((item) => (
                     <tr key={item.id} className="border-b border-[#e4eaf2]">
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top">
                         <strong>
                           {item.patrimonio.numeroPatrimonio ??
                             "Número não registrado"}
                         </strong>
-                        <p>
+                        <p className="mt-1 text-xs text-[#526580]">
                           {item.patrimonio.descricao ??
                             "Descrição histórica não registrada"}
                         </p>
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top">
                         {formatarDataCivil(item.dataReferencia)}
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top">
                         {formatarDecimal(item.valorLiquidoAnterior)}
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top font-semibold text-[#173d6b]">
                         {formatarDecimal(item.valorBrutoNovo)}
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top">
                         <Link
                           prefetch={false}
-                          className="underline"
-                          href={`/reavaliacoes/${item.id}`}
+                          className="inline-flex min-h-8 items-center gap-2 rounded-md border border-[#dce5f0] px-3 text-xs font-semibold text-[#203b61] transition hover:bg-[#f4f8ff] focus-visible:outline-2 focus-visible:outline-[#2863ec]"
+                          href={`/reavaliacoes/${item.id}${consultaAtual ? `?retorno=${encodeURIComponent(retornoDetalhe)}` : ""}`}
                         >
-                          Abrir detalhe
+                          <Eye aria-hidden="true" className="size-3.5" />
+                          Detalhes
                         </Link>
                       </td>
                     </tr>
@@ -157,36 +173,50 @@ export default async function ReavaliacoesPage({
           )}
           <nav
             aria-label="Paginação das reavaliações"
-            className="mt-5 flex items-center justify-end gap-3 text-sm"
+            className="mt-5 flex items-center justify-end gap-2 text-sm"
           >
             {resposta.meta.pagina > 1 ? (
               <Link
                 prefetch={false}
-                className="underline"
+                className="inline-flex min-h-9 items-center gap-1 rounded-md border border-[#dce5f0] px-3 font-semibold hover:bg-[#f4f8ff]"
                 href={hrefPagina(resposta.meta.pagina - 1)}
               >
+                <ChevronLeft aria-hidden="true" className="size-4" />
                 Anterior
               </Link>
             ) : (
-              <span className="text-[#526580]">Anterior</span>
+              <span className="inline-flex min-h-9 items-center gap-1 rounded-md border border-[#edf1f6] px-3 text-[#526580]">
+                <ChevronLeft aria-hidden="true" className="size-4" /> Anterior
+              </span>
             )}
-            <span>
+            <span className="px-2 text-xs text-[#526580]">
               {resposta.meta.pagina} de {resposta.meta.ultimaPagina}
             </span>
             {resposta.meta.pagina < resposta.meta.ultimaPagina ? (
               <Link
                 prefetch={false}
-                className="underline"
+                className="inline-flex min-h-9 items-center gap-1 rounded-md border border-[#dce5f0] px-3 font-semibold hover:bg-[#f4f8ff]"
                 href={hrefPagina(resposta.meta.pagina + 1)}
               >
                 Próxima
+                <ChevronRight aria-hidden="true" className="size-4" />
               </Link>
             ) : (
-              <span className="text-[#526580]">Próxima</span>
+              <span className="inline-flex min-h-9 items-center gap-1 rounded-md border border-[#edf1f6] px-3 text-[#526580]">
+                Próxima <ChevronRight aria-hidden="true" className="size-4" />
+              </span>
             )}
           </nav>
         </section>
       ) : null}
     </main>
   );
+}
+
+export default async function ReavaliacoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  return <ReavaliacoesContent parametros={await searchParams} />;
 }

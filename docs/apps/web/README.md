@@ -42,7 +42,11 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/reavaliacoes`, `/reavaliacoes/nova` e o detalhe oferecem consultas,
   prévia e confirmação na API real; o percurso Chromium com PostgreSQL
   isolado está em
-  [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md);
+  [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md).
+  A evolução visual entregue em
+  [WEB-REAVALIACOES-002](../../tasks/WEB-REAVALIACOES-002-paridade-visual-figma.md)
+  reproduz na tela independente a lista, a criação em etapas e o detalhe
+  lateral de `Telas PC`, sem alterar o domínio existente;
 - `/depreciacao` seleciona pela URL as competências devidas, prioriza a mais
   antiga e permite ao Diretor executar depreciações individuais ou em lote;
 - `/inventarios` permite a Administrador e Diretor consultar inventários; o

@@ -240,6 +240,19 @@ Diretor com a API real. A data de referência é limitada ao mês corrente até
 hoje. O percurso Web–API–PostgreSQL, viewport estreita e axe passaram.
 [Tarefa](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md).
 
+### WEB-REAVALIACOES-002 — Paridade visual com o Figma
+
+**Status:** implementada em 13/11/2026; verificação automatizada concluída.
+
+Foram adequados a lista, o fluxo independente de criação e o detalhe lateral
+aos frames obrigatórios de `Telas PC`. O drawer iniciado no patrimônio foi
+preservado conforme a decisão de execução, pois já estava pronto. Administrador e Diretor
+consultam; somente o Diretor recebe ações de prévia e confirmação. A entrega é
+Web: banco, contratos e API permanecem inalterados porque a matriz de acesso e
+o domínio atuais atendem aos requisitos. O percurso real Web–API–PostgreSQL,
+os perfis, os três viewports e axe passaram.
+[Roadmap executável, frames e referências por objetivo](../../tasks/WEB-REAVALIACOES-002-paridade-visual-figma.md).
+
 ## Movimentações
 
 ### WEB-MOVIMENTACOES-000 — Placeholder no shell
