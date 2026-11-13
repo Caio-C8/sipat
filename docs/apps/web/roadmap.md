@@ -229,6 +229,22 @@ Lista, criação e detalhe no shell autenticado, com orçamento e retorno por it
 histórico e documentos reais. O percurso Chromium/axe e os limites da verificação
 estão na [tarefa](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
 
+### WEB-MANUTENCOES-002 — Paridade visual com o Figma
+
+**Status:** implementada e verificada em 13/11/2026.
+
+Adequar lista, novo pedido, configuração por bem, detalhe e retorno aos frames
+obrigatórios de `Telas PC`. Administrador e Diretor possuem exatamente as mesmas
+permissões em todo o gerenciamento de manutenções. A entrega é Web: banco,
+contratos e API permanecem inalterados porque RF18, UC18 e a matriz atual já
+atendem à regra; qualquer divergência deve ser reproduzida e retornar para nova
+decisão antes de ampliar o escopo.
+
+As oito referências vivas foram comparadas em 1920 × 1080 e o percurso real
+passou nos dois perfis contra PostgreSQL descartável, incluindo acessibilidade,
+responsividade, idempotência, upload parcial, orçamento e retorno por item.
+[Roadmap executável, frames e referências por objetivo](../../tasks/WEB-MANUTENCOES-002-paridade-visual-figma.md).
+
 ## Reavaliações
 
 ### WEB-REAVALIACOES-001 — Consulta e registro integrados

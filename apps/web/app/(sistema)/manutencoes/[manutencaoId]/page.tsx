@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { ManutencaoParamsSchema } from "@repo/contracts";
 import { DetalhePedido } from "@/features/manutencoes/components/detalhe-pedido";
 import { ErroManutencao } from "@/features/manutencoes/components/erro-manutencao";
@@ -28,11 +29,23 @@ export default async function DetalheManutencaoPage({
     }
   }
   return (
-    <main className="grid min-w-0 gap-4 p-4 text-[#19355d] sm:p-7">
-      <Link href="/manutencoes" className="justify-self-start underline">
-        Voltar aos pedidos
-      </Link>
-      <h1 className="text-2xl font-bold">Detalhe da manutenção</h1>
+    <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
+      <header>
+        <Link
+          href="/manutencoes"
+          className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#526580] hover:text-[#19355d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2863ec]"
+        >
+          <ChevronLeft aria-hidden="true" className="size-4" /> Voltar à lista
+        </Link>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {pedido
+            ? `Pedido ${pedido.dados.numeroRequisicao ?? pedido.dados.id}`
+            : "Pedido de manutenção"}
+        </h1>
+        <p className="mt-1 text-sm text-[#526580]">
+          Acompanhe os atendimentos, documentos, orçamentos e retornos.
+        </p>
+      </header>
       {!valores.success ? (
         <div role="alert">Identificador inválido.</div>
       ) : erro ? (

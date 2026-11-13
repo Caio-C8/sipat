@@ -1,5 +1,14 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
+import {
+  Download,
+  FilePlus2,
+  FileText,
+  Pencil,
+  RefreshCw,
+  RotateCcw,
+} from "lucide-react";
 import type {
   DocumentoManutencao,
   ItemManutencao,
@@ -10,18 +19,33 @@ import {
   RegistrarRetornoManutencaoBodySchema,
 } from "@repo/contracts";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 import {
   decidirAposFalha,
   isConflitoIdempotencia,
   type DecisaoIdempotencia,
 } from "@/lib/api/core/idempotencia";
+import {
+  campoManutencao,
+  classeStatusManutencao,
+  formatarDataCivil,
+  formatarMoeda,
+  painelManutencao,
+  rotuloStatusManutencao,
+} from "../apresentacao";
 import { criarOperacoesManutencoes } from "../api/manutencao-operations";
 import { ErroManutencao } from "./erro-manutencao";
 
 const operacoes = criarOperacoesManutencoes(browserApiClient);
-const campo =
-  "rounded-md border border-slate-300 bg-white p-2 text-sm text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2";
 const hoje = () =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -30,29 +54,34 @@ const hoje = () =>
     day: "2-digit",
   }).format(new Date());
 
-function Documentos({ documentos }: { documentos: DocumentoManutencao[] }) {
-  return (
-    <div className="grid gap-2">
-      <h4 className="font-semibold">Documentos</h4>
-      {documentos.length ? (
-        <ul className="list-disc pl-5 text-sm">
-          {documentos.map((doc) => (
-            <li key={doc.id}>
-              <a
-                href={doc.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                {doc.nome} ({doc.fase.toLowerCase()})
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-sm">Nenhum documento.</p>
-      )}
-    </div>
+function ListaDocumentos({
+  documentos,
+}: {
+  documentos: DocumentoManutencao[];
+}) {
+  return documentos.length ? (
+    <ul className="grid gap-2">
+      {documentos.map((doc) => (
+        <li key={doc.id}>
+          <a
+            href={doc.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-[#2863ec] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2863ec]"
+          >
+            <FileText aria-hidden="true" className="size-4" />
+            {doc.nome}
+            <Download aria-hidden="true" className="size-3.5" />
+          </a>
+          <p className="ml-6 text-xs text-[#526580]">
+            {doc.fase.toLowerCase()} ·{" "}
+            {formatarDataCivil(doc.criadoEm.slice(0, 10))}
+          </p>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-sm text-[#526580]">Nenhum documento anexado.</p>
   );
 }
 
@@ -88,7 +117,7 @@ function EnviarDocumento({
       await operacoes.enviarDocumento(
         pedidoId,
         {
-          chaveIdempotencia: chave.current ?? crypto.randomUUID(),
+          chaveIdempotencia: chave.current,
           fase,
           ...(item ? { itemId: item.id } : {}),
         },
@@ -116,10 +145,9 @@ function EnviarDocumento({
     }
   }
   return (
-    <form onSubmit={enviar} className="grid gap-2 rounded border p-3 text-sm">
-      <h4 className="font-semibold">Anexar PDF</h4>
+    <form onSubmit={enviar} className="grid gap-3 text-sm">
       {item ? (
-        <label className="grid gap-1">
+        <label className="grid gap-2">
           Fase
           <select
             value={fase}
@@ -127,9 +155,8 @@ function EnviarDocumento({
               setFase(e.target.value as "ENVIO" | "RECEBIMENTO");
               chave.current = null;
               setErro(null);
-              setDecisaoIdempotencia(null);
             }}
-            className={campo}
+            className={campoManutencao}
           >
             <option value="ENVIO" disabled={!!item.dataRetorno}>
               Envio
@@ -139,10 +166,8 @@ function EnviarDocumento({
             </option>
           </select>
         </label>
-      ) : (
-        <p>Documento comum do pedido (opcional, um PDF).</p>
-      )}
-      <label className="grid gap-1">
+      ) : null}
+      <label className="grid gap-2">
         Arquivo PDF (até 10 MiB)
         <input
           ref={input}
@@ -152,21 +177,21 @@ function EnviarDocumento({
             setArquivo(e.target.files?.[0] ?? null);
             chave.current = null;
             setErro(null);
-            setDecisaoIdempotencia(null);
           }}
           required
-          className={campo}
+          className={campoManutencao}
         />
       </label>
-      <button
+      <Button
         type="submit"
         disabled={
           !arquivo || ocupado || decisaoIdempotencia?.tipo === "ja_processada"
         }
-        className="justify-self-start rounded border px-3 py-2 disabled:opacity-50"
+        className="justify-self-start gap-2"
       >
-        {ocupado ? "Enviando..." : "Enviar documento"}
-      </button>
+        <FilePlus2 aria-hidden="true" />
+        {ocupado ? "Enviando…" : "Anexar PDF"}
+      </Button>
       {erro && decisaoIdempotencia ? (
         <AlertaIdempotencia
           erro={erro}
@@ -180,8 +205,8 @@ function EnviarDocumento({
         <>
           <ErroManutencao erro={erro} />
           <p role="status">
-            Anexo não confirmado. O pedido ou retorno já registrado permanece no
-            sistema; consulte o detalhe antes de reenviar.
+            O pedido ou retorno já confirmado permanece no sistema. Consulte o
+            detalhe antes de reenviar.
           </p>
         </>
       ) : null}
@@ -189,14 +214,16 @@ function EnviarDocumento({
   );
 }
 
-function Orcamento({
+function FormularioOrcamento({
   pedidoId,
   item,
   onAtualizar,
+  onConcluir,
 }: {
   pedidoId: string;
   item: ItemManutencao;
   onAtualizar: () => Promise<void>;
+  onConcluir: () => void;
 }) {
   const [data, setData] = useState(
     item.orcamentoAtual?.dataOrcamento ?? hoje(),
@@ -212,20 +239,6 @@ function Orcamento({
   >([]);
   const [erro, setErro] = useState<unknown>(null);
   const [ocupado, setOcupado] = useState(false);
-  async function buscarFornecedores() {
-    try {
-      setFornecedores(
-        (
-          await operacoes.fornecedores({
-            ...(busca.trim() ? { busca: busca.trim() } : {}),
-            limite: "50",
-          })
-        ).dados,
-      );
-    } catch (e) {
-      setErro(e);
-    }
-  }
   useEffect(() => {
     let ativo = true;
     void operacoes
@@ -240,6 +253,20 @@ function Orcamento({
       ativo = false;
     };
   }, []);
+  async function buscar() {
+    try {
+      setFornecedores(
+        (
+          await operacoes.fornecedores({
+            ...(busca.trim() ? { busca: busca.trim() } : {}),
+            limite: "50",
+          })
+        ).dados,
+      );
+    } catch (e) {
+      setErro(e);
+    }
+  }
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (ocupado) return;
@@ -260,83 +287,55 @@ function Orcamento({
     try {
       await operacoes.atualizarOrcamento(pedidoId, item.id, body);
       await onAtualizar();
+      onConcluir();
     } catch (e) {
       setErro(e);
     } finally {
       setOcupado(false);
     }
   }
-  if (item.dataRetorno) return null;
   return (
     <form
+      id="form-orcamento"
       onSubmit={salvar}
-      className="grid gap-3 rounded border p-3 text-sm sm:grid-cols-2"
+      className="grid gap-4 px-6 text-sm sm:grid-cols-2"
     >
-      <h4 className="font-semibold sm:col-span-2">
-        Atualizar orçamento (versão {item.versaoOrcamento})
-      </h4>
-      <label className="grid gap-1">
-        Data do orçamento
-        <input
-          type="date"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-          required
-          className={campo}
-        />
-      </label>
-      <label className="grid gap-1">
-        Valor
-        <input
-          inputMode="decimal"
-          value={valor}
-          onChange={(e) => setValor(e.target.value)}
-          placeholder="0.00"
-          required
-          className={campo}
-        />
-      </label>
-      <label className="grid gap-1 sm:col-span-2">
-        Descrição
-        <input
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
-          required
-          className={campo}
-        />
-      </label>
-      <div className="grid gap-1 sm:col-span-2">
-        <label htmlFor={`busca-fornecedor-${item.id}`}>
+      <div className="rounded-md bg-[#f3f7fe] p-4 sm:col-span-2">
+        <strong>
+          {item.patrimonio.numeroPatrimonio} · {item.patrimonio.descricao}
+        </strong>
+        <p className="mt-1 text-xs text-[#526580]">
+          Versão atual: {item.versaoOrcamento}
+        </p>
+      </div>
+      <div className="grid gap-2 sm:col-span-2">
+        <label htmlFor="busca-fornecedor-orcamento">
           Buscar fornecedor ativo
         </label>
         <div className="flex gap-2">
           <input
-            id={`busca-fornecedor-${item.id}`}
+            id="busca-fornecedor-orcamento"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className={`${campo} min-w-0 flex-1`}
+            className={campoManutencao}
           />
-          <button
-            type="button"
-            onClick={() => void buscarFornecedores()}
-            className="rounded border px-3"
-          >
+          <Button type="button" variant="outline" onClick={() => void buscar()}>
             Buscar
-          </button>
+          </Button>
         </div>
       </div>
-      <label className="grid gap-1 sm:col-span-2">
+      <label className="grid gap-2">
         Fornecedor
         <select
           value={fornecedorId}
           onChange={(e) => setFornecedorId(e.target.value)}
-          className={campo}
+          className={campoManutencao}
         >
           <option value="">Nenhum</option>
           {item.fornecedor &&
           !fornecedores.some((f) => f.id === item.fornecedor?.id) ? (
             <option value={item.fornecedor.id}>
-              {item.fornecedor.nome} (vínculo atual)
+              {item.fornecedor.nome} (atual)
             </option>
           ) : null}
           {fornecedores.map((f) => (
@@ -346,36 +345,69 @@ function Orcamento({
           ))}
         </select>
       </label>
-      <button
-        type="submit"
-        disabled={ocupado}
-        className="justify-self-start rounded border px-3 py-2 disabled:opacity-50"
-      >
-        {ocupado ? "Salvando..." : "Salvar orçamento"}
-      </button>
+      <label className="grid gap-2">
+        Data do orçamento *
+        <input
+          type="date"
+          value={data}
+          onChange={(e) => setData(e.target.value)}
+          required
+          className={campoManutencao}
+        />
+      </label>
+      <label className="grid gap-2">
+        Valor orçado (R$) *
+        <input
+          inputMode="decimal"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          required
+          className={campoManutencao}
+        />
+      </label>
+      <label className="grid gap-2 sm:col-span-2">
+        Descrição do orçamento *
+        <textarea
+          rows={3}
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          required
+          className={campoManutencao}
+        />
+      </label>
       {erro ? (
         <div className="sm:col-span-2">
           <ErroManutencao erro={erro} />
         </div>
       ) : null}
+      <DialogFooter className="sm:col-span-2">
+        <Button type="button" variant="outline" onClick={onConcluir}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={ocupado}>
+          {ocupado ? "Salvando…" : "Salvar orçamento"}
+        </Button>
+      </DialogFooter>
     </form>
   );
 }
 
-function Retorno({
+function FormularioRetorno({
   pedidoId,
   item,
   dataEnvio,
   onAtualizar,
   onJaProcessada,
+  onConcluir,
 }: {
   pedidoId: string;
   item: ItemManutencao;
   dataEnvio: string;
   onAtualizar: () => Promise<void>;
   onJaProcessada: (erro: unknown, decisao: DecisaoIdempotencia) => void;
+  onConcluir: () => void;
 }) {
-  const [data, setData] = useState(hoje);
+  const [data, setData] = useState(hoje());
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [garantiaDescricao, setGarantiaDescricao] = useState("");
@@ -416,7 +448,9 @@ function Retorno({
     setDecisaoIdempotencia(null);
     try {
       await operacoes.registrarRetorno(pedidoId, item.id, body);
+      chave.current = null;
       await onAtualizar();
+      onConcluir();
     } catch (e) {
       const decisao = decidirAposFalha(e);
       setErro(e);
@@ -429,20 +463,24 @@ function Retorno({
       if (decisao.atualizarConsultas) {
         onJaProcessada(e, decisao);
         await onAtualizar();
+        onConcluir();
       }
     } finally {
       setOcupado(false);
     }
   }
-  if (item.dataRetorno) return null;
   return (
-    <form
-      onSubmit={salvar}
-      className="grid gap-3 rounded border p-3 text-sm sm:grid-cols-2"
-    >
-      <h4 className="font-semibold sm:col-span-2">Registrar retorno</h4>
-      <label className="grid gap-1">
-        Data de retorno
+    <form onSubmit={salvar} className="grid gap-4 px-6 text-sm sm:grid-cols-2">
+      <div className="rounded-md bg-[#f3f7fe] p-4 sm:col-span-2">
+        <strong>
+          {item.patrimonio.numeroPatrimonio} · {item.patrimonio.descricao}
+        </strong>
+        <p className="mt-1 text-xs text-[#526580]">
+          {item.fornecedor?.nome ?? "Fornecedor não informado"}
+        </p>
+      </div>
+      <label className="grid gap-2">
+        Data do retorno *
         <input
           type="date"
           min={dataEnvio}
@@ -453,11 +491,11 @@ function Retorno({
             alterar();
           }}
           required
-          className={campo}
+          className={campoManutencao}
         />
       </label>
-      <label className="grid gap-1">
-        Valor realizado
+      <label className="grid gap-2">
+        Valor realizado (R$) *
         <input
           inputMode="decimal"
           value={valor}
@@ -466,36 +504,35 @@ function Retorno({
             alterar();
           }}
           required
-          placeholder="0.00"
-          className={campo}
+          className={campoManutencao}
         />
       </label>
-      <label className="grid gap-1 sm:col-span-2">
-        Serviço realizado
+      <label className="grid gap-2 sm:col-span-2">
+        Serviço realizado *
         <textarea
-          rows={2}
+          rows={4}
           value={descricao}
           onChange={(e) => {
             setDescricao(e.target.value);
             alterar();
           }}
           required
-          className={campo}
+          className={campoManutencao}
         />
       </label>
-      <label className="grid gap-1">
-        Descrição da garantia (opcional)
+      <label className="grid gap-2">
+        Descrição da garantia
         <input
           value={garantiaDescricao}
           onChange={(e) => {
             setGarantiaDescricao(e.target.value);
             alterar();
           }}
-          className={campo}
+          className={campoManutencao}
         />
       </label>
-      <label className="grid gap-1">
-        Fim da garantia (opcional)
+      <label className="grid gap-2">
+        Fim da garantia
         <input
           type="date"
           min={data}
@@ -505,16 +542,9 @@ function Retorno({
             alterar();
           }}
           disabled={!garantiaDescricao.trim()}
-          className={campo}
+          className={campoManutencao}
         />
       </label>
-      <button
-        type="submit"
-        disabled={ocupado || decisaoIdempotencia?.tipo === "ja_processada"}
-        className="justify-self-start rounded border px-3 py-2 disabled:opacity-50"
-      >
-        {ocupado ? "Registrando..." : "Confirmar retorno"}
-      </button>
       {erro && decisaoIdempotencia ? (
         <div className="sm:col-span-2">
           <AlertaIdempotencia
@@ -531,18 +561,38 @@ function Retorno({
           <ErroManutencao erro={erro} />
         </div>
       ) : null}
+      <DialogFooter className="sm:col-span-2">
+        <Button type="button" variant="outline" onClick={onConcluir}>
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          disabled={ocupado || decisaoIdempotencia?.tipo === "ja_processada"}
+        >
+          {ocupado ? "Registrando…" : "Confirmar retorno"}
+        </Button>
+      </DialogFooter>
     </form>
   );
 }
 
+type Acao = {
+  tipo: "orcamento" | "retorno" | "documento";
+  itemId: string;
+} | null;
+
 export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
   const [pedido, setPedido] = useState(inicial);
   const [erro, setErro] = useState<unknown>(null);
+  const [acao, setAcao] = useState<Acao>(null);
   const [conflitoProcessado, setConflitoProcessado] = useState<{
     erro: unknown;
     decisao: DecisaoIdempotencia;
   } | null>(null);
   const conflitoRef = useRef<HTMLDivElement>(null);
+  const itemAcao = acao
+    ? pedido.itens.find((item) => item.id === acao.itemId)
+    : undefined;
   function informarJaProcessada(
     erroConflito: unknown,
     decisao: DecisaoIdempotencia,
@@ -565,135 +615,309 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
           <AlertaIdempotencia
             erro={conflitoProcessado.erro}
             decisao={conflitoProcessado.decisao}
-            destino={{
-              href: "/manutencoes",
-              rotulo: "Consultar manutenções",
-            }}
+            destino={{ href: "/manutencoes", rotulo: "Consultar manutenções" }}
           />
         </div>
       ) : null}
-      <section className="grid gap-2 rounded-md border bg-white p-4">
-        <h2 className="font-semibold">
-          Pedido {pedido.numeroRequisicao ?? pedido.id}
-        </h2>
-        <p className="break-all text-xs">ID: {pedido.id}</p>
-        <p>
-          Envio: {pedido.dataEnvio} · Situação:{" "}
-          {pedido.status === "CONCLUIDA" ? "Concluída" : "Em andamento"}
-        </p>
-        <p>
-          Comissão: {pedido.comissao.nome} · Autor: {pedido.criadoPor.nome}
-        </p>
-        <p>
-          Itens: {pedido.itensRetornados} retornados e {pedido.itensPendentes}{" "}
-          pendentes
-        </p>
-        {pedido.dataRetorno ? (
-          <p>Último retorno: {pedido.dataRetorno}</p>
-        ) : null}
-        {pedido.justificativa ? (
-          <p>Justificativa: {pedido.justificativa}</p>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => void atualizar()}
-          className="justify-self-start rounded border px-3 py-2 text-sm"
-        >
-          Atualizar dados
-        </button>
-        {erro ? <ErroManutencao erro={erro} /> : null}
-      </section>
-      <section className="grid gap-3 rounded-md border bg-white p-4">
-        <h3 className="font-semibold">Documentos do pedido</h3>
-        <Documentos documentos={pedido.documentos} />
-        {!pedido.documentos.length ? (
-          <EnviarDocumento
-            pedidoId={pedido.id}
-            onAtualizar={atualizar}
-            onJaProcessada={informarJaProcessada}
-          />
-        ) : null}
-      </section>
-      {pedido.itens.map((item) => (
-        <section
-          key={item.id}
-          className="grid gap-4 rounded-md border bg-white p-4"
-          aria-labelledby={`item-${item.id}`}
-        >
-          <h3 id={`item-${item.id}`} className="font-semibold">
-            {item.patrimonio.numeroPatrimonio} — {item.patrimonio.descricao}
-          </h3>
-          <p className="text-sm">
-            Tipo: {item.tipo === "CORRETIVA" ? "Corretiva" : "Preventiva"} ·
-            Fornecedor: {item.fornecedor?.nome ?? "Não informado"} · Previsão:{" "}
-            {item.previsaoRetorno ?? "Não informada"}
-          </p>
-          {item.descricaoProblema ? (
-            <p className="text-sm">Problema: {item.descricaoProblema}</p>
-          ) : null}
-          <p className="text-sm">
-            Situação do bem:{" "}
-            {item.patrimonio.status === "EM_MANUTENCAO"
-              ? "Em manutenção"
-              : item.patrimonio.status}
-          </p>
-          <div className="grid gap-2 text-sm">
-            <h4 className="font-semibold">Orçamentos</h4>
-            {item.revisoesOrcamento.length ? (
-              <ol className="list-decimal pl-5">
-                {item.revisoesOrcamento.map((r) => (
-                  <li key={r.id}>
-                    Versão {r.versao}: {r.dataOrcamento}, {r.valorOrcamento} —{" "}
-                    {r.descricaoOrcamento} (
-                    {r.fornecedor?.nome ?? "sem fornecedor"})
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p>Sem orçamento.</p>
-            )}
-          </div>
-          {item.dataRetorno ? (
-            <div className="grid gap-1 text-sm">
-              <h4 className="font-semibold">Retorno</h4>
-              <p>
-                Recebido em {item.dataRetorno} por{" "}
-                {item.recebidoPor?.nome ?? "Não registrado"}.
-              </p>
-              <p>Serviço: {item.descricaoServicoRealizado}</p>
-              <p>Valor realizado: {item.valorRealizado}</p>
-              <p>
-                Garantia:{" "}
-                {item.garantia
-                  ? `${item.garantia.descricao}${item.garantia.dataFim ? ` até ${item.garantia.dataFim}` : ""}`
-                  : "Não informada"}
-              </p>
+      <section
+        className={painelManutencao}
+        aria-labelledby="dados-pedido-title"
+      >
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.36fr)]">
+          <div>
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="dados-pedido-title" className="font-bold">
+                  Dados do pedido
+                </h2>
+                <p className="mt-1 break-all text-xs text-[#526580]">
+                  ID {pedido.id}
+                </p>
+              </div>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${classeStatusManutencao(pedido.status)}`}
+              >
+                {rotuloStatusManutencao(pedido.status)}
+              </span>
             </div>
-          ) : null}
-          <Orcamento
-            key={`${item.id}-${item.versaoOrcamento}`}
-            pedidoId={pedido.id}
-            item={item}
-            onAtualizar={atualizar}
-          />
-          <Retorno
-            key={`retorno-${item.id}-${item.dataRetorno ?? "pendente"}`}
-            pedidoId={pedido.id}
-            item={item}
-            dataEnvio={pedido.dataEnvio}
-            onAtualizar={atualizar}
-            onJaProcessada={informarJaProcessada}
-          />
-          <Documentos documentos={item.documentos} />
-          <EnviarDocumento
-            key={`documento-${item.id}-${item.dataRetorno ?? "pendente"}`}
-            pedidoId={pedido.id}
-            item={item}
-            onAtualizar={atualizar}
-            onJaProcessada={informarJaProcessada}
-          />
+            <dl className="grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <dt className="text-xs text-[#526580]">Data de envio</dt>
+                <dd className="mt-1 font-semibold">
+                  {formatarDataCivil(pedido.dataEnvio)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-[#526580]">Comissão</dt>
+                <dd className="mt-1 font-semibold">{pedido.comissao.nome}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-[#526580]">Atendimentos</dt>
+                <dd className="mt-1 font-semibold">
+                  {pedido.itensRetornados} de {pedido.totalItens} retornados
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-[#526580]">Último retorno</dt>
+                <dd className="mt-1 font-semibold">
+                  {formatarDataCivil(pedido.dataRetorno)}
+                </dd>
+              </div>
+            </dl>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-5 gap-2"
+              onClick={() => void atualizar()}
+            >
+              <RefreshCw aria-hidden="true" /> Atualizar dados
+            </Button>
+            {erro ? (
+              <div className="mt-4">
+                <ErroManutencao erro={erro} />
+              </div>
+            ) : null}
+          </div>
+          <aside
+            className="rounded-md border border-[#d8e6fb] bg-[#f3f7fe] p-4"
+            aria-label="Documento do pedido"
+          >
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="font-semibold">Documento do pedido</h3>
+              <FileText aria-hidden="true" className="size-4 text-[#2863ec]" />
+            </div>
+            <ListaDocumentos documentos={pedido.documentos} />
+            {!pedido.documentos.length ? (
+              <div className="mt-4">
+                <EnviarDocumento
+                  pedidoId={pedido.id}
+                  onAtualizar={atualizar}
+                  onJaProcessada={informarJaProcessada}
+                />
+              </div>
+            ) : null}
+          </aside>
+        </div>
+      </section>
+
+      <section
+        className={painelManutencao}
+        aria-labelledby="atendimentos-title"
+      >
+        <div className="mb-4">
+          <h2 id="atendimentos-title" className="font-bold">
+            Atendimentos por item
+          </h2>
+          <p className="mt-1 text-xs text-[#526580]">
+            Orçamento, documentos e retorno permanecem individuais.
+          </p>
+        </div>
+        <div
+          className="overflow-x-auto"
+          role="region"
+          aria-label="Atendimentos do pedido"
+          tabIndex={0}
+        >
+          <table className="w-full min-w-[68rem] text-left text-sm">
+            <thead className="bg-[#f7f9fc] text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+              <tr>
+                <th className="px-3 py-3">Patrimônio / problema</th>
+                <th className="px-3 py-3">Fornecedor</th>
+                <th className="px-3 py-3">Tipo</th>
+                <th className="px-3 py-3">Previsão</th>
+                <th className="px-3 py-3">Orçamento</th>
+                <th className="px-3 py-3">Situação</th>
+                <th className="px-3 py-3 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pedido.itens.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-[#e4eaf2] align-top"
+                >
+                  <td className="px-3 py-4">
+                    <strong>
+                      {item.patrimonio.numeroPatrimonio} ·{" "}
+                      {item.patrimonio.descricao}
+                    </strong>
+                    <p className="mt-1 max-w-72 text-xs text-[#526580]">
+                      {item.descricaoProblema ?? "Problema não informado"}
+                    </p>
+                  </td>
+                  <td className="px-3 py-4">
+                    {item.fornecedor?.nome ?? "Não informado"}
+                  </td>
+                  <td className="px-3 py-4">
+                    {item.tipo === "CORRETIVA" ? "Corretiva" : "Preventiva"}
+                  </td>
+                  <td className="px-3 py-4">
+                    {formatarDataCivil(item.previsaoRetorno)}
+                  </td>
+                  <td className="px-3 py-4">
+                    <strong>
+                      {formatarMoeda(item.orcamentoAtual?.valorOrcamento)}
+                    </strong>
+                    <p className="mt-1 text-xs text-[#526580]">
+                      {item.revisoesOrcamento.length} versão(ões)
+                    </p>
+                  </td>
+                  <td className="px-3 py-4">
+                    <span
+                      className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${item.dataRetorno ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+                    >
+                      {item.dataRetorno ? "Retornado" : "Em manutenção"}
+                    </span>
+                    {item.dataRetorno ? (
+                      <p className="mt-1 text-xs text-[#526580]">
+                        {formatarDataCivil(item.dataRetorno)}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="flex justify-end gap-1">
+                      {!item.dataRetorno ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setAcao({ tipo: "orcamento", itemId: item.id })
+                            }
+                          >
+                            <Pencil aria-hidden="true" /> Orçamento
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() =>
+                              setAcao({ tipo: "retorno", itemId: item.id })
+                            }
+                          >
+                            <RotateCcw aria-hidden="true" /> Retorno
+                          </Button>
+                        </>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setAcao({ tipo: "documento", itemId: item.id })
+                        }
+                      >
+                        <FilePlus2 aria-hidden="true" /> PDF
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 flex justify-end border-t border-[#e4eaf2] pt-4">
+          <p className="text-sm font-semibold">
+            Total realizado:{" "}
+            {formatarMoeda(
+              pedido.itens
+                .reduce(
+                  (total, item) => total + Number(item.valorRealizado ?? 0),
+                  0,
+                )
+                .toString(),
+            )}
+          </p>
+        </div>
+      </section>
+
+      {pedido.justificativa ? (
+        <section className={painelManutencao}>
+          <h2 className="font-bold">Motivo do pedido</h2>
+          <p className="mt-2 text-sm text-[#526580]">{pedido.justificativa}</p>
         </section>
-      ))}
+      ) : null}
+
+      <Dialog
+        open={acao?.tipo === "orcamento"}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAcao(null);
+        }}
+      >
+        {acao?.tipo === "orcamento" && itemAcao ? (
+          <DialogContent className="max-h-[min(92vh,54rem)] max-w-3xl overflow-y-auto p-0">
+            <DialogHeader className="border-b border-[#e4eaf2] p-6 pb-4">
+              <DialogTitle className="text-xl text-[#19355d]">
+                Configurar atendimento do item
+              </DialogTitle>
+              <DialogDescription>
+                Registre uma nova versão sem apagar o histórico de orçamento.
+              </DialogDescription>
+            </DialogHeader>
+            <FormularioOrcamento
+              pedidoId={pedido.id}
+              item={itemAcao}
+              onAtualizar={atualizar}
+              onConcluir={() => setAcao(null)}
+            />
+          </DialogContent>
+        ) : null}
+      </Dialog>
+      <Dialog
+        open={acao?.tipo === "retorno"}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAcao(null);
+        }}
+      >
+        {acao?.tipo === "retorno" && itemAcao ? (
+          <DialogContent className="max-h-[min(92vh,54rem)] max-w-3xl overflow-y-auto p-0">
+            <DialogHeader className="border-b border-[#e4eaf2] p-6 pb-4">
+              <DialogTitle className="text-xl text-[#19355d]">
+                Registrar retorno do bem
+              </DialogTitle>
+              <DialogDescription>
+                Conclua apenas o atendimento do patrimônio selecionado.
+              </DialogDescription>
+            </DialogHeader>
+            <FormularioRetorno
+              pedidoId={pedido.id}
+              item={itemAcao}
+              dataEnvio={pedido.dataEnvio}
+              onAtualizar={atualizar}
+              onJaProcessada={informarJaProcessada}
+              onConcluir={() => setAcao(null)}
+            />
+          </DialogContent>
+        ) : null}
+      </Dialog>
+      <Dialog
+        open={acao?.tipo === "documento"}
+        onOpenChange={(aberto) => {
+          if (!aberto) setAcao(null);
+        }}
+      >
+        {acao?.tipo === "documento" && itemAcao ? (
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Documentos do atendimento</DialogTitle>
+              <DialogDescription>
+                {itemAcao.patrimonio.numeroPatrimonio} ·{" "}
+                {itemAcao.patrimonio.descricao}
+              </DialogDescription>
+            </DialogHeader>
+            <ListaDocumentos documentos={itemAcao.documentos} />
+            <div className="border-t border-[#e4eaf2] pt-4">
+              <EnviarDocumento
+                pedidoId={pedido.id}
+                item={itemAcao}
+                onAtualizar={atualizar}
+                onJaProcessada={informarJaProcessada}
+              />
+            </div>
+          </DialogContent>
+        ) : null}
+      </Dialog>
     </div>
   );
 }

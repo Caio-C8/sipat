@@ -103,6 +103,9 @@ describe("catálogo de navegação do sistema", () => {
     expect(
       encontrarNavegacaoPorCaminho("/emprestimos/nova")?.breadcrumb,
     ).toEqual(["Início", "Empréstimos"]);
+    expect(
+      encontrarNavegacaoPorCaminho("/manutencoes/pedido-01")?.breadcrumb,
+    ).toEqual(["Início", "Manutenções"]);
     expect(encontrarNavegacaoPorCaminho("/rota-inexistente")).toBeUndefined();
     expect(
       encontrarNavegacaoPorCaminho("/cadastros/setores/gabinete-02")
