@@ -71,7 +71,9 @@ test.describe("Baixas patrimoniais", () => {
       .getByRole("button", { name: /Continuar com 1 patrimônio/ })
       .click();
     await page.getByLabel("Data da baixa").fill("2026-11-10");
-    await page.getByLabel("Tipo").selectOption("ALIENACAO");
+    await page
+      .getByRole("combobox", { name: "Tipo", exact: true })
+      .selectOption("ALIENACAO");
     await expect(page.getByLabel("Comissão vigente na data")).toContainText(
       "Comissão patrimonial vigente",
     );
@@ -95,6 +97,7 @@ test.describe("Baixas patrimoniais", () => {
   test("mantém reflow, foco e acessibilidade nos viewports exigidos", async ({
     page,
     baseURL,
+    browser,
   }) => {
     await sessao(page, baseURL, "director");
     for (const width of [1920, 1536, 900, 390]) {
@@ -111,16 +114,25 @@ test.describe("Baixas patrimoniais", () => {
         (await new AxeBuilder({ page }).include("main").analyze()).violations,
       ).toEqual([]);
     }
-    await page.locator("body").evaluate((element) => {
-      element.style.zoom = "2";
+    const contextoAmpliado = await browser.newContext({
+      viewport: { width: 640, height: 540 },
+      deviceScaleFactor: 2,
     });
+    await contextoAmpliado.addCookies(await page.context().cookies());
+    const paginaAmpliada = await contextoAmpliado.newPage();
+    await paginaAmpliada.goto(new URL("/baixas", baseURL).toString());
     expect(
-      await page.evaluate(
+      await paginaAmpliada.evaluate(
         () =>
           document.documentElement.scrollWidth <=
           document.documentElement.clientWidth,
       ),
     ).toBe(true);
+    expect(
+      (await new AxeBuilder({ page: paginaAmpliada }).include("main").analyze())
+        .violations,
+    ).toEqual([]);
+    await contextoAmpliado.close();
     await page.keyboard.press("Tab");
     expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe(
       "BODY",

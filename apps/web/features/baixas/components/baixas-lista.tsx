@@ -85,7 +85,7 @@ export function BaixasLista({
             className="min-w-0 overflow-x-auto"
             tabIndex={0}
             role="region"
-            aria-label="Baixas registradas"
+            aria-label="Tabela de baixas registradas"
           >
             <table className="w-full min-w-[980px] text-left text-sm">
               <thead className="bg-[#f5f8fc] text-xs uppercase tracking-wide text-[#526580]">
