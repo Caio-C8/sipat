@@ -3,6 +3,7 @@ import {
   BaixarPatrimonioResponseSchema,
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
+  ConsultarBaixaPatrimonioResponseSchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
@@ -147,13 +148,16 @@ describe("operações de patrimônios", () => {
     });
   });
 
-  it("consulta detalhe e opções da baixa sem cache com contratos próprios", async () => {
+  it("consulta patrimônio, baixa e opções sem cache com contratos próprios", async () => {
     const request = vi.fn().mockResolvedValue({});
     const operacoes = criarOperacoesPatrimonios({
       request,
     } as unknown as ApiClient);
 
     await operacoes.consultar(patrimonioId, {
+      cookie: "sipat_session=segredo",
+    });
+    await operacoes.consultarBaixa(patrimonioId, {
       cookie: "sipat_session=segredo",
     });
     await operacoes.listarOpcoesComissoesBaixa(patrimonioId, {
@@ -174,6 +178,16 @@ describe("operações de patrimônios", () => {
     expect(request).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
+        path: `/patrimonios/${patrimonioId}/baixa`,
+        method: "GET",
+        cache: "no-store",
+        headers: { Cookie: "sipat_session=segredo" },
+        responseSchema: ConsultarBaixaPatrimonioResponseSchema,
+      }),
+    );
+    expect(request).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
         path: `/patrimonios/${patrimonioId}/baixa/opcoes/comissoes`,
         query: {
           dataBaixa: "2026-11-02",
@@ -185,6 +199,24 @@ describe("operações de patrimônios", () => {
         responseSchema: ListarOpcoesComissoesBaixaResponseSchema,
       }),
     );
+  });
+
+  it("obtém o anexo como PDF privado sem expor chave de armazenamento", async () => {
+    const request = vi.fn().mockResolvedValue(new Blob());
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+
+    await operacoes.obterAnexoBaixa(patrimonioId);
+
+    expect(request).toHaveBeenCalledExactlyOnceWith({
+      path: `/patrimonios/${patrimonioId}/baixa/anexo`,
+      method: "GET",
+      cache: "no-store",
+      signal: undefined,
+      responseType: "pdf",
+      timeoutMs: 25_000,
+    });
   });
 
   it("envia baixa multipart e substituição sem Content-Type manual ou retry", async () => {

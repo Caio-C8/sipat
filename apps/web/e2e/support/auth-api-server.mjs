@@ -41,6 +41,63 @@ const comissaoDepreciacao = {
   dataVigenciaFim: "2026-12-31",
 };
 
+const patrimonioBaixaId = "7041c62b-5f83-432c-a178-889977d839b1";
+const baixaId = "47c53ba5-2ea3-494a-b5ea-b1b52181b752";
+const patrimonioBaixa = {
+  id: patrimonioBaixaId,
+  numeroPatrimonio: "123",
+  tipoNumeroPatrimonial: "OFICIAL",
+  descricao: "Notebook corporativo com descrição longa para validar reflow",
+  marca: "Dell",
+  modelo: "Latitude",
+  numeroSerie: "SERIE-123",
+  status: "ATIVO",
+  depreciavel: true,
+  situacaoContabil: {
+    valorBrutoAtual: "5490.0000000",
+    depreciacaoAcumuladaAtual: "500.0000000",
+  },
+  setorAtual: {
+    id: "d4f7ccde-d880-4881-a547-a5c34bf263b2",
+    nome: "Tecnologia da Informação",
+    responsavel: {
+      id: "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab",
+      nome: "Responsável patrimonial",
+    },
+  },
+  especie: {
+    id: "945fd1c9-dc0b-4308-a674-ece87adaf47d",
+    nome: "Notebook",
+    natureza: {
+      id: "9579270d-072b-4c43-a3cb-7c9ac8107ea8",
+      nome: "Equipamento de informática",
+    },
+  },
+};
+const detalheBaixa = {
+  id: baixaId,
+  patrimonio: {
+    id: patrimonioBaixaId,
+    numeroPatrimonio: "123",
+    descricao: patrimonioBaixa.descricao,
+  },
+  comissao: {
+    id: comissaoDepreciacao.id,
+    nome: comissaoDepreciacao.nome,
+  },
+  tipo: "ALIENACAO",
+  dataBaixa: "2026-11-10",
+  motivo: "Alienação autorizada após avaliação da comissão patrimonial.",
+  observacao: "Documento comprobatório anexado ao registro.",
+  createdById: identities.director.id,
+  createdBy: {
+    id: identities.director.id,
+    nome: identities.director.nome,
+  },
+  createdAt: "2026-11-10T15:30:00.000Z",
+  anexoUrl: `/api/patrimonios/${patrimonioBaixaId}/baixa/anexo`,
+};
+
 const pendenteDepreciacao = {
   patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
   numeroPatrimonio: "1",
@@ -114,6 +171,10 @@ function dashboardScenarioFromCookie(cookie = "") {
   return match?.[1];
 }
 
+function baixaScenarioFromCookie(cookie = "") {
+  return cookie.includes("sipat_baixas_scenario=1");
+}
+
 const server = createServer(async (request, response) => {
   const requestUrl = new URL(
     request.url ?? "/",
@@ -148,6 +209,126 @@ const server = createServer(async (request, response) => {
       dados: identity,
     });
     return;
+  }
+
+  if (baixaScenarioFromCookie(request.headers.cookie)) {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname === "/api/relatorios/baixas"
+    ) {
+      const dados = [
+        {
+          id: baixaId,
+          patrimonioId: patrimonioBaixaId,
+          numeroPatrimonio: "123",
+          descricao: patrimonioBaixa.descricao,
+          dataBaixa: detalheBaixa.dataBaixa,
+          tipo: detalheBaixa.tipo,
+          motivo: detalheBaixa.motivo,
+          comissao: detalheBaixa.comissao.nome,
+          autor: "João Diretor",
+          registroEm: detalheBaixa.createdAt,
+          observacao: detalheBaixa.observacao,
+        },
+      ];
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Baixas consultadas.",
+        tipo: "baixas",
+        dados,
+        resumo: {
+          quantidade: 1,
+          porTipo: [{ tipo: "ALIENACAO", quantidade: 1 }],
+        },
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+        consulta: {
+          id: "c7e63c5e-cd1b-4ef8-8ccf-38e150eaf355",
+          instante: "2026-11-13T12:00:00.000Z",
+          filtros: {},
+          criterioTemporal: "Data civil da baixa em São Paulo.",
+          ordenacao: "Data da baixa decrescente.",
+          avisos: [],
+          excluidosDataDesconhecida: 0,
+        },
+      });
+      return;
+    }
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname === "/api/patrimonios" &&
+      requestUrl.searchParams.get("status") === "ATIVO"
+    ) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Patrimônios listados.",
+        dados: [patrimonioBaixa],
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+      });
+      return;
+    }
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname === `/api/patrimonios/${patrimonioBaixaId}/baixa`
+    ) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Baixa consultada.",
+        dados: detalheBaixa,
+      });
+      return;
+    }
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname ===
+        `/api/patrimonios/${patrimonioBaixaId}/baixa/opcoes/comissoes`
+    ) {
+      if (session !== "director") {
+        json(response, 403, {
+          status: 403,
+          sucesso: false,
+          codigo: "PERFIL_NAO_AUTORIZADO",
+          mensagem: "Perfil não autorizado.",
+          erros: [],
+          requisicaoId: "e2e-api-request",
+        });
+        return;
+      }
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Comissões listadas.",
+        dados: [{ ...comissaoDepreciacao, numeroAto: "01/2026" }],
+        meta: { total: 1, pagina: 1, limite: 50, ultimaPagina: 1 },
+      });
+      return;
+    }
+    if (
+      request.method === "POST" &&
+      requestUrl.pathname === `/api/patrimonios/${patrimonioBaixaId}/baixa`
+    ) {
+      if (session !== "director") {
+        json(response, 403, {
+          status: 403,
+          sucesso: false,
+          codigo: "PERFIL_NAO_AUTORIZADO",
+          mensagem: "Perfil não autorizado.",
+          erros: [],
+          requisicaoId: "e2e-api-request",
+        });
+        return;
+      }
+      json(response, 201, {
+        status: 201,
+        sucesso: true,
+        mensagem: "Baixa registrada.",
+        dados: detalheBaixa,
+      });
+      return;
+    }
   }
 
   if (

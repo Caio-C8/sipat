@@ -3,11 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box } from "lucide-react";
-import {
-  TIPOS_BAIXA_PATRIMONIO,
-  type PatrimonioDetalhe,
-  type TipoBaixaPatrimonio,
-} from "@repo/contracts";
+import type { PatrimonioDetalhe } from "@repo/contracts";
 import {
   Dialog,
   DialogContent,
@@ -29,25 +25,11 @@ import { Button } from "@/components/ui/button";
 import { isApiError } from "@/lib/api/core/api-error";
 import { NovaMovimentacao } from "@/features/movimentacoes/components/nova-movimentacao";
 import { NovaReavaliacao } from "@/features/reavaliacoes/components/nova-reavaliacao";
+import { BaixaFormulario } from "@/features/baixas/components/baixa-formulario";
 import { browserPatrimonioOperations } from "../api/browser-patrimonio-operations";
 
-const campo =
-  "mt-1 min-h-10 w-full rounded-md border border-[#dce5f0] bg-white px-3 py-2 text-sm";
 const botao =
   "inline-flex min-h-10 items-center justify-center rounded-md border border-[#dce5f0] bg-white px-4 text-sm font-semibold text-[#203b61] hover:bg-[#f4f8ff] focus-visible:outline-2 focus-visible:outline-[#2863ec]";
-const hoje = () =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-const rotuloTipo = (tipo: string) =>
-  tipo
-    .toLocaleLowerCase("pt-BR")
-    .replaceAll("_", " ")
-    .replace(/^./, (letra) => letra.toLocaleUpperCase("pt-BR"));
-
 export function PatrimonioAcoes({
   patrimonio,
   usuarioId,
@@ -60,11 +42,6 @@ export function PatrimonioAcoes({
   const [acao, setAcao] = useState<
     "movimentacao" | "reavaliacao" | "baixa" | "substituicao" | null
   >(null);
-  const [dataBaixa, setDataBaixa] = useState(hoje);
-  const [comissoes, setComissoes] = useState<
-    Array<{ id: string; nome: string }>
-  >([]);
-  const [carregandoComissoes, setCarregandoComissoes] = useState(false);
   const [pending, setPending] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
@@ -79,65 +56,6 @@ export function PatrimonioAcoes({
     setMensagem(mensagemSucesso);
     setAcao(null);
     router.refresh();
-  }
-
-  async function carregarComissoes(data = dataBaixa) {
-    setCarregandoComissoes(true);
-    setErro("");
-    try {
-      const resposta =
-        await browserPatrimonioOperations.listarOpcoesComissoesBaixa(
-          patrimonio.id,
-          { dataBaixa: data, pagina: "1", limite: "50" },
-        );
-      setComissoes(resposta.dados);
-    } catch (e) {
-      setErro(
-        isApiError(e)
-          ? e.message
-          : "Não foi possível carregar as comissões elegíveis.",
-      );
-    } finally {
-      setCarregandoComissoes(false);
-    }
-  }
-
-  async function confirmarBaixa(formData: FormData) {
-    if (pending) return;
-    const arquivo = formData.get("documento");
-    if (arquivo instanceof File && arquivo.size > 10 * 1024 * 1024) {
-      setErro("O PDF deve possuir no máximo 10 MiB.");
-      return;
-    }
-    setPending(true);
-    setErro("");
-    setMensagem("");
-    try {
-      await browserPatrimonioOperations.baixar(
-        patrimonio.id,
-        {
-          dataBaixa: String(formData.get("dataBaixa")),
-          tipo: String(formData.get("tipo")) as TipoBaixaPatrimonio,
-          motivo: String(formData.get("motivo")),
-          observacao: String(formData.get("observacao")).trim() || undefined,
-          comissaoId: String(formData.get("comissaoId")),
-        },
-        arquivo instanceof File && arquivo.size ? arquivo : undefined,
-      );
-      setMensagem(
-        "Baixa registrada. Os dados e o histórico foram atualizados.",
-      );
-      setAcao(null);
-      router.refresh();
-    } catch (e) {
-      setErro(
-        isApiError(e)
-          ? e.message
-          : "Não foi possível confirmar a baixa. Releia o patrimônio antes de tentar novamente.",
-      );
-    } finally {
-      setPending(false);
-    }
   }
 
   async function confirmarSubstituicao() {
@@ -238,16 +156,41 @@ export function PatrimonioAcoes({
           </DrawerContent>
         </Drawer>
         {patrimonio.status === "ATIVO" ? (
-          <button
-            className={botao}
-            type="button"
-            onClick={() => {
-              setAcao("baixa");
-              void carregarComissoes();
+          <Drawer
+            open={acao === "baixa"}
+            onOpenChange={(aberto) => {
+              if (aberto) setAcao("baixa");
+              else if (!pending) setAcao(null);
             }}
           >
-            Registrar baixa
-          </button>
+            <DrawerTrigger asChild>
+              <button className={botao} type="button">
+                Registrar baixa
+              </button>
+            </DrawerTrigger>
+            <DrawerContent closeDisabled={pending}>
+              <DrawerHeader>
+                <DrawerTitle>Registrar baixa</DrawerTitle>
+                <DrawerDescription>
+                  O patrimônio permanece fixo nesta operação. Confira todos os
+                  dados antes da confirmação irreversível.
+                </DrawerDescription>
+              </DrawerHeader>
+              <DrawerBody>
+                <BaixaFormulario
+                  compacto
+                  patrimonio={patrimonio}
+                  onCancelar={() => setAcao(null)}
+                  onPendingChange={setPending}
+                  onSuccess={() =>
+                    concluirAcao(
+                      "Baixa registrada. Os dados e o histórico foram atualizados.",
+                    )
+                  }
+                />
+              </DrawerBody>
+            </DrawerContent>
+          </Drawer>
         ) : null}
         {patrimonio.status === "ATIVO" &&
         patrimonio.tipoNumeroPatrimonial === "OFICIAL" ? (
@@ -274,113 +217,6 @@ export function PatrimonioAcoes({
       >
         {erro || mensagem}
       </p>
-      <Dialog
-        open={acao === "baixa"}
-        onOpenChange={(aberto) => !aberto && !pending && setAcao(null)}
-      >
-        <DialogContent closeDisabled={pending}>
-          <DialogHeader>
-            <DialogTitle>Registrar baixa patrimonial</DialogTitle>
-            <DialogDescription>
-              A baixa é irreversível. Confira a data, a comissão e o motivo
-              antes de confirmar.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            action={(dados) => void confirmarBaixa(dados)}
-            className="grid gap-4"
-          >
-            <label className="text-sm">
-              Data da baixa
-              <input
-                className={campo}
-                type="date"
-                name="dataBaixa"
-                required
-                max={hoje()}
-                value={dataBaixa}
-                onChange={(e) => {
-                  setDataBaixa(e.target.value);
-                  void carregarComissoes(e.target.value);
-                }}
-              />
-            </label>
-            <label className="text-sm">
-              Comissão
-              <select
-                className={campo}
-                name="comissaoId"
-                required
-                disabled={carregandoComissoes}
-              >
-                <option value="">
-                  {carregandoComissoes ? "Carregando…" : "Selecione"}
-                </option>
-                {comissoes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm">
-              Tipo
-              <select className={campo} name="tipo" required>
-                {TIPOS_BAIXA_PATRIMONIO.map((tipo) => (
-                  <option key={tipo} value={tipo}>
-                    {rotuloTipo(tipo)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm">
-              Motivo
-              <textarea
-                className={campo}
-                name="motivo"
-                required
-                maxLength={2000}
-                rows={3}
-              />
-            </label>
-            <label className="text-sm">
-              Observação (opcional)
-              <textarea
-                className={campo}
-                name="observacao"
-                maxLength={2000}
-                rows={2}
-              />
-            </label>
-            <label className="text-sm">
-              Documento PDF (opcional, até 10 MiB)
-              <input
-                className={campo}
-                type="file"
-                name="documento"
-                accept="application/pdf,.pdf"
-              />
-            </label>
-            <label className="flex items-start gap-2 text-sm">
-              <input className="mt-1" type="checkbox" required /> Confirmo que
-              revisei os dados e entendo que a baixa é irreversível.
-            </label>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={pending}
-                onClick={() => setAcao(null)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={pending || carregandoComissoes}>
-                {pending ? "Confirmando…" : "Confirmar baixa"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
       <Dialog
         open={acao === "substituicao"}
         onOpenChange={(aberto) => !aberto && !pending && setAcao(null)}

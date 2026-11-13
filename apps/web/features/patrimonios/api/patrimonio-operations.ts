@@ -3,6 +3,7 @@ import {
   BaixarPatrimonioResponseSchema,
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
+  ConsultarBaixaPatrimonioResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
   ConfirmarDisponibilidadeUsoBodySchema,
@@ -102,6 +103,33 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
     });
   }
 
+  function consultarBaixa(
+    patrimonioId: string,
+    { cookie, signal }: OpcoesListagem,
+  ) {
+    const params = PatrimonioParamsSchema.parse({ patrimonioId });
+    return apiClient.request({
+      path: `/patrimonios/${params.patrimonioId}/baixa`,
+      method: "GET",
+      headers: cookie ? { Cookie: cookie } : undefined,
+      cache: "no-store",
+      signal,
+      responseSchema: ConsultarBaixaPatrimonioResponseSchema,
+    });
+  }
+
+  function obterAnexoBaixa(patrimonioId: string, signal?: AbortSignal) {
+    const params = PatrimonioParamsSchema.parse({ patrimonioId });
+    return apiClient.request<Blob>({
+      path: `/patrimonios/${params.patrimonioId}/baixa/anexo`,
+      method: "GET",
+      cache: "no-store",
+      signal,
+      responseType: "pdf",
+      timeoutMs: 25_000,
+    });
+  }
+
   function baixar(
     patrimonioId: string,
     dados: BaixarPatrimonioDadosInput,
@@ -198,6 +226,8 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
       });
     },
     consultar,
+    consultarBaixa,
+    obterAnexoBaixa,
     listarOpcoesComissoesBaixa,
     baixar,
     substituirNumero,

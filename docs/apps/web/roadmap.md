@@ -320,6 +320,29 @@ E2E Web e cinco E2E reais contra PostgreSQL descartável passaram; a validação
 incluiu axe, teclado, zoom a 200% e os viewports previstos.
 [Roadmap executável, frames e referências por objetivo](../../tasks/WEB-MOVIMENTACOES-002-paridade-visual-figma.md).
 
+## Baixa
+
+### WEB-BAIXAS-001 — Consulta e registro conforme o Figma
+
+**Status:** aprovada; depende de `BAIXAS-002` para a consulta individual pelo
+Administrador.
+
+Implementar `/baixas`, `/baixas/nova` e o detalhe individual no shell
+autenticado. Administrador e Diretor consultam os registros; somente o Diretor
+vê e acessa o fluxo de registro. A navegação, o título e os textos identificam
+a área somente como `Baixa`: `Baixa e estorno`, filtros, estados ou ações de
+estorno não devem existir.
+
+O implementador deve abrir o arquivo vivo do Figma e comparar os seis nodes
+indicados na tarefa. O Figma é autoridade para a composição visual; requisitos,
+contratos e API continuam sendo autoridade para comportamento. Por isso, a
+seleção visualmente equivalente aceita exatamente um patrimônio, embora o
+protótipo ilustre vários itens. A listagem reutiliza o relatório tabular de
+baixas e a criação reutiliza a operação unitária existente; não estão previstos
+novo endpoint, contrato, migration ou alteração de banco.
+
+[Tarefa, nodes do Figma, desvios obrigatórios e critérios](../../tasks/WEB-BAIXAS-001-interface-baixas.md).
+
 ## WEB-RELATORIOS-001 — Relatórios patrimoniais
 
 **Status:** concluída em 01/11/2026. Nove tipos com prévia/PDF reais, ficha,
