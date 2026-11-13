@@ -3,6 +3,12 @@
 **Status:** implementada e integrada; validação automatizada concluída em 28/10/2026. Homologação manual com leitor de tela pendente.
 **Planejamento aprovado:** 27/10/2026.
 
+> Esta tarefa registra a entrega funcional histórica e as adaptações então
+> aprovadas. A paridade visual estrita das telas independentes passou a ser
+> planejada em
+> [WEB-MOVIMENTACOES-002](./WEB-MOVIMENTACOES-002-paridade-visual-figma.md),
+> sem reabrir o drawer patrimonial já entregue.
+
 ## Objetivo e dependências
 
 Substituir o placeholder por consulta, detalhe individual e registro de
