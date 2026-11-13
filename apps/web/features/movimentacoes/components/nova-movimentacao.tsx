@@ -3,7 +3,15 @@ import { useConfirmacaoPendente } from "../use-confirmacao-pendente";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowRight,
+  Check,
+  Clock3,
+  Search,
+  Trash2,
+} from "lucide-react";
 import {
   CriarMovimentacaoBodySchema,
   type CriarMovimentacaoBodyData,
@@ -38,8 +46,59 @@ type Selecionado = {
   bem: PatrimonioResumo;
   destino: SetorOpcaoMovimentacao | null;
 };
+
+function EtapasMovimentacao({ etapa }: { etapa: number }) {
+  return (
+    <ol
+      className="grid min-w-0 grid-cols-3 gap-2"
+      aria-label="Etapas da movimentação"
+    >
+      {["Selecionar bens", "Definir destinos", "Revisar"].map((nome, i) => {
+        const numero = i + 1;
+        const concluida = numero < etapa;
+        const atual = numero === etapa;
+        return (
+          <li
+            key={nome}
+            aria-current={atual ? "step" : undefined}
+            className="flex min-w-0 items-center gap-2"
+          >
+            <span
+              className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                concluida || atual
+                  ? "bg-[#2863ec] text-white"
+                  : "bg-[#e9eef5] text-[#526580]"
+              }`}
+            >
+              {concluida ? (
+                <Check aria-hidden="true" className="size-4" />
+              ) : (
+                numero
+              )}
+            </span>
+            <span
+              className={`hidden truncate text-xs font-semibold sm:block ${
+                atual ? "text-[#203b61]" : "text-[#526580]"
+              }`}
+            >
+              {nome}
+            </span>
+            {numero < 3 ? (
+              <span
+                aria-hidden="true"
+                className="ml-auto hidden h-px min-w-4 flex-1 bg-[#dce4ef] md:block"
+              />
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 export function NovaMovimentacao({
   usuarioId,
+  usuarioNome,
   patrimonioInicial,
   modoDetalhe = false,
   onCancelar,
@@ -47,6 +106,7 @@ export function NovaMovimentacao({
   onSuccess,
 }: {
   usuarioId: string;
+  usuarioNome?: string;
   patrimonioInicial?: PatrimonioResumo;
   modoDetalhe?: boolean;
   onCancelar?: () => void;
@@ -71,6 +131,7 @@ export function NovaMovimentacao({
     ),
     [observacao, setObservacao] = useState("");
   const [busca, setBusca] = useState(""),
+    [setorFiltro, setSetorFiltro] = useState(""),
     [buscaSetor, setBuscaSetor] = useState(""),
     [buscaComissao, setBuscaComissao] = useState(""),
     [destinoTodos, setDestinoTodos] = useState("");
@@ -258,9 +319,11 @@ export function NovaMovimentacao({
     decisaoIdempotencia?.tipo === "ja_processada";
   if (resultado && !modoDetalhe)
     return (
-      <main className="grid min-w-0 gap-6 p-4 sm:p-7">
+      <main className="grid min-w-0 gap-6 bg-[#f7f9fc] p-4 sm:p-6 lg:p-7">
         <section className={painelMovimentacao}>
-          <Check aria-hidden="true" className="mb-4 text-green-700" />
+          <span className="mb-4 grid size-11 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+            <Check aria-hidden="true" className="size-6" />
+          </span>
           <h1
             ref={tituloEtapa}
             tabIndex={-1}
@@ -273,9 +336,9 @@ export function NovaMovimentacao({
             {formatarDataMovimentacao(resultado.dados[0]!.dataTransferencia)}{" "}
             (São Paulo).
           </p>
-          <ul className="my-5 grid list-disc gap-3 pl-5">
+          <ul className="my-5 grid divide-y divide-[#e4eaf2] rounded-lg border border-[#dce4ef]">
             {resultado.dados.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="flex flex-wrap gap-x-3 gap-y-1 p-4">
                 <Link
                   prefetch={false}
                   className="text-[#19355d] underline"
@@ -295,7 +358,7 @@ export function NovaMovimentacao({
               </li>
             ))}
           </ul>
-          <Button asChild>
+          <Button asChild className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]">
             <Link prefetch={false} href="/movimentacoes">
               Consultar movimentações
             </Link>
@@ -321,49 +384,35 @@ export function NovaMovimentacao({
       className={
         modoDetalhe
           ? "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-6"
-          : "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7"
+          : "grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7"
       }
     >
       {!modoDetalhe ? (
-        <header className="grid gap-3">
+        <header className="grid gap-5">
           <Link
             prefetch={false}
             href="/movimentacoes"
-            className="flex w-fit items-center gap-1 text-sm underline"
+            className="flex w-fit items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
           >
             <ArrowLeft size={15} aria-hidden="true" />
             Voltar às movimentações
           </Link>
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.9fr)]">
             <div>
-              <h1 className="text-2xl font-bold">Nova movimentação</h1>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Nova movimentação
+              </h1>
               <p className="mt-1 text-sm text-[#526580]">
-                Transfira até dez patrimônios entre setores.
+                {
+                  [
+                    "Selecione os bens que serão transferidos.",
+                    "Defina o destino de cada bem e os dados da movimentação.",
+                    "Confira os dados antes de registrar as transferências.",
+                  ][etapa - 1]
+                }
               </p>
             </div>
-            <ol
-              className="flex flex-wrap gap-3 text-xs"
-              aria-label="Etapas da movimentação"
-            >
-              {["Selecionar bens", "Definir destinos", "Revisar"].map(
-                (nome, i) => (
-                  <li
-                    key={nome}
-                    aria-current={etapa === i + 1 ? "step" : undefined}
-                    className={
-                      etapa === i + 1
-                        ? "font-bold text-[#2057d6]"
-                        : "text-[#526580]"
-                    }
-                  >
-                    <span className="mr-1 inline-grid size-6 place-items-center rounded-full border">
-                      {i + 1}
-                    </span>
-                    {nome}
-                  </li>
-                ),
-              )}
-            </ol>
+            <EtapasMovimentacao etapa={etapa} />
           </div>
         </header>
       ) : null}
@@ -451,14 +500,32 @@ export function NovaMovimentacao({
         {etapa === 1 && !modoDetalhe ? (
           <section
             className={painelMovimentacao}
-            aria-label="Selecionar patrimônios"
+            aria-labelledby="bens-movimentacao-title"
           >
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h3 id="bens-movimentacao-title" className="font-bold">
+                  Bens disponíveis para movimentação
+                </h3>
+                <p className="mt-1 text-xs text-[#526580]">
+                  Bens baixados, emprestados ou em manutenção não podem ser
+                  selecionados.
+                </p>
+              </div>
+              <p
+                aria-live="polite"
+                className="text-sm font-semibold text-[#2860eb]"
+              >
+                {selecionados.length} de 10 selecionados
+              </p>
+            </div>
             <form
-              className="mb-4 flex flex-wrap items-end gap-3"
+              className="mb-4 grid items-end gap-3 rounded-md bg-[#f7f9fc] p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(14rem,0.8fr)_auto]"
               onSubmit={(e) => {
                 e.preventDefault();
                 void carregarBens({
                   busca: busca.trim() || undefined,
+                  setorId: setorFiltro || undefined,
                   limite: "20",
                 });
               }}
@@ -474,33 +541,52 @@ export function NovaMovimentacao({
                   placeholder="Número patrimonial ou descrição"
                 />
               </label>
-              <Button type="submit" disabled={bens.loading}>
+              <label className="grid min-w-0 gap-2 text-sm">
+                Setor atual
+                <select
+                  className={campoMovimentacao}
+                  value={setorFiltro}
+                  onChange={(e) => setSetorFiltro(e.target.value)}
+                >
+                  <option value="">Todos os setores</option>
+                  {(setores.dados?.dados ?? []).map((setor) => (
+                    <option key={setor.id} value={setor.id}>
+                      {setor.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Button
+                type="submit"
+                disabled={bens.loading}
+                className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+              >
+                <Search aria-hidden="true" className="size-4" />
                 Pesquisar bens
               </Button>
-              <p aria-live="polite" className="p-2 text-sm font-semibold">
-                {selecionados.length} de 10 selecionados
-              </p>
             </form>
-            <p className="mb-3 text-xs text-[#526580]">
-              Bens baixados, emprestados ou em manutenção não podem ser
-              selecionados.
-            </p>
             {bens.loading ? (
               <p role="status">Carregando patrimônios…</p>
             ) : bens.erro ? (
               <ErroMovimentacao erro={bens.erro} />
             ) : bens.dados?.dados.length ? (
-              <div className="overflow-x-auto">
+              <div
+                className="overflow-x-auto"
+                role="region"
+                aria-label="Patrimônios disponíveis para seleção"
+                tabIndex={0}
+              >
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">
                     Patrimônios disponíveis para seleção
                   </caption>
-                  <thead className="bg-[#f7f9fc] text-xs text-[#526580]">
+                  <thead className="bg-[#f7f9fc] text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
                     <tr>
                       {[
                         "Selecionar",
                         "Patrimônio / bem",
                         "Setor atual",
+                        "Responsável do setor",
                         "Situação",
                       ].map((texto) => (
                         <th className="px-3 py-3" key={texto} scope="col">
@@ -536,12 +622,19 @@ export function NovaMovimentacao({
                             </span>
                             <p className="font-semibold">{bem.descricao}</p>
                           </td>
-                          <td className="px-3 py-4">{bem.setorAtual.nome}</td>
+                          <td className="px-3 py-4 align-top">
+                            {bem.setorAtual.nome}
+                          </td>
+                          <td className="px-3 py-4 align-top text-[#526580]">
+                            {bem.setorAtual.responsavel.nome}
+                          </td>
                           <td className="px-3 py-4">
                             <span
-                              className={
-                                bloqueado ? "text-amber-900" : "text-green-800"
-                              }
+                              className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${
+                                bloqueado
+                                  ? "bg-amber-50 text-amber-900"
+                                  : "bg-emerald-50 text-emerald-800"
+                              }`}
                             >
                               {bem.status === "ATIVO"
                                 ? "Ativo"
@@ -579,6 +672,7 @@ export function NovaMovimentacao({
                   onClick={() =>
                     void carregarBens({
                       busca: busca.trim() || undefined,
+                      setorId: setorFiltro || undefined,
                       pagina: String(bens.dados!.meta.pagina - 1),
                       limite: "20",
                     })
@@ -597,6 +691,7 @@ export function NovaMovimentacao({
                   onClick={() =>
                     void carregarBens({
                       busca: busca.trim() || undefined,
+                      setorId: setorFiltro || undefined,
                       pagina: String(bens.dados!.meta.pagina + 1),
                       limite: "20",
                     })
@@ -632,8 +727,33 @@ export function NovaMovimentacao({
         {etapa === 2 ? (
           <>
             <section className={painelMovimentacao}>
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="grid gap-2">
+              {!modoDetalhe ? (
+                <div>
+                  <h3 className="font-bold">Dados da movimentação</h3>
+                  <p className="mt-1 text-xs text-[#526580]">
+                    Estes dados serão usados em todas as transferências.
+                  </p>
+                </div>
+              ) : null}
+              <div
+                className={
+                  modoDetalhe
+                    ? "grid gap-4 lg:grid-cols-2"
+                    : "mt-4 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,0.65fr)_minmax(0,1fr)_minmax(0,1.35fr)]"
+                }
+              >
+                {!modoDetalhe ? (
+                  <div className="grid min-w-0 content-start gap-2 text-sm">
+                    <span className="font-medium">Data e horário</span>
+                    <div
+                      className={`${campoMovimentacao} flex items-center gap-2 bg-[#f7f9fc] text-[#526580]`}
+                    >
+                      <Clock3 aria-hidden="true" className="size-4 shrink-0" />
+                      Registrados na confirmação
+                    </div>
+                  </div>
+                ) : null}
+                <div className="grid min-w-0 gap-2">
                   <label className="grid gap-2 text-sm">
                     Comissão vigente
                     <select
@@ -660,81 +780,103 @@ export function NovaMovimentacao({
                   <p id="erro-comissao" className="text-sm text-red-800">
                     {campoErro("comissaoId")}
                   </p>
-                  <label className="text-xs">
-                    Buscar comissão vigente
-                    <input
-                      className={campoMovimentacao}
-                      value={buscaComissao}
-                      maxLength={200}
-                      onChange={(e) => setBuscaComissao(e.target.value)}
-                    />
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={comissoes.loading}
-                      onClick={() =>
-                        void carregarComissoes({
-                          contexto: "REGISTRO",
-                          busca: buscaComissao.trim() || undefined,
-                        })
+                  <details
+                    open={modoDetalhe || undefined}
+                    className={
+                      modoDetalhe
+                        ? "contents"
+                        : "rounded-md border border-[#e4eaf2] bg-[#f7f9fc] p-2 text-xs"
+                    }
+                  >
+                    <summary
+                      className={
+                        modoDetalhe
+                          ? "hidden"
+                          : "cursor-pointer font-semibold text-[#31577f]"
                       }
                     >
-                      Buscar comissões
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={
-                        comissoes.loading ||
-                        !comissoes.dados ||
-                        comissoes.dados.meta.pagina <= 1
-                      }
-                      onClick={() =>
-                        void carregarComissoes({
-                          contexto: "REGISTRO",
-                          busca: buscaComissao.trim() || undefined,
-                          pagina: String(comissoes.dados!.meta.pagina - 1),
-                        })
-                      }
+                      Localizar outra comissão vigente
+                    </summary>
+                    <div
+                      className={modoDetalhe ? "grid gap-2" : "mt-3 grid gap-2"}
                     >
-                      Comissões anteriores
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={
-                        comissoes.loading ||
-                        !comissoes.dados ||
-                        comissoes.dados.meta.pagina >=
-                          comissoes.dados.meta.ultimaPagina
-                      }
-                      onClick={() =>
-                        void carregarComissoes({
-                          contexto: "REGISTRO",
-                          busca: buscaComissao.trim() || undefined,
-                          pagina: String(comissoes.dados!.meta.pagina + 1),
-                        })
-                      }
-                    >
-                      Mais comissões
-                    </Button>
-                  </div>
-                  {comissoes.loading ? (
-                    <p role="status">Carregando comissões…</p>
-                  ) : comissoes.erro ? (
-                    <ErroMovimentacao erro={comissoes.erro} />
-                  ) : !comissoes.dados?.dados.length ? (
-                    <p className="text-sm">
-                      Nenhuma comissão vigente encontrada.
-                    </p>
-                  ) : null}
+                      <label className="text-xs">
+                        Buscar comissão vigente
+                        <input
+                          className={campoMovimentacao}
+                          value={buscaComissao}
+                          maxLength={200}
+                          onChange={(e) => setBuscaComissao(e.target.value)}
+                        />
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={comissoes.loading}
+                          onClick={() =>
+                            void carregarComissoes({
+                              contexto: "REGISTRO",
+                              busca: buscaComissao.trim() || undefined,
+                            })
+                          }
+                        >
+                          Buscar comissões
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={
+                            comissoes.loading ||
+                            !comissoes.dados ||
+                            comissoes.dados.meta.pagina <= 1
+                          }
+                          onClick={() =>
+                            void carregarComissoes({
+                              contexto: "REGISTRO",
+                              busca: buscaComissao.trim() || undefined,
+                              pagina: String(comissoes.dados!.meta.pagina - 1),
+                            })
+                          }
+                        >
+                          Comissões anteriores
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={
+                            comissoes.loading ||
+                            !comissoes.dados ||
+                            comissoes.dados.meta.pagina >=
+                              comissoes.dados.meta.ultimaPagina
+                          }
+                          onClick={() =>
+                            void carregarComissoes({
+                              contexto: "REGISTRO",
+                              busca: buscaComissao.trim() || undefined,
+                              pagina: String(comissoes.dados!.meta.pagina + 1),
+                            })
+                          }
+                        >
+                          Mais comissões
+                        </Button>
+                      </div>
+                      {comissoes.loading ? (
+                        <p role="status">Carregando comissões…</p>
+                      ) : comissoes.erro ? (
+                        <ErroMovimentacao erro={comissoes.erro} />
+                      ) : !comissoes.dados?.dados.length ? (
+                        <p className="text-sm">
+                          Nenhuma comissão vigente encontrada.
+                        </p>
+                      ) : null}
+                    </div>
+                  </details>
                 </div>
-                <label className="grid content-start gap-2 text-sm">
-                  Motivo da movimentação
+                <label className="grid min-w-0 content-start gap-2 text-sm">
+                  Motivo da movimentação *
                   <textarea
-                    className={`${campoMovimentacao} min-h-32`}
+                    className={`${campoMovimentacao} min-h-32 min-w-0`}
                     maxLength={2000}
                     value={observacao}
                     aria-invalid={!!campoErro("observacao")}
@@ -744,10 +886,12 @@ export function NovaMovimentacao({
                   <span id="erro-observacao" className="text-red-800">
                     {campoErro("observacao")}
                   </span>
-                  <span className="text-xs text-[#526580]">
-                    Comissão e motivo serão usados em todas as transferências
-                    desta confirmação.
-                  </span>
+                  {modoDetalhe ? (
+                    <span className="text-xs text-[#526580]">
+                      Comissão e motivo serão usados em todas as transferências
+                      desta confirmação.
+                    </span>
+                  ) : null}
                 </label>
               </div>
             </section>
@@ -937,7 +1081,7 @@ export function NovaMovimentacao({
             </section>
           </>
         ) : null}
-        {etapa === 3 ? (
+        {etapa === 3 && modoDetalhe ? (
           <section className={painelMovimentacao}>
             <h3 className="font-bold">Revise antes de confirmar</h3>
             <dl className="my-4 grid gap-3 text-sm">
@@ -997,10 +1141,158 @@ export function NovaMovimentacao({
               </p>
             </div>
           </section>
+        ) : etapa === 3 ? (
+          <div className="grid gap-5">
+            <section className={painelMovimentacao}>
+              <h3 className="font-bold">Dados da movimentação</h3>
+              <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                    Data e horário
+                  </dt>
+                  <dd className="mt-1 font-semibold">
+                    Registrados na confirmação
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                    Comissão
+                  </dt>
+                  <dd className="mt-1 font-semibold">{comissao?.nome}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                    Registrado por
+                  </dt>
+                  <dd className="mt-1 font-semibold">
+                    {usuarioNome ?? "Usuário autenticado"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                    Bens selecionados
+                  </dt>
+                  <dd className="mt-1 text-lg font-bold text-[#2860eb]">
+                    {selecionados.length}
+                  </dd>
+                </div>
+                <div className="sm:col-span-2 xl:col-span-4">
+                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                    Motivo
+                  </dt>
+                  <dd className="mt-1 whitespace-pre-wrap wrap-anywhere">
+                    {observacao.trim()}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+            <section
+              className={painelMovimentacao}
+              aria-labelledby="conferir-transferencias-title"
+            >
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h3 id="conferir-transferencias-title" className="font-bold">
+                    Confira as transferências
+                  </h3>
+                  <p className="mt-1 text-xs text-[#526580]">
+                    Cada patrimônio produzirá um registro individual.
+                  </p>
+                </div>
+                <p className="text-xs text-[#526580]">
+                  {selecionados.length} bem(ns)
+                </p>
+              </div>
+              <div
+                className="overflow-x-auto"
+                role="region"
+                aria-label="Resumo das transferências"
+                tabIndex={0}
+              >
+                <div className="min-w-[44rem]">
+                  <div className="grid grid-cols-[1.2fr_1fr_auto_1fr] gap-4 bg-[#f7f9fc] px-3 py-3 text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                    <span>Patrimônio / bem</span>
+                    <span>Origem</span>
+                    <span aria-hidden="true" />
+                    <span>Destino</span>
+                  </div>
+                  <ul className="grid divide-y divide-[#dce4ef]">
+                    {selecionados.map((item, i) => (
+                      <li
+                        key={item.bem.id}
+                        className="grid grid-cols-[1.2fr_1fr_auto_1fr] items-center gap-4 px-3 py-4 text-sm"
+                      >
+                        <div className="min-w-0 wrap-anywhere">
+                          <p className="text-xs text-[#526580]">
+                            {item.bem.numeroPatrimonio}
+                          </p>
+                          <p className="font-semibold">{item.bem.descricao}</p>
+                        </div>
+                        <div className="min-w-0 wrap-anywhere">
+                          <p className="font-semibold">
+                            {item.bem.setorAtual.nome}
+                          </p>
+                          <p className="text-xs text-[#526580]">
+                            {item.bem.setorAtual.responsavel.nome}
+                          </p>
+                        </div>
+                        <ArrowRight
+                          aria-hidden="true"
+                          className="size-4 text-[#2860eb]"
+                        />
+                        <div className="min-w-0 wrap-anywhere">
+                          <p className="font-semibold">{item.destino?.nome}</p>
+                          <p className="text-xs text-[#526580]">
+                            {item.destino?.responsavelAtual.nome}
+                          </p>
+                        </div>
+                        {errosCampos
+                          .filter((e) => e.campo.startsWith(`itens.${i}.`))
+                          .map((e, j) => (
+                            <p
+                              key={j}
+                              className="col-span-4 text-sm text-red-800"
+                            >
+                              {e.mensagem}
+                            </p>
+                          ))}
+                        {errosCampos.some(
+                          (e) =>
+                            e.campo === `itens.${i}.setorOrigemEsperadoId` &&
+                            e.codigo === "ORIGEM_ALTERADA",
+                        ) ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="col-span-4 justify-self-start"
+                            disabled={atualizacao.pending}
+                            onClick={() => void atualizarOrigem(item.bem.id)}
+                          >
+                            Atualizar e revisar origem do patrimônio{" "}
+                            {item.bem.numeroPatrimonio}
+                          </Button>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-3 rounded-md bg-[#edf4fd] p-4 text-sm leading-relaxed text-[#31577f]">
+                <ArrowLeftRight
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0"
+                />
+                <p>
+                  O servidor define o instante da confirmação. Se qualquer item
+                  estiver impedido, nenhuma transferência será gravada.
+                </p>
+              </div>
+            </section>
+          </div>
         ) : null}
       </fieldset>
       <footer
-        className={`${painelMovimentacao} flex flex-wrap items-center justify-between gap-3`}
+        className={`${painelMovimentacao} flex flex-wrap items-center justify-between gap-3 !p-3`}
       >
         <div className="flex flex-wrap gap-2">
           {modoDetalhe ? (
@@ -1034,6 +1326,7 @@ export function NovaMovimentacao({
         {etapa === 1 ? (
           <Button
             type="button"
+            className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
             disabled={!selecionados.length || desabilitado}
             onClick={() => irEtapa(2)}
           >
@@ -1043,6 +1336,7 @@ export function NovaMovimentacao({
         ) : etapa === 2 ? (
           <Button
             type="button"
+            className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
             disabled={
               !selecionados.length ||
               selecionados.some((i) => i.bem.status !== "ATIVO") ||
@@ -1056,14 +1350,20 @@ export function NovaMovimentacao({
         ) : (
           <Button
             type="button"
+            aria-label="Confirmar movimentação"
+            className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
             disabled={
               desabilitado ||
               errosCampos.some((e) => e.codigo === "ORIGEM_ALTERADA")
             }
             onClick={() => void confirmar()}
           >
-            <Plus size={15} aria-hidden="true" />
-            {criacao.pending ? "Confirmando…" : "Confirmar movimentação"}
+            <Check size={15} aria-hidden="true" />
+            {criacao.pending
+              ? "Confirmando…"
+              : `Confirmar ${selecionados.length} ${
+                  selecionados.length === 1 ? "movimentação" : "movimentações"
+                }`}
           </Button>
         )}
       </footer>

@@ -27,10 +27,10 @@ export function FiltrosMovimentacoes({
   return (
     <form
       action="/movimentacoes"
-      className="grid gap-4"
+      className="grid gap-3"
       aria-label="Filtrar movimentações"
     >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <label className="grid gap-2 text-sm">
           Pesquisar movimentações
           <input
@@ -85,62 +85,65 @@ export function FiltrosMovimentacoes({
             </select>
           </label>
         ))}
-        <label className="grid gap-2 text-sm">
-          De
-          <input
-            className={campoMovimentacao}
-            type="date"
-            name="dataInicio"
-            defaultValue={valores.dataInicio}
-          />
-        </label>
-        <label className="grid gap-2 text-sm">
-          Até
-          <input
-            className={campoMovimentacao}
-            type="date"
-            name="dataFim"
-            defaultValue={valores.dataFim}
-          />
-        </label>
-        <label className="grid gap-2 text-sm">
-          Comissão
-          <select
-            className={campoMovimentacao}
-            name="comissaoId"
-            value={filtros.comissaoId ?? ""}
-            onChange={(e) => {
-              setFiltros((atuais) => ({
-                ...atuais,
-                comissaoId: e.target.value,
-              }));
-              setNomes((atuais) => ({
-                ...atuais,
-                [e.target.value]: e.target.selectedOptions[0]?.text ?? "",
-              }));
-            }}
-            key={valores.comissaoId}
-          >
-            <option value="">Todas as comissões</option>
-            {filtros.comissaoId &&
-            !listaComissoes.some((c) => c.id === filtros.comissaoId) ? (
-              <option value={filtros.comissaoId}>
-                {nomes[filtros.comissaoId!] ?? "Comissão selecionada"}
-              </option>
-            ) : null}
-            {listaComissoes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome} ({c.dataVigenciaInicio} a {c.dataVigenciaFim})
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
-      <details className="rounded-md bg-[#f7f9fc] p-3 text-sm">
-        <summary className="cursor-pointer font-semibold">
-          Localizar outros setores e comissões, incluindo histórico
+      <details
+        open
+        className="group rounded-md border border-[#e4eaf2] bg-[#f7f9fc] p-3 text-sm"
+      >
+        <summary className="cursor-pointer font-semibold text-[#31577f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2860eb]">
+          Período, comissão e opções históricas
         </summary>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-4 border-t border-[#e4eaf2] pt-4 sm:grid-cols-2 xl:grid-cols-3">
+          <label className="grid gap-2 text-sm">
+            De
+            <input
+              className={campoMovimentacao}
+              type="date"
+              name="dataInicio"
+              defaultValue={valores.dataInicio}
+            />
+          </label>
+          <label className="grid gap-2 text-sm">
+            Até
+            <input
+              className={campoMovimentacao}
+              type="date"
+              name="dataFim"
+              defaultValue={valores.dataFim}
+            />
+          </label>
+          <label className="grid gap-2 text-sm">
+            Comissão
+            <select
+              className={campoMovimentacao}
+              name="comissaoId"
+              value={filtros.comissaoId ?? ""}
+              onChange={(e) => {
+                setFiltros((atuais) => ({
+                  ...atuais,
+                  comissaoId: e.target.value,
+                }));
+                setNomes((atuais) => ({
+                  ...atuais,
+                  [e.target.value]: e.target.selectedOptions[0]?.text ?? "",
+                }));
+              }}
+              key={valores.comissaoId}
+            >
+              <option value="">Todas as comissões</option>
+              {filtros.comissaoId &&
+              !listaComissoes.some((c) => c.id === filtros.comissaoId) ? (
+                <option value={filtros.comissaoId}>
+                  {nomes[filtros.comissaoId!] ?? "Comissão selecionada"}
+                </option>
+              ) : null}
+              {listaComissoes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome} ({c.dataVigenciaInicio} a {c.dataVigenciaFim})
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="grid gap-2">
             <label>
               Buscar setores
@@ -275,8 +278,13 @@ export function FiltrosMovimentacoes({
       ) : null}
       {setores.erro ? <ErroMovimentacao erro={setores.erro} /> : null}
       {comissoes.erro ? <ErroMovimentacao erro={comissoes.erro} /> : null}
-      <div className="flex gap-3">
-        <Button type="submit">Aplicar filtros</Button>
+      <div className="flex flex-wrap justify-end gap-3">
+        <Button
+          type="submit"
+          className="h-9 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+        >
+          Aplicar filtros
+        </Button>
         <Button asChild variant="outline">
           <Link prefetch={false} href="/movimentacoes">
             Limpar filtros

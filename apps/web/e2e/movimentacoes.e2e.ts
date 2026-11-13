@@ -499,7 +499,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .getByLabel("Motivo da movimentação")
       .fill("Motivo longo ".repeat(120));
     await page.emulateMedia({ reducedMotion: "reduce" });
-    for (const width of [390, 768, 1440, 1920]) {
+    for (const width of [390, 768, 900, 1440, 1536, 1920]) {
       await page.setViewportSize({ width, height: 1080 });
       expect(
         await page.evaluate(

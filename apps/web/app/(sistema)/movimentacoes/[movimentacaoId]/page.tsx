@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight, ChevronLeft } from "lucide-react";
 import { MovimentacaoParamsSchema } from "@repo/contracts";
 import { obterIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
@@ -39,16 +40,19 @@ export default async function MovimentacaoDetalhePage({
   }
   const item = resposta.dados;
   return (
-    <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
+    <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
       <header>
         <Link
           prefetch={false}
           href="/movimentacoes"
-          className="text-sm underline"
+          className="inline-flex items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
         >
+          <ChevronLeft aria-hidden="true" className="size-4" />
           Voltar às movimentações
         </Link>
-        <h1 className="mt-4 text-2xl font-bold">Detalhes da movimentação</h1>
+        <h1 className="mt-4 text-2xl font-bold tracking-tight">
+          Detalhes da movimentação
+        </h1>
         <p className="mt-2 text-sm">
           Patrimônio {item.patrimonio.numeroPatrimonio} ·{" "}
           {item.patrimonio.descricao}
@@ -56,7 +60,7 @@ export default async function MovimentacaoDetalhePage({
       </header>
       <section className={painelMovimentacao}>
         <h2 className="mb-5 font-bold">Transferência individual</h2>
-        <dl className="grid gap-5 text-sm sm:grid-cols-2">
+        <dl className="grid gap-5 text-sm sm:grid-cols-2 xl:grid-cols-3">
           {[
             ["Setor de origem", item.setorOrigem.nome],
             ["Setor de destino", item.setorDestino.nome],
@@ -78,7 +82,7 @@ export default async function MovimentacaoDetalhePage({
               <dd className="mt-1 font-semibold wrap-anywhere">{valor}</dd>
             </div>
           ))}
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 xl:col-span-3">
             <dt className="text-[#526580]">Motivo</dt>
             <dd className="mt-1 whitespace-pre-wrap wrap-anywhere">
               {item.observacao ??
@@ -86,7 +90,7 @@ export default async function MovimentacaoDetalhePage({
             </dd>
           </div>
           {item.correcaoInventario ? (
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <dt className="text-[#526580]">Vínculo da correção</dt>
               <dd className="mt-1 grid gap-1 break-all">
                 <span>Inventário: {item.correcaoInventario.inventarioId}</span>
@@ -95,6 +99,11 @@ export default async function MovimentacaoDetalhePage({
             </div>
           ) : null}
         </dl>
+        <div className="mt-6 flex items-center gap-3 rounded-md bg-[#edf4fd] p-4 text-sm text-[#31577f]">
+          <span className="font-semibold">{item.setorOrigem.nome}</span>
+          <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
+          <span className="font-semibold">{item.setorDestino.nome}</span>
+        </div>
         <p className="mt-6 border-t pt-4 text-xs text-[#526580]">
           Os nomes e descrições exibidos são dos cadastros atuais.
         </p>

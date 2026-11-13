@@ -43,6 +43,7 @@ export default async function NovaMovimentacaoPage({
   return (
     <NovaMovimentacao
       usuarioId={identidade.id}
+      usuarioNome={identidade.nome}
       patrimonioInicial={patrimonioInicial}
     />
   );

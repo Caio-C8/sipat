@@ -275,6 +275,28 @@ reenvios recuperam a confirmação anterior e horário usa America/Sao_Paulo.
 Lint, tipos, 43 testes unitários, build, 22 E2E padrão e cinco E2E reais passaram.
 Comparação visual, acessibilidade e reprodução estão registradas na tarefa.
 
+### WEB-MOVIMENTACOES-002 — Paridade visual das telas independentes
+
+**Status:** implementado e validado automaticamente em 13/11/2026; homologação
+manual com leitor de tela pendente.
+
+Adequar `/movimentacoes` e as três etapas de `/movimentacoes/nova` aos frames
+de `Telas PC`, preservando o detalhe independente somente leitura. Administrador
+e Diretor continuam consultando; somente o Diretor recebe o fluxo de criação.
+Banco, contratos e API permanecem inalterados porque RF13 e a matriz atual já
+atendem à regra.
+
+O drawer aberto pelo detalhe patrimonial está concluído e não faz parte desta
+entrega. A execução é incremental: lista e autorização visível, seleção de
+bens, destinos/dados comuns, revisão/confirmação, detalhe/regressão e comparação
+visual nos viewports previstos.
+
+As telas independentes foram alinhadas aos quatro pontos vivos de `Telas PC`,
+sem alterar o drawer patrimonial. Lint, tipos, 112 testes unitários, build, sete
+E2E Web e cinco E2E reais contra PostgreSQL descartável passaram; a validação
+incluiu axe, teclado, zoom a 200% e os viewports previstos.
+[Roadmap executável, frames e referências por objetivo](../../tasks/WEB-MOVIMENTACOES-002-paridade-visual-figma.md).
+
 ## WEB-RELATORIOS-001 — Relatórios patrimoniais
 
 **Status:** concluída em 01/11/2026. Nove tipos com prévia/PDF reais, ficha,
