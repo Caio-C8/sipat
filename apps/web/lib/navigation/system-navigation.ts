@@ -287,6 +287,7 @@ export function encontrarNavegacaoPorCaminho(
       (item.href === "/movimentacoes" &&
         pathname.startsWith("/movimentacoes/")) ||
       (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")) ||
+      (item.href === "/manutencoes" && pathname.startsWith("/manutencoes/")) ||
       (item.href === "/inventarios" && pathname.startsWith("/inventarios/")) ||
       (item.href === "/cadastros/setores" &&
         pathname.startsWith("/cadastros/setores/")) ||

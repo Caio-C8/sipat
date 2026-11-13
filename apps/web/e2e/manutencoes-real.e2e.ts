@@ -1,7 +1,9 @@
+import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { createDatabaseClient } from "../../../packages/database/src";
 
 type Fixture = {
   token: string;
@@ -29,6 +31,28 @@ test.describe("manutenção Web → API → PostgreSQL descartável", () => {
         "utf8",
       ),
     ) as Fixture;
+    const databaseUrl = process.env.MANUTENCOES_INTEGRATION_DATABASE_URL!;
+    const db = createDatabaseClient(databaseUrl);
+    try {
+      const patrimonios = await db.patrimonio.findMany({
+        select: { id: true, valorIncorporacao: true },
+      });
+      await Promise.all(
+        patrimonios.map((bem) =>
+          db.situacaoContabilPatrimonio.upsert({
+            where: { patrimonioId: bem.id },
+            create: {
+              patrimonioId: bem.id,
+              valorBrutoAtual: bem.valorIncorporacao,
+              depreciacaoAcumuladaAtual: "0",
+            },
+            update: {},
+          }),
+        ),
+      );
+    } finally {
+      await db.$disconnect();
+    }
     await page.context().addCookies([
       {
         name: "sipat_session",
@@ -39,35 +63,56 @@ test.describe("manutenção Web → API → PostgreSQL descartável", () => {
       },
     ]);
     await page.goto("/manutencoes/nova");
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await expect(
       page.getByRole("heading", { name: "Novo pedido de manutenção" }),
     ).toBeVisible();
+    await page.screenshot({
+      path: "test-results/manutencoes-nova-vazia-1920.png",
+      fullPage: true,
+    });
     await page
-      .getByRole("combobox", { name: "Comissão vigente" })
+      .getByRole("combobox", { name: "Comissão responsável" })
       .selectOption(fixture.comissaoId);
+    const abrirSeletor = page.getByRole("button", { name: "Adicionar bens" });
+    await abrirSeletor.click();
+    await page.screenshot({
+      path: "test-results/manutencoes-seletor-1920.png",
+      fullPage: true,
+    });
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("heading", { name: "Adicionar bens ao pedido" }),
+    ).toBeHidden();
+    await expect(abrirSeletor).toBeFocused();
+    await abrirSeletor.click();
     for (const bem of fixture.bens) {
       await page
-        .getByRole("combobox", { name: "Patrimônio", exact: true })
-        .selectOption(bem.id);
-      await page
-        .getByRole("button", { name: "Adicionar", exact: true })
-        .click();
+        .getByRole("checkbox", { name: new RegExp(bem.numero) })
+        .check();
     }
-    const primeiro = page.getByRole("group", {
-      name: new RegExp(fixture.bens[0]!.numero),
-    });
-    const segundo = page.getByRole("group", {
-      name: new RegExp(fixture.bens[1]!.numero),
-    });
-    await primeiro
-      .getByRole("combobox", { name: "Fornecedor (opcional)" })
+    await page.getByRole("button", { name: "Confirmar seleção" }).click();
+    await page
+      .getByRole("button", { name: `Configurar ${fixture.bens[0]!.numero}` })
+      .click();
+    await page
+      .getByRole("combobox", { name: "Fornecedor / prestador" })
       .selectOption(fixture.fornecedorId);
-    await primeiro
-      .getByRole("textbox", { name: "Problema (opcional)" })
+    await page
+      .getByRole("textbox", { name: "Problema identificado" })
       .fill("Falha no equipamento");
-    await segundo
-      .getByRole("combobox", { name: "Tipo" })
+    await page.getByRole("button", { name: "Salvar atendimento" }).click();
+    await page.screenshot({
+      path: "test-results/manutencoes-nova-itens-1920.png",
+      fullPage: true,
+    });
+    await page
+      .getByRole("button", { name: `Configurar ${fixture.bens[1]!.numero}` })
+      .click();
+    await page
+      .getByRole("combobox", { name: "Tipo de manutenção" })
       .selectOption("PREVENTIVA");
+    await page.getByRole("button", { name: "Salvar atendimento" }).click();
     let criado: { dados: { id: string } } | null = null;
     await page.route(
       "**/api/backend/manutencoes",
@@ -98,25 +143,22 @@ test.describe("manutenção Web → API → PostgreSQL descartável", () => {
     ).toBeVisible();
     const pedidoId = (criado as unknown as { dados: { id: string } }).dados.id;
     await page.goto(`/manutencoes/${pedidoId}`);
-    await expect(page.getByText("0 retornados e 2 pendentes")).toBeVisible();
+    await expect(page.getByText("0 de 2 retornados")).toBeVisible();
+    await page.screenshot({
+      path: "test-results/manutencoes-detalhe-1920.png",
+      fullPage: true,
+    });
 
-    const item = page
-      .locator('section[aria-labelledby^="item-"]')
-      .filter({ hasText: fixture.bens[0]!.numero });
-    await expect(
-      item.getByRole("button", { name: "Confirmar retorno" }),
-    ).toHaveCount(1);
-    await item
-      .getByRole("textbox", { name: "Descrição", exact: true })
+    const item = page.getByRole("row").filter({
+      hasText: fixture.bens[0]!.numero,
+    });
+    await item.getByRole("button", { name: "Orçamento" }).click();
+    await page
+      .getByRole("textbox", { name: "Descrição do orçamento" })
       .fill("Peça nova");
-    await item
-      .getByRole("textbox", { name: "Valor", exact: true })
-      .fill("20.00");
-    await item.getByRole("button", { name: "Salvar orçamento" }).click();
-    await expect(item.getByText(/Versão 1:/)).toBeVisible();
-    await expect(
-      item.getByRole("button", { name: "Confirmar retorno" }),
-    ).toHaveCount(1);
+    await page.getByRole("textbox", { name: "Valor orçado" }).fill("20.00");
+    await page.getByRole("button", { name: "Salvar orçamento" }).click();
+    await expect(item).toContainText("1 versão");
 
     const pdf = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
     await page.getByLabel("Arquivo PDF (até 10 MiB)").first().setInputFiles({
@@ -124,10 +166,7 @@ test.describe("manutenção Web → API → PostgreSQL descartável", () => {
       mimeType: "application/pdf",
       buffer: pdf,
     });
-    await page
-      .getByRole("button", { name: "Enviar documento" })
-      .first()
-      .click();
+    await page.getByRole("button", { name: "Anexar PDF" }).first().click();
     const linkPdf = page
       .getByRole("link", { name: /Documento de manutenção\.pdf/ })
       .first();
@@ -137,31 +176,220 @@ test.describe("manutenção Web → API → PostgreSQL descartável", () => {
     );
     expect(respostaPdf.status()).toBe(200);
     expect(respostaPdf.headers()["content-type"]).toContain("application/pdf");
-    await expect(
-      item.getByRole("button", { name: "Confirmar retorno" }),
-    ).toHaveCount(1);
-
-    await item.getByRole("textbox", { name: "Valor realizado" }).fill("20.00");
-    await item
+    await item.getByRole("button", { name: "Retorno" }).click();
+    await page.screenshot({
+      path: "test-results/manutencoes-retorno-modal-1920.png",
+      fullPage: true,
+    });
+    await page.getByRole("textbox", { name: "Valor realizado" }).fill("20.00");
+    await page
       .getByRole("textbox", { name: "Serviço realizado" })
       .fill("Peça substituída");
-    await item.getByRole("button", { name: "Confirmar retorno" }).click();
-    await expect(page.getByText("1 retornados e 1 pendentes")).toBeVisible();
-    await expect(item.getByText("Situação do bem: ATIVO")).toBeVisible();
+    await page.getByRole("button", { name: "Confirmar retorno" }).click();
+    await expect(page.getByText("1 de 2 retornados")).toBeVisible();
+    await page.screenshot({
+      path: "test-results/manutencoes-parcial-1920.png",
+      fullPage: true,
+    });
+    await expect(item.getByText("Retornado")).toBeVisible();
     await expect(
-      page
-        .locator('section[aria-labelledby^="item-"]')
-        .filter({ hasText: fixture.bens[1]!.numero })
-        .getByText("Situação do bem: Em manutenção"),
-    ).toBeVisible();
+      page.getByRole("row").filter({ hasText: fixture.bens[1]!.numero }),
+    ).toContainText("Em manutenção");
 
     await page.goto(`/manutencoes?busca=${fixture.bens[0]!.numero}`);
     await expect(page.getByRole("table")).toContainText(pedidoId);
+    for (const width of [1920, 1536, 900]) {
+      await page.setViewportSize({ width, height: 1080 });
+      await page.screenshot({
+        path: `test-results/manutencoes-lista-${width}.png`,
+        fullPage: true,
+      });
+    }
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
     await page.screenshot({
       path: "test-results/manutencoes-real-mobile.png",
       fullPage: true,
     });
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    await page.evaluate(() => {
+      document.documentElement.style.zoom = "2";
+    });
+    await expect(
+      page.getByRole("heading", { name: "Manutenção", exact: true }),
+    ).toBeVisible();
+    await page.screenshot({
+      path: "test-results/manutencoes-lista-390-zoom-200.png",
+      fullPage: true,
+    });
+  });
+
+  test("executa o ciclo completo como administrador", async ({ page }) => {
+    const fixtureBase = JSON.parse(
+      readFileSync(
+        path.resolve(
+          process.cwd(),
+          "test-results/manutencoes-real-fixture.json",
+        ),
+        "utf8",
+      ),
+    ) as Fixture;
+    const databaseUrl = process.env.MANUTENCOES_INTEGRATION_DATABASE_URL!;
+    const db = createDatabaseClient(databaseUrl);
+    const tag = randomUUID();
+    let fixture: Fixture;
+    try {
+      const patrimonios = await db.patrimonio.findMany({
+        select: { id: true, valorIncorporacao: true },
+      });
+      await Promise.all(
+        patrimonios.map((bem) =>
+          db.situacaoContabilPatrimonio.upsert({
+            where: { patrimonioId: bem.id },
+            create: {
+              patrimonioId: bem.id,
+              valorBrutoAtual: bem.valorIncorporacao,
+              depreciacaoAcumuladaAtual: "0",
+            },
+            update: {},
+          }),
+        ),
+      );
+      const referencia = await db.patrimonio.findUniqueOrThrow({
+        where: { id: fixtureBase.bens[0]!.id },
+        select: { especieId: true, setorAtualId: true },
+      });
+      const usuario = await db.usuario.create({
+        data: {
+          nome: "Administrador Web teste",
+          email: `${tag}@example.test`,
+          senha: "hash-de-teste",
+          perfil: "ADMINISTRADOR",
+          trocaSenhaObrigatoria: false,
+        },
+      });
+      const token = Buffer.from(
+        randomUUID().replace(/-/g, "").repeat(2).slice(0, 64),
+        "hex",
+      ).toString("base64url");
+      await db.sessaoUsuario.create({
+        data: {
+          usuarioId: usuario.id,
+          tokenHash: createHash("sha256").update(token).digest("hex"),
+          expiraAt: new Date(Date.now() + 3_600_000),
+        },
+      });
+      const bens = await Promise.all(
+        [1, 2].map(async (indice) => {
+          const bem = await db.patrimonio.create({
+            data: {
+              numeroPatrimonio: `${Date.now()}9${indice}`,
+              tipoNumeroPatrimonial: "OFICIAL",
+              descricao: `Equipamento administrador ${indice}`,
+              dataTombamento: new Date("2025-01-01T00:00:00.000Z"),
+              valorIncorporacao: "1000",
+              depreciavel: false,
+              especieId: referencia.especieId,
+              setorAtualId: referencia.setorAtualId,
+              createdById: usuario.id,
+              situacaoContabil: {
+                create: {
+                  valorBrutoAtual: "1000",
+                  depreciacaoAcumuladaAtual: "0",
+                },
+              },
+            },
+          });
+          return { id: bem.id, numero: bem.numeroPatrimonio };
+        }),
+      );
+      fixture = { ...fixtureBase, token, bens };
+    } finally {
+      await db.$disconnect();
+    }
+
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: fixture.token,
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/manutencoes/nova");
+    await page
+      .getByRole("combobox", { name: "Comissão responsável" })
+      .selectOption(fixture.comissaoId);
+    await page.getByRole("button", { name: "Adicionar bens" }).click();
+    for (const bem of fixture.bens) {
+      await page
+        .getByRole("checkbox", { name: new RegExp(bem.numero) })
+        .check();
+    }
+    await page.getByRole("button", { name: "Confirmar seleção" }).click();
+    const pdf = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
+    await page.getByLabel("Selecionar PDF").setInputFiles({
+      name: "pedido-administrador.pdf",
+      mimeType: "application/pdf",
+      buffer: pdf,
+    });
+    await page.route(
+      "**/api/backend/manutencoes/*/documentos",
+      (route) => route.abort("connectionfailed"),
+      { times: 1 },
+    );
+    await page.getByRole("button", { name: "Criar pedido" }).click();
+    await expect(
+      page.getByRole("status").filter({
+        hasText: "O pedido foi criado, mas o PDF não teve envio confirmado",
+      }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Abrir pedido criado" }).click();
+    await expect(page).toHaveURL(/\/manutencoes\/[0-9a-f-]+$/);
+    await expect(page.getByText("0 de 2 retornados")).toBeVisible();
+    await page.getByLabel("Arquivo PDF (até 10 MiB)").first().setInputFiles({
+      name: "pedido-administrador.pdf",
+      mimeType: "application/pdf",
+      buffer: pdf,
+    });
+    await page.getByRole("button", { name: "Anexar PDF" }).first().click();
+    await expect(
+      page.getByRole("link", { name: /Documento de manutenção\.pdf/ }),
+    ).toBeVisible();
+
+    for (const [indice, bem] of fixture.bens.entries()) {
+      const item = page.getByRole("row").filter({ hasText: bem.numero });
+      await item.getByRole("button", { name: "Orçamento" }).click();
+      await page
+        .getByRole("textbox", { name: "Descrição do orçamento" })
+        .fill(`Serviço administrador ${indice + 1}`);
+      await page
+        .getByRole("textbox", { name: "Valor orçado" })
+        .fill(`${30 + indice}.00`);
+      await page.getByRole("button", { name: "Salvar orçamento" }).click();
+      await item.getByRole("button", { name: "Retorno" }).click();
+      await page
+        .getByRole("textbox", { name: "Valor realizado" })
+        .fill(`${30 + indice}.00`);
+      await page
+        .getByRole("textbox", { name: "Serviço realizado" })
+        .fill(`Serviço concluído ${indice + 1}`);
+      await page.getByRole("button", { name: "Confirmar retorno" }).click();
+      await expect(
+        page.getByText(`${indice + 1} de 2 retornados`),
+      ).toBeVisible();
+    }
+    await expect(page.getByText("Concluída").first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Documento de manutenção\.pdf/ }),
+    ).toBeVisible();
   });
 });
