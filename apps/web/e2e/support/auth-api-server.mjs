@@ -484,6 +484,33 @@ const server = createServer(async (request, response) => {
     });
     return;
   }
+  if (request.method === "GET" && requestUrl.pathname === "/api/reavaliacoes") {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Reavaliações consultadas.",
+      dados: [],
+      meta: { total: 0, pagina: 1, limite: 20, ultimaPagina: 1 },
+    });
+    return;
+  }
+  if (
+    request.method === "POST" &&
+    ["/api/reavaliacoes/previa", "/api/reavaliacoes"].includes(
+      requestUrl.pathname,
+    ) &&
+    sessionFromCookie(request.headers.cookie) === "active"
+  ) {
+    json(response, 403, {
+      status: 403,
+      sucesso: false,
+      codigo: "PERFIL_NAO_AUTORIZADO",
+      mensagem: "Somente o Diretor de Patrimônio pode registrar reavaliações.",
+      erros: [],
+      requisicaoId: "e2e-api-request",
+    });
+    return;
+  }
   if (
     request.method === "GET" &&
     ["/api/patrimonios", "/api/patrimonios/dashboard"].includes(

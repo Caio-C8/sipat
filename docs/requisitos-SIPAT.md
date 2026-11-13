@@ -272,6 +272,9 @@ correções está registrada em RF19.
   por uma obrigação que ainda não existe.
 - O dia civil institucional da reavaliação e a competência de depreciação usam o fuso `America/Sao_Paulo`, inclusive na virada do mês.
 - A data de referência da reavaliação deve estar no mês corrente e não pode ultrapassar o dia atual nesse fuso; datas de meses anteriores e datas futuras são recusadas.
+- Administrador e Diretor de Patrimônio podem consultar a lista e os detalhes
+  das reavaliações; somente o Diretor pode iniciar, gerar prévia ou confirmar
+  uma reavaliação.
 
 ### RF15: Depreciação Automática de Patrimônios
 

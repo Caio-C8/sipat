@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Check, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import {
   CriarReavaliacaoBodySchema,
   PreviaReavaliacaoBodySchema,
@@ -52,6 +53,58 @@ type Selecionado = {
   definirPrimeiroParametro?: true;
 };
 
+type Etapa = 1 | 2 | 3;
+
+function EtapasReavaliacao({ etapa }: { etapa: Etapa }) {
+  const etapas = [
+    { numero: 1 as const, rotulo: "Selecionar bens" },
+    { numero: 2 as const, rotulo: "Preencher parâmetros" },
+    { numero: 3 as const, rotulo: "Revisar" },
+  ];
+  return (
+    <ol className="grid grid-cols-3 gap-2" aria-label="Etapas da reavaliação">
+      {etapas.map((item) => {
+        const concluida = item.numero < etapa;
+        const atual = item.numero === etapa;
+        return (
+          <li
+            key={item.numero}
+            aria-current={atual ? "step" : undefined}
+            className="flex min-w-0 items-center gap-2"
+          >
+            <span
+              className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                concluida || atual
+                  ? "bg-[#2863ec] text-white"
+                  : "bg-[#e9eef5] text-[#526580]"
+              }`}
+            >
+              {concluida ? (
+                <Check aria-hidden="true" className="size-4" />
+              ) : (
+                item.numero
+              )}
+            </span>
+            <span
+              className={`hidden truncate text-xs font-semibold sm:block ${
+                atual ? "text-[#203b61]" : "text-[#526580]"
+              }`}
+            >
+              {item.rotulo}
+            </span>
+            {item.numero < 3 ? (
+              <span
+                aria-hidden="true"
+                className="h-px min-w-3 flex-1 bg-[#dce5f0]"
+              />
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function hojeSaoPaulo(): string {
   const partes = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -87,6 +140,7 @@ export function NovaReavaliacao({
   const [buscaAplicada, setBuscaAplicada] = useState("");
   const [pagina, setPagina] = useState(1);
   const [buscaComissao, setBuscaComissao] = useState("");
+  const [etapa, setEtapa] = useState<Etapa>(modoDetalhe ? 2 : 1);
   const [dataReferencia, setDataReferencia] = useState(hojeSaoPaulo);
   const [comissaoId, setComissaoId] = useState("");
   const [selecionados, setSelecionados] = useState<Selecionado[]>(
@@ -167,6 +221,7 @@ export function NovaReavaliacao({
 
   function invalidarPrevia() {
     setPrevia(null);
+    setEtapa((atual) => (atual === 3 ? 2 : atual));
     setErro(null);
     setErrosCampos([]);
     setDecisaoIdempotencia(null);
@@ -253,6 +308,7 @@ export function NovaReavaliacao({
     try {
       const resposta = await previaOperacao.gerar(validacao.data);
       setPrevia(resposta.dados);
+      setEtapa(3);
       if (!resposta.dados.versaoPrevia) {
         setAviso(
           "A prévia identificou impedimentos. Corrija os itens indicados e consulte novamente.",
@@ -355,7 +411,7 @@ export function NovaReavaliacao({
       className={
         modoDetalhe
           ? "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-6"
-          : "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7"
+          : "grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7"
       }
     >
       <Dialog
@@ -439,19 +495,27 @@ export function NovaReavaliacao({
         </DialogContent>
       </Dialog>
       {!modoDetalhe ? (
-        <header>
-          <Link
-            prefetch={false}
-            href="/reavaliacoes"
-            className="text-sm underline"
-          >
-            Voltar às reavaliações
-          </Link>
-          <h1 className="mt-4 text-2xl font-bold">Nova reavaliação</h1>
-          <p className="mt-2 text-sm text-[#526580]">
-            Selecione até 20 bens, informe os novos parâmetros e revise a prévia
-            calculada pela API.
-          </p>
+        <header className="grid gap-5">
+          <div>
+            <Link
+              prefetch={false}
+              href="/reavaliacoes"
+              className="inline-flex items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
+            >
+              <ChevronLeft aria-hidden="true" className="size-4" />
+              Voltar às reavaliações
+            </Link>
+            <h1 className="mt-4 text-2xl font-bold tracking-tight">
+              Nova reavaliação
+            </h1>
+            <p className="mt-1 text-sm text-[#526580]">
+              Selecione os bens, preencha os novos parâmetros e revise a prévia
+              calculada pela API.
+            </p>
+          </div>
+          <div className="rounded-lg border border-[#dce4ef] bg-white px-4 py-4 sm:px-6">
+            <EtapasReavaliacao etapa={etapa} />
+          </div>
         </header>
       ) : null}
       <div ref={painelAviso} tabIndex={-1} className="outline-none">
@@ -542,7 +606,7 @@ export function NovaReavaliacao({
               </Button>
             </section>
           ) : null}
-          {!modoDetalhe ? (
+          {!modoDetalhe && etapa === 1 ? (
             <section
               className={painelReavaliacao}
               aria-labelledby="selecionar-bens-title"
@@ -551,7 +615,7 @@ export function NovaReavaliacao({
                 1. Selecionar bens
               </h2>
               <form
-                className="mt-4 flex flex-wrap items-end gap-3"
+                className="mt-4 flex flex-wrap items-end gap-3 rounded-md bg-[#f7f9fc] p-3"
                 onSubmit={(e) => {
                   e.preventDefault();
                   setPagina(1);
@@ -574,7 +638,12 @@ export function NovaReavaliacao({
                     maxLength={200}
                   />
                 </label>
-                <Button type="submit">Pesquisar</Button>
+                <Button
+                  type="submit"
+                  className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                >
+                  <Search aria-hidden="true" className="size-4" /> Pesquisar
+                </Button>
               </form>
               {bens.loading ? (
                 <p role="status" className="mt-4">
@@ -589,7 +658,7 @@ export function NovaReavaliacao({
                   {bens.dados?.dados.map((bem) => (
                     <li
                       key={bem.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                      className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4eaf2] px-1 py-3 last:border-b-0"
                     >
                       <div>
                         <strong>{bem.numeroPatrimonio}</strong> ·{" "}
@@ -650,223 +719,284 @@ export function NovaReavaliacao({
                   </Button>
                 </nav>
               ) : null}
+              <div
+                className={
+                  modoDetalhe
+                    ? "mt-5 flex flex-wrap items-center gap-3"
+                    : "mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4eaf2] pt-4"
+                }
+              >
+                <Button asChild variant="outline">
+                  <Link href="/reavaliacoes">Cancelar</Link>
+                </Button>
+                <Button
+                  type="button"
+                  disabled={selecionados.length === 0 || detalhe.pending}
+                  className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                  onClick={() => setEtapa(2)}
+                >
+                  Preencher parâmetros{" "}
+                  <ChevronRight aria-hidden="true" className="size-4" />
+                </Button>
+              </div>
             </section>
           ) : null}
-          <section
-            className={painelReavaliacao}
-            aria-labelledby="parametros-title"
-          >
-            <h2 id="parametros-title" className="font-bold">
-              2. Data, comissão e parâmetros
-            </h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm">
-                Data de referência
-                <input
-                  className={campoReavaliacao}
-                  type="date"
-                  min={`${hojeSaoPaulo().slice(0, 7)}-01`}
-                  max={hojeSaoPaulo()}
-                  value={dataReferencia}
-                  onChange={(e) => {
-                    setDataReferencia(e.target.value);
-                    setComissaoId("");
-                    setSelecionados((atuais) =>
-                      atuais.map((item) => ({
-                        ...item,
-                        definirPrimeiroParametro: undefined,
-                      })),
-                    );
-                    invalidarPrevia();
-                  }}
-                />
-              </label>
-              <label className="grid gap-2 text-sm">
-                Comissão vigente
-                <select
-                  className={campoReavaliacao}
-                  value={comissaoId}
-                  onChange={(e) => {
-                    setComissaoId(e.target.value);
-                    invalidarPrevia();
-                  }}
-                >
-                  <option value="">Selecione</option>
-                  {comissaoId && !comissaoSelecionada ? (
-                    <option value={comissaoId}>Comissão selecionada</option>
-                  ) : null}
-                  {comissoes.dados?.dados.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.nome}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm sm:col-span-2">
-                Pesquisar comissão
-                <input
-                  className={campoReavaliacao}
-                  type="search"
-                  value={buscaComissao}
-                  onChange={(e) => setBuscaComissao(e.target.value)}
-                  maxLength={200}
-                />
-              </label>
-            </div>
-            {comissoes.loading ? (
-              <p role="status" className="mt-2 text-sm">
-                Carregando comissões…
-              </p>
-            ) : null}
-            {comissoes.erro ? (
-              <p role="alert" className="mt-2 text-sm text-red-800">
-                Não foi possível consultar as comissões.
-              </p>
-            ) : null}
-            <div className="mt-5 grid gap-4">
-              {selecionados.length ? (
-                selecionados.map((item, indice) => (
-                  <fieldset key={item.bem.id} className="rounded-md border p-4">
-                    <legend className="px-1 font-semibold">
-                      Bem {indice + 1}: {item.bem.numeroPatrimonio} ·{" "}
-                      {item.bem.descricao}
-                    </legend>
-                    <p className="mb-3 text-xs text-[#526580]">
-                      Bruto atual:{" "}
-                      {formatarDecimal(
-                        item.bem.situacaoContabil.valorBrutoAtual,
-                      )}{" "}
-                      · Acumulado atual:{" "}
-                      {formatarDecimal(
-                        item.bem.situacaoContabil.depreciacaoAcumuladaAtual,
-                      )}{" "}
-                      · Residual vigente:{" "}
-                      {formatarDecimal(
-                        item.bem.parametroDepreciacaoAtual?.valorResidual,
-                      )}
-                    </p>
-                    {!item.bem.parametroDepreciacaoAtual ? (
-                      <div
-                        role="alert"
-                        className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm"
-                      >
-                        <p>
-                          Este patrimônio foi cadastrado sem parâmetros de
-                          depreciação. A reavaliação exige um parâmetro. Deseja
-                          definir um agora?
-                        </p>
-                        <p className="mt-1 text-xs">
-                          Enquanto não houver parâmetro vigente, o patrimônio
-                          não deprecia.
-                        </p>
-                        <Button
-                          className="mt-3"
-                          type="button"
-                          variant="outline"
-                          onClick={() => setParametroPendenteId(item.bem.id)}
-                        >
-                          {item.definirPrimeiroParametro
-                            ? "Revisar primeiro parâmetro"
-                            : "Definir primeiro parâmetro"}
-                        </Button>
-                        {item.definirPrimeiroParametro ? (
-                          <p className="mt-2 text-xs">
-                            Primeiro parâmetro confirmado para a prévia.
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                      <label className="grid gap-2 text-sm">
-                        Novo valor bruto (R$)
-                        <input
-                          className={campoReavaliacao}
-                          type="text"
-                          inputMode="decimal"
-                          value={item.valorReavaliado}
-                          onChange={(e) =>
-                            alterarItem(item.bem.id, {
-                              valorReavaliado: e.target.value,
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="grid gap-2 text-sm">
-                        Nova vida útil (meses)
-                        <input
-                          className={campoReavaliacao}
-                          type="number"
-                          min={1}
-                          max={1200}
-                          step={1}
-                          value={item.vidaUtilNovaMeses}
-                          onChange={(e) =>
-                            alterarItem(item.bem.id, {
-                              vidaUtilNovaMeses: e.target.value,
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="grid gap-2 text-sm">
-                        Modalidade residual
-                        <select
-                          className={campoReavaliacao}
-                          value={item.residualTipo}
-                          onChange={(e) => {
-                            const tipo = e.target
-                              .value as Selecionado["residualTipo"];
-                            alterarItem(item.bem.id, {
-                              residualTipo: tipo,
-                              residual:
-                                tipo === "VALOR"
-                                  ? (item.bem.parametroDepreciacaoAtual
-                                      ?.valorResidual ?? "0")
-                                  : (item.bem.parametroDepreciacaoAtual
-                                      ?.percentualResidual ?? "0"),
-                            });
-                          }}
-                        >
-                          <option value="VALOR">Valor em reais</option>
-                          <option value="PERCENTUAL">Percentual</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-2 text-sm">
-                        {item.residualTipo === "VALOR"
-                          ? "Novo residual (R$)"
-                          : "Novo residual (%)"}
-                        <input
-                          className={campoReavaliacao}
-                          type="text"
-                          inputMode="decimal"
-                          value={item.residual}
-                          onChange={(e) =>
-                            alterarItem(item.bem.id, {
-                              residual: e.target.value,
-                            })
-                          }
-                        />
-                      </label>
-                    </div>
-                  </fieldset>
-                ))
-              ) : (
-                <p className="text-sm text-[#526580]">
-                  Selecione ao menos um patrimônio acima.
-                </p>
-              )}
-            </div>
-            <Button
-              className="mt-5"
-              type="button"
-              disabled={
-                bloqueado || selecionados.length === 0 || !!pedidoPendente
-              }
-              onClick={() => void gerarPrevia()}
+          {modoDetalhe || etapa === 2 ? (
+            <section
+              className={painelReavaliacao}
+              aria-labelledby="parametros-title"
             >
-              {previaOperacao.pending ? "Calculando…" : "Calcular prévia"}
-            </Button>
-          </section>
-          {previa ? (
+              <h2 id="parametros-title" className="font-bold">
+                2. Data, comissão e parâmetros
+              </h2>
+              {!modoDetalhe ? (
+                <p className="mt-1 text-xs text-[#526580]">
+                  A data deve estar no mês atual. A comissão e os valores serão
+                  revalidados pela API.
+                </p>
+              ) : null}
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm">
+                  Data de referência
+                  <input
+                    className={campoReavaliacao}
+                    type="date"
+                    min={`${hojeSaoPaulo().slice(0, 7)}-01`}
+                    max={hojeSaoPaulo()}
+                    value={dataReferencia}
+                    onChange={(e) => {
+                      setDataReferencia(e.target.value);
+                      setComissaoId("");
+                      setSelecionados((atuais) =>
+                        atuais.map((item) => ({
+                          ...item,
+                          definirPrimeiroParametro: undefined,
+                        })),
+                      );
+                      invalidarPrevia();
+                    }}
+                  />
+                </label>
+                <label className="grid gap-2 text-sm">
+                  Comissão vigente
+                  <select
+                    className={campoReavaliacao}
+                    value={comissaoId}
+                    onChange={(e) => {
+                      setComissaoId(e.target.value);
+                      invalidarPrevia();
+                    }}
+                  >
+                    <option value="">Selecione</option>
+                    {comissaoId && !comissaoSelecionada ? (
+                      <option value={comissaoId}>Comissão selecionada</option>
+                    ) : null}
+                    {comissoes.dados?.dados.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.nome}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm sm:col-span-2">
+                  Pesquisar comissão
+                  <input
+                    className={campoReavaliacao}
+                    type="search"
+                    value={buscaComissao}
+                    onChange={(e) => setBuscaComissao(e.target.value)}
+                    maxLength={200}
+                  />
+                </label>
+              </div>
+              {comissoes.loading ? (
+                <p role="status" className="mt-2 text-sm">
+                  Carregando comissões…
+                </p>
+              ) : null}
+              {comissoes.erro ? (
+                <p role="alert" className="mt-2 text-sm text-red-800">
+                  Não foi possível consultar as comissões.
+                </p>
+              ) : null}
+              <div className="mt-5 grid gap-4">
+                {selecionados.length ? (
+                  selecionados.map((item, indice) => (
+                    <fieldset
+                      key={item.bem.id}
+                      className={
+                        modoDetalhe
+                          ? "rounded-md border p-4"
+                          : "rounded-md border border-[#dce4ef] bg-[#fbfcfe] p-4"
+                      }
+                    >
+                      <legend className="px-1 font-semibold">
+                        Bem {indice + 1}: {item.bem.numeroPatrimonio} ·{" "}
+                        {item.bem.descricao}
+                      </legend>
+                      <p className="mb-3 text-xs text-[#526580]">
+                        Bruto atual:{" "}
+                        {formatarDecimal(
+                          item.bem.situacaoContabil.valorBrutoAtual,
+                        )}{" "}
+                        · Acumulado atual:{" "}
+                        {formatarDecimal(
+                          item.bem.situacaoContabil.depreciacaoAcumuladaAtual,
+                        )}{" "}
+                        · Residual vigente:{" "}
+                        {formatarDecimal(
+                          item.bem.parametroDepreciacaoAtual?.valorResidual,
+                        )}
+                      </p>
+                      {!item.bem.parametroDepreciacaoAtual ? (
+                        <div
+                          role="alert"
+                          className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm"
+                        >
+                          <p>
+                            Este patrimônio foi cadastrado sem parâmetros de
+                            depreciação. A reavaliação exige um parâmetro.
+                            Deseja definir um agora?
+                          </p>
+                          <p className="mt-1 text-xs">
+                            Enquanto não houver parâmetro vigente, o patrimônio
+                            não deprecia.
+                          </p>
+                          <Button
+                            className="mt-3"
+                            type="button"
+                            variant="outline"
+                            onClick={() => setParametroPendenteId(item.bem.id)}
+                          >
+                            {item.definirPrimeiroParametro
+                              ? "Revisar primeiro parâmetro"
+                              : "Definir primeiro parâmetro"}
+                          </Button>
+                          {item.definirPrimeiroParametro ? (
+                            <p className="mt-2 text-xs">
+                              Primeiro parâmetro confirmado para a prévia.
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <label className="grid gap-2 text-sm">
+                          Novo valor bruto (R$)
+                          <input
+                            className={campoReavaliacao}
+                            type="text"
+                            inputMode="decimal"
+                            value={item.valorReavaliado}
+                            onChange={(e) =>
+                              alterarItem(item.bem.id, {
+                                valorReavaliado: e.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm">
+                          Nova vida útil (meses)
+                          <input
+                            className={campoReavaliacao}
+                            type="number"
+                            min={1}
+                            max={1200}
+                            step={1}
+                            value={item.vidaUtilNovaMeses}
+                            onChange={(e) =>
+                              alterarItem(item.bem.id, {
+                                vidaUtilNovaMeses: e.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm">
+                          Modalidade residual
+                          <select
+                            className={campoReavaliacao}
+                            value={item.residualTipo}
+                            onChange={(e) => {
+                              const tipo = e.target
+                                .value as Selecionado["residualTipo"];
+                              alterarItem(item.bem.id, {
+                                residualTipo: tipo,
+                                residual:
+                                  tipo === "VALOR"
+                                    ? (item.bem.parametroDepreciacaoAtual
+                                        ?.valorResidual ?? "0")
+                                    : (item.bem.parametroDepreciacaoAtual
+                                        ?.percentualResidual ?? "0"),
+                              });
+                            }}
+                          >
+                            <option value="VALOR">Valor em reais</option>
+                            <option value="PERCENTUAL">Percentual</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-2 text-sm">
+                          {item.residualTipo === "VALOR"
+                            ? "Novo residual (R$)"
+                            : "Novo residual (%)"}
+                          <input
+                            className={campoReavaliacao}
+                            type="text"
+                            inputMode="decimal"
+                            value={item.residual}
+                            onChange={(e) =>
+                              alterarItem(item.bem.id, {
+                                residual: e.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                    </fieldset>
+                  ))
+                ) : (
+                  <p className="text-sm text-[#526580]">
+                    Selecione ao menos um patrimônio acima.
+                  </p>
+                )}
+              </div>
+              {modoDetalhe ? (
+                <Button
+                  className="mt-5"
+                  type="button"
+                  disabled={
+                    bloqueado || selecionados.length === 0 || !!pedidoPendente
+                  }
+                  onClick={() => void gerarPrevia()}
+                >
+                  {previaOperacao.pending ? "Calculando…" : "Calcular prévia"}
+                </Button>
+              ) : (
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4eaf2] pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setEtapa(1)}
+                  >
+                    <ChevronLeft aria-hidden="true" className="size-4" /> Voltar
+                  </Button>
+                  <Button
+                    className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                    type="button"
+                    disabled={
+                      bloqueado || selecionados.length === 0 || !!pedidoPendente
+                    }
+                    onClick={() => void gerarPrevia()}
+                  >
+                    {previaOperacao.pending
+                      ? "Calculando…"
+                      : "Revisar reavaliação"}
+                    <ChevronRight aria-hidden="true" className="size-4" />
+                  </Button>
+                </div>
+              )}
+            </section>
+          ) : null}
+          {previa && (modoDetalhe || etapa === 3) ? (
             <section
               className={painelReavaliacao}
               aria-labelledby="revisao-title"
@@ -959,20 +1089,44 @@ export function NovaReavaliacao({
                   </li>
                 ))}
               </ul>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <p className="text-sm">
-                  Data: {formatarDataCivil(dataReferencia)} · Comissão:{" "}
-                  {comissaoSelecionada?.nome ?? "Selecionada"}
-                </p>
-                <Button
-                  type="button"
-                  disabled={
-                    !previa.versaoPrevia || bloqueado || !!pedidoPendente
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4eaf2] pt-4">
+                {!modoDetalhe ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setEtapa(2)}
+                  >
+                    <ChevronLeft aria-hidden="true" className="size-4" />{" "}
+                    Corrigir dados
+                  </Button>
+                ) : null}
+                <div
+                  className={
+                    modoDetalhe
+                      ? "contents"
+                      : "ml-auto flex flex-wrap items-center justify-end gap-3"
                   }
-                  onClick={() => void confirmar()}
                 >
-                  {criacao.pending ? "Confirmando…" : "Confirmar reavaliação"}
-                </Button>
+                  <p className="text-sm">
+                    Data: {formatarDataCivil(dataReferencia)} · Comissão:{" "}
+                    {comissaoSelecionada?.nome ?? "Selecionada"}
+                  </p>
+                  <Button
+                    className={
+                      modoDetalhe
+                        ? undefined
+                        : "h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                    }
+                    type="button"
+                    disabled={
+                      !previa.versaoPrevia || bloqueado || !!pedidoPendente
+                    }
+                    onClick={() => void confirmar()}
+                  >
+                    {criacao.pending ? "Confirmando…" : "Confirmar reavaliação"}
+                  </Button>
+                </div>
               </div>
             </section>
           ) : null}

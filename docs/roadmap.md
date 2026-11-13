@@ -247,18 +247,25 @@ formulário nem disparar operações de criação.
 integrado. A ordem aprovada evita telas sustentadas por dados fixos ou chamadas
 N+1:
 
-| Ordem | Objetivo                                                     | Status   | Dependências                             |
-| ----- | ------------------------------------------------------------ | -------- | ---------------------------------------- |
-| 1     | completar dados públicos e opções necessárias                | aprovado | contratos e APIs patrimoniais existentes |
-| 2     | pesquisa paginada e detalhe individual reais                 | aprovado | objetivo anterior                        |
-| 3     | histórico filtrável e ficha PDF                              | aprovado | detalhe e relatórios existentes          |
-| 4     | ações Web de movimentação, reavaliação, baixa e substituição | aprovado | objetivos anteriores e APIs existentes   |
+| Ordem | Objetivo                                                     | Status   | Dependências                              |
+| ----- | ------------------------------------------------------------ | -------- | ----------------------------------------- |
+| 1     | completar dados públicos e opções necessárias                | aprovado | contratos e APIs patrimoniais existentes  |
+| 2     | pesquisa paginada e detalhe individual reais                 | aprovado | objetivo anterior                         |
+| 3     | histórico filtrável e ficha PDF                              | aprovado | detalhe e relatórios existentes           |
+| 4     | ações Web de movimentação, reavaliação, baixa e substituição | aprovado | objetivos anteriores e APIs existentes    |
+| 5     | paridade visual Web do fluxo independente de reavaliações    | entregue | objetivo 4 e feature de reavaliações real |
 
 Administrador consulta; Diretor consulta e executa as mutações autorizadas. O
 implementador deve usar `@Figma` e inspecionar os frames Web da página `Telas
 PC`. O escopo, os desvios deliberados do protótipo e os arquivos de referência
 estão na
 [tarefa WEB-PATRIMONIOS-001](./tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md).
+
+O objetivo 5 usou os frames Web de reavaliações, mantém leitura para os dois
+perfis e mutação exclusiva do Diretor e não alterou banco ou API. O drawer
+patrimonial existente foi preservado; a entrega concentra-se na tela
+independente, conforme a decisão de execução. O contrato e as evidências estão em
+[WEB-REAVALIACOES-002](./tasks/WEB-REAVALIACOES-002-paridade-visual-figma.md).
 
 ### Conferência de inventário no mobile
 
