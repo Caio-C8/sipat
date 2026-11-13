@@ -76,6 +76,29 @@ comissão disponíveis a ambos não ampliam as rotas administrativas desses
 cadastros. PDFs são lidos por rota protegida, sem receber chave lógica do
 cliente. Ver [MANUTENCOES-001](./tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
 
+## Baixas patrimoniais — política aprovada para a interface Web
+
+Administrador e Diretor de Patrimônio podem consultar a listagem tabular de
+baixas já exposta por relatórios e os dados estruturados de uma baixa
+individual. Somente o Diretor pode carregar opções de registro e confirmar uma
+baixa. A ampliação entregue em
+[BAIXAS-002](./tasks/BAIXAS-002-consulta-administrador.md) alterou apenas a
+autorização da consulta individual existente; não mudou contrato, persistência
+ou regra de domínio.
+
+| Operação                                                    | Administrador | Diretor de Patrimônio |
+| ----------------------------------------------------------- | ------------- | --------------------- |
+| `GET /api/relatorios/baixas`                                | sim           | sim                   |
+| `GET /api/patrimonios/:patrimonioId/baixa`                  | sim           | sim                   |
+| `GET /api/patrimonios/:patrimonioId/baixa/anexo`            | não           | sim                   |
+| `GET /api/patrimonios/:patrimonioId/baixa/opcoes/comissoes` | não           | sim                   |
+| `POST /api/patrimonios/:patrimonioId/baixa`                 | não           | sim                   |
+
+O acesso aos dados estruturados não concede ao Administrador download do PDF
+comprobatório. A interface deve omitir ações e requisições incompatíveis com o
+perfil, mas a API continua sendo a barreira definitiva. Não existem edição,
+exclusão, reativação ou estorno.
+
 ## Fronteira de confiança
 
 ```text

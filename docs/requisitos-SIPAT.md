@@ -348,7 +348,9 @@ correções está registrada em RF19.
 
 ### RF17: Baixa de Patrimônios
 
-**Descrição:** O sistema deve permitir que o Diretor de Patrimônio registre a baixa de um bem patrimonial.
+**Descrição:** O sistema deve permitir que o Diretor de Patrimônio registre a
+baixa de um bem patrimonial e que o Administrador e o Diretor consultem os
+registros de baixa.
 
 **Informações:** Patrimônio, data da baixa, tipo, motivo, observação, documento
 anexado, comissão e usuário responsável.
@@ -377,6 +379,9 @@ anexado, comissão e usuário responsável.
 - O motivo é obrigatório e a observação é opcional.
 - A operação deve gerar registro histórico e pode receber um único documento
   comprobatório PDF de até 10 MiB.
+- Administrador e Diretor de Patrimônio podem consultar os dados estruturados
+  dos registros de baixa; essa leitura não autoriza o Administrador a executar
+  a operação nem amplia, por si só, o acesso ao documento comprobatório.
 - O sistema não deve permitir estornar um patrimônio BAIXADO para que ele volte a ficar ATIVO.
 
 ### RF18: Gestão de Manutenções
@@ -1446,7 +1451,7 @@ determinada sem entrada manual do usuário.
 
 **Eventos:** Administrar os cadastros administrativos do sistema, incluindo usuários, responsáveis, setores, comissões, naturezas de bens, espécies de bens e fornecedores. Também poderá participar do registro e alteração de processos de compra e do gerenciamento de manutenções, consultar todos os dados patrimoniais e acompanhar inventários sem executar operações sobre os patrimônios.
 
-**Serviços:** Autenticação e controle de acesso (RF01); Gestão de Usuários (RF02); Gestão de Responsáveis (RF03); Gestão de Setores (RF04); Gestão de Comissões (RF05); Gestão de Naturezas de Bens (RF06); Gestão de Espécies de Bens (RF07); Gestão de Fornecedores (RF08); Gestão de Processos de Compra e Documentos Fiscais (RF09); Gestão de Manutenções (RF18); Consulta de Patrimônios (RF11); Consulta de Transferências entre Setores (RF13, sem registro); consulta de inventários (RF19); Consulta do Histórico Patrimonial (RF20); Relatórios Patrimoniais (RF21).
+**Serviços:** Autenticação e controle de acesso (RF01); Gestão de Usuários (RF02); Gestão de Responsáveis (RF03); Gestão de Setores (RF04); Gestão de Comissões (RF05); Gestão de Naturezas de Bens (RF06); Gestão de Espécies de Bens (RF07); Gestão de Fornecedores (RF08); Gestão de Processos de Compra e Documentos Fiscais (RF09); Gestão de Manutenções (RF18); Consulta de Patrimônios (RF11); Consulta de Transferências entre Setores (RF13, sem registro); consulta de baixas patrimoniais (RF17, sem registro ou estorno); consulta de inventários (RF19); Consulta do Histórico Patrimonial (RF20); Relatórios Patrimoniais (RF21).
 
 **Subpontos de vista:** Diretor de Patrimônio, Usuário do Sistema.
 

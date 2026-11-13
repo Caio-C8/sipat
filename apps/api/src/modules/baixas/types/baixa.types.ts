@@ -16,6 +16,7 @@ export const baixaDetalheArgs = {
       select: { id: true, numeroPatrimonio: true, descricao: true },
     },
     comissao: { select: { id: true, nome: true } },
+    createdBy: { select: { id: true, nome: true } },
   },
 } satisfies Prisma.BaixaPatrimonioDefaultArgs;
 

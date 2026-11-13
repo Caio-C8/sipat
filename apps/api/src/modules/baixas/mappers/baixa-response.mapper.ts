@@ -12,6 +12,7 @@ export class BaixaResponseMapper {
       motivo: baixa.motivo,
       observacao: baixa.observacao,
       createdById: baixa.createdById,
+      createdBy: baixa.createdBy,
       createdAt: baixa.createdAt.toISOString(),
       anexoUrl:
         baixa.caminhoAnexoDocumento === null

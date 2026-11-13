@@ -35,6 +35,7 @@ export const TipoEventoRelatorioSchema = z.enum([
   "CORRECAO_LOCALIZACAO",
 ]);
 const periodo = { inicio: dia, fim: dia };
+const periodoOpcional = { inicio: dia.optional(), fim: dia.optional() };
 const comum = { patrimonioId: id.optional() };
 const comissao = { comissaoId: id.optional() };
 export const filtrosRelatorios = {
@@ -108,7 +109,7 @@ export const filtrosRelatorios = {
   baixas: z.strictObject({
     ...comum,
     ...comissao,
-    ...periodo,
+    ...periodoOpcional,
     tipo: z
       .enum([
         "ALIENACAO",

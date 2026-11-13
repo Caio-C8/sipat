@@ -131,9 +131,11 @@ No estado atual:
   `DIRETOR_PATRIMONIO`; valida comissão vigente, materializa setores ativos e
   patrimônios `ATIVO`, consulta progresso em lote e executa início, conferência
   idempotente, correção, conclusão e finalização em transações serializáveis;
-- `BaixasModule` restringe criação, consulta e download ao
-  `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com locks
-  de patrimônio e comissão e mantém policy e trigger contra inventário aberto;
+- `BaixasModule` permite a `ADMINISTRADOR` e `DIRETOR_PATRIMONIO` consultar os
+  dados estruturados da baixa, restringe criação, opções de registro e download
+  ao `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com
+  locks de patrimônio e comissão e mantém policy e trigger contra inventário
+  aberto;
 - `DepreciacoesModule` restringe consulta operacional e execução ao
   `DIRETOR_PATRIMONIO`, expõe catálogo finito de competências devidas e resumo
   agregado de pendências, revalida competência e comissão, impede saltos sobre

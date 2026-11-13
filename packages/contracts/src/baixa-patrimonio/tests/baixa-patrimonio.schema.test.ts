@@ -58,6 +58,10 @@ const detalheBaixa = {
   motivo: "Bem sem interesse para o acervo",
   observacao: null,
   createdById: ids.usuario,
+  createdBy: {
+    id: ids.usuario,
+    nome: "Diretora de patrimônio",
+  },
   createdAt: "2026-10-27T15:30:00.000Z",
   anexoUrl: `/api/patrimonios/${ids.patrimonio}/baixa/anexo`,
 } as const;
@@ -261,6 +265,7 @@ describe("responses da baixa patrimonial", () => {
       { ...detalheBaixa, caminhoDocumento: "uploads/baixas/segredo.pdf" },
       { ...detalheBaixa, dataBaixa: new Date("2026-10-27T00:00:00.000Z") },
       { ...detalheBaixa, createdAt: new Date("2026-10-27T15:30:00.000Z") },
+      { ...detalheBaixa, createdBy: { ...detalheBaixa.createdBy, nome: "" } },
       { ...detalheBaixa, observacao: undefined },
     ]);
   });

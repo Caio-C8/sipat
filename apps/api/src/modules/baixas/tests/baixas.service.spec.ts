@@ -31,6 +31,7 @@ function detalhe(caminhoAnexoDocumento: string | null = null) {
     observacao: null,
     caminhoAnexoDocumento,
     createdById: IDENTIDADE.id,
+    createdBy: { id: IDENTIDADE.id, nome: IDENTIDADE.nome },
     createdAt: new Date("2026-10-27T12:00:00.000Z"),
     patrimonio: {
       id: PATRIMONIO_ID,
