@@ -11,8 +11,10 @@ import { mensagemEmprestimo } from "@/features/emprestimos/apresentacao";
 export const metadata: Metadata = { title: "Detalhes do empréstimo" };
 export default async function EmprestimoDetalhePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ emprestimoId: string }>;
+  searchParams: Promise<{ origem?: string }>;
 }) {
   const identidade = await obterIdentidadeAtual();
   if (!identidade) return null;
@@ -31,11 +33,31 @@ export default async function EmprestimoDetalhePage({
     if (isApiError(erro) && erro.status === 404) notFound();
     falha = erro;
   }
+  const origem = (await searchParams).origem;
+  const consultaRetorno = new URLSearchParams();
+  if (origem && origem.length <= 1000) {
+    const permitidos = new Set([
+      "aba",
+      "busca",
+      "dataInicio",
+      "dataFim",
+      "somenteAtrasados",
+      "pagina",
+    ]);
+    new URLSearchParams(origem).forEach((valor, chave) => {
+      if (permitidos.has(chave)) consultaRetorno.set(chave, valor);
+    });
+  }
+  const retorno = consultaRetorno.size
+    ? `/emprestimos?${consultaRetorno}`
+    : "/emprestimos";
   if (resposta)
     return (
       <DetalheEmprestimo
         inicial={resposta.dados}
         podeDevolver={identidade.perfil === "DIRETOR_PATRIMONIO"}
+        usuario={identidade.nome}
+        retorno={retorno}
       />
     );
   return (

@@ -58,7 +58,9 @@ fronteiras entre UI, contratos e integração HTTP.
   e o sino do Diretor usam a mesma semântica derivada de pendências;
 - `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
   devolução parcial na API real; o percurso com PostgreSQL isolado está em
-  [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md);
+  [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+  A evolução visual com abas, seleção, revisão, detalhe e devolução está em
+  [WEB-EMPRESTIMOS-002](../../tasks/WEB-EMPRESTIMOS-002-evolucao-visual-figma.md);
 - movimentações, manutenções, reavaliações e empréstimos distinguem os três
   conflitos públicos de idempotência, preservam a chave somente enquanto o
   resultado permanece incerto e nunca fazem retry automático. Em movimentações,

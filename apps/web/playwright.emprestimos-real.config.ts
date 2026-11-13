@@ -51,5 +51,10 @@ export default defineConfig({
       env: { API_INTERNAL_URL: "http://127.0.0.1:3202", PLAYWRIGHT_TEST: "1" },
     },
   ],
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"], channel: "chrome" },
+    },
+  ],
 });
