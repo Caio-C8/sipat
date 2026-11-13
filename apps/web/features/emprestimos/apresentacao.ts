@@ -1,9 +1,26 @@
 import { isApiError } from "@/lib/api/core/api-error";
 
 export const painelEmprestimo =
-  "min-w-0 rounded-xl border border-[#dce5f0] bg-white p-4 shadow-sm sm:p-6";
+  "min-w-0 rounded-xl border border-[#e1e7ef] bg-white p-4 shadow-sm sm:p-6";
 export const campoEmprestimo =
-  "w-full rounded-md border border-[#b8c8db] bg-white px-3 py-2 text-[#19355d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#225aa5]";
+  "mt-1.5 w-full min-h-10 rounded-md border border-[#cbd5e1] bg-white px-3 py-2 text-[#19355d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#225aa5]";
+export const botaoPrimarioEmprestimo =
+  "bg-[#213f66] text-white hover:bg-[#172f50]";
+
+export function identificacaoEmprestimo(id: string): string {
+  return `Empréstimo ${id.slice(0, 8)}`;
+}
+
+export function situacaoEmprestimo(item: {
+  situacao: "EM_ANDAMENTO" | "CONCLUIDO";
+  emAtraso: boolean;
+}) {
+  if (item.situacao === "CONCLUIDO")
+    return { texto: "Concluído", classe: "bg-emerald-50 text-emerald-800" };
+  if (item.emAtraso)
+    return { texto: "Em atraso", classe: "bg-amber-50 text-amber-900" };
+  return { texto: "Em andamento", classe: "bg-blue-50 text-blue-800" };
+}
 
 export function mensagemEmprestimo(erro: unknown): string {
   if (isApiError(erro)) {

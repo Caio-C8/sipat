@@ -18,5 +18,9 @@ export default async function NovoEmprestimoPage() {
         </Link>
       </main>
     );
-  return <NovoEmprestimo />;
+  return (
+    <NovoEmprestimo
+      usuario={{ nome: identidade.nome, perfil: identidade.perfil }}
+    />
+  );
 }

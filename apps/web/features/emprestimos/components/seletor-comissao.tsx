@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useComissoesEmprestimo } from "../api/hooks";
+import type { ListarOpcoesComissoesEmprestimoResponse } from "@repo/contracts";
 import { campoEmprestimo, mensagemEmprestimo } from "../apresentacao";
 
 export function SeletorComissaoEmprestimo({
@@ -8,11 +9,17 @@ export function SeletorComissaoEmprestimo({
   rotulo,
   value,
   onChange,
+  onSelecionar,
+  selecionada,
 }: {
   dataReferencia: string;
   rotulo: string;
   value: string;
   onChange: (id: string) => void;
+  onSelecionar?: (
+    comissao: ListarOpcoesComissoesEmprestimoResponse["dados"][number] | null,
+  ) => void;
+  selecionada?: ListarOpcoesComissoesEmprestimoResponse["dados"][number] | null;
 }) {
   const comissoes = useComissoesEmprestimo();
   const carregar = comissoes.carregar;
@@ -29,6 +36,9 @@ export function SeletorComissaoEmprestimo({
       });
   }, [dataReferencia, pagina, filtro, carregar]);
   const dados = comissoes.dados;
+  const comissaoAtual =
+    dados?.dados.find((item) => item.id === value) ??
+    (selecionada?.id === value ? selecionada : null);
   return (
     <div className="grid gap-2">
       <label className="text-sm">
@@ -47,6 +57,7 @@ export function SeletorComissaoEmprestimo({
           setPagina(1);
           setFiltro(busca.trim());
           onChange("");
+          onSelecionar?.(null);
         }}
       >
         Buscar comissão
@@ -57,9 +68,18 @@ export function SeletorComissaoEmprestimo({
           className={campoEmprestimo}
           required
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            onSelecionar?.(
+              dados?.dados.find((item) => item.id === e.target.value) ?? null,
+            );
+          }}
         >
           <option value="">Selecione</option>
+          {selecionada &&
+            !dados?.dados.some((item) => item.id === selecionada.id) && (
+              <option value={selecionada.id}>{selecionada.nome}</option>
+            )}
           {dados?.dados.map((item) => (
             <option key={item.id} value={item.id}>
               {item.nome}
@@ -67,6 +87,13 @@ export function SeletorComissaoEmprestimo({
           ))}
         </select>
       </label>
+      {comissaoAtual && (
+        <p className="text-xs text-[#526580]">
+          Vigência:{" "}
+          {comissaoAtual.dataVigenciaInicio.split("-").reverse().join("/")} a{" "}
+          {comissaoAtual.dataVigenciaFim.split("-").reverse().join("/")}
+        </p>
+      )}
       {comissoes.loading && <p role="status">Carregando comissões...</p>}
       {comissoes.erro !== null && (
         <p role="alert" className="text-red-800">
@@ -88,6 +115,7 @@ export function SeletorComissaoEmprestimo({
             onClick={() => {
               setPagina((n) => n - 1);
               onChange("");
+              onSelecionar?.(null);
             }}
           >
             Anterior
@@ -99,6 +127,7 @@ export function SeletorComissaoEmprestimo({
             onClick={() => {
               setPagina((n) => n + 1);
               onChange("");
+              onSelecionar?.(null);
             }}
           >
             Próxima

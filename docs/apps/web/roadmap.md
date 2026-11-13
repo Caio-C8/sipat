@@ -43,6 +43,13 @@ por falta da infraestrutura descartável nessa execução.
 no shell autenticado, com operações reais, devolução parcial, estados de erro e
 permissão. [Tarefa e aceite](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
 
+## WEB-EMPRESTIMOS-002 — Evolução visual
+
+**Status:** implementada e validada localmente em 13/11/2026. A listagem, a
+seleção, o cadastro com revisão, o detalhe e a devolução seguem os cinco
+quadros inspecionados do Figma, com dados reais e o domínio existente.
+[Tarefa e evidências](../../tasks/WEB-EMPRESTIMOS-002-evolucao-visual-figma.md).
+
 ## WEB-INVENTARIOS-001 — Consulta e correção de inventários
 
 **Status:** implementado. Administrador e Diretor consultam inventários e

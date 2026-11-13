@@ -32,6 +32,28 @@ async function main() {
         expiraAt: new Date(Date.now() + 3_600_000),
       },
     });
+    const admin = await db.usuario.create({
+      data: {
+        nome: "Administrador Web RF16",
+        email: `admin-${tag}@example.test`,
+        senha: "hash-sintetico",
+        perfil: "ADMINISTRADOR",
+        trocaSenhaObrigatoria: false,
+      },
+    });
+    const adminToken = Buffer.from(
+      randomUUID().replace(/-/g, "").repeat(2).slice(0, 64),
+      "hex",
+    ).toString("base64url");
+    const adminTokenHash = calcularHashTokenSessao(adminToken);
+    if (!adminTokenHash) throw new Error("Token de administrador inválido.");
+    await db.sessaoUsuario.create({
+      data: {
+        usuarioId: admin.id,
+        tokenHash: adminTokenHash,
+        expiraAt: new Date(Date.now() + 3_600_000),
+      },
+    });
     const responsavel = await db.responsavel.create({
       data: {
         nome: "Responsável Web RF16",
@@ -70,7 +92,7 @@ async function main() {
       },
     });
     const bens: { id: string; numero: string }[] = [];
-    for (let indice = 1; indice <= 2; indice++) {
+    for (let indice = 1; indice <= 4; indice++) {
       const numero = `${Date.now()}${indice}`;
       const bem = await db.patrimonio.create({
         data: {
@@ -92,8 +114,10 @@ async function main() {
       "apps/web/test-results/emprestimos-real-fixture.json",
       JSON.stringify({
         token,
+        adminToken,
         comissaoId: comissao.id,
-        bens,
+        bens: bens.slice(0, 2),
+        bensSeparados: bens.slice(2),
         busca: tag.slice(0, 8),
       }),
     );
