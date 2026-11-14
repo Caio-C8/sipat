@@ -56,6 +56,8 @@ Catálogo na raiz; opções enumeradas em /opcoes/:catalogo; nove tipos tabulare
 em /:tipo e /:tipo/pdf. Ficha em /ficha-bem/:patrimonioId, /eventos e /pdf.
 Opções permitidas por tipo: patrimônios, setores, responsáveis, naturezas,
 espécies, comissões, fornecedores e inventários. Não são seletores de tabelas.
+Na consulta de opções, `busca` também reconhece um UUID exato para resolver o
+rótulo de uma seleção preservada em URL.
 
 Prévia/opções: padrão 20, máximo 50; offset máximo 50.000. Históricos: até
 366 dias, exceto ficha e inventário; depreciações e pendências de depreciação
