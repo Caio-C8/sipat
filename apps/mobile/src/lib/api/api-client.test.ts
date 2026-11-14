@@ -5,14 +5,12 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("apiRequest query", () => {
   it("serializa valores definidos e preserva a ordem declarada", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response("{}", {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("{}", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await apiRequest({
