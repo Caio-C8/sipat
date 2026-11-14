@@ -190,7 +190,7 @@ export class RelatoriosService {
     const f = fontes[catalogo];
     const base = Prisma.sql`SELECT id, ${Prisma.raw(f.r)} rotulo FROM ${Prisma.raw(f.t)}`;
     return this.repo.leitura(async (repo) => {
-      const fonte = Prisma.sql`SELECT * FROM (${base}) o WHERE position(lower(${q.busca ?? ""}) in lower(rotulo)) > 0`;
+      const fonte = Prisma.sql`SELECT * FROM (${base}) o WHERE position(lower(${q.busca ?? ""}) in lower(rotulo)) > 0 OR o.id::text = ${q.busca ?? ""}`;
       const [r] = await repo.consultar(
         Prisma.sql`WITH fonte AS (${fonte}) SELECT jsonb_build_object('total',count(*)::int) dados FROM fonte`,
       );

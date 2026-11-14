@@ -127,3 +127,25 @@
     @apply min-h-svh bg-background text-foreground antialiased;
   }
 }
+
+.system-sidebar-scroll {
+  scrollbar-color: #527092 transparent;
+  scrollbar-width: thin;
+}
+
+.system-sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.system-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.system-sidebar-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #527092;
+}
+
+.system-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: #7793b3;
+}

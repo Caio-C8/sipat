@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   CatalogoOpcaoRelatorio,
   TipoRelatorio,
@@ -15,6 +15,7 @@ export function SeletorRelatorio({
   tipo,
   valor,
   onChange,
+  onLabel,
   obrigatorio = false,
 }: {
   nome: string;
@@ -23,6 +24,7 @@ export function SeletorRelatorio({
   tipo: TipoRelatorio;
   valor: string;
   onChange: (v: string) => void;
+  onLabel?: (nome: string, rotulo: string) => void;
   obrigatorio?: boolean;
 }) {
   const carregar = useOpcoesRelatorio(catalogo, tipo);
@@ -32,7 +34,29 @@ export function SeletorRelatorio({
   );
   const [pending, setPending] = useState(false);
   const [erro, setErro] = useState("");
+  const [rotuloSelecionado, setRotuloSelecionado] = useState("");
   const atual = useRef(0);
+  useEffect(() => {
+    if (!valor) return;
+    let ativo = true;
+    void carregar(valor, 1)
+      .then((resultado) => {
+        if (ativo) {
+          const rotulo =
+            resultado.dados.find((item) => item.id === valor)?.rotulo ??
+            "Opção não encontrada";
+          setRotuloSelecionado(rotulo);
+          onLabel?.(nome, rotulo);
+        }
+      })
+      .catch(() => {
+        if (ativo)
+          setRotuloSelecionado("Não foi possível carregar o nome da opção");
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [carregar, nome, onLabel, valor]);
   async function consultar(pagina = 1) {
     const id = ++atual.current;
     setPending(true);
@@ -83,13 +107,21 @@ export function SeletorRelatorio({
           name={nome}
           value={valor}
           required={obrigatorio}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            const rotulo = resposta?.dados.find(
+              (item) => item.id === e.target.value,
+            )?.rotulo;
+            if (rotulo) onLabel?.(nome, rotulo);
+          }}
         >
           <option value="">
             {obrigatorio ? "Selecione um registro" : "Todos"}
           </option>
           {valor && !resposta?.dados.some((d) => d.id === valor) && (
-            <option value={valor}>Selecionado: {valor}</option>
+            <option value={valor}>
+              {rotuloSelecionado || "Carregando opção selecionada…"}
+            </option>
           )}
           {resposta?.dados.map((d) => (
             <option key={d.id} value={d.id}>

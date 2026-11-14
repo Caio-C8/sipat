@@ -18,7 +18,7 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
       emailDiretor: string;
     };
   for (const perfil of ["administrador", "diretor"]) {
-    test(`nove tipos, prévia e download por ${perfil}`, async ({ page }) => {
+    test(`dez tipos, prévia e download por ${perfil}`, async ({ page }) => {
       const f = fixture();
       await page.goto("/login");
       await page
@@ -47,6 +47,7 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
           competenciaFim: "2026-02",
           patrimonioId: f.patrimonioId,
         },
+        "pendencias-depreciacao": { patrimonioId: f.patrimonioId },
         reavaliacoes: {
           ...periodo,
           base: "REGISTRO",
@@ -63,18 +64,18 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
       };
       for (const [tipo, q] of Object.entries(queries)) {
         await page.goto(
-          `/relatorios?${new URLSearchParams({ tipo, consultar: "1", ...q })}`,
+          `/relatorios?${new URLSearchParams({ relatorio: tipo, consultar: "1", ...q })}`,
         );
         await expect(
-          page.getByRole("heading", { name: /Prévia —/ }),
+          page.getByRole("heading", { name: /Prévia ·/ }),
         ).toBeVisible();
         await expect(
-          page.getByRole("region", { name: "Resultados do relatório" }),
+          page.getByRole("region", { name: "Registros do relatório" }),
         ).toBeVisible();
         const download = page.waitForEvent("download");
         await page
           .getByRole("button", {
-            name: "Gerar e baixar PDF de todos os resultados filtrados",
+            name: "Baixar PDF completo",
             exact: true,
           })
           .click();
@@ -85,22 +86,33 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
         expect(readFileSync(target).subarray(0, 5).toString()).toBe("%PDF-");
         if (tipo === "patrimonios") {
           await expect(
-            page.getByText("25 registros no conjunto filtrado.", {
-              exact: false,
-            }),
+            page.getByText("Total de registros encontrados"),
           ).toBeVisible();
           await page.getByRole("link", { name: "Próxima página" }).click();
           await expect(
-            page.getByText("Página 2 de 2", { exact: false }),
+            page.getByText("2 de 2", { exact: false }),
           ).toBeVisible();
+          const requisicaoPdf = page.waitForRequest((pedido) =>
+            pedido.url().includes("/relatorios/patrimonios/pdf"),
+          );
+          const downloadSegundaPagina = page.waitForEvent("download");
           await page
-            .getByLabel("Busca (opcional)", { exact: true })
+            .getByRole("button", { name: "Baixar PDF completo" })
+            .click();
+          expect(
+            new URL((await requisicaoPdf).url()).searchParams.has("pagina"),
+          ).toBe(false);
+          const arquivoCompleto = await downloadSegundaPagina;
+          expect(await arquivoCompleto.failure()).toBeNull();
+          await page.getByRole("link", { name: "Ajustar filtros" }).click();
+          await page
+            .getByLabel("Busca (opcional)")
             .fill("filtro-sem-resultados");
           await expect(
-            page.getByRole("heading", { name: /Prévia —/ }),
+            page.getByRole("heading", { name: /Prévia ·/ }),
           ).toHaveCount(0);
           await expect(
-            page.getByText("Filtros alterados.", { exact: false }),
+            page.getByRole("button", { name: "Gerar prévia" }),
           ).toBeVisible();
         }
       }
@@ -123,7 +135,7 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
     await expect(page).toHaveURL(/dashboard/);
     await page.goto("/relatorios");
-    await page.getByLabel("Tipo de relatório").selectOption("ficha-bem");
+    await page.locator('a[href="/relatorios?relatorio=ficha-bem"]').click();
     await page
       .getByRole("textbox", { name: "Buscar Patrimônio", exact: true })
       .fill(f.tag);
@@ -135,9 +147,19 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
       .getByRole("combobox", { name: "Selecionar Patrimônio", exact: true })
       .selectOption(f.patrimonioId);
     await page
-      .getByRole("button", { name: "Consultar prévia", exact: true })
+      .getByRole("button", { name: "Gerar prévia", exact: true })
       .click();
-    await expect(page.getByRole("heading", { name: /Prévia —/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Prévia ·/ })).toBeVisible();
+    await page.getByRole("link", { name: "Ajustar filtros" }).click();
+    await page.reload();
+    await expect(
+      page.getByRole("combobox", {
+        name: "Selecionar Patrimônio",
+        exact: true,
+      }),
+    ).toContainText(f.tag);
+    await page.getByRole("button", { name: "Gerar prévia" }).click();
+    await expect(page.getByRole("heading", { name: /Prévia ·/ })).toBeVisible();
     for (const width of [390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       expect(
@@ -165,7 +187,7 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
-    await expect(zoom.getByRole("heading", { name: /Prévia —/ })).toBeVisible();
+    await expect(zoom.getByRole("heading", { name: /Prévia ·/ })).toBeVisible();
     await zoom.screenshot({
       path: test.info().outputPath("relatorios-zoom-200.png"),
       fullPage: true,
@@ -186,7 +208,33 @@ test.describe("Relatórios Web → API → PostgreSQL → PDF", () => {
         .filter({ hasText: "Nenhum registro corresponde aos filtros." }),
     ).toBeVisible();
     const down = page.waitForEvent("download");
-    await page.getByRole("button", { name: /Gerar e baixar PDF/ }).click();
+    await page.getByRole("button", { name: "Baixar PDF completo" }).click();
     await (await down).saveAs(test.info().outputPath("vazio.pdf"));
+  });
+  test("tipo de manutenção e baixa não muda a categoria do relatório", async ({
+    page,
+  }) => {
+    await page.goto("/login");
+    await page.getByLabel("E-mail").fill(process.env.SIPAT_RELATORIOS_EMAIL!);
+    await page
+      .getByLabel("Senha", { exact: true })
+      .fill(process.env.SIPAT_RELATORIOS_SENHA!);
+    await page.getByRole("button", { name: "Entrar", exact: true }).click();
+    for (const [relatorio, tipo] of [
+      ["manutencoes", "CORRETIVA"],
+      ["baixas", "ALIENACAO"],
+    ] as const) {
+      await page.goto(
+        `/relatorios?${new URLSearchParams({ relatorio, tipo, consultar: "1", inicio: "2026-01-01", fim: "2026-12-31", ...(relatorio === "manutencoes" ? { base: "ENVIO" } : {}) })}`,
+      );
+      await expect(
+        page.getByRole("heading", { name: /Prévia ·/ }),
+      ).toContainText(relatorio === "manutencoes" ? "Manutenções" : "Baixas");
+      await expect(
+        page.getByText(
+          `Tipo: ${tipo.toLocaleLowerCase("pt-BR").replace(/^./, (letra) => letra.toUpperCase())}`,
+        ),
+      ).toBeVisible();
+    }
   });
 });

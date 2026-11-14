@@ -1,5 +1,6 @@
 import { isApiError } from "@/lib/api/core/api-error";
 export function mensagemRelatorio(e: unknown): string {
+  if (typeof e === "string") return e;
   if (isApiError(e))
     return e.status === 401
       ? "Sessão expirada. Entre novamente."
@@ -37,6 +38,25 @@ export function rotulo(campo: string): string {
     valorDepreciado: "Quota (R$)",
     valorContabilAnterior: "Líquido anterior (R$)",
     valorContabilNovo: "Líquido posterior (R$)",
+    valorReavaliado: "Valor reavaliado (R$)",
+    valorResidualNovo: "Novo residual (R$)",
+    valorLiquidoAnterior: "Líquido anterior (R$)",
+    dataReavaliacao: "Data da reavaliação",
+    dataTransferencia: "Data da movimentação",
+    dataEnvio: "Envio",
+    dataBaixa: "Data da baixa",
+    dataSaida: "Saída",
+    previsao: "Previsão de devolução",
+    setorOrigem: "Setor de origem",
+    setorDestino: "Setor de destino",
+    setorEsperado: "Setor esperado",
+    verificacao: "Conferência",
+    fornecedor: "Fornecedor",
+    pedidoId: "Pedido",
+    motivo: "Motivo",
+    destinatario: "Destinatário",
+    situacao: "Situação",
+    tipo: "Tipo",
     quantidade: "Quantidade de registros",
     quotas: "Quotas do período (R$)",
     brutoAtual: "Total bruto atual (R$)",
@@ -82,7 +102,60 @@ export function valor(v: unknown): string {
     const [a, b] = v.split(".");
     return `${a!.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${b}`;
   }
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [ano, mes, dia] = v.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+  if (typeof v === "string" && /^[A-Z][A-Z_]+$/.test(v)) return rotuloOpcao(v);
   return String(v);
+}
+export function rotuloOpcao(v: string): string {
+  const nomes: Record<string, string> = {
+    NUMERO: "Número patrimonial",
+    TOMBAMENTO: "Data de tombamento",
+    OFICIAL: "Com número oficial",
+    SEM_NUMERO_OFICIAL: "Sem número oficial",
+    ATIVO: "Ativo",
+    BAIXADO: "Baixado",
+    EMPRESTADO: "Emprestado",
+    EM_MANUTENCAO: "Em manutenção",
+    ENVIO: "Envio",
+    RETORNO: "Retorno",
+    PREVENTIVA: "Preventiva",
+    CORRETIVA: "Corretiva",
+    PENDENTE: "Pendente",
+    RETORNADO: "Retornado",
+    REGISTRO: "Data do registro",
+    REFERENCIA: "Data de referência",
+    VERIFICADO: "Verificado",
+    CORRETO: "Correto",
+    DIVERGENCIA: "Divergência",
+    NAO_LOCALIZADO: "Não localizado",
+    CORRIGIDO: "Corrigido",
+    SAIDA: "Saída",
+    PREVISAO: "Previsão",
+    DEVOLUCAO: "Devolução",
+    DEVOLVIDO: "Devolvido",
+    ALIENACAO: "Alienação",
+    INUTILIZACAO: "Inutilização",
+    SINISTRO: "Sinistro",
+    FURTO: "Furto",
+    EXTRAVIO: "Extravio",
+    TRANSFERENCIA: "Transferência",
+    RECLASSIFICACAO: "Reclassificação",
+    ABANDONO: "Abandono",
+    ERRO_REGISTRO: "Erro de registro",
+    OUTRO: "Outro",
+    CORRECAO_INVENTARIO: "Correção de inventário",
+    COMUM: "Comum",
+  };
+  return (
+    nomes[v] ??
+    v
+      .replaceAll("_", " ")
+      .toLocaleLowerCase("pt-BR")
+      .replace(/^./, (c) => c.toUpperCase())
+  );
 }
 export const painel =
   "rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6";

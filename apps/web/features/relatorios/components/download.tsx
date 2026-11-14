@@ -15,16 +15,22 @@ function Botao({
   nome: string;
 }) {
   return (
-    <div className="grid min-w-0 gap-2">
+    <div className="grid min-w-0 gap-2 sm:flex sm:flex-wrap">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={estado.pending}
+        onClick={() => void estado.abrir(query, nome)}
+      >
+        Abrir documento
+      </Button>
       <Button
         type="button"
         className="h-auto min-h-10 w-full whitespace-normal break-words px-3 py-2"
         disabled={estado.pending}
         onClick={() => void estado.baixar(query, nome)}
       >
-        {estado.pending
-          ? "Gerando PDF…"
-          : "Gerar e baixar PDF de todos os resultados filtrados"}
+        {estado.pending ? "Gerando PDF…" : "Baixar PDF completo"}
       </Button>
       {estado.erro != null && (
         <p role="alert" className="text-sm text-red-700">
