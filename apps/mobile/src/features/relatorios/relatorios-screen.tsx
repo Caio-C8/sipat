@@ -3,6 +3,7 @@ import type {
   CatalogoRelatoriosResponse,
   TipoRelatorio,
 } from "@repo/contracts";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -112,19 +113,23 @@ function ErrorState({
 function CatalogCard({
   item,
   wide,
+  onPress,
 }: Readonly<{
   item: CatalogoRelatoriosResponse["dados"]["tipos"][number];
   wide: boolean;
+  onPress?(): void;
 }>) {
   const presentation = PRESENTATION[item.tipo];
   return (
-    <View
-      accessible
+    <Pressable
+      accessibilityRole={item.disponivel ? "button" : undefined}
       accessibilityLabel={`${item.titulo}. ${presentation.description}. ${
         item.disponivel
           ? "Disponível"
           : `Indisponível${item.motivo ? `: ${item.motivo}` : ""}`
       }`}
+      disabled={!item.disponivel || !onPress}
+      onPress={onPress}
       style={[
         styles.catalogCard,
         wide && styles.catalogCardWide,
@@ -172,14 +177,19 @@ function CatalogCard({
         name={item.disponivel ? "chevron-right" : "lock-keyhole"}
         size={18}
       />
-    </View>
+    </Pressable>
   );
 }
 
 export function RelatoriosContent({
   state,
   onRetry,
-}: Readonly<{ state: CatalogState; onRetry(): void }>) {
+  onSelect,
+}: Readonly<{
+  state: CatalogState;
+  onRetry(): void;
+  onSelect?(tipo: TipoRelatorio): void;
+}>) {
   const { width } = useWindowDimensions();
   const wide = width >= 760;
 
@@ -232,7 +242,16 @@ export function RelatoriosContent({
             </View>
             <View style={[styles.catalogGrid, wide && styles.catalogGridWide]}>
               {state.data.dados.tipos.map((item) => (
-                <CatalogCard item={item} key={item.tipo} wide={wide} />
+                <CatalogCard
+                  item={item}
+                  key={item.tipo}
+                  onPress={
+                    item.disponivel && onSelect
+                      ? () => onSelect(item.tipo)
+                      : undefined
+                  }
+                  wide={wide}
+                />
               ))}
             </View>
           </View>
@@ -255,10 +274,17 @@ function AuthenticatedRelatorios({
 }: Readonly<{
   manager: Parameters<typeof useRelatoriosCatalog>[0];
 }>) {
+  const router = useRouter();
   const catalog = useRelatoriosCatalog(manager);
   return (
     <RelatoriosContent
       onRetry={() => void catalog.reload()}
+      onSelect={(tipo) =>
+        router.push({
+          pathname: "/relatorios/[tipo]",
+          params: { tipo },
+        })
+      }
       state={catalog.state}
     />
   );

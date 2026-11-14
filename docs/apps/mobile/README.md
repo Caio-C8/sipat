@@ -69,7 +69,9 @@ código interno da API.
   consultar catálogos;
 - `/relatorios` consulta o catálogo autenticado publicado pela API, valida as
   dez opções com o contrato compartilhado e apresenta capacidades, motivo e
-  disponibilidade; filtros, prévias e PDF seguem nos objetivos posteriores;
+  disponibilidade; `/relatorios/[tipo]` implementa os dez formulários com
+  filtros validados, datas civis mascaradas e oito catálogos remotos
+  pesquisáveis e paginados; prévias e PDF seguem nos objetivos posteriores;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior

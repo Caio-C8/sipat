@@ -13,7 +13,11 @@ import {
 import { relatorioQueryKeys } from "./relatorio-query-keys";
 
 function unavailableOperations(): RelatoriosOperations {
+  const operations = createRelatoriosOperations(
+    "http://configuracao-indisponivel.invalid",
+  );
   return {
+    ...operations,
     async catalogo() {
       throw new ApiError("network");
     },

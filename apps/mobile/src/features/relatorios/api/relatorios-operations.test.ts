@@ -97,4 +97,35 @@ describe("createRelatoriosOperations", () => {
       ).rejects.toMatchObject({ kind: "http", status });
     }
   });
+
+  it("consulta opções paginadas com busca, token e cancelamento", async () => {
+    const payload = {
+      status: 200,
+      sucesso: true,
+      mensagem: "Opções.",
+      dados: [{ id: "00000000-0000-4000-8000-000000000001", rotulo: "Bem 1" }],
+      meta: { pagina: 2, limite: 20, total: 21, ultimaPagina: 2 },
+    };
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(payload));
+    vi.stubGlobal("fetch", fetchMock);
+    const signal = new AbortController().signal;
+    const operations = createRelatoriosOperations(
+      "https://api.example.test/api",
+    );
+
+    await expect(
+      operations.opcoes("patrimonios", "ficha-bem", "  Bem 1  ", 2, {
+        accessToken: "token",
+        signal,
+      }),
+    ).resolves.toEqual(payload);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.test/api/relatorios/opcoes/patrimonios?tipo=ficha-bem&busca=Bem+1&pagina=2&limite=20",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ Authorization: "Bearer token" }),
+        signal: expect.any(AbortSignal),
+      }),
+    );
+  });
 });

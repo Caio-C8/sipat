@@ -12,6 +12,10 @@ vi.mock("@react-native-vector-icons/lucide", () => ({
   Lucide: ({ name }: { name: string }) => <span data-icon={name} />,
 }));
 
+vi.mock("expo-router", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock("../auth/session/session-context", () => ({ useSession: vi.fn() }));
 vi.mock("./use-relatorios", () => ({
   relatorioErrorMessage: (error: { kind: string; status?: number }) => {

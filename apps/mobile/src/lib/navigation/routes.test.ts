@@ -46,6 +46,7 @@ describe("catálogo de rotas mobile", () => {
       inventarios: "/inventarios",
       patrimonioDetail: "/bens/[patrimonioId]",
       patrimonios: "/bens",
+      relatorioFilters: "/relatorios/[tipo]",
       relatorios: "/relatorios",
       login: "/login",
       resetPassword: "/redefinir-senha",

@@ -8,6 +8,7 @@ export type ApiRequest<T> = Readonly<{
   baseUrl: string;
   token?: string;
   body?: unknown;
+  query?: Readonly<Record<string, string | number | boolean | undefined>>;
   responseSchema?: Readonly<{
     safeParse(
       value: unknown,
@@ -22,6 +23,7 @@ export async function apiRequest<T = void>({
   baseUrl,
   token,
   body,
+  query,
   responseSchema,
   signal,
 }: ApiRequest<T>): Promise<T> {
@@ -36,16 +38,24 @@ export async function apiRequest<T = void>({
 
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}${path}`, {
-      method,
-      headers: {
-        Accept: "application/json",
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    const search = new URLSearchParams();
+    for (const [key, value] of Object.entries(query ?? {})) {
+      if (value !== undefined) search.set(key, String(value));
+    }
+    const queryString = search.toString();
+    response = await fetch(
+      `${baseUrl}${path}${queryString ? `?${queryString}` : ""}`,
+      {
+        method,
+        headers: {
+          Accept: "application/json",
+          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal,
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
-    });
+    );
   } catch (cause) {
     if (timedOut)
       throw new ApiError(

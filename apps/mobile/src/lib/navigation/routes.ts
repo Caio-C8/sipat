@@ -105,6 +105,15 @@ export const mobileRouteCatalog = {
     profiles: ALL_PROFILES,
     state: "implemented",
   },
+  relatorioFilters: {
+    path: "/relatorios/[tipo]",
+    title: "Filtros do relatório",
+    description:
+      "Configuração validada de filtros e opções para os relatórios patrimoniais.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
   login: {
     path: "/login",
     title: "Login",
@@ -161,6 +170,7 @@ export const appRoutes = {
   inventarioConferencia: mobileRouteCatalog.inventarioConferencia.path,
   inventarioCorrecao: mobileRouteCatalog.inventarioCorrecao.path,
   relatorios: mobileRouteCatalog.relatorios.path,
+  relatorioFilters: mobileRouteCatalog.relatorioFilters.path,
   login: mobileRouteCatalog.login.path,
   forgotPassword: mobileRouteCatalog.forgotPassword.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,
