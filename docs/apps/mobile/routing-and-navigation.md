@@ -126,9 +126,10 @@ Redirecionamento no cliente melhora a experiência, mas não protege endpoint.
 grupo `(app)`. `Início` representa `/`, `Bens` representa `/bens` e `Cadastro`
 representa `/cadastro/patrimonio`; Bens permanece selecionado no detalhe e
 Cadastro na sua árvore. Inventário navega para ambos os perfis, mas somente o
-Diretor recebe controles de conferência; Relatórios continua disabled enquanto
-seu fluxo não existir. Não
-crie uma rota vazia para fazer um item parecer navegável e não inclua rotas
+Diretor recebe controles de conferência. `MOBILE-RELATORIOS-001` habilitou
+Relatórios para ambos os perfis em `/relatorios` e mantém o item selecionado em
+toda a árvore; as rotas por tipo continuam ausentes até o objetivo de filtros.
+Não crie uma rota vazia para fazer um item parecer navegável e não inclua rotas
 inexistentes no catálogo tipado.
 
 No export Web estático, o Nginx encaminha `/bens/<id>` ao documento gerado para
