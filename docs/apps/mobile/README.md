@@ -73,7 +73,9 @@ código interno da API.
   filtros validados, datas civis mascaradas e oito catálogos remotos
   pesquisáveis e paginados; as nove prévias tabulares e a ficha individual
   apresentam respostas validadas, resumos, avisos, registros e paginação em
-  memória; PDF segue no objetivo posterior;
+  memória; os dez PDFs usam timeout e limite próprios, cache temporário e
+  preview nativo com compartilhamento como fallback, ou download com Object URL
+  revogada no Web;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior

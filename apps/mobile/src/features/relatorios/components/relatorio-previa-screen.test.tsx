@@ -16,6 +16,11 @@ vi.mock("../use-relatorio-previa", () => ({
   useRelatorioPrevia: vi.fn(),
 }));
 
+vi.mock("../pdf/use-relatorio-pdf", () => ({
+  relatorioPdfErrorMessage: () => "Não foi possível emitir o documento.",
+  useRelatorioPdf: () => ({ state: { status: "idle" }, emit: vi.fn() }),
+}));
+
 const response = {
   status: 200,
   sucesso: true,
@@ -36,7 +41,7 @@ const response = {
 } as const;
 
 describe("RelatorioPreviaScreen", () => {
-  it("apresenta filtros, resumo, vazio válido, paginação e PDF desabilitado", () => {
+  it("apresenta filtros, resumo, vazio válido, paginação e PDF disponível", () => {
     vi.mocked(useRelatorioPrevia).mockReturnValue({
       state: {
         status: "success",
@@ -67,7 +72,10 @@ describe("RelatorioPreviaScreen", () => {
     expect(markup).toContain("Nenhum registro corresponde aos filtros");
     expect(markup).toContain("Página 1 de 1");
     expect(markup).toContain("Abrir documento");
-    expect(markup).toContain('aria-disabled="true"');
+    expect(markup).toContain(
+      "O PDF consulta novamente os dados e pode diferir da prévia.",
+    );
+    expect(markup).not.toContain("Disponível na próxima etapa.");
     expect(markup).toContain("Valores refletem o instante da consulta");
     expect(markup).toContain("Observações importantes");
     expect(markup).not.toContain(response.consulta.id);

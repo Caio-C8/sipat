@@ -99,12 +99,30 @@ técnicas do validador são substituídas por orientações em português, sem
 alterar os refinamentos de negócio dos contratos. Rascunho, seleção e rolagem
 permanecem somente em memória e são descartados ao limpar ou trocar o tipo.
 
-A entrega passou em lint, typecheck, 219 testes, `git diff --check` e exports
-Expo Android, iOS e Web. Os dez formulários, seletores, máscaras e mensagens
-foram homologados no emulador Android em 14/11/2026. O conector oficial do
-Figma não pôde ser reinspecionado por limite do plano Starter; aparelhos
-físicos, tablet, rotação, fonte ampliada e leitores de tela continuam
-pendentes.
+`MOBILE-RELATORIOS-003` acrescentou as nove prévias tabulares e a ficha com
+eventos paginados. `MOBILE-RELATORIOS-004` habilitou a emissão independente dos
+dez PDFs: o boundary binário aceita somente `application/pdf` íntegro até
+10 MiB, usa timeout de 25 segundos, cancelamento e uma única recuperação segura
+de `401`. A interface serializa emissões, apresenta `Retry-After` e não repete
+automaticamente timeout, rede, `422`, `429`, `503` ou response inválida.
+
+Android e iOS usam `UUID.pdf` em `Paths.cache`, `File.preview()` e
+`expo-sharing` apenas como fallback; Web inicia download por Blob/Object URL e
+garante revogação. Temporários são limpos em melhor esforço antes de nova
+emissão, na restauração e no encerramento da sessão, sem apagar imediatamente o
+arquivo entregue ao viewer. A entrega passou em typecheck, 276 testes, ESLint
+dos arquivos afetados e exports Android/iOS/Web. Uma relação de patrimônios foi
+aberta no visualizador do emulador com Expo Go 58.0.5; a integração PostgreSQL
+dos dez PDFs e a matriz de dispositivos permanecem pendentes. O
+`expo-doctor` aprovou 19/20 checks e apontou apenas o baseline
+`expo@58.0.24` abaixo do patch `~58.0.25` então recomendado.
+
+A entrega de `MOBILE-RELATORIOS-001/002` passou em lint, typecheck, 219 testes,
+`git diff --check` e exports Expo Android, iOS e Web. Os dez formulários,
+seletores, máscaras e mensagens foram homologados no emulador Android em
+14/11/2026. O conector oficial do Figma não pôde ser reinspecionado por limite
+do plano Starter; aparelhos físicos, tablet, rotação, fonte ampliada e leitores
+de tela continuam pendentes.
 
 `MOBILE-IDEMPOTENCIA-001` protegeu a confirmação desse cadastro com uma chave
 UUID por tentativa lógica. Timeout, rede, response inválida e operação ainda em

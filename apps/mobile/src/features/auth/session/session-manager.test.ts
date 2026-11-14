@@ -55,6 +55,21 @@ function createOperations(overrides: Partial<AuthOperations> = {}) {
 }
 
 describe("SessionManager", () => {
+  it("limpa temporários em melhor esforço na inicialização e no logout", async () => {
+    const cleanup = vi.fn(async () => undefined);
+    const manager = new SessionManager(
+      createOperations(),
+      createStorage("R".repeat(43)),
+      cleanup,
+    );
+
+    await manager.restore();
+    await manager.logout();
+
+    expect(cleanup).toHaveBeenCalledTimes(2);
+    expect(manager.getSnapshot()).toEqual({ status: "anonymous" });
+  });
+
   it("restaura, rotaciona o refresh persistido e só então publica a identidade", async () => {
     const storage = createStorage("R".repeat(43));
     const operations = createOperations();

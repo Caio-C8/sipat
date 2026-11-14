@@ -15,6 +15,11 @@ import { SessionManager } from "./session-manager";
 
 const SessionContext = createContext<SessionManager | null>(null);
 
+async function cleanupRelatorioPdfTemporaries() {
+  const pdf = await import("../../relatorios/pdf/pdf-platform");
+  await pdf.cleanupRelatorioPdfTemporaries();
+}
+
 function createUnavailableOperations() {
   const fail = async () => {
     throw new ApiError("network");
@@ -36,6 +41,7 @@ export function SessionProvider({ children }: Readonly<PropsWithChildren>) {
           ? createAuthOperations(publicAppConfig.apiBaseUrl)
           : createUnavailableOperations(),
         refreshTokenStorage,
+        cleanupRelatorioPdfTemporaries,
       ),
     [],
   );

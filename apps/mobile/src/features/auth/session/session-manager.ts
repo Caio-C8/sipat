@@ -34,6 +34,8 @@ export class SessionManager {
   constructor(
     private readonly operations: AuthOperations,
     private readonly storage: RefreshTokenStorage,
+    private readonly cleanupTemporaryFiles: () => Promise<void> = async () =>
+      undefined,
   ) {}
 
   getSnapshot = () => this.state;
@@ -68,11 +70,20 @@ export class SessionManager {
 
   private async removeLocalCredential() {
     this.clearMemory();
+    await this.cleanupTemporaryFilesBestEffort();
     try {
       await this.storage.remove();
       this.publish({ status: "anonymous" });
     } catch {
       this.publish({ status: "storage-error", operation: "remove" });
+    }
+  }
+
+  private async cleanupTemporaryFilesBestEffort() {
+    try {
+      await this.cleanupTemporaryFiles();
+    } catch {
+      // Temporários nunca impedem restauração, expiração ou logout da sessão.
     }
   }
 
@@ -107,6 +118,7 @@ export class SessionManager {
 
   async restore() {
     this.publish({ status: "restoring" });
+    await this.cleanupTemporaryFilesBestEffort();
     let refreshToken: string | null;
     try {
       refreshToken = await this.storage.read();

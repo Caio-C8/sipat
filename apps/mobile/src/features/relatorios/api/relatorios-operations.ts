@@ -7,6 +7,7 @@ import {
   OpcoesRelatorioQuerySchema,
   OpcoesRelatorioResponseSchema,
   RelatorioParamsSchema,
+  queryPdfRelatorio,
   queryRelatorio,
   respostasTabulares,
   type CatalogoOpcaoRelatorio,
@@ -19,6 +20,7 @@ import {
   type TipoTabular,
 } from "@repo/contracts";
 import { apiRequest } from "../../../lib/api/api-client";
+import { apiBinaryRequest } from "../../../lib/api/binary-api-client";
 
 type RequestOptions = Readonly<{
   accessToken: string;
@@ -26,6 +28,14 @@ type RequestOptions = Readonly<{
 }>;
 
 type Query = Readonly<Record<string, string | number | boolean | undefined>>;
+
+function pdfFilters(query: Query): Query {
+  return Object.fromEntries(
+    Object.entries(query).filter(
+      ([key]) => key !== "pagina" && key !== "limite",
+    ),
+  );
+}
 
 export function createRelatoriosOperations(baseUrl: string) {
   const get = <T>(
@@ -69,6 +79,21 @@ export function createRelatoriosOperations(baseUrl: string) {
         parsed,
       ) as Promise<RelatorioTabularResponse>;
     },
+    pdf(
+      tipo: TipoTabular,
+      query: Query,
+      options: RequestOptions,
+    ): Promise<Uint8Array> {
+      RelatorioParamsSchema.parse({ tipo });
+      const parsed = queryPdfRelatorio(tipo).parse(pdfFilters(query));
+      return apiBinaryRequest({
+        baseUrl,
+        path: `/relatorios/${tipo}/pdf`,
+        token: options.accessToken,
+        signal: options.signal,
+        query: parsed,
+      });
+    },
     ficha(
       patrimonioId: string,
       options: RequestOptions,
@@ -79,6 +104,21 @@ export function createRelatoriosOperations(baseUrl: string) {
         FichaResponseSchema,
         options,
       );
+    },
+    fichaPdf(
+      patrimonioId: string,
+      query: Query,
+      options: RequestOptions,
+    ): Promise<Uint8Array> {
+      FichaRelatorioParamsSchema.parse({ patrimonioId });
+      const parsed = queryPdfRelatorio("ficha-bem").parse(pdfFilters(query));
+      return apiBinaryRequest({
+        baseUrl,
+        path: `/relatorios/ficha-bem/${patrimonioId}/pdf`,
+        token: options.accessToken,
+        signal: options.signal,
+        query: parsed,
+      });
     },
     eventos(
       patrimonioId: string,
