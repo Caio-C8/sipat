@@ -1,6 +1,6 @@
 # MOBILE-RELATORIOS-002 — Filtros e opções de todos os relatórios
 
-**Status:** aprovada em 14/11/2026
+**Status:** concluída e homologada no emulador em 14/11/2026
 
 ## Objetivo
 
@@ -60,19 +60,19 @@ duplicar contratos ou criar endpoints mobile.
 
 ## Critérios de aceite
 
-- [ ] cada tipo publicado abre um formulário correspondente e nenhum tipo cai
+- [x] cada tipo publicado abre um formulário correspondente e nenhum tipo cai
       em formulário genérico incompleto;
-- [ ] os campos obrigatórios bloqueiam avanço com mensagem junto ao campo e os
+- [x] os campos obrigatórios bloqueiam avanço com mensagem junto ao campo e os
       schemas compartilhados validam a query final;
-- [ ] todos os oito catálogos de opções suportam loading, vazio, erro, busca,
+- [x] todos os oito catálogos de opções suportam loading, vazio, erro, busca,
       paginação e cancelamento sem seleção obsoleta;
-- [ ] a ficha exige patrimônio válido e permite filtros opcionais de período,
+- [x] a ficha exige patrimônio válido e permite filtros opcionais de período,
       evento e busca de eventos;
-- [ ] inventários exige `inventarioId`; movimentações, manutenções,
+- [x] inventários exige `inventarioId`; movimentações, manutenções,
       depreciações, reavaliações e empréstimos respeitam seus períodos e bases;
-- [ ] rascunho, seleção e posição de leitura são preservados ao voltar da etapa
+- [x] rascunho, seleção e posição de leitura são preservados ao voltar da etapa
       seguinte, sem gravar dados em storage;
-- [ ] os dois perfis percorrem exatamente os mesmos formulários e operações.
+- [x] os dois perfis percorrem exatamente os mesmos formulários e operações.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -105,3 +105,30 @@ duplicar contratos ou criar endpoints mobile.
 - Nenhuma. Se uma rota publicada exigir campo ausente nos contratos atuais, o
   implementador deve registrar a divergência e parar antes de alterar API ou
   banco.
+
+## Handoff da implementação
+
+- `/relatorios/[tipo]` valida o segmento dinâmico antes de montar o formulário
+  e publica os dez parâmetros conhecidos no export estático Web.
+- Uma configuração tipada cobre os dez relatórios e deriva campos, seletores,
+  enums e defaults dos contratos atuais. Os dois perfis usam a mesma rota e a
+  mesma composição, sem ramificação de autorização no cliente.
+- Os oito catálogos remotos possuem busca, paginação incremental, estados de
+  loading, vazio e erro, cache em memória por cinco minutos e cancelamento pelo
+  `AbortSignal`, sem retry automático.
+- Datas civis usam a máscara compartilhada `DD/MM/AAAA` na interface e são
+  convertidas para `YYYY-MM-DD` somente no boundary. Datas impossíveis são
+  rejeitadas, mensagens de negócio dos contratos são preservadas e mensagens
+  técnicas do validador são apresentadas ao usuário em português.
+- O rascunho, os rótulos selecionados e a posição de rolagem permanecem apenas
+  em memória ao retornar ao mesmo tipo; a ação `Limpar` ou a troca do tipo
+  descarta esse estado.
+- Lint, typecheck, 47 arquivos com 219 testes Vitest, `git diff --check` e os
+  exports Expo Android, iOS e Web foram aprovados. O export Web gerou 53 rotas
+  estáticas, incluindo os dez tipos de relatório.
+- A execução no emulador Android foi homologada pelo responsável em
+  14/11/2026: os dez formulários, seletores, máscaras e mensagens funcionaram
+  como esperado. O limite de chamadas do plano Starter impediu uma nova leitura
+  pelo conector oficial do Figma; a validação visual final ocorreu no emulador.
+- Aparelhos físicos, tablet, rotação, fonte ampliada, TalkBack, VoiceOver e CI
+  completa não foram validados nesta entrega.

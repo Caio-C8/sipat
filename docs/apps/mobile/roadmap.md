@@ -210,7 +210,7 @@ há endpoint, contrato, tabela, migration ou seed específico para o mobile:
 | Ordem | Objetivo                                                                                                            | Status    | Dependências                                  |
 | ----- | ------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------- |
 | 1     | [`MOBILE-RELATORIOS-001`](../../tasks/MOBILE-RELATORIOS-001-catalogo-navegacao.md) — catálogo e navegação           | concluída | shell, sessão e catálogo de relatórios atuais |
-| 2     | [`MOBILE-RELATORIOS-002`](../../tasks/MOBILE-RELATORIOS-002-filtros-opcoes.md) — filtros e opções de todas as rotas | aprovada  | objetivo 1 e contratos de relatórios          |
+| 2     | [`MOBILE-RELATORIOS-002`](../../tasks/MOBILE-RELATORIOS-002-filtros-opcoes.md) — filtros e opções de todas as rotas | concluída | objetivo 1 e contratos de relatórios          |
 | 3     | [`MOBILE-RELATORIOS-003`](../../tasks/MOBILE-RELATORIOS-003-previas-ficha.md) — prévias, ficha e paginação          | aprovada  | objetivo 2 e consultas/ficha atuais           |
 | 4     | [`MOBILE-RELATORIOS-004`](../../tasks/MOBILE-RELATORIOS-004-pdf-multiplataforma.md) — PDF e validação final         | aprovada  | objetivo 3 e endpoints PDF atuais             |
 

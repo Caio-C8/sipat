@@ -53,8 +53,8 @@ não foram validados nesta execução porque o Docker Desktop não estava ativo.
 topbar azul-marinho com brasão, safe area coerente e bottom bar somente em
 `(app)`. Sem sessão, a topbar mantém a identificação municipal; autenticada,
 substitui esse texto pelo avatar da identidade, cujo menu contém o logout.
-`Início`, `Bens` e `Cadastro` são destinos ativos; Inventário e Relatórios
-permanecem disabled, sem rotas placeholder.
+`Início`, `Bens`, `Inventário`, `Cadastro` e `Relatórios` são destinos ativos,
+com destaque preservado em suas respectivas árvores.
 O `DevelopmentCheckBanner` não foi alterado. `MOBILE-AUTH-003` recompôs login,
 troca obrigatória e confirmação conforme os três frames do Figma, preservando
 contratos, sessão e redirects; a recuperação aparece disabled, sem rota.
@@ -89,6 +89,22 @@ a seleção depreciável exige vida útil e residual, enquanto a seleção não
 depreciável limpa e omite os parâmetros. O detalhe exibe a classificação
 persistida sem inferi-la da espécie. A entrega integrada passou nas verificações
 de contratos, API e mobile registradas na tarefa.
+
+`MOBILE-RELATORIOS-001` habilitou o catálogo autenticado das dez opções para os
+dois perfis. `MOBILE-RELATORIOS-002` adicionou `/relatorios/[tipo]`, os dez
+formulários validados pelos contratos atuais e os oito catálogos remotos com
+busca, paginação, cache de referência e cancelamento. Datas civis são exibidas
+como `DD/MM/AAAA` e convertidas para `YYYY-MM-DD` somente no boundary; mensagens
+técnicas do validador são substituídas por orientações em português, sem
+alterar os refinamentos de negócio dos contratos. Rascunho, seleção e rolagem
+permanecem somente em memória e são descartados ao limpar ou trocar o tipo.
+
+A entrega passou em lint, typecheck, 219 testes, `git diff --check` e exports
+Expo Android, iOS e Web. Os dez formulários, seletores, máscaras e mensagens
+foram homologados no emulador Android em 14/11/2026. O conector oficial do
+Figma não pôde ser reinspecionado por limite do plano Starter; aparelhos
+físicos, tablet, rotação, fonte ampliada e leitores de tela continuam
+pendentes.
 
 `MOBILE-IDEMPOTENCIA-001` protegeu a confirmação desse cadastro com uma chave
 UUID por tentativa lógica. Timeout, rede, response inválida e operação ainda em
