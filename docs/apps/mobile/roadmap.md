@@ -167,10 +167,10 @@ mock, chamada repetida de `POST` ou rota vazia.
 
 Por decisão de produto de 01/11/2026, o mobile fica limitado a autenticação,
 execução das ações de inventário, cadastro e pesquisa de bens já implementados
-e uma futura geração de relatórios. Movimentação, reavaliação, baixa e
+e à sequência aprovada de relatórios. Movimentação, reavaliação, baixa e
 substituição do número patrimonial serão implementadas somente na Web por
-`WEB-PATRIMONIOS-001`. Relatórios mobile exigirão objetivo e tarefa próprios;
-esta decisão não autoriza antecipar rota, botão ativo ou operação.
+`WEB-PATRIMONIOS-001`. Relatórios mobile seguem os objetivos próprios desta
+documentação; cada etapa não autoriza antecipar a seguinte.
 
 ## Conferência de inventário
 
@@ -200,3 +200,45 @@ finalização global ou endpoint de ocorrência.
 `expo-camera` entra somente em `MOBILE-INVENTARIOS-002`, com permissão de câmera
 e sem áudio. Scanner e entrada manual enviam o mesmo `numeroPatrimonial`; não
 há fila offline nem sucesso local sem confirmação da API.
+
+## Relatórios patrimoniais no mobile
+
+Esta sequência substitui o estado disabled de `Relatórios` e reutiliza
+exclusivamente os contratos e endpoints gerais já entregues por RF20/RF21. Não
+há endpoint, contrato, tabela, migration ou seed específico para o mobile:
+
+| Ordem | Objetivo                                                                                                            | Status    | Dependências                                  |
+| ----- | ------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------- |
+| 1     | [`MOBILE-RELATORIOS-001`](../../tasks/MOBILE-RELATORIOS-001-catalogo-navegacao.md) — catálogo e navegação           | concluída | shell, sessão e catálogo de relatórios atuais |
+| 2     | [`MOBILE-RELATORIOS-002`](../../tasks/MOBILE-RELATORIOS-002-filtros-opcoes.md) — filtros e opções de todas as rotas | aprovada  | objetivo 1 e contratos de relatórios          |
+| 3     | [`MOBILE-RELATORIOS-003`](../../tasks/MOBILE-RELATORIOS-003-previas-ficha.md) — prévias, ficha e paginação          | aprovada  | objetivo 2 e consultas/ficha atuais           |
+| 4     | [`MOBILE-RELATORIOS-004`](../../tasks/MOBILE-RELATORIOS-004-pdf-multiplataforma.md) — PDF e validação final         | aprovada  | objetivo 3 e endpoints PDF atuais             |
+
+`ADMINISTRADOR` e `DIRETOR_PATRIMONIO` possuem as mesmas permissões em toda a
+sequência: ambos acessam o catálogo, configuram filtros, consultam prévias e
+geram PDFs dos nove relatórios tabulares e da ficha individual. Não se deve
+reaproveitar a diferença de permissões existente em Cadastro ou Inventário.
+
+O implementador deve abrir obrigatoriamente o arquivo vivo no navegador ou no
+conector oficial, selecionar a página
+[`Telas Mobile`](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=257-2&p=f)
+e inspecionar diretamente os frames
+[`01-relatorios 1` (`278:1022`)](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=278-1022&p=f),
+[`06-ficha-individual 1` (`278:542`)](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=278-542&p=f) e
+[`07-previa-individual 1` (`278:680`)](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled?node-id=278-680&p=f)
+antes de editar e novamente durante a comparação final. O arquivo é somente
+leitura. A implementação deve ser visualmente equivalente em 390×844 e adaptar
+o mesmo desenho a telefone, tablet, retrato, paisagem, fonte ampliada e Web.
+
+O protótipo é autoridade visual; requisitos, contratos e API são autoridade de
+comportamento. Por isso, o texto `9 modelos` do frame principal não pode ocultar
+`pendencias-depreciacao`: o catálogo atual valida dez opções, nove tabulares e
+`ficha-bem`. A tela usa a contagem real e inclui todas as rotas disponíveis,
+mantendo cards, hierarquia, cores, espaçamento, etapas, prévia e ação de abrir
+documento conforme os frames. Essa é a única divergência visual previamente
+aprovada; outras diferenças exigem decisão.
+
+Banco e API só podem ser alterados se a implementação comprovar que o estado
+real diverge dos requisitos ou dos contratos documentados. Nessa situação, o
+implementador deve interromper a camada mobile, registrar a evidência e pedir
+decisão antes de editar o comportamento externo.

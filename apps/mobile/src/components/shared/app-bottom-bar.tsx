@@ -7,7 +7,8 @@ type BottomBarItem = {
   icon: LucideIconName;
   label: string;
   prominent?: boolean;
-  path?: "/" | "/bens" | "/inventarios" | "/cadastro/patrimonio";
+  path?:
+    "/" | "/bens" | "/inventarios" | "/cadastro/patrimonio" | "/relatorios";
 };
 
 export const appBottomBarItems: readonly BottomBarItem[] = [
@@ -20,7 +21,7 @@ export const appBottomBarItems: readonly BottomBarItem[] = [
     path: "/inventarios",
   },
   { icon: "plus", label: "Cadastro", path: "/cadastro/patrimonio" },
-  { icon: "file-text", label: "Relatórios" },
+  { icon: "file-text", label: "Relatórios", path: "/relatorios" },
 ] as const;
 
 export function AppBottomBar() {
@@ -43,7 +44,10 @@ export function AppBottomBar() {
                 ? pathname === item.path || pathname.startsWith("/inventarios/")
                 : item.path === "/cadastro/patrimonio"
                   ? pathname === item.path || pathname.startsWith("/cadastro/")
-                  : pathname === item.path;
+                  : item.path === "/relatorios"
+                    ? pathname === item.path ||
+                      pathname.startsWith("/relatorios/")
+                    : pathname === item.path;
           const iconColor = item.prominent
             ? mobileShell.headerText
             : active

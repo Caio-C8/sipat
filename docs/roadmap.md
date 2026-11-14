@@ -1756,8 +1756,18 @@ no ambiente isolado com dados preservados. O placeholder foi substituído.
 
 ## Relatórios patrimoniais — RF20/RF21
 
-**Status:** concluído e verificado em 01/11/2026, nos nove tipos aprovados.
+**Status:** backend, contratos e Web concluídos e verificados em 01/11/2026;
+catálogo e navegação mobile concluídos e homologados no emulador em
+14/11/2026.
 
-Nove categorias, consultas reais, ficha, PDF e Web simples.
+Nove relatórios tabulares, ficha individual, consultas reais, PDF e Web.
 [Escopo e sequência de tarefas](./apps/api/relatorios-patrimoniais.md).
-Contratos, consultas/ficha, PDF e consumidor verificados em banco isolado. Estornos permanecem fora do escopo.
+Contratos, consultas/ficha, PDF e consumidor Web foram verificados em banco
+isolado. Estornos permanecem fora do escopo.
+
+O mobile implementará todas as dez opções publicadas, com permissões idênticas
+para Administrador e Diretor e sem novos endpoints ou persistência de domínio.
+Catálogo/navegação foi finalizado; a ordem restante é filtros/opções,
+prévias/ficha e PDF multiplataforma. Consulte o
+[roadmap mobile](./apps/mobile/roadmap.md#relatorios-patrimoniais-no-mobile) e as
+quatro tarefas vinculadas antes de iniciar a implementação.

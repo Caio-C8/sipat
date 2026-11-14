@@ -33,8 +33,8 @@ código interno da API.
   por sessão, e mutations patrimoniais e de inventário invalidam somente as
   famílias afetadas antes de liberar a navegação dependente;
 - o grupo `(app)` aplica a bottom bar do protótipo; `Início`, `Bens`,
-  `Inventário` e `Cadastro` representam rotas existentes; Inventário é
-  consultável pelos dois perfis e Relatórios permanece disabled;
+  `Inventário`, `Cadastro` e `Relatórios` representam rotas existentes para os
+  dois perfis, preservando o destaque em suas respectivas árvores;
 - `/bens` e `/bens/[patrimonioId]` implementam consulta para os dois perfis,
   com busca submetida por texto ou pelo número patrimonial exato, filtros
   públicos, paginação e detalhe nas abas `Dados` e `Valores`;
@@ -67,6 +67,9 @@ código interno da API.
   conflitos públicos;
   o Administrador recebe `Cadastro restrito` sem montar o formulário nem
   consultar catálogos;
+- `/relatorios` consulta o catálogo autenticado publicado pela API, valida as
+  dez opções com o contrato compartilhado e apresenta capacidades, motivo e
+  disponibilidade; filtros, prévias e PDF seguem nos objetivos posteriores;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior

@@ -87,6 +87,12 @@ automático; liberar Object URL; preservar filtros em erro. Mensagem explícita:
 3. [RELATORIOS-002](../../tasks/RELATORIOS-002-ficha-historico.md).
 4. [RELATORIOS-003](../../tasks/RELATORIOS-003-pdf.md).
 5. [WEB-RELATORIOS-001](../../tasks/WEB-RELATORIOS-001-interface.md).
+6. Catálogo e navegação mobile implementados em 14/11/2026, sem mudança desta
+   interface; objetivos seguintes aprovados:
+   [MOBILE-RELATORIOS-001](../../tasks/MOBILE-RELATORIOS-001-catalogo-navegacao.md),
+   [MOBILE-RELATORIOS-002](../../tasks/MOBILE-RELATORIOS-002-filtros-opcoes.md),
+   [MOBILE-RELATORIOS-003](../../tasks/MOBILE-RELATORIOS-003-previas-ficha.md) e
+   [MOBILE-RELATORIOS-004](../../tasks/MOBILE-RELATORIOS-004-pdf-multiplataforma.md).
 
 Referências oficiais: [PDFKit](https://pdfkit.org/docs/getting_started.html),
 [streaming NestJS](https://docs.nestjs.com/techniques/streaming-files).

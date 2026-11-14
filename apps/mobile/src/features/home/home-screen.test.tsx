@@ -97,6 +97,7 @@ const successState: HomeDashboardState = {
 const actions = {
   onOpenInventories: vi.fn(),
   onOpenInventory: vi.fn(),
+  onOpenReports: vi.fn(),
   onRefresh: vi.fn(),
   onRetry: vi.fn(),
 };
@@ -124,7 +125,8 @@ describe("HomeContent", () => {
     expect(markup).toContain('aria-label="Abrir Inventário atual"');
     expect(markup).not.toContain("Iniciar conferência");
     expect(markup).toContain('aria-label="Ver inventários"');
-    expect(markup).toContain("Gerar relatório");
+    expect(markup).toContain("Abrir relatórios");
+    expect(markup).toContain('aria-label="Abrir relatórios"');
     expect(markup).toContain("Atualizar dados");
   });
 
@@ -141,7 +143,7 @@ describe("HomeContent", () => {
     expect(markup).toContain("Fazer inventário");
     expect(markup).toContain("Iniciar conferência");
     expect(markup).toContain('aria-label="Iniciar conferência"');
-    expect(markup.match(/aria-disabled="true"/g)).toHaveLength(1);
+    expect(markup).not.toContain('aria-disabled="true"');
     expect(markup).toContain("Inventário atual");
     expect(markup).toContain("15 de");
     expect(markup).toContain("20 bens conferidos");

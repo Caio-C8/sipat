@@ -97,6 +97,14 @@ export const mobileRouteCatalog = {
     profiles: ["DIRETOR_PATRIMONIO"],
     state: "implemented",
   },
+  relatorios: {
+    path: "/relatorios",
+    title: "Relatórios",
+    description: "Catálogo de relatórios patrimoniais publicados pela API.",
+    access: "authenticated",
+    profiles: ALL_PROFILES,
+    state: "implemented",
+  },
   login: {
     path: "/login",
     title: "Login",
@@ -152,6 +160,7 @@ export const appRoutes = {
   inventarioSetorDetail: mobileRouteCatalog.inventarioSetorDetail.path,
   inventarioConferencia: mobileRouteCatalog.inventarioConferencia.path,
   inventarioCorrecao: mobileRouteCatalog.inventarioCorrecao.path,
+  relatorios: mobileRouteCatalog.relatorios.path,
   login: mobileRouteCatalog.login.path,
   forgotPassword: mobileRouteCatalog.forgotPassword.path,
   resetPassword: mobileRouteCatalog.resetPassword.path,

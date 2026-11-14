@@ -31,6 +31,7 @@ type HomeContentProps = Readonly<{
   onRetry(block: HomeBlockName): void;
   onOpenInventories(): void;
   onOpenInventory(inventoryId: string): void;
+  onOpenReports(): void;
 }>;
 
 const STATUS_LABELS = {
@@ -162,16 +163,26 @@ function Action({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.disabledAction, prominent && styles.heroAction]}
+      style={[
+        styles.disabledAction,
+        !disabled && styles.enabledAction,
+        prominent && styles.heroAction,
+      ]}
     >
       <Lucide
         accessible={false}
-        color={prominent ? mobileHome.action : mobileHome.textMuted}
+        color={
+          prominent || !disabled ? mobileHome.action : mobileHome.textMuted
+        }
         name={icon}
         size={18}
       />
       <Text
-        style={[styles.disabledActionText, prominent && styles.heroActionText]}
+        style={[
+          styles.disabledActionText,
+          !disabled && styles.enabledActionText,
+          prominent && styles.heroActionText,
+        ]}
       >
         {label}
       </Text>
@@ -465,17 +476,20 @@ function InventoryBlock({
   );
 }
 
-function FutureReportAction() {
+function ReportAction({ onOpenReports }: Readonly<{ onOpenReports(): void }>) {
   return (
     <View style={styles.reportSection}>
       <View>
         <Text style={styles.reportTitle}>Relatórios</Text>
         <Text style={styles.reportText}>
-          A consulta e a geração serão liberadas quando a página estiver
-          disponível.
+          Consulte o catálogo patrimonial e escolha o relatório desejado.
         </Text>
       </View>
-      <Action icon="file-text" label="Gerar relatório" />
+      <Action
+        icon="file-text"
+        label="Abrir relatórios"
+        onPress={onOpenReports}
+      />
     </View>
   );
 }
@@ -489,6 +503,7 @@ export function HomeContent({
   onRetry,
   onOpenInventories,
   onOpenInventory,
+  onOpenReports,
 }: HomeContentProps) {
   const { width } = useWindowDimensions();
   const wide = width >= 760;
@@ -537,7 +552,7 @@ export function HomeContent({
           onRetry={onRetry}
           profile={profile}
         />
-        <FutureReportAction />
+        <ReportAction onOpenReports={onOpenReports} />
 
         <Pressable
           accessibilityState={{ busy: isRefreshing }}
@@ -588,6 +603,7 @@ function AuthenticatedHome({
       onOpenInventory={(inventoryId) =>
         router.push(`/inventarios/${inventoryId}` as Href)
       }
+      onOpenReports={() => router.push("/relatorios" as Href)}
       onRefresh={dashboard.refresh}
       onRetry={(block) => void dashboard.retry(block)}
       profile={identity.perfil}
@@ -686,6 +702,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  enabledAction: {
+    backgroundColor: mobileHome.actionSurface,
+    borderColor: mobileHome.action,
+    opacity: 1,
+  },
+  enabledActionText: { color: mobileHome.action },
   heroAction: {
     backgroundColor: mobileHome.surface,
     borderWidth: 0,
