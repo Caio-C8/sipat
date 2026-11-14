@@ -10,4 +10,16 @@ export const relatorioQueryKeys = {
       catalogo,
       busca,
     ] as const,
+  previews: () => [...relatorioQueryKeys.all, "previa"] as const,
+  preview: (
+    tipo: string,
+    query: Readonly<Record<string, unknown>>,
+    patrimonioId?: string,
+  ) =>
+    [
+      ...relatorioQueryKeys.previews(),
+      tipo,
+      patrimonioId ?? null,
+      query,
+    ] as const,
 };
