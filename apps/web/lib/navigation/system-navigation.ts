@@ -154,12 +154,14 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     breadcrumb: ["Depreciação", "Processamento"],
   },
   {
-    id: "baixa-estorno",
-    label: "Baixa e estorno",
+    id: "baixa",
+    label: "Baixa",
     icon: Archive,
     grupo: "principal",
-    perfis: APENAS_DIRETOR,
-    implementado: false,
+    perfis: TODOS_PERFIS,
+    implementado: true,
+    href: "/baixas",
+    breadcrumb: ["Início", "Baixa"],
   },
   {
     id: "historico-patrimonial",
@@ -289,6 +291,7 @@ export function encontrarNavegacaoPorCaminho(
       (item.href === "/emprestimos" && pathname.startsWith("/emprestimos/")) ||
       (item.href === "/manutencoes" && pathname.startsWith("/manutencoes/")) ||
       (item.href === "/inventarios" && pathname.startsWith("/inventarios/")) ||
+      (item.href === "/baixas" && pathname.startsWith("/baixas/")) ||
       (item.href === "/cadastros/setores" &&
         pathname.startsWith("/cadastros/setores/")) ||
       (item.href === "/configuracoes" &&

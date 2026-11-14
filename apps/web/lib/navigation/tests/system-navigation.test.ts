@@ -20,6 +20,7 @@ describe("catálogo de navegação do sistema", () => {
       "/manutencoes",
       "/reavaliacoes",
       "/depreciacao",
+      "/baixas",
       "/relatorios",
       "/usuarios",
       "/cadastros/responsaveis",
@@ -80,6 +81,10 @@ describe("catálogo de navegação do sistema", () => {
     expect(diretor).toContain("Manutenção");
     expect(administrador).toContain("Processos de compra");
     expect(diretor).toContain("Processos de compra");
+    expect(administrador).toContain("Baixa");
+    expect(diretor).toContain("Baixa");
+    expect(administrador).not.toContain("Baixa e estorno");
+    expect(diretor).not.toContain("Baixa e estorno");
     expect(administrador).toContain("Espécies");
     expect(administrador).toContain("Setores");
     expect(administrador).toContain("Fornecedores");
@@ -106,6 +111,10 @@ describe("catálogo de navegação do sistema", () => {
     expect(
       encontrarNavegacaoPorCaminho("/manutencoes/pedido-01")?.breadcrumb,
     ).toEqual(["Início", "Manutenções"]);
+    expect(encontrarNavegacaoPorCaminho("/baixas/nova")?.breadcrumb).toEqual([
+      "Início",
+      "Baixa",
+    ]);
     expect(encontrarNavegacaoPorCaminho("/rota-inexistente")).toBeUndefined();
     expect(
       encontrarNavegacaoPorCaminho("/cadastros/setores/gabinete-02")

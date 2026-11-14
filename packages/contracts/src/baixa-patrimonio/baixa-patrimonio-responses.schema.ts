@@ -5,6 +5,7 @@ import {
 } from "../common";
 import { ComissaoResumoSchema } from "../comissao";
 import { DataCivilSchema, NumeroPatrimonialSchema } from "../patrimonio";
+import { NomeUsuarioSchema } from "../usuario";
 import {
   MotivoBaixaPatrimonioSchema,
   ObservacaoBaixaPatrimonioSchema,
@@ -25,6 +26,11 @@ const ComissaoBaixaResponseSchema = z.strictObject({
   nome: NomeRelacionadoSchema,
 });
 
+const UsuarioAuditoriaBaixaResponseSchema = z.strictObject({
+  id: z.uuid(),
+  nome: NomeUsuarioSchema,
+});
+
 export const BaixaPatrimonioDetalheSchema = z
   .strictObject({
     id: z.uuid(),
@@ -35,6 +41,7 @@ export const BaixaPatrimonioDetalheSchema = z
     motivo: MotivoBaixaPatrimonioSchema,
     observacao: ObservacaoBaixaPatrimonioSchema.nullable(),
     createdById: z.uuid(),
+    createdBy: UsuarioAuditoriaBaixaResponseSchema,
     createdAt: DateTimeUtcResponseSchema,
     anexoUrl: z.string().nullable(),
   })

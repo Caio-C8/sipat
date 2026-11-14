@@ -103,7 +103,7 @@ export class BaixasController {
   }
 
   @Get()
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarBaixaPatrimonioResponseDto)
   async consultar(
     @Param() params: BaixaPatrimonioParamsDto,

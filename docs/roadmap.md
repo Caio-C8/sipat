@@ -408,16 +408,18 @@ até a finalização.
 
 ## Ordem das entregas de baixas patrimoniais
 
-| Ordem | Objetivo                                           | Status    | Dependências principais                                            |
-| ----- | -------------------------------------------------- | --------- | ------------------------------------------------------------------ |
-| 26    | `CONTRACTS-010` — Contratos de baixas patrimoniais | concluído | RF17, UC17, `CONTRACTS-004`, `CONTRACTS-007`                       |
-| 27    | `BAIXAS-001` — Registrar e consultar baixa na API  | concluído | `CONTRACTS-010`, `STORAGE-001`, `COMISSOES-001`, `INVENTARIOS-002` |
+| Ordem | Objetivo                                                    | Status    | Dependências principais                                            |
+| ----- | ----------------------------------------------------------- | --------- | ------------------------------------------------------------------ |
+| 26    | `CONTRACTS-010` — Contratos de baixas patrimoniais          | concluído | RF17, UC17, `CONTRACTS-004`, `CONTRACTS-007`                       |
+| 27    | `BAIXAS-001` — Registrar e consultar baixa na API           | concluído | `CONTRACTS-010`, `STORAGE-001`, `COMISSOES-001`, `INVENTARIOS-002` |
+| 28    | `BAIXAS-002` — Consulta individual pelo Administrador       | concluída | `BAIXAS-001`, RNF05 e política de acesso                           |
+| 29    | `WEB-BAIXAS-001` — Consulta e registro Web conforme o Figma | aprovada  | `BAIXAS-002`, relatórios e shell Web                               |
 
-Esta sequência entrega somente contratos, ajustes necessários no banco e API.
-Web, mobile e a consulta agregada do histórico patrimonial permanecem fora do
-escopo. `CONTRACTS-010` fecha primeiro o boundary multipart e as respostas;
-`BAIXAS-001` implementa a transição irreversível, a consulta e o streaming
-privado do comprovante.
+As duas primeiras entregas fecharam contratos, ajustes necessários no banco e
+API. `BAIXAS-002` ampliou somente a leitura estruturada individual ao
+Administrador; a evolução Web aprovada não exige migration nem novo endpoint.
+A lista reutiliza `GET /api/relatorios/baixas`; a criação continua unitária e
+exclusiva do Diretor. O comprovante privado permanece exclusivo do Diretor.
 
 Toda baixa exige patrimônio `ATIVO`, comissão vigente na data civil informada,
 motivo obrigatório e, opcionalmente, observação e um único PDF de até 10 MiB.
@@ -426,6 +428,14 @@ bloqueada. `TRANSFERENCIA` significa saída permanente do acervo, não
 movimentação entre setores; `RECLASSIFICACAO` significa desincorporação
 contábil, não alteração da espécie; `ERRO_REGISTRO` preserva o registro baixado
 para auditoria.
+
+O protótipo Web ilustra seleção e histórico agrupados de vários bens, mas RF17,
+UC17, `CONTRACTS-010` e `BAIXAS-001` definem uma operação por patrimônio e
+mantêm baixa em lote fora do escopo. `WEB-BAIXAS-001` deve reproduzir exatamente
+a composição visual dos frames de `Telas PC`, adaptando a interação para um
+único patrimônio e removendo toda identificação de estorno. Especificações:
+[BAIXAS-002](./tasks/BAIXAS-002-consulta-administrador.md) e
+[WEB-BAIXAS-001](./tasks/WEB-BAIXAS-001-interface-baixas.md).
 
 ### Decisões comuns da numeração patrimonial
 

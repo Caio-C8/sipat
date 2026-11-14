@@ -32,6 +32,17 @@ test("relatórios rejeitam filtros desconhecidos, períodos inválidos e excesso
     false,
   );
 });
+test("baixas lista todos os registros sem período e aceita período como filtro opcional", () => {
+  const schema = queryRelatorio("baixas");
+  assert.deepEqual(schema.parse({}), { pagina: 1, limite: 20 });
+  assert.equal(
+    schema.safeParse({ inicio: "2026-01-01", fim: "2026-12-31" }).success,
+    true,
+  );
+  assert.equal(schema.safeParse({ inicio: "2026-01-01" }).success, false);
+  assert.equal(schema.safeParse({ fim: "2026-12-31" }).success, false);
+  assert.deepEqual(queryPdfRelatorio("baixas").parse({}), {});
+});
 test("competências até doze meses e bases enumeradas por domínio", () => {
   const schema = queryRelatorio("depreciacoes");
   assert.equal(

@@ -32,6 +32,7 @@ function baixa() {
     observacao: null,
     caminhoAnexoDocumento: "uploads/baixas/documento.pdf",
     createdById: DIRETOR_ID,
+    createdBy: { id: DIRETOR_ID, nome: "Diretor" },
     createdAt: new Date("2026-10-27T12:00:00.000Z"),
     patrimonio: {
       id: PATRIMONIO_ID,
@@ -135,7 +136,7 @@ describe("baixas patrimoniais", () => {
   const cookie = (token: string) => `sipat_session=${token}`;
   const rota = `/api/patrimonios/${PATRIMONIO_ID}/baixa`;
 
-  it("aplica 401 ao anônimo, 403 ao administrador e permite o diretor", async () => {
+  it("aplica 401 ao anônimo e permite a consulta aos dois perfis", async () => {
     const anonimo = await request(app.getHttpServer()).get(rota);
     const administrador = await request(app.getHttpServer())
       .get(rota)
@@ -145,11 +146,47 @@ describe("baixas patrimoniais", () => {
       .set("Cookie", cookie(tokenDiretor));
 
     expect(anonimo.status).toBe(401);
-    expect(administrador.status).toBe(403);
+    expect(administrador.status).toBe(200);
     expect(diretor.status).toBe(200);
+    expect(
+      ConsultarBaixaPatrimonioResponseSchema.safeParse(administrador.body)
+        .success,
+    ).toBe(true);
     expect(
       ConsultarBaixaPatrimonioResponseSchema.safeParse(diretor.body).success,
     ).toBe(true);
+    expect(service.consultar).toHaveBeenCalledTimes(2);
+    expect(service.consultar).toHaveBeenNthCalledWith(1, PATRIMONIO_ID);
+    expect(service.consultar).toHaveBeenNthCalledWith(2, PATRIMONIO_ID);
+  });
+
+  it("barra o administrador antes dos services exclusivos do Diretor", async () => {
+    const dados = JSON.stringify({
+      dataBaixa: "2026-10-27",
+      tipo: "ALIENACAO",
+      motivo: "Alienação autorizada",
+      comissaoId: COMISSAO_ID,
+    });
+
+    const opcoes = await request(app.getHttpServer())
+      .get(`${rota}/opcoes/comissoes?dataBaixa=2026-10-27`)
+      .set("Cookie", cookie(tokenAdministrador));
+    const criacao = await request(app.getHttpServer())
+      .post(rota)
+      .set("Cookie", cookie(tokenAdministrador))
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .field("dados", dados);
+    const anexo = await request(app.getHttpServer())
+      .get(`${rota}/anexo`)
+      .set("Cookie", cookie(tokenAdministrador));
+
+    expect(opcoes.status).toBe(403);
+    expect(criacao.status).toBe(403);
+    expect(anexo.status).toBe(403);
+    expect(service.listarOpcoesComissoes).not.toHaveBeenCalled();
+    expect(service.criar).not.toHaveBeenCalled();
+    expect(service.abrirDocumento).not.toHaveBeenCalled();
   });
 
   it("protege a criação com CSRF e deriva a identidade da sessão", async () => {

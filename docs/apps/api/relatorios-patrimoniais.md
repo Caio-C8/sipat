@@ -107,7 +107,7 @@ buscas textuais limitadas a 200 caracteres. Paginação não integra a entrada P
 | Reavaliações              | bem e comissão                                                                                                                                 | registro/referência, instante e UUID decrescentes             |
 | Inventários               | bem, setor esperado/encontrado, verificação, situação original, correções original/posterior                                                   | setor esperado, identificação atual e UUID crescentes         |
 | Empréstimos               | bem, grupo, destinatário, pendente/devolvido e atraso                                                                                          | saída/previsão/devolução decrescente e UUID                   |
-| Baixas                    | bem, tipo e comissão                                                                                                                           | baixa, registro e UUID decrescentes                           |
+| Baixas                    | período civil (início e fim juntos), bem, tipo e comissão                                                                                      | baixa, registro e UUID decrescentes                           |
 
 Os contratos específicos em `packages/contracts/src/relatorio-patrimonial/`
 definem os campos completos de saída. A ficha oferece 14 variantes de eventos;
