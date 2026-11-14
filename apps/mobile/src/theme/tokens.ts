@@ -138,6 +138,21 @@ export const mobileInventarios = {
   overlay: "rgba(20, 36, 59, 0.45)",
 } as const;
 
+export const mobileRelatorios = {
+  surface: "#ffffff",
+  surfaceMuted: "#f7f9fc",
+  text: "#0f172a",
+  textMuted: "#647b98",
+  textSubtle: "#72849c",
+  border: "#d7e2ef",
+  information: "#1e3a5f",
+  action: "#2563eb",
+  actionSurface: "#eff6ff",
+  danger: "#9a4035",
+  dangerBorder: "#e8b9b1",
+  dangerSurface: "#fff2ef",
+} as const;
+
 export const institutionalPalette = {
   canvas: "#F8FAFC",
   surface: "#FFFFFF",
