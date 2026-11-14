@@ -26,6 +26,44 @@ import {
 @Injectable()
 export class RelatoriosService {
   constructor(private readonly repo: RelatoriosRepository) {}
+  async rotulosFiltros(filtros: Record<string, unknown>) {
+    const catalogos: Record<string, { tabela: string; expressao: string }> = {
+      patrimonioId: {
+        tabela: "patrimonios",
+        expressao: "numero_patrimonio || ' — ' || descricao",
+      },
+      setorId: { tabela: "setores", expressao: "nome" },
+      setorOrigemId: { tabela: "setores", expressao: "nome" },
+      setorDestinoId: { tabela: "setores", expressao: "nome" },
+      setorEsperadoId: { tabela: "setores", expressao: "nome" },
+      setorEncontradoId: { tabela: "setores", expressao: "nome" },
+      responsavelId: { tabela: "responsaveis", expressao: "nome" },
+      especieId: { tabela: "especies", expressao: "nome" },
+      naturezaId: { tabela: "naturezas", expressao: "nome" },
+      comissaoId: { tabela: "comissoes", expressao: "nome" },
+      fornecedorId: { tabela: "fornecedores", expressao: "razao_social" },
+      inventarioId: { tabela: "inventarios", expressao: "nome" },
+      pedidoId: {
+        tabela: "manutencoes",
+        expressao: "coalesce(numero_requisicao, id::text)",
+      },
+    };
+    return this.repo.leitura(async (repo) => {
+      const rotulados: Record<string, unknown> = { ...filtros };
+      for (const [campo, valor] of Object.entries(filtros)) {
+        const catalogo = catalogos[campo];
+        if (!catalogo || typeof valor !== "string") continue;
+        const [linha] = await repo.consultar(Prisma.sql`
+          SELECT jsonb_build_object('rotulo', ${Prisma.raw(catalogo.expressao)}) dados
+          FROM ${Prisma.raw(catalogo.tabela)} WHERE id = ${valor}::uuid LIMIT 1
+        `);
+        const rotulo = (linha?.dados as { rotulo?: string } | undefined)
+          ?.rotulo;
+        rotulados[campo] = rotulo ?? `Cadastro não localizado (${valor})`;
+      }
+      return rotulados;
+    });
+  }
   catalogo() {
     return CatalogoRelatoriosResponseSchema.parse({
       status: 200,

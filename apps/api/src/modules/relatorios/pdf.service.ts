@@ -49,11 +49,17 @@ export class RelatoriosPdfService {
         throw limiteRelatorio();
       const resposta = "eventos" in resultado ? resultado.eventos : resultado;
       const cadastro = "cadastro" in resultado ? resultado.cadastro : undefined;
+      const filtrosLegiveis =
+        Object.keys(resposta.consulta.filtros).some((campo) =>
+          campo.endsWith("Id"),
+        ) && typeof this.tabulares.rotulosFiltros === "function"
+          ? await this.tabulares.rotulosFiltros(resposta.consulta.filtros)
+          : resposta.consulta.filtros;
       const bytes = await this.renderizar(
         tipo,
         resposta.dados,
         resposta.resumo,
-        resposta.consulta,
+        { ...resposta.consulta, filtros: filtrosLegiveis },
         usuario,
         prazo,
         signal,
@@ -91,7 +97,10 @@ export class RelatoriosPdfService {
   ): Promise<Buffer> {
     const doc = new PDFDocument({
       size: "A4",
-      layout: tipo === "ficha-bem" ? "portrait" : "landscape",
+      layout:
+        tipo === "ficha-bem" || tipo === "patrimonios"
+          ? "portrait"
+          : "landscape",
       margin: 36,
       bufferPages: true,
       autoFirstPage: false,
@@ -137,6 +146,7 @@ export class RelatoriosPdfService {
     );
     try {
       await layout.conteudo(linhas, resumo, usuario, cadastro);
+      layout.cabecalhos();
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);

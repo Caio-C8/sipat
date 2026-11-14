@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import PDFDocument from "pdfkit";
 import { RelatoriosPdfService } from "./pdf.service";
 import type { RelatoriosService } from "./relatorios.service";
 import type { FichaService } from "./ficha.service";
@@ -19,6 +20,35 @@ const consulta = {
   avisos: [],
 };
 describe("admissão e limites de PDF", () => {
+  afterEach(() => jest.restoreAllMocks());
+  it("usa rótulos resolvidos no servidor para filtros de cadastro do PDF", async () => {
+    const setorId = randomUUID();
+    const textos: string[] = [];
+    const original = PDFDocument.prototype.text;
+    jest.spyOn(PDFDocument.prototype, "text").mockImplementation(function (
+      this: PDFKit.PDFDocument,
+      ...args: Parameters<typeof original>
+    ) {
+      if (typeof args[0] === "string") textos.push(args[0]);
+      return original.apply(this, args);
+    });
+    const backend = {
+      tabular: jest.fn(async () => ({
+        dados: [],
+        resumo: { quantidade: 0 },
+        consulta: { ...consulta, filtros: { setorId } },
+      })),
+      rotulosFiltros: jest.fn(async () => ({ setorId: "Setor de Tecnologia" })),
+    };
+    const service = new RelatoriosPdfService(
+      backend as unknown as RelatoriosService,
+      {} as FichaService,
+    );
+    await service.emitir("patrimonios", { setorId }, usuario);
+    expect(backend.rotulosFiltros).toHaveBeenCalledWith({ setorId });
+    expect(textos.join(" ")).toContain("Setor: Setor de Tecnologia");
+    expect(textos.join(" ")).not.toContain(setorId);
+  });
   it("rejeita emissão concorrente do mesmo usuário e libera após falha", async () => {
     const rejeicoes: ((e: Error) => void)[] = [];
     const backend = {

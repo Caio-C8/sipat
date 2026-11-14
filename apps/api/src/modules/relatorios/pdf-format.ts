@@ -49,6 +49,32 @@ export function rotuloRelatorio(campo: string): string {
     realizadoConhecido: "Realizado conhecido (R$)",
     vidaUtilNovaMeses: "Vida útil nova (meses)",
     vidaUtilAnteriorMeses: "Vida útil anterior (meses)",
+    setorId: "Setor",
+    setorOrigemId: "Setor de origem",
+    setorDestinoId: "Setor de destino",
+    setorEsperadoId: "Setor esperado",
+    setorEncontradoId: "Setor encontrado",
+    responsavelId: "Responsável",
+    especieId: "Espécie",
+    naturezaId: "Natureza",
+    comissaoId: "Comissão",
+    fornecedorId: "Fornecedor",
+    inventarioId: "Inventário",
+    pedidoId: "Pedido",
+    tipoNumero: "Tipo de número patrimonial",
+    tipoNumeroPatrimonial: "Tipo de número patrimonial",
+    precisao: "Precisão da data",
+    numeroAnterior: "Número anterior",
+    numeroNovo: "Número novo",
+    fonteId: "UUID da fonte",
+    ordenacao: "Ordenação",
+    busca: "Busca",
+    base: "Base do período",
+    setorOrigem: "Setor de origem",
+    setorDestino: "Setor de destino",
+    salaAtual: "Sala cadastral atual",
+    semNumeroOficial: "Bens sem número oficial",
+    valorLiquidoAnterior: "Líquido anterior (R$)",
   };
   return (
     especiais[campo] ??
@@ -67,6 +93,65 @@ export function textoRelatorio(v: unknown): string {
           `${rotuloRelatorio(k)}: ${x === null && ["brutoAtual", "acumuladoAtual", "liquidoAtual"].includes(k) ? "Total indisponível" : textoRelatorio(x)}`,
       )
       .join("; ");
+  if (typeof v === "string") {
+    const enums: Record<string, string> = {
+      ATIVO: "Ativo",
+      BAIXADO: "Baixado",
+      EMPRESTADO: "Emprestado",
+      EM_MANUTENCAO: "Em manutenção",
+      OFICIAL: "Oficial",
+      SEM_NUMERO_OFICIAL: "Sem número oficial",
+      NUMERO: "Número patrimonial",
+      TOMBAMENTO: "Data de tombamento",
+      PENDENTE: "Pendente",
+      RETORNADO: "Retornado",
+      DEVOLVIDO: "Devolvido",
+      CORRECAO_INVENTARIO: "Correção de inventário",
+      COMUM: "Comum",
+      REGISTRO: "Registro",
+      REFERENCIA: "Referência",
+      ENVIO: "Envio",
+      RETORNO: "Retorno",
+      SAIDA: "Saída",
+      PREVISAO: "Previsão",
+      VERIFICADO: "Verificado",
+      CORRETO: "Correto",
+      DIVERGENCIA: "Divergência",
+      NAO_LOCALIZADO: "Não localizado",
+      CORRIGIDO: "Corrigido",
+      PRIMEIRO_PARAMETRO: "Primeiro parâmetro",
+      NAO_INFORMADO_LEGADO: "Não informado no registro legado",
+      REGISTRADO: "Registrado",
+      SIM: "Sim",
+      NAO: "Não",
+      true: "Sim",
+      false: "Não",
+      SUBSTITUICAO_NUMERO: "Substituição de número",
+      TRANSFERENCIA: "Transferência",
+      REAVALIACAO: "Reavaliação",
+      DEPRECIACAO: "Depreciação",
+      EMPRESTIMO: "Empréstimo",
+      DEVOLUCAO: "Devolução",
+      BAIXA: "Baixa",
+      ENVIO_MANUTENCAO: "Envio para manutenção",
+      REVISAO_ORCAMENTO: "Revisão de orçamento",
+      RETORNO_MANUTENCAO: "Retorno da manutenção",
+      CONFERENCIA_INVENTARIO: "Conferência de inventário",
+      LOCALIZACAO_POSTERIOR: "Localização posterior",
+      CORRECAO_LOCALIZACAO: "Correção de localização",
+      DIA: "Dia",
+      INSTANTE: "Instante",
+      DESCONHECIDA: "Desconhecida",
+      ADMINISTRADOR: "Administrador",
+      DIRETOR_PATRIMONIO: "Diretor de Patrimônio",
+    };
+    if (enums[v]) return enums[v];
+    if (/^[A-Z_]+$/.test(v) && v.includes("_"))
+      return v
+        .toLocaleLowerCase("pt-BR")
+        .replaceAll("_", " ")
+        .replace(/^./, (c) => c.toLocaleUpperCase("pt-BR"));
+  }
   if (typeof v === "string" && /^-?\d+\.\d{7}$/.test(v)) {
     const [a, b] = v.split(".");
     return `${a!.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${b}`;
