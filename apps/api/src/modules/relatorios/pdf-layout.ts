@@ -18,6 +18,273 @@ type Consulta = {
   avisos: string[];
 };
 type Celula = { rotulo: string; linhas: string[] };
+type Coluna = {
+  campo: string;
+  titulo: string;
+  peso: number;
+  direita?: boolean;
+};
+const tabelas: Partial<Record<TipoRelatorio, Coluna[]>> = {
+  patrimonios: [
+    { campo: "numeroPatrimonio", titulo: "Patrimônio / código", peso: 0.19 },
+    { campo: "descricao", titulo: "Descrição", peso: 0.31 },
+    { campo: "setorAtual", titulo: "Setor atual", peso: 0.24 },
+    {
+      campo: "valorLiquidoAtual",
+      titulo: "Líquido atual (R$)",
+      peso: 0.26,
+      direita: true,
+    },
+  ],
+  movimentacoes: [
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.13 },
+    { campo: "descricao", titulo: "Descrição atual", peso: 0.25 },
+    { campo: "setorOrigem", titulo: "Origem", peso: 0.19 },
+    { campo: "setorDestino", titulo: "Destino", peso: 0.19 },
+    { campo: "dataTransferencia", titulo: "Transferência", peso: 0.16 },
+    { campo: "origem", titulo: "Natureza", peso: 0.08 },
+  ],
+  manutencoes: [
+    { campo: "requisicao", titulo: "Requisição", peso: 0.14 },
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.13 },
+    { campo: "fornecedor", titulo: "Fornecedor", peso: 0.22 },
+    { campo: "situacao", titulo: "Situação", peso: 0.13 },
+    { campo: "dataEnvio", titulo: "Envio", peso: 0.12 },
+    {
+      campo: "valorOrcamento",
+      titulo: "Orçamento (R$)",
+      peso: 0.26,
+      direita: true,
+    },
+  ],
+  depreciacoes: [
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.13 },
+    { campo: "descricao", titulo: "Descrição atual", peso: 0.21 },
+    { campo: "competencia", titulo: "Competência", peso: 0.12 },
+    {
+      campo: "valorContabilAnterior",
+      titulo: "Líquido anterior (R$)",
+      peso: 0.18,
+      direita: true,
+    },
+    {
+      campo: "valorDepreciado",
+      titulo: "Quota (R$)",
+      peso: 0.18,
+      direita: true,
+    },
+    {
+      campo: "valorContabilNovo",
+      titulo: "Líquido posterior (R$)",
+      peso: 0.18,
+      direita: true,
+    },
+  ],
+  "pendencias-depreciacao": [
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.14 },
+    { campo: "descricao", titulo: "Descrição atual", peso: 0.28 },
+    { campo: "competenciaEsperada", titulo: "Competência esperada", peso: 0.2 },
+    {
+      campo: "quantidadePendencias",
+      titulo: "Pendências",
+      peso: 0.14,
+      direita: true,
+    },
+    {
+      campo: "quotaPrevista",
+      titulo: "Quota prevista (R$)",
+      peso: 0.24,
+      direita: true,
+    },
+  ],
+  reavaliacoes: [
+    { campo: "numeroSnapshot", titulo: "Número no evento", peso: 0.15 },
+    { campo: "descricaoSnapshot", titulo: "Descrição no evento", peso: 0.25 },
+    { campo: "dataReferencia", titulo: "Referência", peso: 0.12 },
+    {
+      campo: "valorLiquidoAnterior",
+      titulo: "Líquido anterior (R$)",
+      peso: 0.24,
+      direita: true,
+    },
+    {
+      campo: "valorReavaliado",
+      titulo: "Novo bruto (R$)",
+      peso: 0.24,
+      direita: true,
+    },
+  ],
+  inventarios: [
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.14 },
+    { campo: "descricao", titulo: "Descrição atual", peso: 0.24 },
+    { campo: "setorEsperado", titulo: "Setor esperado", peso: 0.19 },
+    { campo: "setorEncontrado", titulo: "Setor encontrado", peso: 0.19 },
+    { campo: "verificacao", titulo: "Conferência", peso: 0.12 },
+    { campo: "situacao", titulo: "Situação", peso: 0.12 },
+  ],
+  emprestimos: [
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.13 },
+    { campo: "destinatario", titulo: "Destinatário", peso: 0.25 },
+    { campo: "dataSaida", titulo: "Saída", peso: 0.13 },
+    { campo: "previsao", titulo: "Previsão", peso: 0.13 },
+    { campo: "dataDevolucao", titulo: "Devolução", peso: 0.14 },
+    { campo: "situacao", titulo: "Situação", peso: 0.22 },
+  ],
+  baixas: [
+    { campo: "numeroPatrimonio", titulo: "Bem", peso: 0.13 },
+    { campo: "descricao", titulo: "Descrição atual", peso: 0.25 },
+    { campo: "dataBaixa", titulo: "Baixa", peso: 0.14 },
+    { campo: "tipo", titulo: "Tipo", peso: 0.17 },
+    { campo: "motivo", titulo: "Motivo", peso: 0.31 },
+  ],
+};
+const detalhesPorTipo: Partial<Record<TipoRelatorio, string[]>> = {
+  patrimonios: [
+    "tipoNumeroPatrimonial",
+    "especie",
+    "natureza",
+    "salaAtual",
+    "responsavelAtual",
+    "status",
+    "dataTombamento",
+    "valorIncorporacao",
+    "valorBrutoAtual",
+    "depreciacaoAcumuladaAtual",
+  ],
+  movimentacoes: [
+    "comissao",
+    "autor",
+    "registroEm",
+    "observacao",
+    "inventarioId",
+  ],
+  manutencoes: [
+    "descricao",
+    "pedidoId",
+    "tipo",
+    "previsaoRetorno",
+    "dataRetorno",
+    "valorRealizado",
+    "versaoOrcamento",
+    "servico",
+    "garantia",
+    "vencimentoGarantia",
+    "comissao",
+  ],
+  depreciacoes: ["processamento", "comissao", "autor"],
+  "pendencias-depreciacao": [
+    "status",
+    "primeiraCompetencia",
+    "ultimaCompetenciaProcessada",
+    "valorLiquidoAtual",
+    "valorResidual",
+  ],
+  reavaliacoes: [
+    "numeroPatrimonioAtual",
+    "descricaoAtual",
+    "dataReavaliacao",
+    "valorBrutoAnterior",
+    "depreciacaoAcumuladaAnterior",
+    "valorResidualAnterior",
+    "valorResidualNovo",
+    "vidaUtilAnteriorMeses",
+    "vidaUtilNovaMeses",
+    "comissaoSnapshot",
+    "autorSnapshot",
+    "comissaoAtual",
+    "autorAtual",
+    "laudo",
+    "observacao",
+    "parametroAnteriorSituacao",
+    "parametroAnteriorId",
+  ],
+  inventarios: [
+    "inventario",
+    "statusInventario",
+    "dataVerificacao",
+    "autorVerificacao",
+    "statusNaVerificacao",
+    "ausenciaJustificada",
+    "correcao",
+    "tipoCorrecao",
+    "dataCorrecao",
+    "autorCorrecao",
+    "localizacaoId",
+    "dataLocalizacao",
+    "setorLocalizacao",
+    "autorLocalizacao",
+    "correcaoPosterior",
+    "tipoCorrecaoPosterior",
+    "dataCorrecaoPosterior",
+    "autorCorrecaoPosterior",
+  ],
+  emprestimos: [
+    "descricao",
+    "grupoId",
+    "modoAgrupamento",
+    "finalidade",
+    "setorVinculo",
+    "emAtraso",
+    "comissaoSaida",
+    "autorSaida",
+    "comissaoDevolucao",
+    "autorDevolucao",
+    "observacao",
+  ],
+  baixas: ["comissao", "autor", "registroEm", "observacao"],
+};
+const referenciasPorTipo: Partial<Record<TipoRelatorio, string[]>> = {
+  patrimonios: ["id", "patrimonioId"],
+  movimentacoes: ["id", "patrimonioId"],
+  manutencoes: ["id", "patrimonioId"],
+  depreciacoes: ["id", "patrimonioId", "parametroId"],
+  "pendencias-depreciacao": ["id", "patrimonioId"],
+  reavaliacoes: ["id", "patrimonioId"],
+  inventarios: [
+    "id",
+    "patrimonioId",
+    "inventarioId",
+    "emprestimoId",
+    "manutencaoItemId",
+    "transferenciaCorrecaoId",
+    "transferenciaPosteriorId",
+  ],
+  emprestimos: ["id", "patrimonioId", "devolucaoId"],
+  baixas: ["id", "patrimonioId"],
+};
+const indicadores: Partial<Record<TipoRelatorio, string[]>> = {
+  patrimonios: ["quantidade", "liquidoAtual", "semNumeroOficial"],
+  movimentacoes: ["quantidade", "bensDistintos"],
+  manutencoes: ["quantidade", "pendentes", "realizadoConhecido"],
+  depreciacoes: ["quantidade", "bensDistintos", "quotas"],
+  "pendencias-depreciacao": [
+    "quantidade",
+    "bensDistintos",
+    "quantidadeCompetencias",
+  ],
+  reavaliacoes: ["quantidade", "bensDistintos", "semReferencia"],
+  inventarios: ["quantidade", "pendentes", "divergentes"],
+  emprestimos: ["quantidade", "pendentes", "atrasados"],
+  baixas: ["quantidade"],
+};
+const camposEventoFicha: Record<string, string[]> = {
+  SUBSTITUICAO_NUMERO: ["numeroAnterior", "numeroNovo"],
+  REVISAO_ORCAMENTO: ["itemId", "versao", "descricao", "valor", "fornecedor"],
+};
+const tipoAtributosFicha: Record<string, TipoRelatorio> = {
+  TRANSFERENCIA: "movimentacoes",
+  REAVALIACAO: "reavaliacoes",
+  DEPRECIACAO: "depreciacoes",
+  EMPRESTIMO: "emprestimos",
+  DEVOLUCAO: "emprestimos",
+  BAIXA: "baixas",
+  ENVIO_MANUTENCAO: "manutencoes",
+  RETORNO_MANUTENCAO: "manutencoes",
+  CONFERENCIA_INVENTARIO: "inventarios",
+  CORRECAO_INVENTARIO: "inventarios",
+  LOCALIZACAO_POSTERIOR: "inventarios",
+  CORRECAO_LOCALIZACAO: "inventarios",
+};
 const azul = "#17365b",
   tinta = "#24364b",
   cinza = "#526278",
@@ -28,7 +295,7 @@ export class LayoutRelatorioPdf {
   private y = 0;
   private paginas = 0;
   private contexto = "";
-  private tabela = false;
+  private colunasAtivas: Coluna[] | undefined;
   private readonly largura: number;
   constructor(
     private readonly doc: PDFKit.PDFDocument,
@@ -38,7 +305,8 @@ export class LayoutRelatorioPdf {
     private readonly signal: AbortSignal | undefined,
     private readonly conferirStream: () => void,
   ) {
-    this.largura = tipo === "ficha-bem" ? 523.28 : 769.89;
+    this.largura =
+      tipo === "ficha-bem" || tipo === "patrimonios" ? 523.28 : 769.89;
   }
 
   private conferir() {
@@ -119,31 +387,43 @@ export class LayoutRelatorioPdf {
     this.conferir();
     if (++this.paginas > LimitesRelatorios.paginasPdf) throw limiteRelatorio();
     this.doc.addPage();
-    this.doc.image(
-      path.join(
-        __dirname,
-        ...(path.basename(__dirname) === "dist"
-          ? ["modules", "relatorios", "assets"]
-          : ["assets"]),
-        "brasao.png",
-      ),
-      36,
-      25,
-      { fit: [34, 38] },
-    );
-    this.fonte(9, true, cinza);
-    this.texto(
-      "SIPAT | Câmara Municipal de Patos de Minas",
-      82,
-      26,
-      this.largura - 46,
-    );
-    this.fonte(19, true, azul);
-    this.texto(titulosRelatorios[this.tipo], 82, 43, this.largura - 46);
-    this.doc.rect(36, 74, this.largura, 2).fill(azul);
     this.y = 89;
-    if (this.contexto) this.faixa(this.contexto + " | continuação", true);
-    if (this.tabela) this.cabecalhoDepreciacoes();
+    if (this.contexto) {
+      this.fonte(8, true, azul);
+      this.texto(
+        `SIPAT · Câmara Municipal de Patos de Minas · ${titulosRelatorios[this.tipo]}`,
+        36,
+        this.y,
+        this.largura,
+      );
+      this.y += 16;
+      this.faixa(this.contexto + " | continuação", true);
+    }
+    if (this.colunasAtivas) this.cabecalhoTabela(this.colunasAtivas);
+  }
+  cabecalhos() {
+    const range = this.doc.bufferedPageRange();
+    const brasao = path.join(
+      __dirname,
+      ...(path.basename(__dirname) === "dist"
+        ? ["modules", "relatorios", "assets"]
+        : ["assets"]),
+      "brasao.png",
+    );
+    for (let i = range.start; i < range.start + range.count; i++) {
+      this.doc.switchToPage(i);
+      this.doc.image(brasao, 36, 25, { fit: [34, 38] });
+      this.fonte(9, true, cinza);
+      this.texto(
+        "SIPAT | Câmara Municipal de Patos de Minas",
+        82,
+        26,
+        this.largura - 46,
+      );
+      this.fonte(19, true, azul);
+      this.texto(titulosRelatorios[this.tipo], 82, 43, this.largura - 46);
+      this.doc.rect(36, 74, this.largura, 2).fill(azul);
+    }
   }
   private faixa(titulo: string, clara = false) {
     this.doc
@@ -234,154 +514,322 @@ export class LayoutRelatorioPdf {
     }
     this.y += 8;
   }
-  private cabecalhoDepreciacoes() {
-    const larguras = this.colunasDepreciacoes();
-    this.doc.rect(36, this.y, this.largura, 29).fill(azul);
-    this.fonte(8, true, "#ffffff");
-    let x = 44;
-    [
-      "Bem / descrição atual",
-      "Competência",
-      "Líquido anterior (R$)",
-      "Quota processada (R$)",
-      "Líquido posterior (R$)",
-    ].forEach((t, i) => {
-      this.texto(t, x, this.y + 10, larguras[i]! - 16, i >= 2);
-      x += larguras[i]!;
-    });
-    this.y += 29;
+  private cabecalhoTabela(colunas: Coluna[]) {
+    this.doc.rect(36, this.y, this.largura, 30).fill("#eaf0f7");
+    this.fonte(8, true, azul);
+    let x = 36;
+    for (const coluna of colunas) {
+      const largura = this.largura * coluna.peso;
+      const titulo = coluna.titulo;
+      this.texto(titulo, x + 7, this.y + 10, largura - 14, coluna.direita);
+      x += largura;
+    }
+    this.y += 30;
   }
-  private colunasDepreciacoes() {
-    return [this.largura - 484, 76, 136, 136, 136];
+  private async tabelaRegistros(
+    linhas: readonly Registro[],
+    colunas: Coluna[],
+  ) {
+    if (this.y + 55 > this.fim) this.novaPagina();
+    this.contexto = "Registros selecionados";
+    this.fonte(11, true, azul);
+    this.texto("Registros selecionados", 36, this.y, this.largura);
+    this.y += 23;
+    this.colunasAtivas = colunas;
+    this.cabecalhoTabela(colunas);
+    for (let indice = 0; indice < linhas.length; indice++) {
+      this.conferir();
+      const registro = linhas[indice]!;
+      this.contexto = `Registro ${indice + 1} de ${linhas.length} — ${textoRelatorio(registro.numeroPatrimonio ?? registro.numeroPatrimonioAtual ?? registro.numeroSnapshot ?? "sem número")}`;
+      const celulas = await Promise.all(
+        colunas.map(async (c) => {
+          const valor = registro[c.campo];
+          const conteudo =
+            valor === null && c.campo === "valorLiquidoAtual"
+              ? "Indisponível"
+              : textoRelatorio(valor);
+          return this.linhas(conteudo, this.largura * c.peso - 14, 8.5);
+        }),
+      );
+      const total = Math.max(...celulas.map((c) => c.length));
+      let deslocamento = 0;
+      while (deslocamento < total) {
+        if (this.y + 25 > this.fim) this.novaPagina();
+        const cabem = Math.min(
+          total - deslocamento,
+          Math.max(1, Math.floor((this.fim - this.y - 12) / 11)),
+        );
+        const altura = Math.max(28, cabem * 11 + 12);
+        if (indice % 2 === 1)
+          this.doc.rect(36, this.y, this.largura, altura).fill("#f7f9fc");
+        let x = 36;
+        for (let c = 0; c < colunas.length; c++) {
+          const coluna = colunas[c]!;
+          const largura = this.largura * coluna.peso;
+          this.fonte(8.5, false, tinta);
+          celulas[c]!.slice(deslocamento, deslocamento + cabem).forEach(
+            (texto, i) =>
+              this.texto(
+                texto,
+                x + 7,
+                this.y + 7 + i * 11,
+                largura - 14,
+                coluna.direita,
+              ),
+          );
+          x += largura;
+        }
+        this.doc
+          .moveTo(36, this.y + altura)
+          .lineTo(36 + this.largura, this.y + altura)
+          .lineWidth(0.4)
+          .strokeColor(borda)
+          .stroke();
+        this.y += altura;
+        deslocamento += cabem;
+        if (deslocamento < total) this.novaPagina();
+      }
+      if (indice % 32 === 0) await setImmediate();
+    }
+    this.colunasAtivas = undefined;
+    this.contexto = "";
+    this.y += 10;
   }
-  private async depreciacao(registro: Registro, indice: number, total: number) {
-    const larguras = this.colunasDepreciacoes();
-    const titulo = `Bem ${textoRelatorio(registro.numeroPatrimonio)} | lançamento ${indice + 1}/${total}`;
-    const corpo = [
-      await this.linhas(registro.descricao, larguras[0]! - 16),
-      await this.linhas(registro.competencia, larguras[1]! - 16),
-      await this.linhas(registro.valorContabilAnterior, larguras[2]! - 16),
-      await this.linhas(registro.valorDepreciado, larguras[3]! - 16, 9, true),
-      await this.linhas(registro.valorContabilNovo, larguras[4]! - 16),
-    ];
-    const detalhes = await this.linhas(
-      `Processado em (São Paulo): ${textoRelatorio(registro.processamento)} | Comissão: ${textoRelatorio(registro.comissao)} | Autor: ${textoRelatorio(registro.autor)}`,
-      this.largura - 16,
-      8,
+  private async detalhesRegistros(linhas: readonly Registro[]) {
+    const campos = detalhesPorTipo[this.tipo] ?? [];
+    const referencias = referenciasPorTipo[this.tipo] ?? [];
+    if (!campos.length) return;
+    const alturaRegistro = async (registro: Registro) => {
+      let altura = 85;
+      for (const campo of campos.filter((campo) => campo in registro)) {
+        altura +=
+          (
+            await this.linhas(
+              `${rotuloRelatorio(campo)}: ${textoRelatorio(registro[campo])}`,
+              this.largura - 14,
+              9,
+            )
+          ).length *
+            13 +
+          5;
+      }
+      return altura;
+    };
+    const primeiraAltura = linhas[0] ? await alturaRegistro(linhas[0]) : 35;
+    if (this.y + Math.min(primeiraAltura + 20, this.fim - 155) > this.fim)
+      this.novaPagina();
+    this.fonte(11, true, azul);
+    this.texto("Informações complementares", 36, this.y, this.largura);
+    this.y += 20;
+    for (let i = 0; i < linhas.length; i++) {
+      const registro = linhas[i]!;
+      const numero =
+        registro.numeroPatrimonio ??
+        registro.numeroPatrimonioAtual ??
+        registro.numeroSnapshot;
+      const titulo = `${i + 1}. ${numero ? `Bem ${textoRelatorio(numero)}` : "Registro"}`;
+      const altura = await alturaRegistro(registro);
+      if (this.y + Math.min(altura, this.fim - 155) > this.fim) {
+        this.contexto = "Informações complementares";
+        this.novaPagina();
+      }
+      this.contexto = titulo;
+      this.fonte(9, true, azul);
+      this.texto(titulo, 36, this.y, this.largura);
+      this.y += 16;
+      const presentes = campos.filter((campo) => campo in registro);
+      const financeiros = presentes.filter((campo) =>
+        /^(valor|depreciacaoAcumulada)/.test(campo),
+      );
+      const cadastrais = presentes.filter(
+        (campo) => !financeiros.includes(campo),
+      );
+      for (const [subtitulo, grupo] of [
+        ["Dados complementares", cadastrais],
+        ["Valores contábeis e financeiros", financeiros],
+      ] as const) {
+        if (!grupo.length) continue;
+        if (this.y + 42 > this.fim) this.novaPagina();
+        if (financeiros.length && cadastrais.length) {
+          this.fonte(8, true, cinza);
+          this.texto(subtitulo, 36, this.y, this.largura);
+          this.y += 15;
+        }
+        await this.lista(
+          grupo.map(
+            (campo) =>
+              `${rotuloRelatorio(campo)}: ${textoRelatorio(registro[campo])}`,
+          ),
+        );
+      }
+      const porValor = new Map<string, string[]>();
+      for (const campo of referencias) {
+        if (registro[campo] === null || registro[campo] === undefined) continue;
+        const valor = textoRelatorio(registro[campo]);
+        porValor.set(valor, [
+          ...(porValor.get(valor) ?? []),
+          rotuloRelatorio(campo),
+        ]);
+      }
+      const refs = [...porValor].map(
+        ([valor, rotulos]) => `${rotulos.join(" / ")}: ${valor}`,
+      );
+      if (refs.length)
+        await this.paragrafo(`Referências: ${refs.join(" · ")}`, 7.5, cinza);
+      this.doc
+        .moveTo(36, this.y)
+        .lineTo(36 + this.largura, this.y)
+        .lineWidth(0.4)
+        .strokeColor(borda)
+        .stroke();
+      this.y += 11;
+      if (i % 16 === 0) {
+        await setImmediate();
+        this.conferir();
+      }
+    }
+    this.contexto = "";
+  }
+  private async lista(itens: string[]) {
+    for (const item of itens) {
+      const linhas = await this.linhas(item, this.largura - 14, 9);
+      const altura = linhas.length * 13 + 5;
+      // Um tópico curto acompanha seu valor; somente textos maiores que uma página são divididos.
+      if (altura <= this.fim - 155 && this.y + altura > this.fim)
+        this.novaPagina();
+      for (let i = 0; i < linhas.length; i++) {
+        if (this.y + 13 > this.fim) this.novaPagina();
+        this.fonte(9, false, tinta);
+        if (i === 0) this.texto("•", 38, this.y, 10);
+        this.texto(linhas[i]!, 50, this.y, this.largura - 14);
+        this.y += 13;
+      }
+      this.y += 5;
+      await setImmediate();
+      this.conferir();
+    }
+    this.y += 4;
+  }
+  private async cadastroFicha(cadastro: Registro) {
+    await this.paragrafo(
+      "Cadastro atual: valores e localização na consulta; não representam posição em data passada.",
     );
-    const referencias = await this.linhas(
-      `Registro: ${textoRelatorio(registro.id)} | Bem (UUID): ${textoRelatorio(registro.patrimonioId)} | Parâmetro: ${textoRelatorio(registro.parametroId)}`,
-      this.largura - 16,
+    const secoes: [string, string[]][] = [
+      [
+        "Identificação cadastral",
+        [
+          "numeroPatrimonio",
+          "tipoNumeroPatrimonial",
+          "descricao",
+          "marca",
+          "modelo",
+          "serie",
+          "especie",
+          "natureza",
+          "status",
+          "dataTombamento",
+        ],
+      ],
+      [
+        "Localização e aquisição atuais",
+        ["setorAtual", "salaAtual", "responsavelAtual", "processo"],
+      ],
+      [
+        "Valores e depreciação atuais",
+        [
+          "valorIncorporacao",
+          "valorBrutoAtual",
+          "depreciacaoAcumuladaAtual",
+          "valorLiquidoAtual",
+          "parametro",
+        ],
+      ],
+    ];
+    for (const [titulo, campos] of secoes) {
+      if (this.y + 55 > this.fim) this.novaPagina();
+      this.contexto = titulo;
+      this.faixa(titulo, true);
+      await this.grade(
+        await this.preparar(
+          campos
+            .filter((campo) => campo in cadastro)
+            .map(
+              (campo) =>
+                [rotuloRelatorio(campo), cadastro[campo]] as [string, unknown],
+            ),
+          2,
+        ),
+        2,
+      );
+      this.contexto = "";
+    }
+    await this.paragrafo(
+      `Referências do cadastro: ${["id", "patrimonioId", "processoId"]
+        .filter((campo) => cadastro[campo])
+        .map(
+          (campo) =>
+            `${rotuloRelatorio(campo)}: ${textoRelatorio(cadastro[campo])}`,
+        )
+        .join(" · ")}`,
       7.5,
     );
-    const n = Math.max(...corpo.map((c) => c.length));
-    const altura =
-      25 + n * 12 + detalhes.length * 11 + referencias.length * 10 + 13;
-    if (!this.tabela) {
-      if (this.y + 29 + Math.min(altura, this.fim - 118) > this.fim)
-        this.novaPagina();
-      this.tabela = true;
-      this.cabecalhoDepreciacoes();
-    }
-    // Mantém o lançamento inteiro quando ele cabe em uma página. Textos maiores continuam identificados.
-    if (this.y + Math.min(altura, this.fim - 118) > this.fim) this.novaPagina();
-    this.contexto = titulo;
-    let linha = 0;
-    while (linha < n) {
-      if (this.y + 42 > this.fim) this.novaPagina();
-      const cabem = Math.min(
-        n - linha,
-        Math.floor((this.fim - this.y - 29) / 12),
-      );
-      const alturaCorpo = 25 + cabem * 12;
-      this.doc
-        .rect(36, this.y, this.largura, alturaCorpo)
-        .fill(indice % 2 ? "#f0f4f9" : "#f9fbfd");
-      this.fonte(10, true, azul);
-      this.texto(titulo, 44, this.y + 7, this.largura - 16);
-      let x = 44;
-      for (let c = 0; c < corpo.length; c++) {
-        this.fonte(9, c === 3, c === 3 ? azul : tinta);
-        corpo[c]!.slice(linha, linha + cabem).forEach((v, i) =>
-          this.texto(v, x, this.y + 24 + i * 12, larguras[c]! - 16, c >= 2),
-        );
-        x += larguras[c]!;
-      }
-      this.y += alturaCorpo;
-      linha += cabem;
-      if (linha < n) this.novaPagina();
-    }
-    for (const [linhas, tamanho] of [
-      [detalhes, 8],
-      [referencias, 7.5],
-    ] as const) {
-      for (const linha of linhas) {
-        if (this.y + 12 > this.fim) this.novaPagina();
-        this.fonte(tamanho, false, cinza);
-        this.texto(linha, 44, this.y + 2, this.largura - 16);
-        this.y += 11;
-      }
-    }
-    this.y += 7;
-    this.doc
-      .moveTo(36, this.y)
-      .lineTo(36 + this.largura, this.y)
-      .lineWidth(0.5)
-      .strokeColor(borda)
-      .stroke();
-    this.y += 8;
-    this.contexto = "";
-    await setImmediate();
-    this.conferir();
   }
-  private async registro(
-    registro: Registro,
-    indice: number,
-    total: number,
-    cadastro?: Registro,
-  ) {
-    const numero =
-      registro.numeroPatrimonio ??
-      registro.numeroPatrimonioAtual ??
-      cadastro?.numeroPatrimonio;
-    const titulo = `${numero ? `Bem ${textoRelatorio(numero)} | ` : ""}${this.tipo === "ficha-bem" ? "Evento" : "Registro"} ${indice + 1} de ${total}`;
-    const descricao = registro.descricao ?? registro.descricaoAtual;
-    const detalhes = Object.fromEntries(
-      Object.entries(registro).filter(
-        ([k]) =>
-          ![
-            "descricao",
-            "descricaoAtual",
-            "numeroPatrimonio",
-            "numeroPatrimonioAtual",
-          ].includes(k),
+  private async eventoFicha(evento: Registro, indice: number, total: number) {
+    const tipo = String(evento.tipo ?? "EVENTO");
+    const titulo = `${indice + 1} de ${total} · ${textoRelatorio(tipo)} · ${textoRelatorio(evento.ocorrencia)}`;
+    this.contexto = titulo;
+    if (this.y + 65 > this.fim) this.novaPagina();
+    this.faixa(titulo, true);
+    await this.lista(
+      ["precisao", "registroEm", "autor", "comissao"].map(
+        (campo) =>
+          `${rotuloRelatorio(campo)}: ${textoRelatorio(evento[campo])}`,
       ),
     );
-    const entradas = this.entradas(detalhes);
-    // UUIDs vêm depois das informações de negócio, mantendo a rastreabilidade.
-    entradas.sort(
-      ([a], [b]) =>
-        Number(a.includes("UUID") || a.endsWith(" Id")) -
-        Number(b.includes("UUID") || b.endsWith(" Id")),
+    const atributos = (evento.atributos ?? {}) as Registro;
+    const tipoTabular = tipoAtributosFicha[tipo];
+    const campos =
+      camposEventoFicha[tipo] ??
+      (tipoTabular
+        ? [
+            ...tabelas[tipoTabular]!.map((coluna) => coluna.campo),
+            ...(detalhesPorTipo[tipoTabular] ?? []),
+            ...(referenciasPorTipo[tipoTabular] ?? []),
+          ]
+        : []);
+    const unicos = [...new Set(campos)];
+    const dados = unicos
+      .filter(
+        (campo) =>
+          campo in atributos && !campo.endsWith("Id") && campo !== "id",
+      )
+      .map(
+        (campo) =>
+          `${rotuloRelatorio(campo)}: ${textoRelatorio(atributos[campo])}`,
+      );
+    if (dados.length) await this.lista(dados);
+    const refs = ["id", "patrimonioId", "fonteId"]
+      .filter((campo) => evento[campo])
+      .map(
+        (campo) =>
+          `${rotuloRelatorio(campo)}: ${textoRelatorio(evento[campo])}`,
+      );
+    refs.push(
+      ...unicos
+        .filter(
+          (campo) =>
+            campo in atributos &&
+            campo.endsWith("Id") &&
+            campo !== "patrimonioId",
+        )
+        .filter((campo) => atributos[campo] !== null)
+        .map(
+          (campo) =>
+            `${rotuloRelatorio(campo)}: ${textoRelatorio(atributos[campo])}`,
+        ),
     );
-    const colunas = this.tipo === "ficha-bem" ? 2 : 3;
-    const grade = await this.preparar(entradas, colunas);
-    const altura =
-      65 +
-      grade.reduce(
-        (s, r) => s + 31 + Math.max(...r.map((c) => c.linhas.length)) * 12,
-        0,
-      );
-    if (this.y + Math.min(altura, this.fim - 89) > this.fim) this.novaPagina();
-    this.contexto = titulo;
-    this.faixa(titulo);
-    if (descricao !== undefined)
-      await this.paragrafo(
-        `Descrição cadastral atual: ${textoRelatorio(descricao)}`,
-        10,
-        tinta,
-      );
-    await this.grade(grade, colunas);
+    if (refs.length)
+      await this.paragrafo(`Referências: ${refs.join(" · ")}`, 7.5, cinza);
     this.contexto = "";
   }
   async conteudo(
@@ -392,18 +840,38 @@ export class LayoutRelatorioPdf {
   ) {
     this.novaPagina();
     await this.paragrafo(
-      `Emitido em ${textoRelatorio(this.consulta.instante)} (São Paulo) | ${usuario.nome} | ${usuario.perfil}`,
+      `Emitido em ${textoRelatorio(this.consulta.instante)} (São Paulo) | ${usuario.nome} | ${textoRelatorio(usuario.perfil)}`,
     );
-    this.contexto = "Identificação da consulta";
+    this.contexto = "Filtros aplicados";
+    if (this.y + 55 > this.fim) this.novaPagina();
+    this.faixa("Filtros aplicados", true);
     await this.paragrafo(
-      `Filtros: ${Object.keys(this.consulta.filtros).length ? textoRelatorio(this.consulta.filtros) : "Sem filtros opcionais"}`,
+      Object.keys(this.consulta.filtros).length
+        ? textoRelatorio(this.consulta.filtros)
+        : "Sem filtros opcionais",
     );
     await this.paragrafo(
-      `Critério temporal: ${this.consulta.criterioTemporal} Ordenação: ${this.consulta.ordenacao}`,
+      `Critério temporal: ${this.consulta.criterioTemporal} Ordenação: ${this.consulta.ordenacao.replace(/\bNUMERO\b/g, "número patrimonial").replace(/\bTOMBAMENTO\b/g, "data de tombamento")}`,
     );
     this.faixa("Resumo do conjunto filtrado", true);
     const { porCompetencia, porTipo, ...totais } = resumo;
-    await this.grade(await this.preparar(this.entradas(totais)), 3, true);
+    const principais = indicadores[this.tipo] ?? ["quantidade"];
+    const destaque = Object.fromEntries(
+      principais
+        .filter((campo) => campo in totais)
+        .map((campo) => [campo, totais[campo]]),
+    );
+    const complementares = Object.fromEntries(
+      Object.entries(totais).filter(([campo]) => !principais.includes(campo)),
+    );
+    if (Object.keys(destaque).length)
+      await this.grade(await this.preparar(this.entradas(destaque)), 3, true);
+    if (Object.keys(complementares).length)
+      await this.paragrafo(
+        `Outros totais: ${textoRelatorio(complementares)}`,
+        8,
+        cinza,
+      );
     for (const [rotulo, dados] of [
       ["Por competência", porCompetencia],
       ["Por tipo", porTipo],
@@ -419,10 +887,7 @@ export class LayoutRelatorioPdf {
     );
     this.contexto = "";
     if (cadastro) {
-      await this.paragrafo(
-        "Cadastro atual: valores e localização na consulta; não representam posição em data passada.",
-      );
-      await this.registro(cadastro, 0, 1, cadastro);
+      await this.cadastroFicha(cadastro);
     }
     if (!linhas.length) {
       if (this.y + 65 > this.fim) this.novaPagina();
@@ -432,10 +897,12 @@ export class LayoutRelatorioPdf {
       );
       return;
     }
-    for (let i = 0; i < linhas.length; i++) {
-      if (this.tipo === "depreciacoes")
-        await this.depreciacao(linhas[i]!, i, linhas.length);
-      else await this.registro(linhas[i]!, i, linhas.length, cadastro);
+    if (this.tipo === "ficha-bem") {
+      for (let i = 0; i < linhas.length; i++)
+        await this.eventoFicha(linhas[i]!, i, linhas.length);
+    } else {
+      await this.tabelaRegistros(linhas, tabelas[this.tipo]!);
+      await this.detalhesRegistros(linhas);
     }
   }
 }

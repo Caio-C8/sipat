@@ -55,7 +55,7 @@ describe("legibilidade e vínculo entre bem e valores no PDF", () => {
   }
   const service = () =>
     new RelatoriosPdfService({} as RelatoriosService, {} as FichaService);
-  it("mantém cada lançamento normal inteiro, com número, descrição, competência e valores na mesma página", async () => {
+  it("mantém número, descrição, competência e valores de cada lançamento na mesma linha tabular", async () => {
     const paginas = observar();
     const dados = Array.from({ length: 30 }, (_, i) => linha(i + 1));
     const pdf = await service().renderizar(
@@ -67,21 +67,24 @@ describe("legibilidade e vínculo entre bem e valores no PDF", () => {
       Date.now() + 20000,
     );
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
-    expect(paginas.size).toBeLessThanOrEqual(10);
+    expect(paginas.size).toBeLessThanOrEqual(15);
     for (let n = 1; n <= 30; n++) {
       const pagina = [...paginas.values()].find((p) =>
-        p.some((t) => t.texto === `Bem ${n} | lançamento ${n}/30`),
+        p.some((t) => t.texto.includes(`Computador número ${n} -`)),
       )!;
       expect(pagina).toBeDefined();
       const texto = pagina.map((t) => t.texto).join(" ");
+      expect(pagina.some((t) => t.texto === String(n))).toBe(true);
       expect(texto).toContain(`Computador número ${n} - descrição`);
       expect(texto).toContain(`${n},1234567`);
-      expect(texto).toContain(
-        `Registro: registro-${n} | Bem (UUID): uuid-bem-${n} | Parâmetro: parametro-${n}`,
-      );
       expect(texto).toContain("10/2026");
-      expect(texto).toContain("Quota processada (R$)");
+      expect(texto).toContain("Quota (R$)");
     }
+    expect(
+      [...paginas.values()]
+        .map((p) => p.map((t) => t.texto).join(" "))
+        .join(" "),
+    ).toContain("registro-30");
     for (const pagina of paginas.values())
       for (const t of pagina) {
         expect(t.x).toBeGreaterThanOrEqual(36);
@@ -111,12 +114,44 @@ describe("legibilidade e vínculo entre bem e valores no PDF", () => {
     expect(textos.join(" ")).toContain("MARCADOR-FINAL");
     expect(textos.join("").match(/X/g)?.length).toBe(2000);
     const primeiraPaginaDoBem = textos.findIndex((t) =>
-      t.includes("Bem 77 | lançamento 1/1"),
+      t.includes("Registros selecionados"),
     );
     for (const texto of textos.slice(primeiraPaginaDoBem + 1)) {
-      expect(texto).toContain("Bem 77 | lançamento 1/1 | continuação");
-      expect(texto).toContain("Quota processada (R$)");
+      if (texto.includes("Informações complementares")) continue;
+      expect(texto).toContain("continuação");
+      expect(texto).toContain(
+        "SIPAT · Câmara Municipal de Patos de Minas · Depreciações",
+      );
+      if (texto.includes("X")) expect(texto).toContain("Quota (R$)");
     }
+  });
+  it("apresenta detalhes em tópicos e agrupa UUIDs iguais sem perder seus rótulos", async () => {
+    const paginas = observar();
+    await service().renderizar(
+      "patrimonios",
+      [
+        {
+          id: "mesmo-uuid",
+          patrimonioId: "mesmo-uuid",
+          numeroPatrimonio: "SP-123",
+          descricao: "Bem de teste",
+          setorAtual: "Setor de teste",
+          valorLiquidoAtual: null,
+          especie: "Equipamento",
+          natureza: "Material permanente",
+          valorIncorporacao: "1000.1234567",
+        },
+      ],
+      { quantidade: 1 },
+      consulta,
+      usuario,
+      Date.now() + 20000,
+    );
+    const textos = [...paginas.values()].flat().map((t) => t.texto);
+    expect(textos.filter((t) => t === "•")).toHaveLength(3);
+    expect(textos.join(" ")).toContain("Valores contábeis e financeiros");
+    expect(textos.join(" ")).toContain("1.000,1234567");
+    expect(textos.join(" ").match(/mesmo-uuid/g)).toHaveLength(1);
   });
   it("produz vazio legível e não transforma datas civis em instantes", async () => {
     const paginas = observar();

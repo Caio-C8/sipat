@@ -147,14 +147,18 @@ existentes; não sobrescreve credenciais. A fixture JSON fica em test-results.
 
 PDFKit 0.20.2 está fixado no manifesto/lockfile. O build Nest copia o brasão
 para `dist/modules/relatorios/assets`; a imagem runner usa o mesmo asset local.
-O PDF destaca número e descrição de cada bem. Depreciações usam uma tabela
-com competência, líquido anterior, quota e líquido posterior na mesma linha;
-comissão, autor, processamento e referências ficam abaixo do respectivo
-lançamento. Os demais tipos usam blocos por registro e campos em grade,
-preservando todos os campos e a distinção entre cadastro atual e snapshots.
-Quebras repetem a identificação do bem/registro e os cabeçalhos; textos longos
-continuam sem corte. Datas civis e competências são formatadas em pt-BR;
-instantes usam America/Sao_Paulo. Valores mantêm as sete casas decimais.
+O PDF usa tabela com colunas próprias para cada um dos nove tipos tabulares,
+seguida de informações complementares e referências vinculadas à posição do
+registro. Os detalhes usam tópicos com recuo, um campo por item, e separam
+dados complementares de valores financeiros. Blocos que cabem em uma página
+são mantidos juntos; referências com UUID idêntico compartilham o mesmo valor,
+preservando seus rótulos. A relação de patrimônios e a ficha individual usam A4 retrato; os
+demais tipos tabulares usam paisagem. A ficha separa identificação, localização,
+valores atuais e eventos. Cabeçalhos e títulos de tabela são repetidos nas
+continuações; textos longos continuam sem corte. Datas civis e competências são
+formatadas em pt-BR; instantes usam America/Sao_Paulo. Valores mantêm as sete
+casas decimais. Filtros de cadastros têm rótulos obtidos no servidor durante a
+emissão; identificadores técnicos permanecem na seção de referências.
 
 ## Evidências e limitações
 
