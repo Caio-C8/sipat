@@ -36,6 +36,10 @@ import {
   useRelatorioPrevia,
   type RelatorioPreviaRequest,
 } from "../use-relatorio-previa";
+import {
+  relatorioPdfErrorMessage,
+  useRelatorioPdf,
+} from "../pdf/use-relatorio-pdf";
 
 type PreviewResponse = ReturnType<typeof useRelatorioPrevia>["state"];
 
@@ -211,6 +215,7 @@ export function RelatorioPreviaScreen({
   const { manager } = useSession();
   const { width } = useWindowDimensions();
   const preview = useRelatorioPrevia(manager, request);
+  const pdf = useRelatorioPdf(manager, request);
   const wide = width >= 760;
   const data = preview.state.status === "success" ? preview.state.data : null;
   const response = data?.response;
@@ -390,8 +395,7 @@ export function RelatorioPreviaScreen({
                   </Text>
                   <Text style={styles.feedbackText}>
                     Este é um resultado válido. Os filtros e avisos foram
-                    preservados; um documento vazio poderá ser gerado quando a
-                    etapa de PDF estiver disponível.
+                    preservados; um documento vazio também pode ser emitido.
                   </Text>
                 </View>
               ) : (
@@ -480,21 +484,53 @@ export function RelatorioPreviaScreen({
       </ScrollView>
 
       <View style={styles.actionBar}>
+        {pdf.state.status === "error" ? (
+          <Text accessibilityLiveRegion="assertive" style={styles.pdfError}>
+            {relatorioPdfErrorMessage(pdf.state.error)}
+          </Text>
+        ) : null}
+        {pdf.state.status === "success" ? (
+          <Text accessibilityLiveRegion="polite" style={styles.pdfSuccess}>
+            {pdf.state.method === "download"
+              ? "Download do documento iniciado."
+              : pdf.state.method === "sharing"
+                ? "Documento enviado ao compartilhamento do dispositivo."
+                : "Documento aberto no visualizador do dispositivo."}
+          </Text>
+        ) : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: true }}
-          disabled
-          style={styles.documentButton}
+          accessibilityState={{
+            busy: pdf.state.status === "loading",
+            disabled: !response || pdf.state.status === "loading",
+          }}
+          disabled={!response || pdf.state.status === "loading"}
+          onPress={() => void pdf.emit()}
+          style={[
+            styles.documentButton,
+            (!response || pdf.state.status === "loading") &&
+              styles.documentButtonDisabled,
+          ]}
         >
-          <Lucide
-            accessible={false}
-            color="#7b8ba0"
-            name="file-text"
-            size={18}
-          />
-          <Text style={styles.documentText}>Abrir documento</Text>
+          {pdf.state.status === "loading" ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <Lucide
+              accessible={false}
+              color="#ffffff"
+              name="file-text"
+              size={18}
+            />
+          )}
+          <Text style={styles.documentText}>
+            {pdf.state.status === "loading"
+              ? "Emitindo documento…"
+              : "Abrir documento"}
+          </Text>
         </Pressable>
-        <Text style={styles.disabledHint}>Disponível na próxima etapa.</Text>
+        <Text style={styles.disabledHint}>
+          O PDF consulta novamente os dados e pode diferir da prévia.
+        </Text>
       </View>
     </View>
   );
@@ -793,14 +829,29 @@ const styles = StyleSheet.create({
   },
   documentButton: {
     alignItems: "center",
-    backgroundColor: "#e8eef6",
+    backgroundColor: mobileRelatorios.action,
     borderRadius: radii.md,
     flexDirection: "row",
     gap: spacing.sm,
     justifyContent: "center",
     minHeight: 50,
   },
-  documentText: { color: "#7b8ba0", fontSize: 14, fontWeight: "800" },
+  documentButtonDisabled: { backgroundColor: "#9ab6df" },
+  documentText: { color: "#ffffff", fontSize: 14, fontWeight: "800" },
+  pdfError: {
+    color: mobileRelatorios.danger,
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: spacing.sm,
+    textAlign: "center",
+  },
+  pdfSuccess: {
+    color: mobileRelatorios.information,
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: spacing.sm,
+    textAlign: "center",
+  },
   disabledHint: {
     color: mobileRelatorios.textSubtle,
     fontSize: 10,

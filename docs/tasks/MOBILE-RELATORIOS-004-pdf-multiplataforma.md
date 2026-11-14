@@ -1,6 +1,7 @@
 # MOBILE-RELATORIOS-004 — PDF multiplataforma e validação final
 
-**Status:** aprovada em 14/11/2026
+**Status:** implementada e validada localmente em 14/11/2026; integração real
+e validação em dispositivos pendentes
 
 ## Objetivo
 
@@ -69,15 +70,15 @@ fluxo completo.
 
 - [ ] os dez modelos abrem um PDF válido com os filtros atuais para
       Administrador e Diretor;
-- [ ] `Content-Type` incorreto, corpo acima de 10 MiB, response não PDF e
+- [x] `Content-Type` incorreto, corpo acima de 10 MiB, response não PDF e
       arquivo ilegível falham sem abrir ou preservar conteúdo inválido;
 - [ ] sessão expirada renova e repete o GET no máximo uma vez; falha definitiva
       aplica o fluxo de logout já existente;
 - [ ] Android e iOS usam visualizador nativo ou fallback explícito de
       compartilhamento; Web revoga Object URL em sucesso, falha e desmontagem;
-- [ ] toque repetido não cria emissões concorrentes e cancelamento/desmontagem
+- [x] toque repetido não cria emissões concorrentes e cancelamento/desmontagem
       não apresenta sucesso tardio;
-- [ ] temporários não contêm dados no nome, não sobrevivem por decisão de
+- [x] temporários não contêm dados no nome, não sobrevivem por decisão de
       produto e possuem limpeza testada em melhor esforço;
 - [ ] o fluxo completo mantém exatamente a linguagem visual dos três frames em
       390×844, com os desvios comportamentais documentados, e funciona na
@@ -114,3 +115,37 @@ fluxo completo.
 
 - Nenhuma. Publicação em loja, capacidade de produção e E2E em dispositivos
   adicionais permanecem validações operacionais, não mudanças de escopo.
+
+## Handoff da implementação
+
+- As nove rotas `/:tipo/pdf` e a ficha usam o mesmo Bearer em memória e a
+  recuperação segura de `401` já coordenada pela sessão. O boundary binário
+  aplica timeout de 25 segundos, cancelamento, `application/pdf`, máximo de
+  10 MiB, assinatura `%PDF-` e trailer `%%EOF`; paginação da prévia é removida
+  antes da validação por `queryPdfRelatorio`.
+- Android e iOS gravam `UUID.pdf` em `Paths.cache/relatorios-pdf`, validam o
+  arquivo gravado, tentam `File.preview()` e só então usam `expo-sharing` como
+  fallback. A limpeza em melhor esforço ocorre antes de nova emissão, na
+  restauração e no encerramento da sessão; o arquivo não é apagado logo após a
+  entrega ao viewer.
+- Web cria Blob/Object URL e inicia download a partir da ação do usuário. A URL
+  é revogada após a entrega, em falha e na desmontagem. A coordenação local
+  mantém somente uma emissão ativa, aborta na desmontagem e ignora resultado
+  tardio.
+- O conector oficial do Figma atingiu o limite Starter. Os três frames foram
+  reinspecionados em modo somente leitura pelo navegador integrado e a ação
+  fixa preserva a linguagem de `07-previa-individual 1`; não houve comparação
+  lado a lado da UI executada em emulador ou aparelho.
+- Validações aprovadas: typecheck; 54 arquivos/276 testes Vitest; ESLint dos
+  arquivos afetados sem warnings; exports Android, iOS e Web com 53 rotas;
+  formatação afetada. O `expo-doctor` aprovou 19/20 checks e apontou somente o
+  baseline `expo@58.0.24` abaixo do patch `~58.0.25` recomendado no catálogo em
+  14/11/2026.
+- Uma emissão real de relação de patrimônios foi homologada no emulador com
+  Expo Go 58.0.5 e abriu no `PdfViewerActivity` instalado. Para isso, os módulos
+  Expo usados no fluxo passaram a seguir os imports estáticos documentados para
+  o SDK 58.
+- Não foram executados nesta entrega: integração real com os dez PDFs e os dois
+  perfis em PostgreSQL descartável, download runtime no Web, Android/iOS reais,
+  ausência de viewer, foreground/background, offline, tablet, rotação,
+  fonte ampliada, TalkBack, VoiceOver, build nativo APK/IPA, EAS e CI completa.

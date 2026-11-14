@@ -314,4 +314,56 @@ describe("createRelatoriosOperations", () => {
     ).resolves.toEqual(payload);
     expect(payload.dados.secoes).toHaveLength(14);
   });
+
+  it.each(Object.keys(previewQueries) as TipoTabular[])(
+    "emite o PDF de %s sem enviar paginação",
+    async (tipo) => {
+      const pdf = new TextEncoder().encode("%PDF-1.7\n%%EOF\n");
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(pdf, {
+          status: 200,
+          headers: { "content-type": "application/pdf" },
+        }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const operations = createRelatoriosOperations(
+        "https://api.example.test/api",
+      );
+
+      await expect(
+        operations.pdf(
+          tipo,
+          { ...previewQueries[tipo], pagina: 4, limite: 20 },
+          { accessToken: "token" },
+        ),
+      ).resolves.toEqual(pdf);
+      const url = String(fetchMock.mock.calls[0]?.[0]);
+      expect(url).toContain(`/relatorios/${tipo}/pdf`);
+      expect(url).not.toContain("pagina=");
+      expect(url).not.toContain("limite=");
+    },
+  );
+
+  it("emite a ficha pela rota binária com os filtros de eventos", async () => {
+    const pdf = new TextEncoder().encode("%PDF-1.7\n%%EOF\n");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(pdf, {
+        status: 200,
+        headers: { "content-type": "application/pdf" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const operations = createRelatoriosOperations(
+      "https://api.example.test/api",
+    );
+
+    await operations.fichaPdf(
+      "00000000-0000-4000-8000-000000000001",
+      { evento: "CONFERENCIA_INVENTARIO", pagina: 2, limite: 20 },
+      { accessToken: "token" },
+    );
+    expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+      "https://api.example.test/api/relatorios/ficha-bem/00000000-0000-4000-8000-000000000001/pdf?evento=CONFERENCIA_INVENTARIO",
+    );
+  });
 });
