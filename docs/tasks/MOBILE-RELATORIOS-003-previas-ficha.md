@@ -1,6 +1,7 @@
 # MOBILE-RELATORIOS-003 — Prévias, ficha e paginação
 
-**Status:** aprovada em 14/11/2026
+**Status:** implementada e validada localmente em 14/11/2026; homologação
+visual em runtime pendente
 
 ## Objetivo
 
@@ -21,7 +22,8 @@ individual, com resumos, avisos, registros e paginação antes da emissão do PD
 - consultar explicitamente a prévia das nove rotas tabulares com página de 20
   itens e a ficha/eventos do patrimônio selecionado;
 - apresentar filtros aplicados, resumo específico do tipo, registros,
-  metadados, critério temporal, ordenação, avisos e exclusões retornadas;
+  metadados úteis dos eventos, avisos e exclusões retornadas, sem expor na
+  interface identificadores, referências ou critérios internos da consulta;
 - paginar sem perder filtros ou misturar respostas de consultas diferentes;
 - representar loading inicial, atualização, vazio válido, erro recuperável,
   resposta inválida, limite, indisponibilidade e sessão expirada;
@@ -55,17 +57,17 @@ individual, com resumos, avisos, registros e paginação antes da emissão do PD
 
 ## Critérios de aceite
 
-- [ ] os nove tabulares apresentam `dados`, `resumo`, `meta` e `consulta`
+- [x] os nove tabulares apresentam `dados`, `resumo`, `meta` e `consulta`
       validados pelo schema específico; ficha apresenta cadastro e 14 tipos de
       evento paginados;
-- [ ] zero registros é sucesso vazio e preserva filtros, avisos e possibilidade
+- [x] zero registros é sucesso vazio e preserva filtros, avisos e possibilidade
       de gerar PDF vazio;
-- [ ] paginação usa metadados reais e impede offset além do limite público;
-- [ ] valores decimais permanecem strings no transporte e são formatados no
+- [x] paginação usa metadados reais e impede offset além do limite público;
+- [x] valores decimais permanecem strings no transporte e são formatados no
       cliente sem perda das sete casas ou soma local indevida;
-- [ ] `401`, `403`, `422`, `429`, `503`, timeout, offline e response inválida
+- [x] `401`, `403`, `422`, `429`, `503`, timeout, offline e response inválida
       possuem mensagens distintas e ação segura;
-- [ ] ambos os perfis recebem a mesma prévia e a mesma capacidade de avançar;
+- [x] ambos os perfis recebem a mesma prévia e a mesma capacidade de avançar;
 - [ ] a composição corresponde ao frame em 390×844 e se adapta à matriz de
       telefone, tablet, orientação, fonte ampliada e Web.
 
@@ -97,3 +99,39 @@ individual, com resumos, avisos, registros e paginação antes da emissão do PD
 ## Pendências ou decisões bloqueantes
 
 - Nenhuma.
+
+## Handoff da implementação
+
+- O mesmo fluxo `/relatorios/[tipo]` alterna entre filtros e prévia sem criar
+  persistência. A confirmação monta uma query key com tipo, filtros validados,
+  página e patrimônio da ficha; o `AbortSignal` cancela a chamada quando a key
+  muda e o cache operacional permanece em memória por 30 segundos.
+- As nove prévias tabulares validam o schema específico. A ficha consulta
+  cadastro e eventos em paralelo, apresenta as 14 seções públicas e pagina os
+  eventos com os metadados retornados pela API.
+- Filtros, resumo, avisos, exclusões, cadastro e campos informativos dos
+  registros são exibidos a partir da response. A prévia humaniza enums, datas,
+  competências e objetos aninhados, seleciona os mesmos dados funcionais das
+  seções do PDF e omite UUIDs, campos terminados em `Id`, referências e
+  critérios internos da consulta. Decimais continuam strings e são formatados
+  preservando as sete casas; nenhuma soma ou ordenação é refeita no cliente.
+- Loading inicial, atualização, vazio válido, limite público, sessão expirada,
+  permissão, validação, rate limit, indisponibilidade, timeout, offline e
+  response inválida têm estados distintos. `Ajustar filtros`, cabeçalho e botão
+  físico voltam ao rascunho; `Abrir documento` permanece desabilitado.
+- O frame `07-previa-individual 1` foi reinspecionado em modo somente leitura
+  pelo navegador integrado após o conector oficial atingir o limite Starter.
+  A composição implementada segue a gramática 390×844 observada, mas ainda não
+  foi comparada lado a lado em emulador ou aparelho.
+- Validações aprovadas: typecheck; 50 arquivos/248 testes Vitest; ESLint direto
+  sem erros (um warning preexistente gerado em `.expo/types/router.d.ts`);
+  exports Android, iOS e Web, com 53 rotas estáticas.
+- A suíte PostgreSQL isolada de relatórios aprovou 8 de 9 cenários. O cenário
+  restante, fora do fluxo mobile, esperava `403` ao consultar uma baixa, mas a
+  API tentou serializar a descrição de estresse acima do contrato de 1.000
+  caracteres e respondeu `500`. O banco descartável foi removido; o banco de
+  desenvolvimento não foi usado.
+- O script `expo lint` não concluiu porque o Corepack tentou acessar
+  `registry.npmjs.org` e recebeu `ENOTFOUND`; o mesmo ESLint instalado foi
+  executado diretamente. CI completa, EAS, emulador, aparelhos físicos,
+  tablet, rotação, fonte ampliada, TalkBack e VoiceOver não foram executados.

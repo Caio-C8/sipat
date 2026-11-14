@@ -1,9 +1,10 @@
 import { Lucide } from "@react-native-vector-icons/lucide";
 import type { CatalogoOpcaoRelatorio, TipoRelatorio } from "@repo/contracts";
-import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Modal,
   Pressable,
   ScrollView,
@@ -28,6 +29,8 @@ import {
   type RelatorioOption,
 } from "./relatorio-form-config";
 import { useRelatorioCatalogo } from "./use-relatorio-catalogos";
+import { RelatorioPreviaScreen } from "./components/relatorio-previa-screen";
+import type { RelatorioPreviaRequest } from "./use-relatorio-previa";
 
 const drafts = new Map<TipoRelatorio, RelatorioDraft>();
 const labels = new Map<TipoRelatorio, Record<string, string>>();
@@ -321,10 +324,10 @@ export function RelatorioFormScreen({
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selection, setSelection] = useState<Selection>();
-  const [ready, setReady] = useState(false);
+  const [previewRequest, setPreviewRequest] =
+    useState<RelatorioPreviaRequest>();
   const wide = width >= 760;
   const update = (name: string, value: string, label?: string) => {
-    setReady(false);
     setErrors((current) => ({ ...current, [name]: "" }));
     setDraft((current) => {
       const next = { ...current, [name]: value };
@@ -347,18 +350,55 @@ export function RelatorioFormScreen({
     setDraft(next);
     setSelectedLabels({});
     setErrors({});
-    setReady(false);
+    setPreviewRequest(undefined);
   };
   const submit = () => {
     const result = validateRelatorioDraft(tipo, draft);
     if (!result.success) {
       setErrors(result.errors);
-      setReady(false);
       return;
     }
     setErrors({});
-    setReady(true);
+    setPreviewRequest({
+      tipo,
+      query: result.query,
+      ...(result.patrimonioId ? { patrimonioId: result.patrimonioId } : {}),
+    });
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!previewRequest) return undefined;
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          setPreviewRequest(undefined);
+          return true;
+        },
+      );
+      return () => subscription.remove();
+    }, [previewRequest]),
+  );
+
+  if (previewRequest) {
+    return (
+      <RelatorioPreviaScreen
+        draft={draft}
+        onAdjust={() => setPreviewRequest(undefined)}
+        onBack={() => setPreviewRequest(undefined)}
+        onPage={(pagina) =>
+          setPreviewRequest((current) =>
+            current
+              ? { ...current, query: { ...current.query, pagina } }
+              : current,
+          )
+        }
+        request={previewRequest}
+        selectedLabels={selectedLabels}
+        tipo={tipo}
+      />
+    );
+  }
   return (
     <>
       <ScrollView
@@ -433,19 +473,6 @@ export function RelatorioFormScreen({
               </View>
             ))}
           </View>
-          {ready ? (
-            <View accessibilityLiveRegion="polite" style={styles.success}>
-              <Lucide
-                accessible={false}
-                color="#178765"
-                name="circle-check"
-                size={19}
-              />
-              <Text style={styles.successText}>
-                Filtros válidos e prontos para a prévia.
-              </Text>
-            </View>
-          ) : null}
           <Pressable
             accessibilityRole="button"
             onPress={submit}
@@ -614,15 +641,6 @@ const styles = StyleSheet.create({
   placeholder: { color: mobileRelatorios.textSubtle },
   invalid: { borderColor: mobileRelatorios.danger },
   errorText: { color: mobileRelatorios.danger, fontSize: 11, lineHeight: 16 },
-  success: {
-    alignItems: "center",
-    backgroundColor: "#eafaf4",
-    borderRadius: radii.md,
-    flexDirection: "row",
-    gap: spacing.sm,
-    padding: spacing.md,
-  },
-  successText: { color: "#176b51", flex: 1, fontSize: 12, fontWeight: "700" },
   primaryButton: {
     alignItems: "center",
     backgroundColor: mobileRelatorios.action,

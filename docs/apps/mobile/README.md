@@ -71,7 +71,9 @@ código interno da API.
   dez opções com o contrato compartilhado e apresenta capacidades, motivo e
   disponibilidade; `/relatorios/[tipo]` implementa os dez formulários com
   filtros validados, datas civis mascaradas e oito catálogos remotos
-  pesquisáveis e paginados; prévias e PDF seguem nos objetivos posteriores;
+  pesquisáveis e paginados; as nove prévias tabulares e a ficha individual
+  apresentam respostas validadas, resumos, avisos, registros e paginação em
+  memória; PDF segue no objetivo posterior;
 - tokens semânticos mínimos sustentam a base visual compartilhada;
 - a resposta de `GET /api/health` é validada no boundary antes de ser exibida;
 - a consulta possui timeout de oito segundos, cancelamento da chamada anterior

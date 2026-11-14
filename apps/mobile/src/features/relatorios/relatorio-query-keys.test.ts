@@ -11,4 +11,20 @@ describe("relatorioQueryKeys", () => {
       "tipos",
     ]);
   });
+
+  it("isola prévias por tipo, filtros canônicos, página e patrimônio", () => {
+    expect(
+      relatorioQueryKeys.preview(
+        "ficha-bem",
+        { pagina: 2, limite: 20, evento: "BAIXA" },
+        "00000000-0000-4000-8000-000000000001",
+      ),
+    ).toEqual([
+      "relatorios",
+      "previa",
+      "ficha-bem",
+      "00000000-0000-4000-8000-000000000001",
+      { pagina: 2, limite: 20, evento: "BAIXA" },
+    ]);
+  });
 });
