@@ -45,7 +45,7 @@ export class ComissoesController {
   constructor(private readonly comissoesService: ComissoesService) {}
 
   @Get()
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarComissoesResponseDto)
   async listar(
     @Query() query: ListarComissoesQueryDto,
@@ -68,7 +68,7 @@ export class ComissoesController {
   }
 
   @Get(":comissaoId")
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarComissaoResponseDto)
   async consultar(
     @Param() params: ComissaoParamsDto,

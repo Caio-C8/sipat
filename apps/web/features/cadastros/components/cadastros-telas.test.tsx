@@ -48,6 +48,23 @@ describe("cadastros integrados", () => {
     ).toContain("pagina=2");
     expect(screen.queryByText(/de exemplo/)).toBeNull();
   });
+  it("remove entradas de mutação na consulta compartilhada", () => {
+    render(
+      <CadastrosTelas
+        secao="naturezas"
+        registros={[{ id, titulo: "Natureza real", detalhe: "Patrimonial" }]}
+        meta={{ total: 1, pagina: 1, ultimaPagina: 1 }}
+        mostrarFornecedores
+        somenteLeitura
+      >
+        <p>Dados consultados</p>
+      </CadastrosTelas>,
+    );
+
+    expect(screen.getByText("Consulta somente leitura")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Nova natureza" })).toBeNull();
+    expect(screen.getByText("Dados consultados")).toBeTruthy();
+  });
   it("cadastra natureza sem campos ilustrativos e atualiza a consulta", async () => {
     vi.mocked(browserApiClient.request).mockResolvedValue({ dados: { id } });
     render(<FormularioNatureza />);

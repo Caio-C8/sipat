@@ -11,7 +11,6 @@ import {
 import { ProcessamentoDepreciacoes } from "@/features/depreciacoes/components/processamento-depreciacoes";
 import { serverDepreciacaoOperations } from "@/features/depreciacoes/api/server-depreciacao-operations";
 import { serverReavaliacaoOperations } from "@/features/reavaliacoes/api/server-reavaliacao-operations";
-import { AccessDenied } from "@/components/shared/access-denied";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 
@@ -38,11 +37,7 @@ export default async function DepreciacaoPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const identidade = await exigirIdentidadeAtual();
-  if (identidade.perfil !== "DIRETOR_PATRIMONIO") {
-    return (
-      <AccessDenied description="Somente o Diretor de Patrimônio pode processar depreciações." />
-    );
-  }
+  const podeProcessar = identidade.perfil === "DIRETOR_PATRIMONIO";
 
   const recebidos = await searchParams;
   const competenciaRecebida =
@@ -207,6 +202,7 @@ export default async function DepreciacaoPage({
       erroComissoes={erroComissoes}
       competencias={competencias}
       competenciaMaisAntigaPendente={competenciaMaisAntigaPendente}
+      podeProcessar={podeProcessar}
     />
   );
 }

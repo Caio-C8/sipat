@@ -189,13 +189,36 @@ describe("gestão de comissões", () => {
     };
   }
 
+  function requisicaoDiretor() {
+    return {
+      post: (path: string) =>
+        request(app.getHttpServer())
+          .post(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+      patch: (path: string) =>
+        request(app.getHttpServer())
+          .patch(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+      delete: (path: string) =>
+        request(app.getHttpServer())
+          .delete(path)
+          .set("Cookie", cookie(tokenDiretor))
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1"),
+    };
+  }
+
   function esperarCodigo(resposta: request.Response, codigo: string) {
     const resultado = RespostaErroSchema.safeParse(resposta.body);
     expect(resultado.success).toBe(true);
     if (resultado.success) expect(resultado.data.codigo).toBe(codigo);
   }
 
-  it("aplica 401 ao anônimo, 403 ao diretor e permite o administrador", async () => {
+  it("aplica 401 ao anônimo e permite a leitura aos dois perfis", async () => {
     const anonimo = await request(app.getHttpServer()).get("/api/comissoes");
     const diretor = await request(app.getHttpServer())
       .get("/api/comissoes")
@@ -203,13 +226,33 @@ describe("gestão de comissões", () => {
     const administrador = await requisicaoAdministrador().get("/api/comissoes");
 
     expect(anonimo.status).toBe(401);
-    expect(diretor.status).toBe(403);
+    expect(diretor.status).toBe(200);
     expect(administrador.status).toBe(200);
     expect(
       ListarComissoesResponseSchema.safeParse(administrador.body).success,
     ).toBe(true);
     esperarCodigo(anonimo, "NAO_AUTENTICADO");
-    esperarCodigo(diretor, "ACESSO_NEGADO");
+  });
+
+  it("mantém todas as mutações exclusivas do administrador", async () => {
+    const respostas = [
+      await requisicaoDiretor().post("/api/comissoes").send({}),
+      await requisicaoDiretor().patch(`/api/comissoes/${COMISSAO_ID}`).send({}),
+      await requisicaoDiretor()
+        .post(`/api/comissoes/${COMISSAO_ID}/membros`)
+        .send({}),
+      await requisicaoDiretor()
+        .patch(`/api/comissoes/${COMISSAO_ID}/membros/${MEMBRO_ID}`)
+        .send({}),
+      await requisicaoDiretor().delete(
+        `/api/comissoes/${COMISSAO_ID}/membros/${MEMBRO_ID}`,
+      ),
+    ];
+
+    for (const resposta of respostas) {
+      expect(resposta.status).toBe(403);
+      esperarCodigo(resposta, "ACESSO_NEGADO");
+    }
   });
 
   it("valida o body, aplica CSRF e deriva a auditoria da sessão", async () => {

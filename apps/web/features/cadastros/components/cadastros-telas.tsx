@@ -63,6 +63,7 @@ export function CadastrosTelas({
   id,
   salvo,
   mostrarFornecedores,
+  somenteLeitura = false,
   children,
 }: {
   secao: SecaoCadastro;
@@ -73,6 +74,7 @@ export function CadastrosTelas({
   id?: string;
   salvo?: boolean;
   mostrarFornecedores: boolean;
+  somenteLeitura?: boolean;
   children: ReactNode;
 }) {
   const config = paginasCadastros[secao];
@@ -89,11 +91,15 @@ export function CadastrosTelas({
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold min-[1500px]:text-[27px]">
-            {config.titulo}
+            {somenteLeitura ? config.lista : config.titulo}
           </h1>
           <p className="mt-1 text-sm text-[#62748e]">{config.subtitulo}</p>
         </div>
-        <span className="text-xs text-[#62748e]">* Campos obrigatórios</span>
+        <span className="text-xs text-[#62748e]">
+          {somenteLeitura
+            ? "Consulta somente leitura"
+            : "* Campos obrigatórios"}
+        </span>
       </header>
       <AbasCadastros secao={secao} mostrarFornecedores={mostrarFornecedores} />
       {salvo && (
@@ -108,7 +114,9 @@ export function CadastrosTelas({
         <aside className={cartao + " grid gap-4"}>
           <h2 className="font-bold">{config.lista}</h2>
           <p className="text-sm text-[#62748e]">
-            Selecione para consultar ou editar.
+            {somenteLeitura
+              ? "Selecione para consultar."
+              : "Selecione para consultar ou editar."}
           </p>
           <form action={config.href} className="grid gap-2">
             <label className="text-sm">
@@ -179,9 +187,11 @@ export function CadastrosTelas({
             <p className="text-sm">Nenhum registro encontrado.</p>
           )}
           <Paginacao meta={meta} href={hrefPagina} />
-          <Link className={principal} href={config.href}>
-            {config.novo}
-          </Link>
+          {!somenteLeitura && (
+            <Link className={principal} href={config.href}>
+              {config.novo}
+            </Link>
+          )}
         </aside>
         {children}
       </div>
@@ -189,5 +199,34 @@ export function CadastrosTelas({
         SIPAT · Organização dos dados patrimoniais
       </footer>
     </main>
+  );
+}
+
+export function DetalheCadastroSomenteLeitura({
+  titulo,
+  campos,
+  children,
+}: {
+  titulo: string;
+  campos: readonly { rotulo: string; valor: ReactNode }[];
+  children?: ReactNode;
+}) {
+  return (
+    <section className={cartao} aria-labelledby="detalhe-cadastro">
+      <h2 id="detalhe-cadastro" className="font-bold">
+        {titulo}
+      </h2>
+      <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+        {campos.map((campo) => (
+          <div key={campo.rotulo}>
+            <dt className="text-[#62748e]">{campo.rotulo}</dt>
+            <dd className="mt-1 break-words font-medium">
+              {campo.valor || "Não informado"}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {children}
+    </section>
   );
 }

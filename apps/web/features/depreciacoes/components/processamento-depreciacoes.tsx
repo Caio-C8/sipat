@@ -101,6 +101,7 @@ export function ProcessamentoDepreciacoes({
   erroComissoes,
   competencias,
   competenciaMaisAntigaPendente,
+  podeProcessar,
 }: {
   resposta: ListarDepreciacoesPendentesResponse;
   competencia: string;
@@ -108,6 +109,7 @@ export function ProcessamentoDepreciacoes({
   erroComissoes: string;
   competencias: CompetenciaDepreciacao[];
   competenciaMaisAntigaPendente: string | null;
+  podeProcessar: boolean;
 }) {
   const router = useRouter();
   const [navegando, iniciarNavegacao] = useTransition();
@@ -137,7 +139,14 @@ export function ProcessamentoDepreciacoes({
   }
 
   async function confirmarExecucao() {
-    if (!alvo || !comissaoId || pendente || mutacaoEmAndamento.current) return;
+    if (
+      !podeProcessar ||
+      !alvo ||
+      !comissaoId ||
+      pendente ||
+      mutacaoEmAndamento.current
+    )
+      return;
     mutacaoEmAndamento.current = true;
     setErro("");
     setSucesso("");
@@ -208,8 +217,9 @@ export function ProcessamentoDepreciacoes({
             Depreciação
           </h1>
           <p className="mt-1 text-sm text-[#526b8c]">
-            Consulte os bens elegíveis e processe a competência de{" "}
-            {tituloCompetencia}, individualmente ou em lote.
+            {podeProcessar
+              ? `Consulte os bens elegíveis e processe a competência de ${tituloCompetencia}, individualmente ou em lote.`
+              : `Consulte os bens elegíveis e as pendências da competência de ${tituloCompetencia}.`}
           </p>
         </header>
 
@@ -303,48 +313,58 @@ export function ProcessamentoDepreciacoes({
           </article>
         </section>
 
-        <section className="grid gap-4 rounded-lg border border-[#dfe7f1] bg-white p-5 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] md:items-end">
-          <div>
-            <label
-              htmlFor="comissao-depreciacao"
-              className="text-xs font-medium text-[#526b8c]"
-            >
-              Comissão vigente para o processamento *
-            </label>
-            <select
-              id="comissao-depreciacao"
-              className={`${campo} mt-1`}
-              value={comissaoId}
-              onChange={(event) => setComissaoId(event.target.value)}
-              disabled={pendente || comissoes.length === 0}
-            >
-              <option value="">
-                {comissoes.length
-                  ? "Selecione uma comissão"
-                  : "Nenhuma comissão vigente"}
-              </option>
-              {comissoes.map((comissao) => (
-                <option key={comissao.id} value={comissao.id}>
-                  {comissao.nome}
+        {podeProcessar ? (
+          <section className="grid gap-4 rounded-lg border border-[#dfe7f1] bg-white p-5 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] md:items-end">
+            <div>
+              <label
+                htmlFor="comissao-depreciacao"
+                className="text-xs font-medium text-[#526b8c]"
+              >
+                Comissão vigente para o processamento *
+              </label>
+              <select
+                id="comissao-depreciacao"
+                className={`${campo} mt-1`}
+                value={comissaoId}
+                onChange={(event) => setComissaoId(event.target.value)}
+                disabled={pendente || comissoes.length === 0}
+              >
+                <option value="">
+                  {comissoes.length
+                    ? "Selecione uma comissão"
+                    : "Nenhuma comissão vigente"}
                 </option>
-              ))}
-            </select>
-            {erroComissoes ? (
-              <p role="alert" className="mt-2 text-sm text-red-800">
-                {erroComissoes}
-              </p>
-            ) : null}
-            {!erroComissoes && comissoes.length === 0 ? (
-              <p className="mt-2 text-sm text-[#8d5a2a]">
-                Não há comissão vigente para registrar esta operação.
-              </p>
-            ) : null}
-          </div>
-          <p className="text-xs leading-5 text-[#526b8c]">
-            A comissão é obrigatória e precisa estar vigente na data do
-            processamento.
+                {comissoes.map((comissao) => (
+                  <option key={comissao.id} value={comissao.id}>
+                    {comissao.nome}
+                  </option>
+                ))}
+              </select>
+              {erroComissoes ? (
+                <p role="alert" className="mt-2 text-sm text-red-800">
+                  {erroComissoes}
+                </p>
+              ) : null}
+              {!erroComissoes && comissoes.length === 0 ? (
+                <p className="mt-2 text-sm text-[#8d5a2a]">
+                  Não há comissão vigente para registrar esta operação.
+                </p>
+              ) : null}
+            </div>
+            <p className="text-xs leading-5 text-[#526b8c]">
+              A comissão é obrigatória e precisa estar vigente na data do
+              processamento.
+            </p>
+          </section>
+        ) : (
+          <p
+            role="status"
+            className="rounded-md border border-[#bfd4ff] bg-[#eff5ff] p-4 text-sm text-[#203b61]"
+          >
+            Consulta somente leitura. O processamento de depreciações é
+            exclusivo do Diretor de Patrimônio.
           </p>
-        </section>
+        )}
 
         {erro ? (
           <div
@@ -433,9 +453,11 @@ export function ProcessamentoDepreciacoes({
                     <th scope="col" className="p-3">
                       Valor residual
                     </th>
-                    <th scope="col" className="p-3">
-                      <span className="sr-only">Ação</span>
-                    </th>
+                    {podeProcessar ? (
+                      <th scope="col" className="p-3">
+                        <span className="sr-only">Ação</span>
+                      </th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -470,19 +492,21 @@ export function ProcessamentoDepreciacoes({
                           </small>
                         ) : null}
                       </td>
-                      <td className="p-3 text-right">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={pendente || !comissaoId}
-                          onClick={() =>
-                            abrirConfirmacao({ tipo: "INDIVIDUAL", item })
-                          }
-                          className="min-h-10 gap-2 px-4"
-                        >
-                          <TrendingDown className="size-4" /> Processar bem
-                        </Button>
-                      </td>
+                      {podeProcessar ? (
+                        <td className="p-3 text-right">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={pendente || !comissaoId}
+                            onClick={() =>
+                              abrirConfirmacao({ tipo: "INDIVIDUAL", item })
+                            }
+                            className="min-h-10 gap-2 px-4"
+                          >
+                            <TrendingDown className="size-4" /> Processar bem
+                          </Button>
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
@@ -490,11 +514,17 @@ export function ProcessamentoDepreciacoes({
             </div>
           )}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4ebf4] pt-4">
-            <p className="max-w-2xl text-xs leading-5 text-[#526b8c]">
-              O processamento em lote inclui todos os bens elegíveis da
-              competência, mesmo os que não aparecem nesta página. A operação é
-              confirmada como uma unidade.
-            </p>
+            {podeProcessar ? (
+              <p className="max-w-2xl text-xs leading-5 text-[#526b8c]">
+                O processamento em lote inclui todos os bens elegíveis da
+                competência, mesmo os que não aparecem nesta página. A operação
+                é confirmada como uma unidade.
+              </p>
+            ) : (
+              <p className="max-w-2xl text-xs leading-5 text-[#526b8c]">
+                Esta consulta não altera os dados patrimoniais.
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-4">
               {resposta.meta.ultimaPagina > 1 ? (
                 <nav
@@ -526,25 +556,27 @@ export function ProcessamentoDepreciacoes({
                   )}
                 </nav>
               ) : null}
-              <Button
-                type="button"
-                disabled={
-                  pendente ||
-                  !comissaoId ||
-                  resposta.resumo.totalElegiveis === 0 ||
-                  (quantidadeResidual > 0 && !confirmarResidual)
-                }
-                onClick={() => abrirConfirmacao({ tipo: "LOTE" })}
-                className="min-h-10 gap-2 bg-[#203b61] px-5 text-white hover:bg-[#31537f]"
-              >
-                <Check className="size-4" />{" "}
-                {lote.pending
-                  ? "Processando…"
-                  : "Confirmar depreciação em lote"}
-              </Button>
+              {podeProcessar ? (
+                <Button
+                  type="button"
+                  disabled={
+                    pendente ||
+                    !comissaoId ||
+                    resposta.resumo.totalElegiveis === 0 ||
+                    (quantidadeResidual > 0 && !confirmarResidual)
+                  }
+                  onClick={() => abrirConfirmacao({ tipo: "LOTE" })}
+                  className="min-h-10 gap-2 bg-[#203b61] px-5 text-white hover:bg-[#31537f]"
+                >
+                  <Check className="size-4" />{" "}
+                  {lote.pending
+                    ? "Processando…"
+                    : "Confirmar depreciação em lote"}
+                </Button>
+              ) : null}
             </div>
           </div>
-          {quantidadeResidual > 0 ? (
+          {podeProcessar && quantidadeResidual > 0 ? (
             <label className="mt-4 flex max-w-3xl items-start gap-3 rounded-md border border-[#f4d78e] bg-[#fffbec] p-3 text-sm text-[#70430c]">
               <input
                 className="mt-1 size-4 accent-[#b45b0a]"
@@ -563,7 +595,7 @@ export function ProcessamentoDepreciacoes({
       </main>
 
       <Dialog
-        open={alvo !== null}
+        open={podeProcessar && alvo !== null}
         onOpenChange={(open) => {
           if (!open && !pendente) setAlvo(null);
         }}

@@ -79,10 +79,9 @@ No estado atual:
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,
   `POST /api/auth/redefinir-senha`, as cinco rotas protegidas de `/api/usuarios`,
-  as cinco rotas administrativas de `/api/responsaveis`, as quatro rotas
-  administrativas de `/api/naturezas`, as quatro rotas de `/api/especies`, as
-  cinco rotas de `/api/setores`, as cinco
-  rotas administrativas de `/api/fornecedores` e
+  as cinco rotas de `/api/responsaveis`, as quatro rotas de `/api/naturezas`,
+  as quatro rotas de `/api/especies`, as cinco rotas de `/api/setores`, as cinco
+  rotas de `/api/fornecedores` e
   `GET /api/patrimonios`, `GET /api/patrimonios/:patrimonioId` e
   `POST /api/patrimonios` e
   `POST /api/patrimonios/:patrimonioId/substituicoes-numero`, além de
@@ -105,12 +104,12 @@ No estado atual:
   `trocaSenhaObrigatoria`, carregado da fonte persistente no usuário;
 - `UsuariosModule` separa DTOs Zod, controller, service, repository, tipos e
   mappers; somente `ADMINISTRADOR` acessa suas rotas;
-- `ResponsaveisModule` segue o mesmo corte por camadas, restringe as cinco
-  operações ao `ADMINISTRADOR`, garante matrícula única no banco e inativa sem
-  excluir nem romper vínculos existentes;
-- `NaturezasModule` restringe cadastro, consulta, listagem e alteração ao
-  `ADMINISTRADOR`, deriva nome normalizado e auditoria no servidor e preserva
-  espécies vinculadas durante alterações;
+- `ResponsaveisModule` permite consulta e listagem aos dois perfis, restringe
+  as três mutações ao `ADMINISTRADOR`, garante matrícula única no banco e
+  inativa sem excluir nem romper vínculos existentes;
+- `NaturezasModule` permite consulta e listagem aos dois perfis, restringe
+  cadastro e alteração ao `ADMINISTRADOR`, deriva nome normalizado e auditoria
+  no servidor e preserva espécies vinculadas durante alterações;
 - `EspeciesModule` permite consulta e listagem aos dois perfis, restringe
   cadastro e alteração ao `ADMINISTRADOR`, exige uma natureza existente, deriva
   normalização e auditoria no servidor e preserva patrimônios vinculados ao
@@ -119,13 +118,14 @@ No estado atual:
   cadastro, alteração e mudança de situação ao `ADMINISTRADOR`, exige
   responsável ativo em novos vínculos, deriva auditoria da sessão e inativa sem
   excluir nem romper vínculos;
-- `FornecedoresModule` restringe cadastro, consulta, listagem, alteração e
-  mudança de situação ao `ADMINISTRADOR`, normaliza CNPJ e contato, protege a
-  unicidade sob concorrência e inativa sem excluir nem romper vínculos;
-- `ComissoesModule` restringe todas as rotas ao `ADMINISTRADOR`, cria comissão
-  e composição atomicamente, limita integrantes ativos, garante presidente
-  único no PostgreSQL e congela ato, vigência e composição após o primeiro uso
-  patrimonial;
+- `FornecedoresModule` permite consulta e listagem aos dois perfis, restringe
+  cadastro, alteração e mudança de situação ao `ADMINISTRADOR`, normaliza CNPJ
+  e contato, protege a unicidade sob concorrência e inativa sem excluir nem
+  romper vínculos;
+- `ComissoesModule` permite consulta e listagem aos dois perfis, restringe
+  comissão e composição ao `ADMINISTRADOR`, limita integrantes ativos, garante
+  presidente único no PostgreSQL e congela ato, vigência e composição após o
+  primeiro uso patrimonial;
 - `InventariosModule` permite a `ADMINISTRADOR` e `DIRETOR_PATRIMONIO` as
   quatro consultas de inventários e restringe criação e as cinco mutações ao
   `DIRETOR_PATRIMONIO`; valida comissão vigente, materializa setores ativos e
@@ -136,11 +136,11 @@ No estado atual:
   ao `DIRETOR_PATRIMONIO`, registra baixa e status `BAIXADO` atomicamente com
   locks de patrimônio e comissão e mantém policy e trigger contra inventário
   aberto;
-- `DepreciacoesModule` restringe consulta operacional e execução ao
-  `DIRETOR_PATRIMONIO`, expõe catálogo finito de competências devidas e resumo
-  agregado de pendências, revalida competência e comissão, impede saltos sobre
-  meses anteriores e serializa execuções individuais e em massa. Pendências
-  também possuem relatório tabular e PDF para Administrador e Diretor;
+- `DepreciacoesModule` permite aos dois perfis consultar competências, resumo e
+  pendências, restringe execuções ao `DIRETOR_PATRIMONIO`, revalida competência
+  e comissão, impede saltos sobre meses anteriores e serializa execuções
+  individuais e em massa. Pendências também possuem relatório tabular e PDF
+  para Administrador e Diretor;
 - a conferência preserva o snapshot cadastral, diferencia ausência por
   empréstimo ou manutenção vigente, cria transferência somente na correção
   cadastral e mantém o fato histórico da divergência; itens encontrados fora do

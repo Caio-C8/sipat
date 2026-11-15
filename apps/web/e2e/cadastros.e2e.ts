@@ -115,7 +115,7 @@ test("administrador cria, altera, inativa e corrige conflito de fornecedor", asy
     "Fornecedor duplicado",
   );
 });
-test("diretor cria processo sem notas novas e não acessa cadastros administrativos", async ({
+test("diretor cria processo sem notas novas e consulta cadastros sem ações administrativas", async ({
   page,
 }) => {
   await sessao(page, "director");
@@ -132,22 +132,30 @@ test("diretor cria processo sem notas novas e não acessa cadastros administrati
     page.getByRole("button", { name: "Adicionar nota fiscal" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "Fornecedores", exact: true }),
-  ).toHaveCount(0);
+    page.getByRole("link", { name: "Fornecedores", exact: true }).first(),
+  ).toBeVisible();
   for (const rota of [
     "/cadastros/especies",
     "/cadastros/naturezas",
     "/cadastros/comissoes",
     "/cadastros/responsaveis",
-    "/cadastros/setores",
-    "/cadastros/setores/novo",
     "/cadastros/fornecedores",
   ]) {
     await page.goto(rota);
-    await expect(
-      page.getByRole("heading", { name: "Acesso não permitido" }),
-    ).toBeVisible();
+    await expect(page.getByText("Consulta somente leitura")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Salvar/ })).toHaveCount(0);
   }
+  await page.goto("/cadastros/setores");
+  await expect(
+    page.getByRole("heading", { name: "Setores", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Cadastrar setor" })).toHaveCount(
+    0,
+  );
+  await page.goto("/cadastros/setores/novo");
+  await expect(
+    page.getByRole("heading", { name: "Acesso não permitido" }),
+  ).toBeVisible();
 });
 test("falha da API aparece como erro e não como lista vazia", async ({
   page,

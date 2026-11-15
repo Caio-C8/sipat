@@ -126,7 +126,7 @@ describe("depreciações patrimoniais", () => {
 
   const cookie = (token: string) => `sipat_session=${token}`;
 
-  it("aplica 401 ao anônimo, 403 ao administrador e permite o diretor", async () => {
+  it("aplica 401 ao anônimo e permite a leitura aos dois perfis", async () => {
     const rota = "/api/depreciacoes/pendentes?competencia=2026-10";
     const anonimo = await request(app.getHttpServer()).get(rota);
     const administrador = await request(app.getHttpServer())
@@ -137,14 +137,14 @@ describe("depreciações patrimoniais", () => {
       .set("Cookie", cookie(tokenDiretor));
 
     expect(anonimo.status).toBe(401);
-    expect(administrador.status).toBe(403);
+    expect(administrador.status).toBe(200);
     expect(diretor.status).toBe(200);
     expect(
       ListarDepreciacoesPendentesResponseSchema.safeParse(diretor.body).success,
     ).toBe(true);
   });
 
-  it("restringe catálogo e resumo de competências ao diretor", async () => {
+  it("compartilha catálogo e resumo de competências entre os dois perfis", async () => {
     for (const rota of [
       "/api/depreciacoes/competencias",
       "/api/depreciacoes/pendencias/resumo",
@@ -156,7 +156,7 @@ describe("depreciações patrimoniais", () => {
         request(app.getHttpServer())
           .get(rota)
           .set("Cookie", cookie(tokenAdministrador)),
-      ).resolves.toHaveProperty("status", 403);
+      ).resolves.toHaveProperty("status", 200);
     }
 
     const catalogo = await request(app.getHttpServer())
@@ -172,6 +172,27 @@ describe("depreciações patrimoniais", () => {
     expect(
       ResumoPendenciasDepreciacaoResponseSchema.safeParse(resumo.body).success,
     ).toBe(true);
+  });
+
+  it("mantém os processamentos exclusivos do diretor", async () => {
+    const configurar = (requisicao: request.Test) =>
+      requisicao
+        .set("Cookie", cookie(tokenAdministrador))
+        .set("Origin", ORIGEM)
+        .set(CABECALHO_CSRF, "1");
+    const massa = await configurar(
+      request(app.getHttpServer()).post("/api/depreciacoes"),
+    ).send({});
+    const individual = await configurar(
+      request(app.getHttpServer()).post(
+        `/api/patrimonios/${DIRETOR_ID}/depreciacoes`,
+      ),
+    ).send({});
+
+    expect(massa.status).toBe(403);
+    expect(individual.status).toBe(403);
+    expect(service.executarEmMassa).not.toHaveBeenCalled();
+    expect(service.executarIndividual).not.toHaveBeenCalled();
   });
 
   it("protege a mutação com CSRF e deriva a identidade da sessão", async () => {
