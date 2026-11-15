@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { isApiError } from "@/lib/api/core/api-error";
+import { formatBrl } from "@/lib/format/decimal";
 import {
   useExecutarDepreciacaoIndividual,
   useExecutarDepreciacoesEmMassa,
@@ -31,12 +32,6 @@ type AlvoConfirmacao =
 
 const campo =
   "min-h-10 min-w-0 w-full rounded-md border border-[#dce5f0] bg-white px-3 py-2 text-sm text-[#17253d] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#2863ec] disabled:bg-[#eef2f7]";
-const dinheiro = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 const statusPatrimonio: Record<ItemPendente["status"], string> = {
   ATIVO: "Ativo",
   EMPRESTADO: "Emprestado",
@@ -44,7 +39,7 @@ const statusPatrimonio: Record<ItemPendente["status"], string> = {
 };
 
 function moeda(valor: string) {
-  return dinheiro.format(Number(valor));
+  return formatBrl(valor);
 }
 
 function mensagemErro(erro: unknown) {

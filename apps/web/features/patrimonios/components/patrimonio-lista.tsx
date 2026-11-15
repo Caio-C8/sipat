@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Info, Search } from "lucide-react";
 import type { ListarPatrimoniosResponse } from "@repo/contracts";
+import { formatBrl, subtractDecimal } from "@/lib/format/decimal";
 
 const pagina =
   "mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-4 text-[#17253d] sm:px-7 sm:py-6";
@@ -16,13 +17,6 @@ const rotulosStatus: Record<string, string> = {
   EMPRESTADO: "Emprestado",
   EM_MANUTENCAO: "Em manutenção",
 };
-
-function moeda(valor: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(valor);
-}
 
 export function PatrimonioLista({
   resposta,
@@ -137,9 +131,10 @@ export function PatrimonioLista({
               </thead>
               <tbody>
                 {resposta.dados.map((item) => {
-                  const liquido =
-                    Number(item.situacaoContabil.valorBrutoAtual) -
-                    Number(item.situacaoContabil.depreciacaoAcumuladaAtual);
+                  const liquido = subtractDecimal(
+                    item.situacaoContabil.valorBrutoAtual,
+                    item.situacaoContabil.depreciacaoAcumuladaAtual,
+                  );
                   return (
                     <tr key={item.id} className="border-b border-[#e4ebf4]">
                       <td className="p-3 font-semibold">
@@ -167,7 +162,9 @@ export function PatrimonioLista({
                           {rotulosStatus[item.status]}
                         </span>
                       </td>
-                      <td className="p-3 font-semibold">{moeda(liquido)}</td>
+                      <td className="p-3 font-semibold">
+                        {formatBrl(liquido)}
+                      </td>
                       <td className="p-3">
                         <Link
                           className="font-semibold text-[#2863ec] underline"

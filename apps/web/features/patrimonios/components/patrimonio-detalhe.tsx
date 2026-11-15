@@ -12,6 +12,7 @@ import { rotuloCompetencia } from "@/features/depreciacoes/apresentacao";
 import { apresentarEvento, formatarData, rotulosEvento } from "../apresentacao";
 import { PatrimonioAcoes } from "./patrimonio-acoes";
 import { DisponibilidadeUso } from "./disponibilidade-uso";
+import { formatBrl, subtractDecimal } from "@/lib/format/decimal";
 
 const pagina =
   "mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-4 text-[#17253d] sm:px-7 sm:py-6";
@@ -21,10 +22,6 @@ const botao =
 const campo =
   "mt-1 min-h-10 w-full rounded-md border border-[#dce5f0] bg-white px-3 text-sm";
 const nulo = "Não informado";
-const moeda = (valor: string) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    Number(valor),
-  );
 
 function Dado({
   titulo,
@@ -195,9 +192,10 @@ export function PatrimonioDetalheView({
   usuarioId: string;
   hoje: string;
 }) {
-  const liquido =
-    Number(patrimonio.situacaoContabil.valorBrutoAtual) -
-    Number(patrimonio.situacaoContabil.depreciacaoAcumuladaAtual);
+  const liquido = subtractDecimal(
+    patrimonio.situacaoContabil.valorBrutoAtual,
+    patrimonio.situacaoContabil.depreciacaoAcumuladaAtual,
+  );
   const historico = valores.aba === "historico";
   return (
     <main className={pagina}>
@@ -232,17 +230,19 @@ export function PatrimonioDetalheView({
         {[
           {
             titulo: "Valor de incorporação",
-            valor: moeda(patrimonio.valorIncorporacao),
+            valor: formatBrl(patrimonio.valorIncorporacao),
             Icone: Wallet,
           },
           {
             titulo: "Valor atual",
-            valor: moeda(liquido.toFixed(7)),
+            valor: formatBrl(liquido),
             Icone: TrendingUp,
           },
           {
             titulo: "Depreciação acumulada",
-            valor: moeda(patrimonio.situacaoContabil.depreciacaoAcumuladaAtual),
+            valor: formatBrl(
+              patrimonio.situacaoContabil.depreciacaoAcumuladaAtual,
+            ),
             Icone: TrendingDown,
           },
         ].map(({ titulo, valor, Icone }) => (
@@ -383,7 +383,7 @@ export function PatrimonioDetalheView({
                 />
                 <Dado
                   titulo="Valor residual"
-                  valor={moeda(
+                  valor={formatBrl(
                     patrimonio.parametroDepreciacaoAtual.valorResidual,
                   )}
                 />

@@ -1,4 +1,5 @@
 import { isApiError } from "@/lib/api/core/api-error";
+import { formatBrl } from "@/lib/format/decimal";
 
 export const campoReavaliacao =
   "min-h-10 min-w-0 w-full rounded-md border border-[#cfd9e7] bg-white px-3 py-2 text-sm text-[#19355d] shadow-[0_1px_1px_rgba(22,48,82,0.02)] transition placeholder:text-[#93a3b8] hover:border-[#aebed2] focus-visible:border-[#2860eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2860eb] disabled:bg-[#eef2f7]";
@@ -7,9 +8,7 @@ export const painelReavaliacao =
 
 export function formatarDecimal(valor: string | null | undefined): string {
   if (valor == null) return "Não registrado";
-  const [inteiro, fracao = ""] = valor.split(".");
-  const agrupado = inteiro!.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `R$ ${agrupado},${fracao.padEnd(2, "0")}`;
+  return formatBrl(valor);
 }
 
 export function formatarDataCivil(valor: string | null | undefined): string {

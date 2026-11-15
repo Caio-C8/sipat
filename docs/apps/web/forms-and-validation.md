@@ -2,11 +2,12 @@
 
 ## Estado atual
 
-O SIPAT não instala React Hook Form ou resolvers. Os formulários de
-`/patrimonios/novo` e `/configuracoes/alterar-senha` usam estado local e os
-schemas compartilhados das respectivas operações. Escolha outra solução quando
-uma entrega concreta exigir gerenciamento adicional; valide compatibilidade
-com React e Zod nas versões do projeto.
+O SIPAT instala React Hook Form e o resolver Zod. O cadastro de naturezas é a
+vertical de prova desse padrão; validação visual, mapeamento para o contrato e
+operações HTTP continuam separados. Formulários ainda não migrados, como
+`/patrimonios/novo` e `/configuracoes/alterar-senha`, preservam o estado local e
+os schemas das respectivas operações até que uma mudança concreta justifique a
+migração.
 
 Independentemente da biblioteca, dados externos devem ser validados no boundary
 e a API deve repetir a validação. Validação no navegador melhora a experiência,
@@ -81,8 +82,9 @@ visual; use uma operação com entrada e saída explícitas.
   inputs inteiros aceitam apenas dígitos e não usam comportamento de incremento
   acidental de `type="number"`.
 
-Essas decisões são implementadas incrementalmente por
-[WEB-UI-001](../../tasks/WEB-UI-001-fundacao-visual-formularios.md).
+A fundação foi implementada por
+[WEB-UI-001](../../tasks/WEB-UI-001-fundacao-visual-formularios.md); a migração
+das demais telas permanece incremental.
 
 ## Testes
 

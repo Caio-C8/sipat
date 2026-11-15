@@ -1,4 +1,5 @@
 import type { EventoFicha } from "@repo/contracts";
+import { formatBrl } from "@/lib/format/decimal";
 
 export const rotulosEvento = {
   SUBSTITUICAO_NUMERO: "Substituição de número",
@@ -29,13 +30,6 @@ export function formatarData(valor: string | null) {
   }).format(data);
 }
 
-function moeda(valor: string) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number(valor));
-}
-
 export function apresentarEvento(evento: EventoFicha): {
   titulo: string;
   descricao: string;
@@ -60,13 +54,13 @@ export function apresentarEvento(evento: EventoFicha): {
     case "REAVALIACAO":
       return {
         titulo,
-        descricao: `Bem reavaliado para ${moeda(evento.atributos.valorReavaliado)}.`,
+        descricao: `Bem reavaliado para ${formatBrl(evento.atributos.valorReavaliado)}.`,
         detalhe: evento.atributos.observacao ?? "Sem observação informada.",
       };
     case "DEPRECIACAO":
       return {
         titulo,
-        descricao: `Quota de ${moeda(evento.atributos.valorDepreciado)}; valor posterior ${moeda(evento.atributos.valorContabilNovo)}.`,
+        descricao: `Quota de ${formatBrl(evento.atributos.valorDepreciado)}; valor posterior ${formatBrl(evento.atributos.valorContabilNovo)}.`,
         detalhe: `Competência ${evento.atributos.competencia}.`,
       };
     case "EMPRESTIMO":
@@ -98,7 +92,7 @@ export function apresentarEvento(evento: EventoFicha): {
     case "REVISAO_ORCAMENTO":
       return {
         titulo,
-        descricao: `${evento.atributos.descricao} · ${moeda(evento.atributos.valor)}`,
+        descricao: `${evento.atributos.descricao} · ${formatBrl(evento.atributos.valor)}`,
         detalhe: evento.atributos.fornecedor ?? "Fornecedor não informado.",
       };
     case "RETORNO_MANUTENCAO":

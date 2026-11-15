@@ -1,7 +1,6 @@
 "use client";
 import { FormularioCadastro } from "./formulario-cadastro";
 import type {
-  NaturezaDetalhe,
   EspecieDetalhe,
   ResponsavelDetalhe,
   SetorDetalhe,
@@ -9,8 +8,6 @@ import type {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  useCriarNatureza,
-  useAlterarNatureza,
   useCriarEspecie,
   useAlterarEspecie,
   useCriarResponsavel,
@@ -29,46 +26,8 @@ import {
   mensagemErro,
 } from "./cadastro-ui";
 import { SeletorNatureza, SeletorResponsavel } from "./seletor-cadastro";
+export { FormularioNatureza } from "./natureza-form";
 
-export function FormularioNatureza({
-  registro,
-}: {
-  registro?: NaturezaDetalhe;
-}) {
-  const criar = useCriarNatureza();
-  const alterar = useAlterarNatureza();
-  return (
-    <FormularioCadastro
-      titulo={registro ? "Editar natureza" : "Nova natureza"}
-      destino="/cadastros/naturezas"
-      rotulo="Salvar natureza"
-      salvar={async (dados) => {
-        const body = {
-          nome: texto(dados, "nome"),
-          descricao: registro
-            ? (opcional(dados, "descricao") ?? null)
-            : opcional(dados, "descricao"),
-        };
-        const resposta = registro
-          ? await alterar.confirmar({ id: registro.id, body })
-          : await criar.confirmar({
-              nome: body.nome,
-              descricao: body.descricao ?? undefined,
-            });
-        return resposta?.dados ?? null;
-      }}
-    >
-      <Campo
-        rotulo="Nome da natureza"
-        name="nome"
-        required
-        maxLength={100}
-        defaultValue={registro?.nome}
-      />
-      <Descricao valor={registro?.descricao} />
-    </FormularioCadastro>
-  );
-}
 export function FormularioEspecie({ registro }: { registro?: EspecieDetalhe }) {
   const criar = useCriarEspecie();
   const alterar = useAlterarEspecie();

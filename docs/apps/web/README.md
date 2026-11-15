@@ -78,7 +78,8 @@ fronteiras entre UI, contratos e integração HTTP.
   tecnologia;
 - Core Web Vitals e operações HTTP podem emitir métricas com rotas e nomes
   normalizados;
-- `components/ui` contém primitives visuais genéricas já instaladas;
+- `components/ui` contém primitives visuais genéricas e `components/shared`
+  oferece campos, feedback, filtros, paginação e inputs numéricos comuns;
 - Vitest cobre infraestrutura HTTP, configuração, observabilidade, a operação
   patrimonial e os estados do dashboard;
 - Playwright cobre o catálogo, o fluxo de autenticação, redirects, estados do
@@ -163,7 +164,7 @@ esse template.
 
 - identidade visual definitiva além dos tokens e padrões aprovados em
   `WEB-UI-001`;
-- biblioteca de formulários e estado remoto;
+- biblioteca de cache e estado remoto;
 - duração e política operacional das sessões e do cookie;
 - serviço de observabilidade e analytics;
 - internacionalização;

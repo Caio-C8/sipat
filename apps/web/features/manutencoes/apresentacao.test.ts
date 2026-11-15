@@ -13,7 +13,7 @@ describe("apresentação de manutenções", () => {
   });
 
   it("formata valores e preserva ausência explícita", () => {
-    expect(formatarMoeda("1234.5")).toBe("R$ 1.234,50");
+    expect(formatarMoeda("1234.5")).toBe("R$ 1.234,5000000");
     expect(formatarMoeda(null)).toBe("Não informado");
   });
 

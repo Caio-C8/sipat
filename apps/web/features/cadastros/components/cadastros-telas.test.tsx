@@ -89,6 +89,17 @@ describe("cadastros integrados", () => {
       "/cadastros/naturezas?id=" + id + "&salvo=1",
     );
   });
+  it("resume erros, marca o campo e move o foco ao primeiro inválido", async () => {
+    render(<FormularioNatureza />);
+    fireEvent.click(screen.getByRole("button", { name: "Salvar natureza" }));
+
+    const name = await screen.findByLabelText("Nome da natureza *");
+    await waitFor(() => expect(name).toBe(document.activeElement));
+    expect(name.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText("Revise os dados informados")).toBeTruthy();
+    expect(screen.getAllByText("Informe o nome da natureza.")).toHaveLength(2);
+    expect(browserApiClient.request).not.toHaveBeenCalled();
+  });
   it("limpa descrição por null na edição e preserva campos após erro", async () => {
     vi.mocked(browserApiClient.request).mockRejectedValue(
       new ApiError({
