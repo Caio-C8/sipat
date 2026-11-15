@@ -56,7 +56,7 @@ fronteiras entre UI, contratos e integração HTTP.
   finalizado é somente leitura na Web;
 - o detalhe patrimonial confirma e exibe a disponibilidade para uso, resume
   primeira, última e próxima competência e liga para a pendência; o relatório
-  e o sino do Diretor usam a mesma semântica derivada de pendências;
+  de pendências preserva essa semântica sem criar central de notificações;
 - `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
   devolução parcial na API real; o percurso com PostgreSQL isolado está em
   [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
@@ -87,8 +87,9 @@ fronteiras entre UI, contratos e integração HTTP.
 - as rotas `/login`, `/redefinir-senha`, `/senha-atualizada`,
   `/esqueci-senha`, `/recuperar-senha` e `/recuperacao-concluida` estão
   integradas à API por operações tipadas quando há mutation;
-- o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb, notificações e
-  menu do usuário, com navegação filtrada por perfil;
+- o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb navegável, rodapé
+  derivado da tela e menu do usuário, com navegação ordenada e filtrada por
+  perfil; Minha conta fica no menu e o shell não consulta notificações;
 - não existem biblioteca de cache remoto nem estado global na Web;
 - `WEB-AUTH-001` está implementado com backend mockado estrito no E2E; a
   validação adicional contra uma stack real permanece pendente.

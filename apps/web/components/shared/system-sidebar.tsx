@@ -7,6 +7,7 @@ import { Menu, Package, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { PerfilUsuario } from "@repo/contracts";
 import {
+  encontrarNavegacaoPorCaminho,
   listarNavegacaoPorPerfil,
   type GrupoNavegacao,
 } from "@/lib/navigation/system-navigation";
@@ -21,6 +22,7 @@ export function SystemSidebar({ perfil }: Readonly<{ perfil: PerfilUsuario }>) {
   const [menuOpen, setMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const itens = listarNavegacaoPorPerfil(perfil);
+  const itemAtivo = encontrarNavegacaoPorCaminho(pathname);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -95,51 +97,22 @@ export function SystemSidebar({ perfil }: Readonly<{ perfil: PerfilUsuario }>) {
               <ul className="grid list-none gap-0.5 p-0">
                 {itensDoGrupo.map((item) => {
                   const Icon = item.icon;
-                  const ativo =
-                    item.href === pathname ||
-                    (item.href === "/movimentacoes" &&
-                      pathname.startsWith("/movimentacoes/")) ||
-                    (item.href === "/cadastros/setores" &&
-                      pathname.startsWith("/cadastros/setores/")) ||
-                    (item.href === "/configuracoes" &&
-                      pathname.startsWith("/configuracoes/"));
+                  const ativo = item.id === itemAtivo?.id;
 
                   return (
                     <li key={item.id}>
-                      {item.href ? (
-                        <Link
-                          href={item.href}
-                          aria-current={ativo ? "page" : undefined}
-                          className={`flex min-h-[34px] items-center gap-2.5 rounded-lg px-2.5 py-1 text-xs leading-tight no-underline transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#8dbbf0] min-[1101px]:min-h-[29px] min-[1101px]:text-[10px] min-[1500px]:min-h-8 min-[1500px]:py-1.5 min-[1500px]:text-xs ${ativo ? "bg-[#2860eb] font-semibold text-white shadow-sm shadow-[#071b37]/40" : "text-[#c8d7e8] hover:bg-white/10 hover:text-white"}`}
-                        >
-                          <Icon
-                            className="shrink-0"
-                            size={15}
-                            aria-hidden="true"
-                          />
-                          <span className="min-w-0">
-                            <span className="block">{item.label}</span>
-                            {!item.implementado ? (
-                              <span className="block text-[9px] font-semibold">
-                                Em desenvolvimento
-                              </span>
-                            ) : null}
-                          </span>
-                        </Link>
-                      ) : (
-                        <span
-                          className="flex min-h-[34px] cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-1 text-xs leading-tight text-[#9eb1c9] min-[1101px]:min-h-[29px] min-[1101px]:text-[10px] min-[1500px]:min-h-8 min-[1500px]:py-1.5 min-[1500px]:text-xs"
-                          aria-disabled="true"
-                        >
-                          <Icon
-                            className="shrink-0"
-                            size={15}
-                            aria-hidden="true"
-                          />
-                          <span>{item.label}</span>
-                          <span className="sr-only">Não implementado</span>
-                        </span>
-                      )}
+                      <Link
+                        href={item.href}
+                        aria-current={ativo ? "page" : undefined}
+                        className={`flex min-h-[34px] items-center gap-2.5 rounded-lg px-2.5 py-1 text-xs leading-tight no-underline transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#8dbbf0] min-[1101px]:min-h-[29px] min-[1101px]:text-[10px] min-[1500px]:min-h-8 min-[1500px]:py-1.5 min-[1500px]:text-xs ${ativo ? "bg-[#2860eb] font-semibold text-white shadow-sm shadow-[#071b37]/40" : "text-[#c8d7e8] hover:bg-white/10 hover:text-white"}`}
+                      >
+                        <Icon
+                          className="shrink-0"
+                          size={15}
+                          aria-hidden="true"
+                        />
+                        <span className="min-w-0">{item.label}</span>
+                      </Link>
                     </li>
                   );
                 })}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import { LogoutButton } from "@/components/auth/logout-button";
@@ -95,6 +96,14 @@ export function UserMenu({
             <strong className="wrap-anywhere text-xs">{identidade.nome}</strong>
             <span className="text-[10px] text-[#62748e]">{perfil}</span>
           </div>
+          <Link
+            className="mt-2 flex min-h-[34px] items-center rounded-md px-2 py-[7px] text-[11px] font-bold text-[#24466e] no-underline hover:bg-[#f3f7fb] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#8dbbf0]"
+            href="/configuracoes"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+          >
+            Minha conta
+          </Link>
           <LogoutButton
             className="flex min-h-[34px] w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-[7px] text-[11px] font-bold text-[#9b2c2c] hover:bg-[#fff4f4] disabled:cursor-wait disabled:opacity-65 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#8dbbf0]"
             wrapperClassName="grid gap-2 pt-2"

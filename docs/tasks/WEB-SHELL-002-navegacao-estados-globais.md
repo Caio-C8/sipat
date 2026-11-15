@@ -1,6 +1,6 @@
 # `WEB-SHELL-002` — Evoluir navegação e estados globais
 
-**Status:** `aprovada`
+**Status:** `implementada e validada em 15/11/2026`
 
 ## Objetivo
 
@@ -55,13 +55,13 @@ funcionais.
 
 ## Critérios de aceite
 
-- [ ] cada perfil recebe exatamente a ordem e as opções aprovadas.
-- [ ] detalhes como `/patrimonios/:id` mantêm o item pai ativo.
-- [ ] breadcrumb navega aos ancestrais reais e nunca exibe UUID técnico.
-- [ ] não existem sino, painel de notificações, Configurações ou Histórico na sidebar.
-- [ ] rodapé contém somente `SIPAT · <tela>` e funciona em todas as rotas.
-- [ ] 401, 403, 404 e falha transitória nunca produzem página vazia.
-- [ ] shell passa por teclado, reflow, zoom e viewports previstos.
+- [x] cada perfil recebe exatamente a ordem e as opções aprovadas.
+- [x] detalhes como `/patrimonios/:id` mantêm o item pai ativo.
+- [x] breadcrumb navega aos ancestrais reais e nunca exibe UUID técnico.
+- [x] não existem sino, painel de notificações, Configurações ou Histórico na sidebar.
+- [x] rodapé contém somente `SIPAT · <tela>` e funciona em todas as rotas.
+- [x] 401, 403, 404 e falha transitória nunca produzem página vazia.
+- [x] shell passa por teclado, reflow, zoom e viewports previstos.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -82,3 +82,20 @@ funcionais.
 ## Pendências ou decisões bloqueantes
 
 - Nenhuma.
+
+## Evidências da entrega
+
+- O catálogo central resolve telas exatas e padrões dinâmicos, deriva item ativo,
+  breadcrumb sem identificadores e o nome do rodapé. Testes unitários cobrem a
+  ordem integral dos dois perfis e colisões entre rotas estáticas e dinâmicas.
+- O sino, o painel, o componente e o hook que iniciava
+  `GET /depreciacoes/pendencias/resumo` foram removidos do shell. O endpoint da
+  API permanece disponível para outros consumidores aprovados.
+- Lint, typecheck, build de produção e 135 testes Vitest em 33 arquivos foram
+  aprovados para `@repo/web`.
+- Playwright aprovou 22 cenários Chromium nos arquivos de autenticação, baixas e
+  depreciações, cobrindo os dois perfis, acesso direto, 401, 403, 404, falha
+  transitória, item pai, breadcrumb, rodapé, axe, teclado, foco, reflow,
+  ampliação simulada e viewports 390, 768, 1440 e 1920.
+- A validação não substitui inspeção manual completa com leitor de tela nem a CI
+  integral do monorepo.

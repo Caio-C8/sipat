@@ -64,9 +64,16 @@ estado explícito e não é convertida em logout; `401` continua levando ao logi
 `WEB-SHELL-001` moveu `/dashboard` para `app/(sistema)/dashboard` e centralizou
 os redirects de sessão em `app/(sistema)/layout.tsx`. A consulta memoizada da
 identidade é reutilizada pelas páginas que precisam do perfil, sem nova chamada
-HTTP no mesmo request. O catálogo de navegação é
-a fonte do item ativo e do breadcrumb; somente caminhos Web implementados
-recebem link. Movimentações está marcado como implementado e inclui suas páginas descendentes no item ativo e breadcrumb.
+HTTP no mesmo request. O catálogo de telas e navegação é a fonte de rota,
+label, perfil, item ativo, breadcrumb, rodapé e padrões descendentes. Rotas
+dinâmicas mostram labels orientados à tarefa sem expor o identificador técnico;
+ancestrais reais são links. A correspondência por segmentos evita colisões como
+`/patrimonios/novo` e `/patrimonios/[patrimonioId]`.
+
+`WEB-SHELL-002` removeu Configurações e Histórico da sidebar, manteve Minha
+conta no menu do usuário e eliminou o sino e a consulta de notificações. O
+dashboard é a única página com saudação e data; as demais preservam cabeçalho
+de título, descrição e ações da própria vertical.
 
 `WEB-DASHBOARD-001` adicionou `loading.tsx` ao segmento e integrou os totais
 geral e por status por uma operação Server. Erro de integração e zero registros

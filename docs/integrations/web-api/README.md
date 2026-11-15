@@ -115,10 +115,11 @@ e conclusão de setores ficam no aplicativo móvel.
 O detalhe confirma `POST /patrimonios/:id/disponibilidade-uso` somente para o
 Diretor, com data civil, CSRF e chave idempotente preservada enquanto o
 resultado estiver incerto. Administrador e Diretor consultam o fato e o resumo
-contábil retornados no detalhe. O sino do Diretor consulta
-`GET /depreciacoes/pendencias/resumo` apenas ao abrir; falha desse aviso não
-bloqueia o shell. O relatório `pendencias-depreciacao` continua separado do
-histórico de depreciações e usa as operações tabular e PDF existentes.
+contábil retornados no detalhe. O shell não consulta
+`GET /depreciacoes/pendencias/resumo` nem implementa central de notificações; o
+endpoint permanece na API, sem consumidor no topbar. O relatório
+`pendencias-depreciacao` continua separado do histórico de depreciações e usa
+as operações tabular e PDF existentes.
 
 ## Transporte HTTP
 
