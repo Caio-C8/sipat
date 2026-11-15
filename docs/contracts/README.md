@@ -84,3 +84,10 @@ verdadeiramente o mesmo contrato. A validação executada no frontend melhora a
 experiência do usuário, mas nunca substitui a validação do backend.
 
 O dashboard Web consulta `GET /api/patrimonios/dashboard` com sessão de Administrador ou Diretor de Patrimônio. O contrato `DashboardPatrimonialResponseSchema` inclui totais por situação, correções pendentes, até quatro setores por quantidade e as três atividades patrimoniais mais recentes pela data de registro.
+
+Esse é o contrato atualmente implementado. A substituição aprovada por
+`GET /api/dashboard`, com visão operacional entre domínios e atividades do
+usuário autenticado, permanece pendente em
+[WEB-DASHBOARD-002](../tasks/WEB-DASHBOARD-002-visao-operacional.md). As demais
+ampliações aprovadas para a evolução Web estão delimitadas no
+[roadmap de contratos](./roadmap.md#contratos-da-evolução-web-de-usabilidade-e-padronização).

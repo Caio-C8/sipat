@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { NovoEmprestimo } from "@/features/emprestimos/components/novo-emprestimo";
 export const metadata: Metadata = { title: "Novo empréstimo" };
 export default async function NovoEmprestimoPage() {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "DIRETOR_PATRIMONIO")
     return (
       <main className="p-4 sm:p-7">

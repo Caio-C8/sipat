@@ -6,7 +6,7 @@ import {
   type ListarEmprestimosQueryInput,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverEmprestimoOperations } from "@/features/emprestimos/api/server-emprestimo-operations";
 import {
   botaoPrimarioEmprestimo,
@@ -26,8 +26,7 @@ export default async function EmprestimosPage({
 }: {
   searchParams: Promise<Parametros>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const entrada = Object.fromEntries(
     Object.entries(await searchParams).filter(
       ([, valor]) => typeof valor === "string" && valor !== "",

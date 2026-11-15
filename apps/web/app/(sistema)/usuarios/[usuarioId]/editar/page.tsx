@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { UsuarioForm } from "@/features/usuarios/components/usuario-form";
 import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { AccessDenied } from "@/components/shared/access-denied";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 
 export const metadata: Metadata = { title: "Editar usuário" };
@@ -15,9 +15,12 @@ export default async function EditarUsuarioPage({
 }: {
   params: Promise<{ usuarioId: string }>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade || identidade.perfil !== "ADMINISTRADOR")
-    redirect("/dashboard");
+  const identidade = await exigirIdentidadeAtual();
+  if (identidade.perfil !== "ADMINISTRADOR") {
+    return (
+      <AccessDenied description="Somente o Administrador pode editar usuários." />
+    );
+  }
 
   const { usuarioId } = await params;
 

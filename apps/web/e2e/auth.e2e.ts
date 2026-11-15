@@ -29,6 +29,104 @@ function loginResponse(
 }
 
 test.describe("Autenticação Web", () => {
+  test("aplica a matriz de entrada na raiz", async ({ page }) => {
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/login$/);
+
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "pending",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/redefinir-senha$/);
+
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "active",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/dashboard$/);
+  });
+
+  test("distingue indisponibilidade da API de sessão encerrada", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "unavailable",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(
+      page.getByRole("heading", {
+        name: "Não foi possível verificar sua sessão",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Tentar novamente" }),
+    ).toHaveAttribute("href", "/");
+
+    await page.goto("/dashboard");
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(
+      page.getByRole("heading", {
+        name: "Não foi possível verificar sua sessão",
+      }),
+    ).toBeVisible();
+  });
+
+  test("mantém recuperação pública e diferencia falta de acesso", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "director",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+
+    const token = "A".repeat(43);
+    const link = new URL(
+      `/recuperar-senha#token=${token}`,
+      "http://localhost:3100",
+    );
+    expect(link.host).toBe("localhost:3100");
+    expect(link.pathname).toBe("/recuperar-senha");
+    expect(link.search).toBe("");
+    expect(new URLSearchParams(link.hash.slice(1)).get("token")).toBe(token);
+
+    await page.goto(link.toString());
+    await expect(page).toHaveURL(/\/recuperar-senha$/);
+    await expect(
+      page.getByLabel("Nova senha *", { exact: true }),
+    ).toBeVisible();
+
+    await page.goto("/usuarios");
+    await expect(
+      page.getByRole("heading", { name: "Acesso não permitido" }),
+    ).toBeVisible();
+    await expect(page.getByText(/Somente o Administrador/)).toBeVisible();
+  });
+
   test("abre a solicitação pelo login e exibe a confirmação neutra", async ({
     page,
     apiMock,

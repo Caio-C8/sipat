@@ -575,7 +575,12 @@ describeComPostgres("autenticação concorrente no PostgreSQL", () => {
     if (mensagem?.tipo !== "REDEFINIR_SENHA") {
       throw new Error("Mensagem de redefinição esperada.");
     }
+    const link = new URL(mensagem.link);
+    expect(link.origin).toBe("https://sipat.example");
+    expect(link.pathname).toBe("/recuperar-senha");
+    expect(link.search).toBe("");
     const token = obterTokenDoLink(mensagem.link)!;
+    expect(link.hash).toBe(`#token=${token}`);
     const dados = {
       token,
       novaSenha: "uma senha redefinida segura 1!",

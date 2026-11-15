@@ -9,7 +9,7 @@ import {
 } from "@/features/cadastros/components/setores-telas";
 import { serverCadastros } from "@/features/cadastros/api/server";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import {
   ErroCadastro,
@@ -37,8 +37,7 @@ export async function SetoresPage({
 }: {
   searchParams: SearchCadastros;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const parsed = QuerySchema.safeParse(await searchParams);
   if (!parsed.success)
     return (
@@ -81,8 +80,7 @@ export async function SetoresPage({
   );
 }
 export async function NovoSetorPage() {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "ADMINISTRADOR")
     return (
       <main className={pagina}>
@@ -99,8 +97,7 @@ export async function SetorPage({
   params: Promise<{ setorId: string }>;
   searchParams: SearchCadastros;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const { setorId } = await params;
   if (!z.uuid().safeParse(setorId).success) notFound();
   const parsed = QuerySchema.safeParse(await searchParams);

@@ -4,6 +4,41 @@ Este roadmap coordena entregas que atravessam contratos, banco, API, Web e
 testes. Os roadmaps de cada área detalham seus próprios artefatos; este arquivo
 define a ordem, as dependências e os critérios comuns do produto.
 
+## Evolução Web de usabilidade e padronização
+
+**Status:** aprovada em 14/11/2026; implementação não iniciada por este
+planejamento.
+
+A sequência completa, os critérios e as referências por objetivo estão no
+[roadmap Web](./apps/web/roadmap.md#evolução-web-de-usabilidade-e-padronização).
+As entregas transversais seguem esta ordem:
+
+1. [WEB-AUTH-003](./tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md) —
+   corrigir entrada, sessão e recuperação em staging;
+2. [SEC-002](./tasks/SEC-002-matriz-leitura-compartilhada.md) — aplicar a matriz
+   aprovada na API antes de refletir permissões na interface;
+3. [WEB-UI-001](./tasks/WEB-UI-001-fundacao-visual-formularios.md) e
+   [WEB-SHELL-002](./tasks/WEB-SHELL-002-navegacao-estados-globais.md) — criar a
+   fundação visual, feedback e navegação;
+4. [WEB-PATRIMONIOS-002](./tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md),
+   [WEB-INVENTARIOS-002](./tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md) e
+   [WEB-MANUTENCOES-003](./tasks/WEB-MANUTENCOES-003-identificacao-itens.md) —
+   entregar as verticais de maior valor e os contratos de que a home depende;
+5. [WEB-DASHBOARD-002](./tasks/WEB-DASHBOARD-002-visao-operacional.md) — agregar
+   a visão operacional em uma única rota;
+6. [WEB-CADASTROS-002](./tasks/WEB-CADASTROS-002-modais-roteaveis.md),
+   [WEB-OPERACOES-001](./tasks/WEB-OPERACOES-001-padronizar-operacoes.md) e
+   [WEB-RELATORIOS-002](./tasks/WEB-RELATORIOS-002-padronizacao-visual.md) —
+   completar a aplicação Web sem alterar capacidades já validadas;
+7. [WEB-BUSCA-001](./tasks/WEB-BUSCA-001-busca-global.md) — habilitar a busca
+   somente depois de existirem destinos canônicos estáveis;
+8. [MOBILE-INVENTARIOS-004](./tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) —
+   corrigir o leitor móvel depois da frente Web.
+
+As novas regras de produto estão em RF18, RF19, RF21–RF23 e RNF05. A política
+de leitura compartilhada está em
+[segurança e acesso](./security-and-access.md#matriz-de-leitura-compartilhada-aprovada).
+
 ## Empréstimos e devoluções — RF16
 
 **Status:** implementado e validado em banco isolado e no ambiente local de desenvolvimento em 31/10/2026; migrations de inventário e RF16 aplicadas somente ao banco local `sipat` em `localhost:5433`. Staging e produção não foram migrados.

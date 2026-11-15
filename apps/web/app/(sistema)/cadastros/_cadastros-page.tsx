@@ -22,7 +22,7 @@ import {
 } from "@/features/cadastros/components/cadastro-ui";
 import { serverCadastros } from "@/features/cadastros/api/server";
 import type { Leitura } from "@/features/cadastros/api/cadastro-operations";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 export type SearchCadastros = Promise<
   Record<string, string | string[] | undefined>
@@ -99,8 +99,7 @@ export async function CadastrosPage({
   secao: SecaoCadastro;
   searchParams: SearchCadastros;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   if (secao !== "processos" && identidade.perfil !== "ADMINISTRADOR")
     return (
       <main className={pagina}>

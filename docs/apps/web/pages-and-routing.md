@@ -4,7 +4,7 @@
 
 A aplicação Web do SIPAT expõe:
 
-- `/`: catálogo público das páginas, acessos e endpoints técnicos;
+- `/`: entrada Server que encaminha para login, primeiro acesso ou dashboard;
 - `/login`: autenticação integrada à API para usuários anônimos;
 - `/esqueci-senha`: solicitação pública e neutra de recuperação por e-mail;
 - `/recuperar-senha#token=…`: redefinição pública por token transitório;
@@ -47,23 +47,24 @@ simulados como dados persistidos.
 
 ## Matriz aprovada para WEB-AUTH-001
 
-| Rota                | Acesso                           | Comportamento incompatível                   |
-| ------------------- | -------------------------------- | -------------------------------------------- |
-| `/`                 | pública                          | permanece pública, inclusive autenticado     |
-| `/login`            | anônimo                          | pendente → troca; autenticado → dashboard    |
-| `/redefinir-senha`  | sessão com troca obrigatória     | anônimo → login; troca concluída → dashboard |
-| `/senha-atualizada` | sessão válida e troca concluída  | anônimo → login; pendente → redefinir senha  |
-| `/dashboard`        | ambos os perfis, troca concluída | anônimo → login; pendente → redefinir senha  |
+| Rota                | Acesso                           | Comportamento incompatível                           |
+| ------------------- | -------------------------------- | ---------------------------------------------------- |
+| `/`                 | entrada Server                   | anônimo → login; pendente → troca; comum → dashboard |
+| `/login`            | anônimo                          | pendente → troca; autenticado → dashboard            |
+| `/redefinir-senha`  | sessão com troca obrigatória     | anônimo → login; troca concluída → dashboard         |
+| `/senha-atualizada` | sessão válida e troca concluída  | anônimo → login; pendente → redefinir senha          |
+| `/dashboard`        | ambos os perfis, troca concluída | anônimo → login; pendente → redefinir senha          |
 
-A implementação de `WEB-AUTH-001` substituiu a visão geral ilustrativa em `/`
-pelo catálogo público e criou `/dashboard` protegido, conforme a
-[tarefa aprovada](../../tasks/WEB-AUTH-001-integrar-autenticacao.md). O catálogo
-lista todas as páginas realmente disponíveis e seus acessos. Os
-endpoints `/api/health` e `/api/backend/:path*` aparecem em uma seção técnica,
-deixando explícito que o rewrite herda a política da API e não é uma página.
+A implementação de `WEB-AUTH-001` criou `/dashboard` protegido, conforme a
+[tarefa aprovada](../../tasks/WEB-AUTH-001-integrar-autenticacao.md). O
+`WEB-AUTH-003` removeu o catálogo público transitório: `/` consulta a identidade
+uma vez por request e aplica a matriz da tabela. Falha transitória da API mostra
+estado explícito e não é convertida em logout; `401` continua levando ao login.
 
 `WEB-SHELL-001` moveu `/dashboard` para `app/(sistema)/dashboard` e centralizou
-os redirects de sessão em `app/(sistema)/layout.tsx`. O catálogo de navegação é
+os redirects de sessão em `app/(sistema)/layout.tsx`. A consulta memoizada da
+identidade é reutilizada pelas páginas que precisam do perfil, sem nova chamada
+HTTP no mesmo request. O catálogo de navegação é
 a fonte do item ativo e do breadcrumb; somente caminhos Web implementados
 recebem link. Movimentações está marcado como implementado e inclui suas páginas descendentes no item ativo e breadcrumb.
 
@@ -113,3 +114,10 @@ expor identificadores brutos ou dados sensíveis.
 Se uma feature exigir modal roteável, documente a semântica de acesso direto,
 refresh, Voltar e Avançar. Preserve foco, teclado e confirmação de descarte. Um
 modal não deve ser a única forma de alcançar uma operação essencial.
+
+Na evolução aprovada, criação e edição dos cadastros administrativos e do
+inventário pendente usam esse padrão. Cadastro patrimonial, manutenção e ações
+patrimoniais complexas permanecem em páginas/drawers próprios. O detalhe
+operacional do inventário continua página completa. Consulte
+[WEB-CADASTROS-002](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md) e
+[WEB-INVENTARIOS-002](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md).

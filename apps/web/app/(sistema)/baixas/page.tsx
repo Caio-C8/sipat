@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { queryRelatorio } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverRelatorios } from "@/features/relatorios/api/server";
 import { BaixasLista } from "@/features/baixas/components/baixas-lista";
@@ -17,8 +17,7 @@ export default async function BaixasPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const recebidos = await searchParams;
   const valores = prepararFiltrosBaixas(recebidos);
   const query = queryRelatorio("baixas").safeParse(valores);

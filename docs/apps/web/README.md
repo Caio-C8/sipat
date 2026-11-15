@@ -20,7 +20,8 @@ fronteiras entre UI, contratos e integração HTTP.
   [WEB-CADASTROS-001](./roadmap.md#web-cadastros-001--integrar-cadastros-à-api-existente).
   O cadastro de patrimônio não faz parte dessa integração.
 
-- `/` apresenta o catálogo público de páginas, acessos e endpoints técnicos;
+- `/` decide no servidor entre `/login`, `/redefinir-senha` e `/dashboard`
+  conforme ausência de sessão, primeiro acesso ou sessão comum;
 - `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
   reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
   blocos ainda sem integração;
@@ -93,10 +94,22 @@ fronteiras entre UI, contratos e integração HTTP.
 - `WEB-AUTH-002` está implementado com backend mockado estrito no E2E; a
   validação adicional contra PostgreSQL e SMTP fake permanece pendente.
 
-`WEB-AUTH-001` transformou `/` no catálogo público de rotas e moveu a visão
-geral ilustrativa para `/dashboard`, protegida para os dois perfis.
+`WEB-AUTH-001` moveu a visão geral ilustrativa para `/dashboard`. O
+`WEB-AUTH-003` substituiu o catálogo transitório de `/` pela matriz Server de
+entrada, centralizou ausência/indisponibilidade no limite autenticado e removeu
+retornos vazios das páginas protegidas.
 `WEB-SHELL-001` moveu a proteção e a composição visual das páginas autenticadas
 para o layout do grupo `(sistema)` sem alterar a URL pública.
+
+## Evolução aprovada de usabilidade e padronização
+
+A sequência aprovada para estabilizar autenticação, permissões, componentes,
+shell e verticais Web está em
+[Evolução Web de usabilidade e padronização](./roadmap.md#evolução-web-de-usabilidade-e-padronização).
+As tarefas vinculadas ao roadmap são contratos de execução; esta seção não
+descreve essas melhorias como já implementadas. O trabalho prioriza o produto
+Web apresentável e funcional, preserva as URLs atuais e deixa a evolução mobile
+para depois, exceto pelo controle crítico do leitor de inventário.
 
 `/usuarios`, `/usuarios/novo`, `/usuarios/[usuarioId]` e
 `/usuarios/[usuarioId]/editar` integram listagem paginada, filtros, consulta,
@@ -148,7 +161,8 @@ esse template.
 
 ## Decisões pendentes do SIPAT
 
-- identidade visual, temas e tokens definitivos;
+- identidade visual definitiva além dos tokens e padrões aprovados em
+  `WEB-UI-001`;
 - biblioteca de formulários e estado remoto;
 - duração e política operacional das sessões e do cookie;
 - serviço de observabilidade e analytics;

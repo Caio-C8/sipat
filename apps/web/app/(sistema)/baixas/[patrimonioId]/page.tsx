@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, CircleUserRound, Scale } from "lucide-react";
 import { PatrimonioParamsSchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 import { AnexoBaixa } from "@/features/baixas/components/anexo-baixa";
@@ -24,8 +24,7 @@ export default async function BaixaDetalhePage({
   params: Promise<{ patrimonioId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const parametro = PatrimonioParamsSchema.safeParse(await params);
   if (!parametro.success) notFound();
   const consulta = await searchParams;

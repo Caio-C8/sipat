@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { Plus, Search } from "lucide-react";
 import { ListarUsuariosQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { AccessDenied } from "@/components/shared/access-denied";
 import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 
 export const metadata: Metadata = {
@@ -25,9 +25,12 @@ export default async function UsuariosPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade || identidade.perfil !== "ADMINISTRADOR")
-    redirect("/dashboard");
+  const identidade = await exigirIdentidadeAtual();
+  if (identidade.perfil !== "ADMINISTRADOR") {
+    return (
+      <AccessDenied description="Somente o Administrador pode gerenciar usuários." />
+    );
+  }
   const recebidos = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(recebidos).filter(

@@ -8,7 +8,7 @@ import {
   type EventosFichaResponse,
   type FichaResponse,
 } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverRelatorios } from "@/features/relatorios/api/server";
 import { FormularioRelatorios } from "@/features/relatorios/components/formulario";
 import { DownloadRelatorio } from "@/features/relatorios/components/download";
@@ -37,8 +37,7 @@ export default async function RelatoriosPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const params = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(params).filter(([, v]) => typeof v === "string" && v !== ""),

@@ -5,7 +5,7 @@ import { ListarInventariosQuerySchema } from "@repo/contracts";
 import { AbrirInventarioDialog } from "@/features/inventarios/components/abrir-inventario-dialog";
 import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
 import { isApiError } from "@/lib/api/core/api-error";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = { title: "Inventários" };
 
@@ -29,8 +29,7 @@ export default async function InventariosPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const params = await searchParams;
   const busca = typeof params.busca === "string" ? params.busca : undefined;
   const status = typeof params.status === "string" ? params.status : undefined;

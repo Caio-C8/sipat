@@ -290,6 +290,26 @@ aprovada em [Armazenamento local de documentos](../../file-storage.md).
 contratos compartilhados e `NOTAS-FISCAIS-001` entregou o fluxo complementar de
 notas e anexos. A implementação de `COMPRAS-001` permanece em validação.
 
+## Evolução Web aprovada com impacto na API
+
+As próximas mudanças de API decorrentes da evolução Web estão delimitadas nas
+tarefas, e não representam estado implementado:
+
+- [SEC-002](../../tasks/SEC-002-matriz-leitura-compartilhada.md) ajusta somente
+  as consultas compartilhadas da matriz de acesso;
+- [WEB-PATRIMONIOS-002](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)
+  adiciona a prévia não reservada de numeração;
+- [WEB-INVENTARIOS-002](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)
+  adiciona a edição transacional do inventário ainda pendente;
+- [WEB-MANUTENCOES-003](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)
+  adiciona o número global `BIGINT` do pedido, serializado como string;
+- [WEB-DASHBOARD-002](../../tasks/WEB-DASHBOARD-002-visao-operacional.md) e
+  [WEB-BUSCA-001](../../tasks/WEB-BUSCA-001-busca-global.md) criam agregações
+  próprias, finitas e autorizadas.
+
+Os formatos públicos correspondentes estão registrados no
+[roadmap de contratos](../../contracts/roadmap.md#contratos-da-evolução-web-de-usabilidade-e-padronização).
+
 ## Relatórios patrimoniais
 
 O módulo oferece catálogo, seletores, nove consultas tabulares e ficha com

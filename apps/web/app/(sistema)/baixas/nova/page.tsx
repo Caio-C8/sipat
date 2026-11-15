@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ListarPatrimoniosQuerySchema } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 import { NovaBaixa } from "@/features/baixas/components/nova-baixa";
 
@@ -13,8 +13,7 @@ export default async function NovaBaixaPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "DIRETOR_PATRIMONIO") redirect("/baixas");
   const recebidos = await searchParams;
   const valores = Object.fromEntries(

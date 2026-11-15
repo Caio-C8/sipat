@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Plus } from "lucide-react";
 import { ListarReavaliacoesQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverReavaliacaoOperations } from "@/features/reavaliacoes/api/server-reavaliacao-operations";
 import { ErroReavaliacao } from "@/features/reavaliacoes/components/erro-reavaliacao";
 import { FiltrosReavaliacoes } from "@/features/reavaliacoes/components/filtros-reavaliacoes";
@@ -21,8 +21,7 @@ async function ReavaliacoesContent({
 }: {
   parametros: Record<string, string | string[] | undefined>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const valores = Object.fromEntries(
     Object.entries(parametros).filter(
       ([, valor]) => typeof valor === "string" && valor !== "",

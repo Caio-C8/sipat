@@ -8,7 +8,7 @@ import {
 import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
 import { ResolverCorrecaoDialog } from "@/features/inventarios/components/resolver-correcao-dialog";
 import { isApiError } from "@/lib/api/core/api-error";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = { title: "Detalhe do inventário" };
 const painel = "rounded-xl border border-[#dfe7f1] bg-white p-5";
@@ -28,8 +28,7 @@ export default async function InventarioDetalhePage({
   params: Promise<{ inventarioId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const { inventarioId } = await params;
   if (!InventarioParamsSchema.safeParse({ inventarioId }).success)
     return (
