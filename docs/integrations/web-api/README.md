@@ -197,8 +197,11 @@ nas mutações e não leem o cookie `HttpOnly`. Server Components que consultare
 `/auth/me` encaminham explicitamente o header `Cookie` recebido, usam o cliente
 server-only e desabilitam cache para não misturar identidades.
 
-As páginas protegidas confirmam a sessão por `/auth/me`; não foi necessário
-adicionar Proxy do Next.js. A API continua aplicando autenticação, pendência de
+As páginas protegidas confirmam a sessão por `/auth/me`; o layout Server trata
+`401` como sessão ausente/expirada e falhas de rede, timeout ou `502`–`504` como
+indisponibilidade transitória, sem fingir logout. A leitura fica memoizada no
+request e é reutilizada por páginas que precisam da identidade. Não foi
+necessário adicionar Proxy do Next.js. A API continua aplicando autenticação, pendência de
 primeiro acesso e perfil em toda operação.
 
 Responses `401`, `403` por primeiro acesso e `403` por perfil são estados
@@ -246,7 +249,9 @@ mantém o token somente em memória e remove o fragmento da URL. O deep link de
 retorno nunca carrega o token e não cria sessão. `/redefinir-senha` continua
 sendo a página autenticada do primeiro acesso.
 
-Consulte o [contrato de execução](../../tasks/WEB-AUTH-002-recuperar-senha.md).
+Consulte os contratos de execução
+[WEB-AUTH-002](../../tasks/WEB-AUTH-002-recuperar-senha.md) e
+[WEB-AUTH-003](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md).
 
 ## Relatórios e transporte de PDF
 

@@ -101,6 +101,26 @@ HTTP permanecem sem conhecimento de mensagem visual, navegação ou Sonner. Erro
 de campo e falhas recuperáveis devem continuar próximos do formulário ou do
 diálogo; toast não é o único lugar para informação necessária à correção.
 
+### Padrão aprovado para a evolução Web
+
+A evolução `WEB-UI-001` adota as seguintes decisões, ainda dependentes de
+implementação e migração incremental das telas:
+
+- Select atende conjuntos pequenos e fixos; Combobox atende catálogos extensos,
+  remotos ou pesquisáveis. Ambos compartilham `Field`, tokens e estados;
+- filtros simples podem usar uma configuração compartilhada, mas colunas,
+  validações e regras permanecem na feature do domínio;
+- tabelas são composições sobre a primitive `Table`, não um componente universal
+  com condicionais para todos os domínios;
+- paginação, ação de consulta, estados vazios e feedback terão composições
+  comuns;
+- valores monetários são digitados com duas casas e exibidos com exatamente
+  sete casas em Web e relatórios;
+- `components/ui` não conhece rota, perfil, contrato HTTP ou entidade SIPAT.
+
+O contrato executável está em
+[WEB-UI-001](../../tasks/WEB-UI-001-fundacao-visual-formularios.md).
+
 ## Composição
 
 Prefira composição, slots e `children` a um componente que recebe várias props

@@ -38,7 +38,9 @@ gerenciem a própria senha com segurança.
 
 ### RF03: Gestão de Responsáveis
 
-**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte, altere e inative responsáveis pelos setores.
+**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte,
+altere e inative responsáveis pelos setores. O Diretor de Patrimônio pode
+consultar esses registros, sem receber permissão de mutação.
 
 **Informações:** Nome, matrícula, situação e informações de auditoria.
 
@@ -51,7 +53,9 @@ gerenciem a própria senha com segurança.
 
 ### RF04: Gestão de Setores
 
-**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte, altere, ative e inative setores.
+**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte,
+altere, ative e inative setores. O Diretor de Patrimônio pode consultar esses
+registros, sem receber permissão de mutação.
 
 **Informações:** Nome, sala, ramal, responsável atual, situação do setor e informações de auditoria.
 
@@ -64,7 +68,9 @@ gerenciem a própria senha com segurança.
 
 ### RF05: Gestão de Comissões
 
-**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e altere comissões relacionadas às operações patrimoniais.
+**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e
+altere comissões relacionadas às operações patrimoniais. O Diretor de
+Patrimônio pode consultar esses registros, sem receber permissão de mutação.
 
 **Informações:** Nome, descrição, número do ato em formato textual, período de vigência, membros, papel de cada membro e informações de auditoria.
 
@@ -85,7 +91,9 @@ gerenciem a própria senha com segurança.
 
 ### RF06: Gestão de Naturezas de Bens
 
-**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e altere naturezas de bens patrimoniais.
+**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e
+altere naturezas de bens patrimoniais. O Diretor de Patrimônio pode consultar
+esses registros, sem receber permissão de mutação.
 
 **Informações:** Nome da natureza, nome normalizado, descrição e informações de auditoria.
 
@@ -96,7 +104,9 @@ gerenciem a própria senha com segurança.
 
 ### RF07: Gestão de Espécies de Bens
 
-**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e altere espécies de bens.
+**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte e
+altere espécies de bens. O Diretor de Patrimônio pode consultar esses registros,
+sem receber permissão de mutação.
 
 **Informações:** Nome da espécie, nome normalizado, descrição, natureza vinculada e informações de auditoria.
 
@@ -108,7 +118,10 @@ gerenciem a própria senha com segurança.
 
 ### RF08: Gestão de Fornecedores
 
-**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte, altere, ative e inative fornecedores utilizados nos registros de aquisição e manutenção.
+**Descrição:** O sistema deve permitir que o Administrador cadastre, consulte,
+altere, ative e inative fornecedores utilizados nos registros de aquisição e
+manutenção. O Diretor de Patrimônio pode consultar esses registros, sem receber
+permissão de mutação.
 
 **Informações:** Razão social, nome fantasia, nome do representante, CNPJ, e-mail, telefone, endereço, situação e informações de auditoria.
 
@@ -309,6 +322,8 @@ correções está registrada em RF19.
 - O Diretor de Patrimônio deve poder consultar, com paginação finita, os
   patrimônios elegíveis ainda não depreciados na competência selecionada antes
   de executar a operação em massa.
+- O Administrador pode consultar competências, resumos, pendências e resultados
+  de depreciação, mas não pode executar processamento individual ou em massa.
 - A execução deve abranger exatamente um patrimônio ou todos os patrimônios elegíveis; não deve aceitar uma lista ou quantidade arbitrária de bens.
 - Toda execução deve informar uma única comissão, existente e vigente na data civil do processamento.
 - O valor de depreciação calculado deve ser somado ao acumulado de depreciação da situação patrimonial.
@@ -319,10 +334,10 @@ correções está registrada em RF19.
 - A execução deve ser atômica: erro ou conflito inesperado em qualquer item desfaz todas as depreciações da solicitação. Itens classificados pelas regras como inelegíveis não constituem erro e devem ser discriminados no resultado agregado.
 - A consulta deve informar as competências que possuem pendências, suas
   quantidades e a competência pendente mais antiga, com respostas finitas.
-- A tela de depreciações, o detalhe do bem, um relatório específico de
-  pendências e o menu de notificações devem tornar as pendências visíveis. O
-  alerta do menu é derivado do estado atual e não cria, neste escopo, caixa
-  postal persistente, leitura individual ou canal externo.
+- A tela de depreciações, o detalhe do bem, o dashboard e um relatório
+  específico de pendências devem tornar as pendências visíveis. Não haverá
+  central de notificações, caixa postal persistente, leitura individual ou
+  canal externo nesta etapa.
 - A apresentação da competência deve ser localizada, por exemplo, como **Abril
   de 2026**, preservando `2026-04` como representação canônica na API.
 
@@ -388,7 +403,9 @@ anexado, comissão e usuário responsável.
 
 **Descrição:** O sistema deve permitir que o Administrador e o Diretor de Patrimônio registre, acompanhe e conclua manutenções de patrimônios.
 
-**Informações:** Manutenção, patrimônios enviados, datas, fornecedor quando aplicável, orçamento por item, descrição do serviço, valor do serviço, garantia, documentos e informações de recebimento.
+**Informações:** Manutenção, número sequencial do pedido, patrimônios enviados,
+datas, fornecedor quando aplicável, orçamento por item, descrição do serviço,
+valor do serviço, garantia, documentos e informações de recebimento.
 
 **Regras:**
 
@@ -398,6 +415,9 @@ anexado, comissão e usuário responsável.
 - Documentos podem ser anexados no envio e/ou no recebimento.
 - A manutenção não deve alterar automaticamente o valor patrimonial do bem.
 - O status do patrimônio deve refletir o envio e o retorno da manutenção.
+- Cada pedido deve possuir um número `BIGINT` único, imutável, crescente e
+  gerado pelo banco. A API o representa como string decimal e a interface o
+  apresenta como `Pedido #n`.
 
 **Decisões confirmadas para RF18:** comissão e data de envio pertencem ao pedido;
 fornecedor, tipo (`PREVENTIVA` ou `CORRETIVA`) e previsão de retorno pertencem a
@@ -428,6 +448,10 @@ situação do item, estado e tipo de correção, transferência de correção qu
 houver e usuário responsável.
 
 **Regras:**
+
+- Enquanto o inventário estiver `PENDENTE`, o Diretor pode alterar somente
+  nome, descrição, observação e comissão. A nova comissão deve ser válida para
+  o vínculo. Após o início do primeiro setor, esses dados ficam imutáveis.
 
 - A criação deve incluir somente os setores ativos e os patrimônios com status
   ATIVO existentes naquele momento.
@@ -472,6 +496,9 @@ houver e usuário responsável.
 - A baixa de qualquer patrimônio incluído e a inativação de qualquer setor do
   inventário devem permanecer bloqueadas até a finalização do inventário.
 - O bem poderá ser identificado por leitura da etiqueta patrimonial ou por busca manual quando a leitura não for possível.
+- Na conferência móvel, a primeira leitura válida deve pausar o leitor antes do
+  envio, manter o resultado visível e exigir a ação explícita
+  `Ler próximo patrimônio` para uma nova leitura.
 - Uma nova leitura do mesmo patrimônio no mesmo setor deve devolver o resultado
   já consolidado sem duplicar ou alterar a conferência.
 - Se um patrimônio já verificado for informado em outro setor, o sistema deve
@@ -559,6 +586,57 @@ retirar validações existentes como solução automática.
 - Os relatórios devem utilizar os dados históricos preservados pelo sistema e permitir a conferência das informações relevantes ao patrimônio.
 - Os filtros disponíveis devem ser compatíveis com os atributos existentes no cadastro e nos registros históricos.
 - Deve ser possível exportar essas informações para documentos PDF.
+- Administrador e Diretor de Patrimônio possuem acesso aos mesmos tipos de
+  relatório, inclusive relatórios tabulares e PDFs de baixas. O PDF de relatório
+  não altera, por si só, a política do documento comprobatório anexado à baixa.
+
+### RF22: Busca Global
+
+**Descrição:** O sistema Web deve permitir que Administrador e Diretor de
+Patrimônio pesquisem registros dos domínios compartilhados a partir do shell
+autenticado.
+
+**Informações:** Termo pesquisado, tipo do resultado, identificação principal,
+descrição resumida e destino navegável.
+
+**Regras:**
+
+- A busca deve abranger patrimônios, reavaliações, depreciações, movimentações,
+  empréstimos, baixas, inventários, manutenções, processos de compra,
+  fornecedores, setores, responsáveis, comissões, naturezas e espécies.
+- Usuários não integram a busca global, pois sua gestão é exclusiva do
+  Administrador.
+- Os resultados devem ser agrupados por domínio, limitados por grupo e
+  respeitar no backend as permissões de leitura do perfil autenticado.
+- Início, cadastro de patrimônio e relatórios são destinos de navegação, não
+  entidades retornadas como resultado.
+
+### RF23: Visão Geral Operacional
+
+**Descrição:** O dashboard Web deve apresentar um resumo operacional real e
+navegável para o usuário autenticado por meio de uma única consulta agregada.
+
+**Informações:** Totais patrimoniais, pendências vencidas, setores com mais
+patrimônios e atividades patrimoniais realizadas pelo usuário atual.
+
+**Regras:**
+
+- Inventários entram como pendência quando possuem correção aberta há pelo
+  menos 14 dias completos, contados da verificação ou localização que originou
+  a pendência.
+- Manutenções entram como pendência quando o envio ocorreu há pelo menos 14
+  dias completos e existe item ainda sem retorno.
+- A depreciação entra como pendência depois de 14 dias completos do início da
+  competência devida ainda não processada.
+- A interface mostra até três inventários, três manutenções e a competência de
+  depreciação mais antiga, com destinos que preservam o filtro correspondente.
+- `Setores com mais patrimônios` mostra no máximo cinco setores, desconsidera
+  bens `BAIXADO` e navega à pesquisa patrimonial filtrada pelo setor.
+- `Últimas atividades realizadas por você` mostra as três ações patrimoniais
+  mais recentes atribuídas à identidade atual, com data, horário, número
+  patrimonial e destino para a aba de histórico do bem.
+- O Administrador visualiza somente blocos compatíveis com sua leitura; a API
+  continua sendo a autoridade de autorização.
 
 ## Requisitos Não Funcionais
 
@@ -587,6 +665,9 @@ retirar validações existentes como solução automática.
 - Uma espécie deve estar vinculada a uma única natureza.
 - Um patrimônio deve possuir uma única espécie e um setor atual.
 - Os valores monetários devem utilizar o formato decimal, com 13 casas decimais à esquerda da vírgula e 7 casas decimais à direita da vírgula.
+- Na Web, inputs monetários aceitam duas casas decimais durante a digitação; a
+  apresentação de valores monetários, inclusive em relatórios e PDFs gerados,
+  usa exatamente sete casas decimais sem alterar a precisão armazenada.
 - Os valores patrimoniais devem ser armazenados em Real (BRL).
 - Os relacionamentos entre patrimônios, setores, espécies, naturezas, processos de compra e demais entidades devem manter sua integridade referencial.
 
@@ -626,6 +707,10 @@ retirar validações existentes como solução automática.
   inclusive patrimônios, inventários e históricos, sem que a permissão de
   leitura conceda autorização para executar operações patrimoniais.
 - Os dois perfis poderão buscar dados dos patrimônios, gerar relatórios e enviar patrimônios para manutenção.
+- Os dois perfis podem consultar os cadastros administrativos compartilhados;
+  somente o Administrador pode criá-los, alterá-los, ativá-los ou inativá-los.
+- O Administrador pode consultar depreciações, mas somente o Diretor pode
+  processá-las.
 - Operações patrimoniais que exigem autorização devem ser executadas somente pelo perfil autorizado.
 - As operações relacionadas aos patrimônios que exigem comissão devem possuir uma comissão vigente associada.
 - O usuário responsável pela execução de uma operação deve ser registrado por meio de `created_by_id`.

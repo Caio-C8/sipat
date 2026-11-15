@@ -49,11 +49,21 @@ Quando `AUTH_PASSWORD_RESET_ENABLED` é `true`, a API exige
 `SMTP_PASSWORD` e `SMTP_FROM`. A URL usa HTTPS em todos os ambientes; somente
 em `development` também pode usar HTTP com `localhost`, `127.0.0.1` ou `::1`,
 para que a página Web local receba o token quando existir. A URL-base aponta
-para `/recuperar-senha`; a API acrescenta o token somente no fragmento.
+para exatamente `/recuperar-senha`, sem query ou fragmento configurado; a API
+acrescenta o token somente no fragmento. A inicialização falha antes de servir
+requisições quando esse destino ou a política HTTPS estiverem incorretos, sem
+incluir URL, token ou credencial na mensagem.
 `SMTP_SECURE`
 seleciona TLS desde a conexão e `SMTP_REQUIRE_TLS` exige upgrade STARTTLS; em
 staging e produção pelo menos um deles deve ser `true`, sempre com validação do
 certificado.
+
+O `.env.staging.example` deixa a capacidade habilitada com host e credenciais
+fictícios. Antes de implantar, substitua `staging.sipat.example`, host, usuário,
+senha e remetente pelos valores do cofre e do domínio HTTPS reais. Depois do
+deploy, solicite um novo e-mail: links emitidos anteriormente preservam o host
+antigo e não são reescritos. O smoke deve conferir somente protocolo, host,
+path e presença de um fragmento `token`, sem imprimir o valor do token.
 
 `AUTH_EMAIL_MAX_CONCURRENCY` e `AUTH_EMAIL_MAX_QUEUE` limitam, por instância, os
 envios simultâneos e a fila em memória. A fila não é durável: falha do processo,

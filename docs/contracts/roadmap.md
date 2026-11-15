@@ -617,3 +617,59 @@ contábil no resumo, usuário de cadastro mínimo no detalhe, busca textual fini
 nos eventos da ficha e query/response próprios para opções de comissão da
 baixa. Não há mudança de banco, semântica de mutação ou permissão administrativa
 geral. [Tarefa e critérios](../tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes.md).
+
+## Contratos da evolução Web de usabilidade e padronização
+
+**Status:** aprovados em 14/11/2026; implementação pendente nas respectivas
+fatias verticais.
+
+Estes contratos não devem ser implementados como uma entrega isolada. Cada
+schema compartilhado nasce junto da regra na API e do consumidor Web indicado,
+preservando compatibilidade enquanto houver consumidores do formato anterior.
+
+### Prévia não reservada de número patrimonial
+
+`WEB-PATRIMONIOS-002` adiciona uma consulta autenticada para a prévia dos
+próximos números oficial e `SP-`. A resposta deve identificar explicitamente
+que a prévia não reserva valor; a criação continua recebendo o número definitivo
+da sequence dentro da transação. A consulta não muda o body de cadastro nem
+aceita número escolhido pelo cliente.
+[Tarefa e critérios](../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md).
+
+### Edição de inventário pendente
+
+`WEB-INVENTARIOS-002` adiciona params UUID, body estrito com `nome`,
+`descricao`, `observacao` e `comissaoId` e response pública atualizada para
+`PATCH /inventarios/:inventarioId`. Campos opcionais de conteúdo devem seguir a
+mesma nulabilidade já adotada na criação. A API deve expor conflitos públicos
+para inventário fora de `PENDENTE`, comissão inválida e concorrência com o
+início do primeiro setor.
+[Tarefa e critérios](../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md).
+
+### Número humano do pedido de manutenção
+
+`WEB-MANUTENCOES-003` amplia os contratos de manutenção com `numeroPedido` como
+string decimal obrigatória nas respostas de resumo e detalhe. Filtros aceitam o
+número sem converter o `BIGINT` do banco em `number`; UUID permanece como chave
+técnica da rota. A ampliação deve cobrir dashboard, relatórios, seed, fixtures e
+todos os consumidores dos schemas existentes.
+[Tarefa e critérios](../tasks/WEB-MANUTENCOES-003-identificacao-itens.md).
+
+### Dashboard operacional agregado
+
+`WEB-DASHBOARD-002` cria query e response próprias para `GET /dashboard`, com
+blocos discriminados de totais, pendências de inventário, manutenção e
+depreciação, setores e atividades do usuário autenticado. Limites, ordenação,
+datas civis e destinos canônicos fazem parte do contrato observado pela Web.
+`DashboardPatrimonialResponseSchema` e `GET /patrimonios/dashboard` continuam
+válidos até a migração de todos os consumidores e só então podem ser removidos.
+[Tarefa e critérios](../tasks/WEB-DASHBOARD-002-visao-operacional.md).
+
+### Busca global agregada
+
+`WEB-BUSCA-001` cria query finita e response discriminada por domínio para
+`GET /busca`. Cada item contém apenas identificador técnico necessário,
+identificador humano, título, complemento seguro e destino canônico. A resposta
+informa total limitado/truncado por grupo, não inclui usuários e não transporta
+payloads completos, segredos, anexos ou campos internos.
+[Tarefa e critérios](../tasks/WEB-BUSCA-001-busca-global.md).

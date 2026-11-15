@@ -65,6 +65,25 @@ visual; use uma operação com entrada e saída explícitas.
 - mova o foco ao primeiro erro quando isso ajudar a recuperação;
 - não use apenas cor, tooltip ou placeholder para explicar um erro.
 
+### Feedback aprovado para a evolução Web
+
+- erro geral ou relevante da API fica acima do formulário, persiste enquanto
+  necessário e recebe scroll/foco programático quando aparece;
+- erro associado a campo fica somente abaixo do controle, marca
+  `aria-invalid` e move o foco ao primeiro campo inválido;
+- toast comunica sucesso e falha geral não bloqueante, sem duplicar erro de
+  campo nem ser o único local de uma instrução necessária;
+- modal usa `Cancelar`; página de criação usa `Limpar`; edição em página usa
+  `Restaurar alterações`, com confirmação quando houver perda de dados;
+- mensagens públicas descrevem o que o usuário pode fazer e não mencionam API,
+  servidor, stack, tabela ou implementação interna;
+- inputs monetários mantêm string decimal e duas casas durante a edição;
+  inputs inteiros aceitam apenas dígitos e não usam comportamento de incremento
+  acidental de `type="number"`.
+
+Essas decisões são implementadas incrementalmente por
+[WEB-UI-001](../../tasks/WEB-UI-001-fundacao-visual-formularios.md).
+
 ## Testes
 
 Cubra defaults, valores válidos, erros corrigíveis, transformação de input para
