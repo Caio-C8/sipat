@@ -154,12 +154,12 @@ pública, cliente HTTP, normalização de rotas e operações, Web Vitals e
 observabilidade. Novas features devem adicionar testes proporcionais aos seus
 contratos e estados.
 
-A suíte Playwright cobre o catálogo público, metadata, links de health, login,
-primeiro acesso, rotação simulada do cookie, logout, redirects, acessibilidade
-automatizável, headers de segurança e execução da home sem violações CSP no
-build de produção. O fluxo usa um backend mockado estrito para permitir que
-Server Components validem `/auth/me`; ele não substitui a verificação adicional
-contra API e banco reais.
+A suíte Playwright cobre a entrada Server e sua matriz de sessão, os health
+checks públicos, metadata, login, primeiro acesso, rotação simulada do cookie,
+logout, redirects, acessibilidade automatizável, headers de segurança e
+execução do destino anônimo sem violações CSP no build de produção. O fluxo usa
+um backend mockado estrito para permitir que Server Components validem
+`/auth/me`; ele não substitui a verificação adicional contra API e banco reais.
 
 O mock de rede registra expectations por método e path, aceita contagem exata,
 valida query e payload dentro do responder e falha no teardown quando recebe
@@ -167,7 +167,8 @@ uma request inesperada ou quando uma request esperada não ocorre. As fixtures d
 response são analisadas pelos schemas compartilhados antes de serem entregues à
 aplicação.
 
-A verificação axe atual cobre a home com regras WCAG A e AA automatizáveis. Esse
+A verificação axe atual cobre o destino anônimo com regras WCAG A e AA
+automatizáveis. Esse
 resultado não comprova conformidade integral: teclado, foco em todos os estados,
 zoom, contraste contextual, leitores de tela e julgamento humano continuam
 exigindo revisão manual.
