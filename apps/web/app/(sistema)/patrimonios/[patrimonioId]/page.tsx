@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { PatrimonioParamsSchema, queryRelatorio } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 import { serverRelatorios } from "@/features/relatorios/api/server";
@@ -17,8 +17,7 @@ export default async function PatrimonioDetalhePage({
   params: Promise<{ patrimonioId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const parametro = PatrimonioParamsSchema.safeParse(await params);
   if (!parametro.success) notFound();
   const recebidos = await searchParams;

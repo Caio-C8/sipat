@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { ListarPatrimoniosQuerySchema } from "@repo/contracts";
 import { PatrimonioLista } from "@/features/patrimonios/components/patrimonio-lista";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 
 export const metadata: Metadata = {
@@ -16,8 +16,7 @@ export default async function PatrimoniosPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const recebidos = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(recebidos).filter(

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { PatrimonioParamsSchema } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { NovaMovimentacao } from "@/features/movimentacoes/components/nova-movimentacao";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 export const metadata: Metadata = { title: "Nova movimentação" };
@@ -11,8 +11,7 @@ export default async function NovaMovimentacaoPage({
 }: {
   searchParams: Promise<{ patrimonioId?: string }>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "DIRETOR_PATRIMONIO")
     return (
       <main className="p-7">

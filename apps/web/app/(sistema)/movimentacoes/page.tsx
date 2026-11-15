@@ -9,7 +9,7 @@ import {
   Plus,
 } from "lucide-react";
 import { ListarMovimentacoesQuerySchema } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { Button } from "@/components/ui/button";
 import { serverMovimentacaoOperations } from "@/features/movimentacoes/api/server-movimentacao-operations";
 import { FiltrosMovimentacoes } from "@/features/movimentacoes/components/filtros-movimentacoes";
@@ -27,8 +27,7 @@ export default async function MovimentacoesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const parametros = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(parametros).filter(

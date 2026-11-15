@@ -157,6 +157,35 @@ describe("validateEnvironment", () => {
     ).toThrow();
   });
 
+  it("exige o consumidor público de recuperação sem query ou fragmento", () => {
+    const smtp = {
+      SMTP_HOST: "smtp.example",
+      SMTP_PORT: "587",
+      SMTP_SECURE: "false",
+      SMTP_REQUIRE_TLS: "true",
+      SMTP_USER: "usuario",
+      SMTP_PASSWORD: "senha",
+      SMTP_FROM: "sipat@example.com",
+    };
+
+    for (const AUTH_PASSWORD_RESET_URL of [
+      "https://sipat.example/redefinir-senha",
+      "https://sipat.example/recuperar-senha?origem=email",
+      "https://sipat.example/recuperar-senha#token=fixo",
+    ]) {
+      expect(() =>
+        validateEnvironment({
+          ...ambienteValido(),
+          AUTH_PASSWORD_RESET_ENABLED: "true",
+          AUTH_PASSWORD_RESET_URL,
+          ...smtp,
+        }),
+      ).toThrow(
+        "AUTH_PASSWORD_RESET_URL deve terminar exatamente em /recuperar-senha",
+      );
+    }
+  });
+
   it("rejeita SMTP sem TLS obrigatório em staging e production", () => {
     expect(() =>
       validateEnvironment({

@@ -4,7 +4,7 @@ import {
   ReavaliacaoParamsSchema,
   type ReavaliacaoDetalhe,
 } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverReavaliacaoOperations } from "../api/server-reavaliacao-operations";
 import { formatarDataCivil, formatarDecimal } from "../presentation";
@@ -193,7 +193,7 @@ export async function ReavaliacaoDetalheServer({
   interceptado: boolean;
   retorno: string;
 }) {
-  if (!(await obterIdentidadeAtual())) return null;
+  await exigirIdentidadeAtual();
   const parsed = ReavaliacaoParamsSchema.safeParse({ reavaliacaoId });
   if (!parsed.success) notFound();
   let item: ReavaliacaoDetalhe | null = null;

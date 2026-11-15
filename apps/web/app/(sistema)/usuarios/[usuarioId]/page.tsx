@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { ChevronLeft, Pencil, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
@@ -9,7 +8,8 @@ import {
   SituacaoUsuario,
   perfilLabel,
 } from "@/features/usuarios/components/usuario-form";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { AccessDenied } from "@/components/shared/access-denied";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 
 export const metadata: Metadata = { title: "Consultar usuário" };
@@ -20,9 +20,12 @@ export default async function UsuarioDetalhePage({
 }: {
   params: Promise<{ usuarioId: string }>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade || identidade.perfil !== "ADMINISTRADOR")
-    redirect("/dashboard");
+  const identidade = await exigirIdentidadeAtual();
+  if (identidade.perfil !== "ADMINISTRADOR") {
+    return (
+      <AccessDenied description="Somente o Administrador pode consultar usuários." />
+    );
+  }
   const { usuarioId } = await params;
   let usuario;
   let erro = "";

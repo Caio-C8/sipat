@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft } from "lucide-react";
 import { MovimentacaoParamsSchema } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverMovimentacaoOperations } from "@/features/movimentacoes/api/server-movimentacao-operations";
 import { ErroMovimentacao } from "@/features/movimentacoes/components/erro-movimentacao";
@@ -18,7 +18,7 @@ export default async function MovimentacaoDetalhePage({
 }: {
   params: Promise<{ movimentacaoId: string }>;
 }) {
-  if (!(await obterIdentidadeAtual())) return null;
+  await exigirIdentidadeAtual();
   const parsed = MovimentacaoParamsSchema.safeParse(await params);
   if (!parsed.success) notFound();
   let resposta: Awaited<

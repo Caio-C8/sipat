@@ -152,6 +152,20 @@ const environmentSchema = z
       });
     }
 
+    if (
+      urlRedefinicao &&
+      (urlRedefinicao.pathname !== "/recuperar-senha" ||
+        urlRedefinicao.search !== "" ||
+        urlRedefinicao.hash !== "")
+    ) {
+      contexto.addIssue({
+        code: "custom",
+        path: ["AUTH_PASSWORD_RESET_URL"],
+        message:
+          "AUTH_PASSWORD_RESET_URL deve terminar exatamente em /recuperar-senha, sem query ou fragmento.",
+      });
+    }
+
     for (const chave of [
       "SMTP_HOST",
       "SMTP_PORT",

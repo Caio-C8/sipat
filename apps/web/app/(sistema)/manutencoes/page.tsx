@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ListarManutencoesQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { ErroManutencao } from "@/features/manutencoes/components/erro-manutencao";
 import { serverManutencaoOperations } from "@/features/manutencoes/api/server-manutencao-operations";
 import {
@@ -30,7 +30,7 @@ export default async function ManutencoesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  if (!(await obterIdentidadeAtual())) return null;
+  await exigirIdentidadeAtual();
   const entrada = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(entrada).filter(

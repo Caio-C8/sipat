@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { EmprestimoParamsSchema } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverEmprestimoOperations } from "@/features/emprestimos/api/server-emprestimo-operations";
 import { DetalheEmprestimo } from "@/features/emprestimos/components/detalhe-emprestimo";
@@ -16,8 +16,7 @@ export default async function EmprestimoDetalhePage({
   params: Promise<{ emprestimoId: string }>;
   searchParams: Promise<{ origem?: string }>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   const parsed = EmprestimoParamsSchema.safeParse(await params);
   if (!parsed.success) notFound();
   let resposta: Awaited<

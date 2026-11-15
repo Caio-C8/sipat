@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { HomeDashboard } from "@/app/_home/home-dashboard";
 import type { ResumoPatrimonialDashboard } from "@/features/patrimonios/api/patrimonio-operations";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = {
   title: "Visão geral",
@@ -11,11 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
-  const identidade = await obterIdentidadeAtual();
-
-  if (!identidade) {
-    return null;
-  }
+  const identidade = await exigirIdentidadeAtual();
 
   const cookie = (await headers()).get("cookie");
   let resumoPatrimonial:

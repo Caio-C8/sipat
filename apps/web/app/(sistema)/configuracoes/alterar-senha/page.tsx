@@ -3,7 +3,7 @@ import { LockKeyhole } from "lucide-react";
 import { AlterarSenhaForm } from "@/features/configuracoes/components/alterar-senha-form";
 import { ConfiguracoesAbas } from "@/features/configuracoes/components/configuracoes-abas";
 import { nomesPerfis } from "@/lib/navigation/system-navigation";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = {
   title: "Alterar senha",
@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AlterarSenhaPage() {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
 
   return (
     <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-4 text-[#17253d] sm:px-5 sm:py-5 min-[1500px]:gap-5 min-[1500px]:px-[30px] min-[1500px]:py-6">

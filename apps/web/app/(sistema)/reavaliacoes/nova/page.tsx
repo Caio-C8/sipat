@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { PatrimonioParamsSchema } from "@repo/contracts";
-import { obterIdentidadeAtual } from "@/lib/auth/server-session";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { NovaReavaliacao } from "@/features/reavaliacoes/components/nova-reavaliacao";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 
@@ -13,8 +13,7 @@ export default async function NovaReavaliacaoPage({
 }: {
   searchParams: Promise<{ patrimonioId?: string }>;
 }) {
-  const identidade = await obterIdentidadeAtual();
-  if (!identidade) return null;
+  const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "DIRETOR_PATRIMONIO") {
     return (
       <main className="p-4 sm:p-7">

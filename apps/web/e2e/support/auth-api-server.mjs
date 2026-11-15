@@ -187,6 +187,18 @@ const server = createServer(async (request, response) => {
   }
 
   if (request.method === "GET" && requestUrl.pathname === "/api/auth/me") {
+    if (request.headers.cookie?.includes("sipat_session=unavailable")) {
+      json(response, 503, {
+        status: 503,
+        sucesso: false,
+        codigo: "SERVICO_INDISPONIVEL",
+        mensagem: "Serviço temporariamente indisponível.",
+        erros: [],
+        requisicaoId: "e2e-api-request",
+      });
+      return;
+    }
+
     const session = sessionFromCookie(request.headers.cookie);
     const identity = session ? identities[session] : undefined;
 
