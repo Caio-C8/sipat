@@ -472,9 +472,19 @@ test.describe("Autenticação Web", () => {
     await expect(navigation.getByText("Usuários", { exact: true })).toHaveCount(
       0,
     );
-    await expect(navigation.getByText("Setores", { exact: true })).toHaveCount(
-      0,
-    );
+    for (const [nome, href] of [
+      ["Responsáveis", "/cadastros/responsaveis"],
+      ["Setores", "/cadastros/setores"],
+      ["Comissões", "/cadastros/comissoes"],
+      ["Naturezas", "/cadastros/naturezas"],
+      ["Espécies", "/cadastros/especies"],
+      ["Fornecedores", "/cadastros/fornecedores"],
+      ["Depreciação", "/depreciacao"],
+    ] as const) {
+      await expect(
+        navigation.getByRole("link", { name: nome, exact: true }),
+      ).toHaveAttribute("href", href);
+    }
     await expect(
       navigation.getByText("Manutenção", { exact: true }),
     ).toBeVisible();

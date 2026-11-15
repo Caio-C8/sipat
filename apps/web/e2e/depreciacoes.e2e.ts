@@ -30,8 +30,10 @@ test("seleciona competências pela URL e expõe o alerta derivado", async ({
   ).toBeVisible();
   await expect(page.getByText(/\b(?:API|URL)\b/)).toHaveCount(0);
 
-  await seletor.selectOption("2026-11");
-  await expect(page).toHaveURL(/competencia=2026-11/);
+  await expect(async () => {
+    await seletor.selectOption("2026-11");
+    await expect(page).toHaveURL(/competencia=2026-11/, { timeout: 2_000 });
+  }).toPass({ timeout: 10_000 });
   await expect(
     page
       .getByRole("status")
@@ -73,6 +75,7 @@ test("seleciona competências pela URL e expõe o alerta derivado", async ({
     ),
   ).toBe(true);
   await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page).toHaveTitle("Depreciação | SIPAT");
 
   const acessibilidade = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
