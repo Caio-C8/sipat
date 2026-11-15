@@ -298,10 +298,6 @@ test.describe("cadastros Web → API → PostgreSQL isolado", () => {
     await expect(
       page.getByRole("heading", { name: "Editar processo de compra" }),
     ).toBeVisible();
-    await page.goto("/cadastros/fornecedores");
-    await expect(
-      page.getByRole("heading", { name: "Acesso não permitido" }),
-    ).toBeVisible();
     const link = page.getByRole("link", {
       name: "Abrir PDF da nota NF-" + tag,
       exact: true,
@@ -382,7 +378,7 @@ test.describe("cadastros Web → API → PostgreSQL isolado", () => {
       expect(excesso).toEqual([]);
     }
   });
-  test("diretor consulta notas, cadastra processo sem notas e tem gestão administrativa negada", async ({
+  test("diretor consulta cadastros, cadastra processo sem notas e não recebe mutações administrativas", async ({
     page,
   }, info) => {
     const fixture = JSON.parse(
@@ -416,10 +412,26 @@ test.describe("cadastros Web → API → PostgreSQL isolado", () => {
     await expect(
       page.getByText("Nenhuma nota fiscal vinculada.", { exact: true }),
     ).toBeVisible();
-    await page.goto("/cadastros/naturezas");
+    for (const rota of [
+      "naturezas",
+      "especies",
+      "responsaveis",
+      "comissoes",
+      "fornecedores",
+    ] as const) {
+      await page.goto(`/cadastros/${rota}`);
+      await expect(page.getByText("Consulta somente leitura")).toBeVisible();
+      await expect(page.getByRole("button", { name: /^Salvar/ })).toHaveCount(
+        0,
+      );
+    }
+    await page.goto("/cadastros/setores");
     await expect(
-      page.getByRole("heading", { name: "Acesso não permitido" }),
+      page.getByRole("heading", { name: "Setores", exact: true }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Cadastrar setor" }),
+    ).toHaveCount(0);
     await page.goto("/cadastros/setores/novo");
     await expect(
       page.getByRole("heading", { name: "Acesso não permitido" }),

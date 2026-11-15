@@ -38,7 +38,7 @@ export class DepreciacoesController {
   constructor(private readonly depreciacoes: DepreciacoesService) {}
 
   @Get("depreciacoes/competencias")
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarCompetenciasDepreciacaoResponseDto)
   async listarCompetencias(): Promise<ListarCompetenciasDepreciacaoResponse> {
     return {
@@ -50,7 +50,7 @@ export class DepreciacoesController {
   }
 
   @Get("depreciacoes/pendencias/resumo")
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ResumoPendenciasDepreciacaoResponseDto)
   async resumoPendencias(): Promise<ResumoPendenciasDepreciacaoResponse> {
     return {
@@ -62,7 +62,7 @@ export class DepreciacoesController {
   }
 
   @Get("depreciacoes/pendentes")
-  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarDepreciacoesPendentesResponseDto)
   async listarPendentes(
     @Query() query: ListarDepreciacoesPendentesQueryDto,

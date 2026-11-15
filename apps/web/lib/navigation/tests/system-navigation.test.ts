@@ -88,9 +88,18 @@ describe("catálogo de navegação do sistema", () => {
     expect(administrador).toContain("Espécies");
     expect(administrador).toContain("Setores");
     expect(administrador).toContain("Fornecedores");
-    expect(diretor).not.toContain("Espécies");
-    expect(diretor).not.toContain("Setores");
-    expect(diretor).not.toContain("Fornecedores");
+    for (const item of [
+      "Responsáveis",
+      "Setores",
+      "Comissões",
+      "Naturezas",
+      "Espécies",
+      "Fornecedores",
+      "Depreciação",
+    ]) {
+      expect(administrador).toContain(item);
+      expect(diretor).toContain(item);
+    }
   });
 
   it("resolve o breadcrumb pelo caminho catalogado", () => {

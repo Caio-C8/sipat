@@ -318,10 +318,10 @@ a primeira Home mobile; outros endpoints existentes permanecem sujeitos a
 objetivo próprio quando uma interface realmente os consumir, sem ampliar
 permissões silenciosamente.
 
-### Matriz de leitura compartilhada aprovada
+### Matriz de leitura compartilhada implementada
 
-`SEC-002` aprova uma evolução ainda não implementada por completo. Depois da
-entrega, Administrador e Diretor de Patrimônio poderão consultar patrimônios,
+`SEC-002` foi implementada e validada em 15/11/2026. Administrador e Diretor de
+Patrimônio consultam patrimônios,
 reavaliações, depreciações, movimentações, empréstimos, baixas, inventários,
 manutenções, relatórios, processos de compra, fornecedores, setores,
 responsáveis, comissões, naturezas e espécies.
@@ -340,9 +340,10 @@ As mutações permanecem separadas:
 - o PDF de relatório de baixas não concede acesso ao documento comprobatório
   original anexado ao registro, cuja política atual permanece restrita.
 
-A API continua sendo a autoridade. A Web deve omitir ações incompatíveis, mas
-os Guards precisam provar `403` em cada mutação recusada. O contrato de execução
-é [SEC-002](./tasks/SEC-002-matriz-leitura-compartilhada.md).
+A API continua sendo a autoridade. A Web omite ações incompatíveis e os testes
+dos Guards reais provam `403` em cada mutação recusada. O contrato e as
+evidências de execução estão em
+[SEC-002](./tasks/SEC-002-matriz-leitura-compartilhada.md).
 
 ### Matriz de recuperação de senha planejada
 

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import * as z from "zod";
 import {
   CadastrosTelas,
+  DetalheCadastroSomenteLeitura,
   type SecaoCadastro,
 } from "@/features/cadastros/components/cadastros-telas";
 import {
@@ -59,7 +60,9 @@ async function carregar<
   consultar: (id: string, opcoes?: Leitura) => Promise<{ dados: D }>;
   resumo: (item: T) => { titulo: string; detalhe: string };
   formulario: (dado?: D) => ReactNode;
+  detalhe?: (dado: D) => ReactNode;
   mostrarFornecedores: boolean;
+  somenteLeitura: boolean;
 }) {
   const { params, secao, cookie } = config;
   const lista = await config.listar(
@@ -85,9 +88,27 @@ async function carregar<
       id={params.id}
       salvo={params.salvo === "1"}
       mostrarFornecedores={config.mostrarFornecedores}
+      somenteLeitura={config.somenteLeitura}
     >
       <div key={registro ? JSON.stringify(registro) : "novo"}>
-        {config.formulario(registro)}
+        {config.somenteLeitura ? (
+          registro && config.detalhe ? (
+            config.detalhe(registro)
+          ) : (
+            <DetalheCadastroSomenteLeitura
+              titulo="Consultar cadastro"
+              campos={[
+                {
+                  rotulo: "Orientação",
+                  valor:
+                    "Selecione um registro da lista para consultar seus dados.",
+                },
+              ]}
+            />
+          )
+        ) : (
+          config.formulario(registro)
+        )}
       </div>
     </CadastrosTelas>
   );
@@ -100,18 +121,6 @@ export async function CadastrosPage({
   searchParams: SearchCadastros;
 }) {
   const identidade = await exigirIdentidadeAtual();
-  if (secao !== "processos" && identidade.perfil !== "ADMINISTRADOR")
-    return (
-      <main className={pagina}>
-        <h1 className="text-2xl font-bold">Acesso não permitido</h1>
-        <p role="alert">
-          Somente o Administrador pode gerenciar este cadastro.
-        </p>
-        <Link href="/dashboard" className="underline">
-          Voltar à visão geral
-        </Link>
-      </main>
-    );
   const parsed = ParamsSchema.safeParse(await searchParams);
   if (!parsed.success)
     return (
@@ -125,7 +134,9 @@ export async function CadastrosPage({
     secao,
     params: parsed.data,
     cookie,
-    mostrarFornecedores: identidade.perfil === "ADMINISTRADOR",
+    mostrarFornecedores: true,
+    somenteLeitura:
+      secao !== "processos" && identidade.perfil === "DIRETOR_PATRIMONIO",
   };
   try {
     switch (secao) {
@@ -135,6 +146,18 @@ export async function CadastrosPage({
           ...serverCadastros.naturezas,
           resumo: (x) => ({ titulo: x.nome, detalhe: "Natureza patrimonial" }),
           formulario: (registro) => <FormularioNatureza registro={registro} />,
+          detalhe: (registro) => (
+            <DetalheCadastroSomenteLeitura
+              titulo={`Natureza · ${registro.nome}`}
+              campos={[
+                { rotulo: "Nome", valor: registro.nome },
+                {
+                  rotulo: "Descrição",
+                  valor: registro.descricao ?? "Não informada",
+                },
+              ]}
+            />
+          ),
         });
       case "especies":
         return await carregar({
@@ -142,6 +165,19 @@ export async function CadastrosPage({
           ...serverCadastros.especies,
           resumo: (x) => ({ titulo: x.nome, detalhe: x.natureza.nome }),
           formulario: (registro) => <FormularioEspecie registro={registro} />,
+          detalhe: (registro) => (
+            <DetalheCadastroSomenteLeitura
+              titulo={`Espécie · ${registro.nome}`}
+              campos={[
+                { rotulo: "Nome", valor: registro.nome },
+                { rotulo: "Natureza", valor: registro.natureza.nome },
+                {
+                  rotulo: "Descrição",
+                  valor: registro.descricao ?? "Não informada",
+                },
+              ]}
+            />
+          ),
         });
       case "responsaveis":
         return await carregar({
@@ -153,6 +189,19 @@ export async function CadastrosPage({
           }),
           formulario: (registro) => (
             <FormularioResponsavel registro={registro} />
+          ),
+          detalhe: (registro) => (
+            <DetalheCadastroSomenteLeitura
+              titulo={`Responsável · ${registro.nome}`}
+              campos={[
+                { rotulo: "Nome", valor: registro.nome },
+                { rotulo: "Matrícula", valor: registro.matricula },
+                {
+                  rotulo: "Situação",
+                  valor: registro.ativo ? "Ativo" : "Inativo",
+                },
+              ]}
+            />
           ),
         });
       case "fornecedores":
@@ -184,6 +233,42 @@ export async function CadastrosPage({
           formulario: (registro) => (
             <FormularioFornecedor registro={registro} />
           ),
+          detalhe: (registro) => (
+            <DetalheCadastroSomenteLeitura
+              titulo={`Fornecedor · ${registro.razaoSocial}`}
+              campos={[
+                { rotulo: "Razão social", valor: registro.razaoSocial },
+                {
+                  rotulo: "Nome fantasia",
+                  valor: registro.nomeFantasia ?? "Não informado",
+                },
+                {
+                  rotulo: "Representante",
+                  valor: registro.nomeRepresentante ?? "Não informado",
+                },
+                {
+                  rotulo: "CNPJ",
+                  valor: formatarCnpj(registro.cnpj) ?? "Não informado",
+                },
+                {
+                  rotulo: "E-mail",
+                  valor: registro.email ?? "Não informado",
+                },
+                {
+                  rotulo: "Telefone",
+                  valor: registro.telefone ?? "Não informado",
+                },
+                {
+                  rotulo: "Endereço",
+                  valor: registro.endereco ?? "Não informado",
+                },
+                {
+                  rotulo: "Situação",
+                  valor: registro.ativo ? "Ativo" : "Inativo",
+                },
+              ]}
+            />
+          ),
         });
       case "comissoes":
         return await carregar({
@@ -198,6 +283,48 @@ export async function CadastrosPage({
               x.dataVigenciaFim.split("-").reverse().join("/"),
           }),
           formulario: (registro) => <FormularioComissao registro={registro} />,
+          detalhe: (registro) => (
+            <DetalheCadastroSomenteLeitura
+              titulo={`Comissão · ${registro.nome}`}
+              campos={[
+                { rotulo: "Nome", valor: registro.nome },
+                {
+                  rotulo: "Ato de designação",
+                  valor: registro.numeroAto ?? "Não informado",
+                },
+                {
+                  rotulo: "Início da vigência",
+                  valor: registro.dataVigenciaInicio
+                    .split("-")
+                    .reverse()
+                    .join("/"),
+                },
+                {
+                  rotulo: "Fim da vigência",
+                  valor: registro.dataVigenciaFim
+                    .split("-")
+                    .reverse()
+                    .join("/"),
+                },
+                {
+                  rotulo: "Descrição",
+                  valor: registro.descricao ?? "Não informada",
+                },
+                {
+                  rotulo: "Integrantes",
+                  valor:
+                    registro.membros.length > 0
+                      ? registro.membros
+                          .map(
+                            (membro) =>
+                              `${membro.responsavel.nome} (${membro.papel === "PRESIDENTE" ? "Presidente" : "Membro"})`,
+                          )
+                          .join(", ")
+                      : "Nenhum integrante cadastrado",
+                },
+              ]}
+            />
+          ),
         });
       case "processos":
         return await carregar({

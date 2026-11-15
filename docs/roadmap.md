@@ -16,7 +16,7 @@ As entregas transversais seguem esta ordem:
 1. [WEB-AUTH-003](./tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md) —
    corrigir entrada, sessão e recuperação em staging;
 2. [SEC-002](./tasks/SEC-002-matriz-leitura-compartilhada.md) — aplicar a matriz
-   aprovada na API antes de refletir permissões na interface;
+   de leitura compartilhada, implementada e validada em 15/11/2026;
 3. [WEB-UI-001](./tasks/WEB-UI-001-fundacao-visual-formularios.md) e
    [WEB-SHELL-002](./tasks/WEB-SHELL-002-navegacao-estados-globais.md) — criar a
    fundação visual, feedback e navegação;

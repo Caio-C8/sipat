@@ -1,6 +1,6 @@
 # `SEC-002` — Aplicar a matriz de leitura compartilhada
 
-**Status:** `aprovada`
+**Status:** `implementada e validada em 15/11/2026`
 
 ## Objetivo
 
@@ -50,13 +50,13 @@ patrimoniais nos perfis aprovados.
 
 ## Critérios de aceite
 
-- [ ] todos os `GET` aprovados retornam `200` para os dois perfis e `401` sem sessão.
-- [ ] toda mutação exclusiva continua retornando `403` ao perfil não autorizado.
-- [ ] o Administrador consulta depreciação sem receber ação de processamento.
-- [ ] o Diretor consulta os seis catálogos administrativos compartilhados sem
+- [x] todos os `GET` aprovados retornam `200` para os dois perfis e `401` sem sessão.
+- [x] toda mutação exclusiva continua retornando `403` ao perfil não autorizado.
+- [x] o Administrador consulta depreciação sem receber ação de processamento.
+- [x] o Diretor consulta os seis catálogos administrativos compartilhados sem
       alterá-los e mantém acesso total aos processos de compra.
-- [ ] ambos geram todos os relatórios, inclusive baixas, em prévia e PDF.
-- [ ] documento comprobatório anexado à baixa preserva a política atual.
+- [x] ambos geram todos os relatórios, inclusive baixas, em prévia e PDF.
+- [x] documento comprobatório anexado à baixa preserva a política atual.
 
 ## Arquivos ou módulos potencialmente afetados
 
@@ -76,3 +76,16 @@ patrimoniais nos perfis aprovados.
 ## Pendências ou decisões bloqueantes
 
 - Nenhuma.
+
+## Evidências da entrega
+
+- API: lint, tipos e build aprovados; 435 testes passaram e 139 integrações
+  opt-in de outros bancos permaneceram ignoradas. As cinco suítes E2E afetadas
+  somaram 31 cenários com `200`, `401` e `403` para a matriz alterada.
+- Web: lint, tipos e build de produção aprovados; 122 testes Vitest passaram.
+- Integração real: as 28 migrations foram aplicadas em PostgreSQL 17
+  descartável e os dois percursos Chromium de cadastros passaram contra API e
+  banco reais. O Administrador exerceu mutações e PDFs; o Diretor consultou os
+  seis catálogos sem receber controles de mutação e manteve processos de compra.
+- O container, os serviços e os uploads temporários usados na validação foram
+  removidos ao final. Nenhum banco operacional, staging ou produção foi alterado.

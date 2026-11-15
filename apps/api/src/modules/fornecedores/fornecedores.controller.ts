@@ -40,7 +40,7 @@ export class FornecedoresController {
   constructor(private readonly fornecedoresService: FornecedoresService) {}
 
   @Get()
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarFornecedoresResponseDto)
   async listar(
     @Query() query: ListarFornecedoresQueryDto,
@@ -61,7 +61,7 @@ export class FornecedoresController {
   }
 
   @Get(":fornecedorId")
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarFornecedorResponseDto)
   async consultar(
     @Param() params: FornecedorParamsDto,

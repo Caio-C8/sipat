@@ -95,7 +95,7 @@ const comissoes = [
   },
 ] satisfies ComissaoOpcaoReavaliacao[];
 
-function renderizar() {
+function renderizar(podeProcessar = true) {
   render(
     <ProcessamentoDepreciacoes
       resposta={resposta}
@@ -104,6 +104,7 @@ function renderizar() {
       erroComissoes=""
       competencias={competencias}
       competenciaMaisAntigaPendente="2026-10"
+      podeProcessar={podeProcessar}
     />,
   );
 }
@@ -123,6 +124,17 @@ describe("ProcessamentoDepreciacoes", () => {
       ),
     ).toBeTruthy();
     expect(screen.queryByText(/\b(?:API|URL)\b/)).toBeNull();
+  });
+
+  it("oferece somente consulta ao administrador", () => {
+    renderizar(false);
+
+    expect(screen.getByText(/Consulta somente leitura/)).toBeTruthy();
+    expect(screen.queryByLabelText(/Comissão vigente/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Processar bem/ })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /Confirmar depreciação em lote/ }),
+    ).toBeNull();
   });
 
   it("consulta novamente o catálogo após concluir a competência em lote", async () => {

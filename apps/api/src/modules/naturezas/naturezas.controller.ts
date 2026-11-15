@@ -37,7 +37,7 @@ export class NaturezasController {
   constructor(private readonly naturezasService: NaturezasService) {}
 
   @Get()
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarNaturezasResponseDto)
   async listar(
     @Query() query: ListarNaturezasQueryDto,
@@ -58,7 +58,7 @@ export class NaturezasController {
   }
 
   @Get(":naturezaId")
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarNaturezaResponseDto)
   async consultar(
     @Param() params: NaturezaParamsDto,

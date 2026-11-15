@@ -40,7 +40,7 @@ export class ResponsaveisController {
   constructor(private readonly responsaveisService: ResponsaveisService) {}
 
   @Get()
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ListarResponsaveisResponseDto)
   async listar(
     @Query() query: ListarResponsaveisQueryDto,
@@ -61,7 +61,7 @@ export class ResponsaveisController {
   }
 
   @Get(":responsavelId")
-  @PerfisPermitidos("ADMINISTRADOR")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @ZodSerializerDto(ConsultarResponsavelResponseDto)
   async consultar(
     @Param() params: ResponsavelParamsDto,
