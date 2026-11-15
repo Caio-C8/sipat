@@ -1,7 +1,6 @@
 import { Search } from "lucide-react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import { CurrentBreadcrumb } from "./current-breadcrumb";
-import { NotificationsMenu } from "./notifications-menu";
 import { UserMenu } from "./user-menu";
 
 export function SystemTopbar({
@@ -24,7 +23,6 @@ export function SystemTopbar({
             disabled
           />
         </label>
-        <NotificationsMenu perfil={identidade.perfil} />
         <UserMenu identidade={identidade} />
       </div>
     </header>

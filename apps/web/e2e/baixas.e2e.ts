@@ -53,6 +53,22 @@ test.describe("Baixas patrimoniais", () => {
     await expect(
       page.getByRole("button", { name: "Abrir PDF comprobatório" }),
     ).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("navigation", { name: "Navegação principal" })
+        .getByRole("link", { name: "Baixas", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    const breadcrumb = page.getByRole("navigation", {
+      name: "Localização atual",
+    });
+    await expect(
+      breadcrumb.getByRole("link", { name: "Baixas", exact: true }),
+    ).toHaveAttribute("href", "/baixas");
+    await expect(breadcrumb).toContainText("Detalhes");
+    await expect(breadcrumb).not.toContainText(patrimonioId);
+    await expect(
+      page.getByText("SIPAT · Detalhes da baixa", { exact: true }),
+    ).toBeVisible();
     expect(
       (await new AxeBuilder({ page }).include("main").analyze()).violations,
     ).toEqual([]);
@@ -100,7 +116,7 @@ test.describe("Baixas patrimoniais", () => {
     browser,
   }) => {
     await sessao(page, baseURL, "director");
-    for (const width of [1920, 1536, 900, 390]) {
+    for (const width of [1920, 1440, 768, 390]) {
       await page.setViewportSize({ width, height: 1080 });
       await page.goto("/baixas");
       expect(

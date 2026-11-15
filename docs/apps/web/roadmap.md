@@ -2,7 +2,7 @@
 
 ## Evolução Web de usabilidade e padronização
 
-**Status:** objetivos 1 a 3 implementados e validados até 15/11/2026; cada etapa
+**Status:** objetivos 1 a 4 implementados e validados até 15/11/2026; cada etapa
 restante só é marcada como implementada após as verificações da respectiva task.
 
 O objetivo é chegar rapidamente a uma versão Web correta e apresentável sem
@@ -16,7 +16,7 @@ salvo a proteção do leitor de inventário ao final.
 | 1     | [`WEB-AUTH-003`](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md)     | `/` e páginas protegidas sem vazio; recuperação correta em staging      | implementada | auth atual e configuração do ambiente  |
 | 2     | [`SEC-002`](../../tasks/SEC-002-matriz-leitura-compartilhada.md)                  | matriz de leitura/mutação provada na API para os dois perfis            | implementada | requisitos e Guards atuais             |
 | 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns          | implementada | primitives atuais                      |
-| 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | aprovada     | objetivos 1–3                          |
+| 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | implementada | objetivos 1–3                          |
 | 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final           | aprovada     | objetivos 2–4                          |
 | 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                      | aprovada     | objetivos 2–4                          |
 | 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | `Pedido #n`, seleção e dados por item simplificados                     | aprovada     | objetivos 2–4 e migration validada     |
@@ -210,8 +210,9 @@ consultas correspondentes na API. [Escopo e aceite](../../tasks/WEB-DEPRECIACOES
 Substitui o início livre pela confirmação auditável de disponibilidade nos
 detalhes do bem, permite selecionar competências devidas com rótulos como
 `Abril de 2026` e expõe pendências na tela de depreciações, no detalhe, em
-relatório próprio e na seção de pendências do sino. O alerta é derivado e não
-implementa caixa postal, lido/não lido ou canais externos.
+relatório próprio e, nesta entrega histórica, na seção de pendências do sino.
+O `WEB-SHELL-002` removeu depois o sino e sua chamada sem alterar os relatórios
+ou o endpoint da API.
 [Escopo e aceite](../../tasks/WEB-DEPRECIACOES-002-disponibilidade-competencias-pendencias.md).
 
 ### WEB-SHELL-001 — Padronizar o shell autenticado por perfil
@@ -226,6 +227,17 @@ estados aprovados sem antecipar endpoints ou páginas.
 
 Especificação aprovada:
 [WEB-SHELL-001](../../tasks/WEB-SHELL-001-padronizar-shell-autenticado.md).
+
+### WEB-SHELL-002 — Evoluir navegação e estados globais
+
+**Status:** implementada e validada em 15 de novembro de 2026.
+
+Ordena a navegação conforme a matriz de perfis, centraliza telas e padrões
+descendentes, torna ancestrais do breadcrumb navegáveis, deriva o rodapé e
+remove Configurações, Histórico e notificações da sidebar/topbar. Estados de
+acesso, indisponibilidade, 404 e erro de segmento compartilham uma composição
+acionável sem alterar URLs ou a autoridade da API.
+[Escopo e evidências](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md).
 
 ### WEB-DASHBOARD-001 — Integrar a visão geral
 

@@ -1,10 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./support/test";
 
-test("seleciona competências pela URL e expõe o alerta derivado", async ({
+test("seleciona competências pela URL sem criar uma central de notificações", async ({
   page,
   baseURL,
-  apiMock,
 }) => {
   if (!baseURL) throw new Error("baseURL necessária");
   await page.context().addCookies([
@@ -43,25 +42,9 @@ test("seleciona competências pela URL e expõe o alerta derivado", async ({
     page.getByText("Não há bens pendentes para esta competência."),
   ).toBeVisible();
 
-  apiMock.expectGet("/depreciacoes/pendencias/resumo", () => ({
-    body: {
-      status: 200,
-      sucesso: true,
-      mensagem: "Resumo consultado.",
-      dados: {
-        totalPendencias: 2,
-        totalPatrimonios: 1,
-        competenciaMaisAntiga: "2026-10",
-      },
-    },
-  }));
-  await page.getByRole("button", { name: "Notificações" }).click();
-  const painel = page.getByRole("region", { name: "Notificações" });
-  await expect(painel).toContainText("2 pendência(s) em 1 patrimônio(s)");
-  await expect(painel).toContainText("Outubro de 2026");
-  await expect(
-    painel.getByRole("link", { name: "Consultar depreciações" }),
-  ).toHaveAttribute("href", "/depreciacao?competencia=2026-10");
+  await expect(page.getByRole("button", { name: "Notificações" })).toHaveCount(
+    0,
+  );
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(

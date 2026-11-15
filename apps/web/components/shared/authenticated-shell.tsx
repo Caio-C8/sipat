@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import { SystemSidebar } from "./system-sidebar";
+import { SystemFooter } from "./system-footer";
 import { SystemTopbar } from "./system-topbar";
 
 export function AuthenticatedShell({
@@ -13,9 +14,10 @@ export function AuthenticatedShell({
   return (
     <div className="min-h-svh bg-[#f7f9fc] text-xs text-[#17253d] min-[1101px]:grid min-[1101px]:grid-cols-[clamp(184px,14vw,232px)_minmax(0,1fr)]">
       <SystemSidebar perfil={identidade.perfil} />
-      <div className="min-w-0">
+      <div className="flex min-h-svh min-w-0 flex-col">
         <SystemTopbar identidade={identidade} />
         {children}
+        <SystemFooter />
       </div>
     </div>
   );

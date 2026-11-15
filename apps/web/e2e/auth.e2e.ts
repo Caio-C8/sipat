@@ -376,14 +376,12 @@ test.describe("Autenticação Web", () => {
     ).toBeVisible();
 
     await page.getByRole("button", { name: /Menu do usuário/ }).click();
-    const logout = page.getByRole("menuitem");
+    const logout = page.getByRole("menuitem", { name: "Sair", exact: true });
     await logout.click();
-    await expect(logout).toBeDisabled();
-    await expect(logout).toHaveText("Saindo...");
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test("filtra a navegação por perfil e não cria links para rotas futuras", async ({
+  test("aplica ordem, perfis e estados ativos da navegação", async ({
     page,
   }) => {
     await page.context().addCookies([
@@ -401,13 +399,39 @@ test.describe("Autenticação Web", () => {
       name: "Navegação principal",
     });
     await expect(
+      navigation.locator("section").nth(0).getByRole("link").allTextContents(),
+    ).resolves.toEqual([
+      "Início",
+      "Patrimônios",
+      "Reavaliações",
+      "Depreciações",
+      "Movimentações",
+      "Empréstimos",
+      "Baixas",
+      "Inventários",
+      "Manutenções",
+      "Relatórios",
+    ]);
+    await expect(
+      navigation.locator("section").nth(1).getByRole("link").allTextContents(),
+    ).resolves.toEqual([
+      "Processos de compra",
+      "Fornecedores",
+      "Setores",
+      "Responsáveis",
+      "Comissões",
+      "Naturezas",
+      "Espécies",
+      "Usuários",
+    ]);
+    await expect(
       navigation.getByText("Usuários", { exact: true }),
     ).toBeVisible();
     await expect(
       navigation.getByText("Cadastrar patrimônio", { exact: true }),
     ).toHaveCount(0);
     await expect(
-      navigation.getByText("Manutenção", { exact: true }),
+      navigation.getByText("Manutenções", { exact: true }),
     ).toBeVisible();
     await expect(
       navigation.getByRole("link", {
@@ -420,7 +444,7 @@ test.describe("Autenticação Web", () => {
     ).toHaveAttribute("href", "/cadastros/setores");
     await expect(
       navigation.getByRole("link", {
-        name: "Pesquisar patrimônio",
+        name: "Patrimônios",
         exact: true,
       }),
     ).toHaveAttribute("href", "/patrimonios");
@@ -431,10 +455,10 @@ test.describe("Autenticação Web", () => {
       navigation.getByRole("link", { name: "Empréstimos", exact: true }),
     ).toHaveAttribute("href", "/emprestimos");
     await expect(
-      navigation.getByRole("link", { name: "Manutenção", exact: true }),
+      navigation.getByRole("link", { name: "Manutenções", exact: true }),
     ).toHaveAttribute("href", "/manutencoes");
     await expect(
-      navigation.getByRole("link", { name: "Reavaliação", exact: true }),
+      navigation.getByRole("link", { name: "Reavaliações", exact: true }),
     ).toHaveAttribute("href", "/reavaliacoes");
     await expect(
       navigation.getByRole("link", { name: "Empréstimos", exact: true }),
@@ -458,6 +482,32 @@ test.describe("Autenticação Web", () => {
       navigation.getByText("Cadastrar patrimônio", { exact: true }),
     ).toBeVisible();
     await expect(
+      navigation.locator("section").nth(0).getByRole("link").allTextContents(),
+    ).resolves.toEqual([
+      "Início",
+      "Patrimônios",
+      "Cadastrar patrimônio",
+      "Reavaliações",
+      "Depreciações",
+      "Movimentações",
+      "Empréstimos",
+      "Baixas",
+      "Inventários",
+      "Manutenções",
+      "Relatórios",
+    ]);
+    await expect(
+      navigation.locator("section").nth(1).getByRole("link").allTextContents(),
+    ).resolves.toEqual([
+      "Processos de compra",
+      "Fornecedores",
+      "Setores",
+      "Responsáveis",
+      "Comissões",
+      "Naturezas",
+      "Espécies",
+    ]);
+    await expect(
       navigation.getByRole("link", {
         name: "Cadastrar patrimônio",
         exact: true,
@@ -479,21 +529,32 @@ test.describe("Autenticação Web", () => {
       ["Naturezas", "/cadastros/naturezas"],
       ["Espécies", "/cadastros/especies"],
       ["Fornecedores", "/cadastros/fornecedores"],
-      ["Depreciação", "/depreciacao"],
+      ["Depreciações", "/depreciacao"],
     ] as const) {
       await expect(
         navigation.getByRole("link", { name: nome, exact: true }),
       ).toHaveAttribute("href", href);
     }
     await expect(
-      navigation.getByText("Manutenção", { exact: true }),
+      navigation.getByText("Manutenções", { exact: true }),
     ).toBeVisible();
     await expect(
-      navigation.getByRole("link", { name: "Reavaliação", exact: true }),
+      navigation.getByRole("link", { name: "Reavaliações", exact: true }),
     ).toHaveAttribute("href", "/reavaliacoes");
+    await expect(
+      navigation.getByText("Configurações", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      navigation.getByText("Histórico patrimonial", { exact: true }),
+    ).toHaveCount(0);
+
+    await page.getByRole("button", { name: /Menu do usuário/ }).click();
+    await expect(
+      page.getByRole("menuitem", { name: "Minha conta", exact: true }),
+    ).toHaveAttribute("href", "/configuracoes");
   });
 
-  test("expõe os estados deliberadamente vazios do shell e restaura o foco", async ({
+  test("mantém busca indisponível e remove notificações do shell", async ({
     page,
   }) => {
     await page.context().addCookies([
@@ -509,28 +570,18 @@ test.describe("Autenticação Web", () => {
 
     await expect(
       page.getByRole("navigation", { name: "Localização atual" }),
-    ).toContainText("Visão geral");
+    ).toContainText("Início");
     await expect(
       page.getByLabel("Pesquisa ainda não implementada"),
     ).toBeDisabled();
     await expect(page.getByRole("button", { name: /ajuda/i })).toHaveCount(0);
 
-    const notifications = page.getByRole("button", { name: "Notificações" });
-    await notifications.click();
-    const panel = page.getByRole("region", { name: "Notificações" });
     await expect(
-      panel.getByRole("heading", { name: "Pendências recentes" }),
-    ).toBeVisible();
+      page.getByRole("button", { name: "Notificações" }),
+    ).toHaveCount(0);
     await expect(
-      panel.getByRole("heading", { name: "Últimas operações" }),
+      page.getByText("SIPAT · Início", { exact: true }),
     ).toBeVisible();
-    await expect(
-      panel.getByText("Nenhum alerta disponível para este perfil."),
-    ).toBeVisible();
-    await expect(panel.getByText("Não implementado")).toHaveCount(1);
-    await page.keyboard.press("Escape");
-    await expect(panel).toHaveCount(0);
-    await expect(notifications).toBeFocused();
 
     const dashboard = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
@@ -707,6 +758,29 @@ test.describe("Autenticação Web", () => {
     ]);
     await page.goto("/dashboard");
     await expect(page).toHaveURL(/\/redefinir-senha$/);
+  });
+
+  test("oferece caminhos de saída em endereço não encontrado", async ({
+    page,
+  }) => {
+    const response = await page.goto("/endereco-inexistente");
+
+    expect(response?.status()).toBe(404);
+    await expect(
+      page.getByRole("heading", { name: "Página não encontrada" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Voltar" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Início", exact: true }),
+    ).toHaveAttribute("href", "/dashboard");
+
+    const resultado = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      resultado.violations,
+      JSON.stringify(resultado.violations, null, 2),
+    ).toEqual([]);
   });
 
   test("autenticação e recuperação não possuem violações automatizáveis", async ({

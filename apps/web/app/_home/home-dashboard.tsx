@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import type { ResumoPatrimonialDashboard } from "@/features/patrimonios/api/patrimonio-operations";
-import { nomesPerfis } from "@/lib/navigation/system-navigation";
 
 type EstadoResumoPatrimonial =
   | Readonly<{ status: "sucesso"; dados: ResumoPatrimonialDashboard }>
@@ -115,7 +114,6 @@ export function HomeDashboard({
   resumoPatrimonial: EstadoResumoPatrimonial;
   dataAtual?: Date;
 }>) {
-  const perfil = nomesPerfis[identidade.perfil];
   const data = formatarData(dataAtual);
   const dados =
     resumoPatrimonial.status === "sucesso"
@@ -522,13 +520,6 @@ export function HomeDashboard({
             ))}
         </div>
       </section>
-
-      <footer className="flex flex-col justify-between gap-3 text-[9px] text-[#60728a] min-[421px]:flex-row max-[1100px]:text-[11px] min-[1500px]:text-[11px]">
-        <span>SIPAT · Visão geral</span>
-        <span>
-          {identidade.nome} · {perfil}
-        </span>
-      </footer>
     </main>
   );
 }

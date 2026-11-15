@@ -2,13 +2,16 @@
 
 ## Estado atual
 
-A rota `/dashboard` apresenta uma visão geral responsiva dentro do shell
-autenticado compartilhado. Seus totais geral e por status vêm da listagem
-patrimonial; pendências, setores e atividades comunicam explicitamente que a
-integração ainda não existe. O nome e o perfil vêm da identidade autenticada e
-os demais módulos da navegação são apenas apresentação, exceto o link para o
-módulo integrado de movimentações, com seleção, destinos, revisão e consulta. A home `/` apresenta o
-catálogo público de páginas e endpoints técnicos.
+A rota `/dashboard` apresenta a saudação, a data e uma visão geral responsiva
+dentro do shell autenticado. As demais páginas usam título, descrição e ações
+do contexto. A entrada `/` encaminha para login, primeiro acesso ou dashboard
+conforme a sessão, sem catálogo técnico público.
+
+Sidebar, breadcrumb, topbar, rodapé e menu do usuário são compartilhados. A
+navegação segue a matriz dos dois perfis, mantém o pai ativo em detalhes e
+subrotas e não expõe notificações ou opções ainda sem função. Estados de acesso,
+sessão indisponível, conteúdo ausente e erro inesperado oferecem Voltar e
+Início com textos distintos e orientados à ação.
 Em larguras menores, a navegação filtrada por perfil é apresentada por um menu
 expansível com `aria-expanded`, fechamento por `Escape` e devolução de foco. Os
 cartões passam de quatro para duas ou uma coluna conforme o espaço disponível.
