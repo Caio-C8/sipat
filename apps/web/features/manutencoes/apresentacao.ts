@@ -1,4 +1,5 @@
 import { isApiError } from "@/lib/api/core/api-error";
+import { formatBrl } from "@/lib/format/decimal";
 
 export const campoManutencao =
   "min-h-10 min-w-0 w-full rounded-md border border-[#cfd9e7] bg-white px-3 py-2 text-sm text-[#19355d] shadow-[0_1px_1px_rgba(22,48,82,0.02)] transition placeholder:text-[#93a3b8] hover:border-[#aebed2] focus-visible:border-[#2863ec] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2863ec] disabled:bg-[#eef2f7] disabled:text-[#7b8ba1]";
@@ -14,13 +15,7 @@ export function formatarDataCivil(valor: string | null | undefined): string {
 
 export function formatarMoeda(valor: string | null | undefined): string {
   if (valor == null) return "Não informado";
-  const numero = Number(valor);
-  if (!Number.isFinite(numero)) return valor;
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  }).format(numero);
+  return formatBrl(valor);
 }
 
 export function rotuloStatusManutencao(status: "EM_ANDAMENTO" | "CONCLUIDA") {

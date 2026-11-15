@@ -24,6 +24,13 @@ import {
 } from "@repo/contracts";
 import { isApiError } from "@/lib/api/core/api-error";
 import {
+  compareDecimal,
+  divideDecimalByInteger,
+  formatBrl,
+  multiplyDecimal,
+  subtractDecimal,
+} from "@/lib/format/decimal";
+import {
   decidirAposFalha,
   isConflitoIdempotencia,
   type DecisaoIdempotencia,
@@ -102,17 +109,12 @@ function converterDecimal(valor: string) {
     : normalizado;
 }
 
-function numeroDecimal(valor: string) {
-  const numero = Number(converterDecimal(valor));
-  return Number.isFinite(numero) ? numero : 0;
-}
-
-function formatarMoeda(valor: string | number) {
-  const numero = typeof valor === "number" ? valor : Number(valor);
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(Number.isFinite(numero) ? numero : 0);
+function decimalMonetarioOuZero(valor: string) {
+  const normalizado = converterDecimal(valor);
+  if (!/^\d+(?:\.\d{0,2})?$/.test(normalizado)) return "0.00";
+  if (normalizado.endsWith(".")) return `${normalizado}00`;
+  const [inteiro, fracao = ""] = normalizado.split(".");
+  return `${inteiro}.${fracao.padEnd(2, "0")}`;
 }
 
 function hojeLocal() {
@@ -219,16 +221,25 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const processoCompra = listaProcessos.find(
     (item) => item.id === processoCompraIdAtual,
   );
-  const valorNumerico = numeroDecimal(valorAtual);
-  const valorResidualNumerico = residualEmPercentualAtual
-    ? (valorNumerico * numeroDecimal(residualAtual)) / 100
-    : numeroDecimal(residualAtual);
-  const vidaUtilNumerica = Number(vidaUtilAtual);
+  const valorDecimal = decimalMonetarioOuZero(valorAtual);
+  const residualDecimal = decimalMonetarioOuZero(residualAtual);
+  const valorResidualDecimal = residualEmPercentualAtual
+    ? divideDecimalByInteger(
+        multiplyDecimal(valorDecimal, residualDecimal, 4),
+        "100",
+        2,
+      )
+    : residualDecimal;
+  const vidaUtilValida = /^[1-9]\d*$/.test(vidaUtilAtual);
   const estimativaMensal =
     depreciavelAtual &&
-    valorNumerico > valorResidualNumerico &&
-    vidaUtilNumerica > 0
-      ? (valorNumerico - valorResidualNumerico) / vidaUtilNumerica
+    compareDecimal(valorDecimal, valorResidualDecimal) > 0 &&
+    vidaUtilValida
+      ? divideDecimalByInteger(
+          subtractDecimal(valorDecimal, valorResidualDecimal, 2),
+          vidaUtilAtual,
+          7,
+        )
       : null;
   const nomeResumo =
     descricaoAtual.split(",")[0]?.trim() || "Bem sem descrição";
@@ -328,7 +339,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
               percentualResidual: residualEmPercentual
                 ? converterDecimal(residual)
                 : undefined,
-              valorResidual: valorResidualNumerico.toFixed(2),
+              valorResidual: valorResidualDecimal,
               valorBaseInicial: converterDecimal(valor),
             },
           }
@@ -346,7 +357,10 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
       );
       return;
     }
-    if (depreciavel && valorResidualNumerico >= valorNumerico) {
+    if (
+      depreciavel &&
+      compareDecimal(valorResidualDecimal, valorDecimal) >= 0
+    ) {
       setErrosCampos({
         "parametrosDepreciacao.valorResidual":
           "O valor residual deve ser menor que o valor de incorporação.",
@@ -834,7 +848,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                       <p className="mt-2 text-base font-bold text-[#19355d]">
                         {estimativaMensal === null
                           ? "Informe os valores"
-                          : formatarMoeda(estimativaMensal)}
+                          : formatBrl(estimativaMensal)}
                       </p>
                     </div>
                   </div>
@@ -892,7 +906,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
               <div className="mt-4 rounded-lg bg-[#eef5ff] p-4">
                 <p className="text-[11px]">Valor de incorporação</p>
                 <p className="break-words text-2xl font-bold text-[#19355d]">
-                  {formatarMoeda(valorNumerico)}
+                  {formatBrl(valorDecimal)}
                 </p>
                 <p className="text-right text-[10px] text-[#62748e]">por bem</p>
               </div>
@@ -921,7 +935,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                 Valor total da aquisição{" "}
                 <strong className="float-right">
                   {processoCompra?.valorTotal
-                    ? formatarMoeda(processoCompra.valorTotal)
+                    ? formatBrl(processoCompra.valorTotal)
                     : "Não informado"}
                 </strong>
               </p>

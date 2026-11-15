@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { browserApiClient } from "@/lib/api/browser-api-client";
+import { addDecimal } from "@/lib/format/decimal";
 import {
   decidirAposFalha,
   isConflitoIdempotencia,
@@ -821,12 +822,10 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
           <p className="text-sm font-semibold">
             Total realizado:{" "}
             {formatarMoeda(
-              pedido.itens
-                .reduce(
-                  (total, item) => total + Number(item.valorRealizado ?? 0),
-                  0,
-                )
-                .toString(),
+              pedido.itens.reduce(
+                (total, item) => addDecimal(total, item.valorRealizado ?? "0"),
+                "0",
+              ),
             )}
           </p>
         </div>

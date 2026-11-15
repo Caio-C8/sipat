@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 async function sessao(page: import("@playwright/test").Page, value = "active") {
   await page.context().addCookies([
@@ -36,6 +37,44 @@ test("administrador navega pelos cadastros integrados e distingue listas vazias"
       }),
     ).toBeEnabled();
   }
+});
+test("fundação de formulário mantém foco, acessibilidade e layout responsivo", async ({
+  page,
+}) => {
+  await sessao(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/cadastros/naturezas");
+    await expect(
+      page.getByRole("form", { name: "Nova natureza" }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Salvar natureza" }).click();
+  await expect(page.getByLabel("Nome da natureza *")).toBeFocused();
+  await expect(page.getByText("Revise os dados informados")).toBeVisible();
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .include('form[aria-label="Nova natureza"]')
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "2";
+  });
+  await expect(
+    page.getByRole("button", { name: "Salvar natureza" }),
+  ).toBeVisible();
 });
 test("administrador consulta setores reais e abre formulário habilitado", async ({
   page,

@@ -78,10 +78,15 @@ dependências e estilos sem consumidor.
 ### Estado implementado
 
 `components.json` usa o estilo `radix-nova`, Tailwind CSS 4, CSS variables,
-ícones Lucide e aliases locais. A infraestrutura atual preserva as primitives genéricas
-`AlertDialog`, `Alert`, `Badge`, `Button`, `Checkbox`, `Dialog`, `Field`,
-`Input`, `Label`, `RadioGroup`, `Select`, `Separator`, `Skeleton`, `Table`,
-`Textarea` e `Toaster`.
+ícones Lucide e aliases locais. A infraestrutura atual preserva as primitives
+genéricas `AlertDialog`, `Alert`, `Badge`, `Button`, `Card`, `Checkbox`,
+`Combobox`, `Dialog`, `Drawer`, `Field`, `Input`, `Label`, `Pagination`,
+`RadioGroup`, `Select`, `Separator`, `Skeleton`, `Table`, `Textarea` e
+`Toaster`.
+
+As composições em `components/shared` cobrem campos, resumo focável de erros,
+filtros simples, paginação e inputs numéricos. Regras, contratos e operações
+continuam nas respectivas features.
 
 Não há composição de domínio no baseline. Ao iniciar as telas do SIPAT, remova
 primitives que não forem usadas ou mantenha-as somente quando fizerem parte
@@ -101,10 +106,10 @@ HTTP permanecem sem conhecimento de mensagem visual, navegação ou Sonner. Erro
 de campo e falhas recuperáveis devem continuar próximos do formulário ou do
 diálogo; toast não é o único lugar para informação necessária à correção.
 
-### Padrão aprovado para a evolução Web
+### Padrão implementado para a evolução Web
 
-A evolução `WEB-UI-001` adota as seguintes decisões, ainda dependentes de
-implementação e migração incremental das telas:
+A evolução `WEB-UI-001` implementou a fundação abaixo. A adoção pelas demais
+telas continua incremental para preservar o comportamento de cada vertical:
 
 - Select atende conjuntos pequenos e fixos; Combobox atende catálogos extensos,
   remotos ou pesquisáveis. Ambos compartilham `Field`, tokens e estados;

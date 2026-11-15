@@ -2,8 +2,8 @@
 
 ## Evolução Web de usabilidade e padronização
 
-**Status:** planejamento aprovado em 14/11/2026; cada etapa só é marcada como
-implementada após as verificações da respectiva task.
+**Status:** objetivos 1 a 3 implementados e validados até 15/11/2026; cada etapa
+restante só é marcada como implementada após as verificações da respectiva task.
 
 O objetivo é chegar rapidamente a uma versão Web correta e apresentável sem
 reescrever os domínios que já funcionam. A execução começa por defeitos e
@@ -15,7 +15,7 @@ salvo a proteção do leitor de inventário ao final.
 | ----- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------ | -------------------------------------- |
 | 1     | [`WEB-AUTH-003`](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md)     | `/` e páginas protegidas sem vazio; recuperação correta em staging      | implementada | auth atual e configuração do ambiente  |
 | 2     | [`SEC-002`](../../tasks/SEC-002-matriz-leitura-compartilhada.md)                  | matriz de leitura/mutação provada na API para os dois perfis            | implementada | requisitos e Guards atuais             |
-| 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns          | aprovada     | primitives atuais                      |
+| 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns          | implementada | primitives atuais                      |
 | 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | aprovada     | objetivos 1–3                          |
 | 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final           | aprovada     | objetivos 2–4                          |
 | 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                      | aprovada     | objetivos 2–4                          |

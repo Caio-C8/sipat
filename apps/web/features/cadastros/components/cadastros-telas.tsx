@@ -1,14 +1,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { AbasCadastros, type SecaoAbas } from "./abas-cadastros";
+import { pagina, cartao, principal, Paginacao } from "./cadastro-ui";
 import {
-  pagina,
-  cartao,
-  campo,
-  botao,
-  principal,
-  Paginacao,
-} from "./cadastro-ui";
+  SimpleQueryFilters,
+  type SimpleQueryFilter,
+} from "@/components/shared/simple-query-filters";
 export type SecaoCadastro = Exclude<SecaoAbas, "setores">;
 export const paginasCadastros = {
   processos: {
@@ -78,6 +75,32 @@ export function CadastrosTelas({
   children: ReactNode;
 }) {
   const config = paginasCadastros[secao];
+  const filters: SimpleQueryFilter[] = [
+    {
+      type: "text",
+      name: "busca",
+      label: "Buscar cadastro",
+      defaultValue: busca,
+      placeholder: "Buscar por nome ou número…",
+      maxLength:
+        secao === "processos" ? 200 : secao === "comissoes" ? 150 : 100,
+    },
+    ...(secao === "fornecedores"
+      ? [
+          {
+            type: "select" as const,
+            name: "situacao",
+            label: "Situação",
+            defaultValue: situacao ?? "todos",
+            options: [
+              { value: "todos", label: "Todos" },
+              { value: "ativos", label: "Ativos" },
+              { value: "inativos", label: "Inativos" },
+            ],
+          },
+        ]
+      : []),
+  ];
   const hrefPagina = (p: number) =>
     config.href +
     "?" +
@@ -118,41 +141,7 @@ export function CadastrosTelas({
               ? "Selecione para consultar."
               : "Selecione para consultar ou editar."}
           </p>
-          <form action={config.href} className="grid gap-2">
-            <label className="text-sm">
-              Buscar cadastro
-              <input
-                className={campo}
-                name="busca"
-                defaultValue={busca}
-                placeholder="Buscar por nome ou número…"
-                maxLength={
-                  secao === "processos"
-                    ? 200
-                    : secao === "comissoes"
-                      ? 150
-                      : 100
-                }
-              />
-            </label>
-            {secao === "fornecedores" && (
-              <label className="text-sm">
-                Situação
-                <select
-                  className={campo}
-                  name="situacao"
-                  defaultValue={situacao ?? "todos"}
-                >
-                  <option value="todos">Todos</option>
-                  <option value="ativos">Ativos</option>
-                  <option value="inativos">Inativos</option>
-                </select>
-              </label>
-            )}
-            <button type="submit" className={botao}>
-              Consultar
-            </button>
-          </form>
+          <SimpleQueryFilters action={config.href} filters={filters} />
           <ul className="grid gap-2">
             {registros.map((item) => (
               <li key={item.id}>

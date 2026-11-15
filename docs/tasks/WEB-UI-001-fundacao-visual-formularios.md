@@ -1,6 +1,6 @@
 # `WEB-UI-001` — Consolidar a fundação visual e de formulários
 
-**Status:** `aprovada`
+**Status:** `implementada e validada em 15/11/2026`
 
 ## Objetivo
 
@@ -61,12 +61,29 @@ genéricos que conheçam regras de domínio.
 
 ## Critérios de aceite
 
-- [ ] vertical de prova usa o kit sem perder comportamento ou acessibilidade.
-- [ ] erro geral recebe scroll/foco e erro de campo foca o primeiro inválido.
-- [ ] Select e Combobox compartilham aparência, mas preservam semântica distinta.
-- [ ] teclado, leitores de tela, zoom e viewport estreita permanecem utilizáveis.
-- [ ] valores não passam por `number` JavaScript e mantêm precisão decimal.
-- [ ] componentes compartilhados não importam API ou vocabulário de domínio.
+- [x] vertical de prova usa o kit sem perder comportamento ou acessibilidade.
+- [x] erro geral recebe scroll/foco e erro de campo foca o primeiro inválido.
+- [x] Select e Combobox compartilham aparência, mas preservam semântica distinta.
+- [x] teclado, leitores de tela, zoom e viewport estreita permanecem utilizáveis.
+- [x] valores não passam por `number` JavaScript e mantêm precisão decimal.
+- [x] componentes compartilhados não importam API ou vocabulário de domínio.
+
+## Implementação e evidências
+
+- o kit compartilhado passou a incluir campos, resumo de erros, filtros simples,
+  paginação, inputs monetário e inteiro, além das primitives `Card`, `Combobox`
+  e `Pagination`;
+- o cadastro de naturezas é a vertical de prova com React Hook Form, resolver
+  Zod, foco no primeiro erro e operações HTTP mantidas na feature;
+- valores decimais são formatados e calculados por strings e `bigint`, sem
+  conversão monetária para `number`, inclusive nas telas patrimoniais afetadas;
+- `pnpm --filter @repo/web lint`, `typecheck` e a suíte Vitest passaram; a suíte
+  contém 32 arquivos e 132 testes;
+- o percurso Playwright de cadastros passou com sete cenários em Chromium e
+  exercitou o build de produção, axe, movimento reduzido, zoom de 200% e
+  viewports de 390, 768 e 1440 pixels;
+- a validação E2E usa respostas HTTP simuladas. Não substitui integração com API
+  e PostgreSQL reais, homologação manual com leitor de tela nem a CI completa.
 
 ## Arquivos ou módulos potencialmente afetados
 

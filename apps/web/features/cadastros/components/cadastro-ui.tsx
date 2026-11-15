@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ZodError } from "zod";
 import { isApiError } from "@/lib/api/core/api-error";
 import { mensagemConflitoIdempotencia } from "@/lib/api/core/idempotencia";
+import { PaginationSummary } from "@/components/shared/pagination-summary";
 
 export const pagina =
   "mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-5 text-[#17253d] min-[651px]:px-6 min-[1500px]:px-8";
@@ -78,29 +79,7 @@ export function Paginacao({
   meta: { pagina: number; ultimaPagina: number; total: number };
   href: (pagina: number) => string;
 }) {
-  return (
-    <nav
-      aria-label="Paginação"
-      className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm"
-    >
-      <span>
-        {meta.total} registros · Página {meta.pagina} de{" "}
-        {Math.max(1, meta.ultimaPagina)}
-      </span>
-      <div className="flex gap-2">
-        {meta.pagina > 1 && (
-          <Link className={botao} href={href(meta.pagina - 1)}>
-            Anterior
-          </Link>
-        )}
-        {meta.pagina < meta.ultimaPagina && (
-          <Link className={botao} href={href(meta.pagina + 1)}>
-            Próxima
-          </Link>
-        )}
-      </div>
-    </nav>
-  );
+  return <PaginationSummary meta={meta} href={href} />;
 }
 export const texto = (dados: FormData, nome: string) =>
   String(dados.get(nome) ?? "").trim();
