@@ -177,7 +177,7 @@ export default async function InventarioDetalhePage({
                   </Card>
                 ))}
               </section>
-              <Card>
+              <Card className="min-w-0">
                 <CardHeader>
                   <CardTitle>Itens do inventário</CardTitle>
                 </CardHeader>
@@ -211,7 +211,7 @@ export default async function InventarioDetalhePage({
                     <form
                       action={`/inventarios/${inventarioId}`}
                       method="get"
-                      className="flex gap-2"
+                      className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto"
                     >
                       <input type="hidden" name="visao" value={visao} />
                       <label className="sr-only" htmlFor="busca-itens">
@@ -222,7 +222,7 @@ export default async function InventarioDetalhePage({
                         name="busca"
                         defaultValue={busca ?? ""}
                         placeholder="Patrimônio ou descrição"
-                        className="w-64"
+                        className="w-full sm:w-64"
                       />
                       <Button variant="outline">Buscar</Button>
                     </form>
@@ -232,6 +232,7 @@ export default async function InventarioDetalhePage({
                       role="region"
                       aria-label="Itens do inventário"
                       tabIndex={0}
+                      className="min-w-0"
                     >
                       <Table className="min-w-[900px]">
                         <TableHeader>
