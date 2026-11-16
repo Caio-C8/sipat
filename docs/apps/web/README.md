@@ -57,8 +57,9 @@ fronteiras entre UI, contratos e integração HTTP.
   lateral de `Telas PC`, sem alterar o domínio existente;
 - `/depreciacao` seleciona pela URL as competências devidas, prioriza a mais
   antiga e permite ao Diretor executar depreciações individuais ou em lote;
-- `/inventarios` permite a Administrador e Diretor consultar inventários; o
-  Diretor pode abrir inventários globais e resolver divergências pendentes.
+- `/inventarios` permite a Administrador e Diretor consultar e filtrar
+  inventários; o Diretor pode criar e editar inventários pendentes em modais
+  roteáveis, resolver divergências e finalizar com confirmação explícita.
   A conferência de bens e setores permanece no aplicativo móvel; inventário
   finalizado é somente leitura na Web;
 - o detalhe patrimonial confirma e exibe a disponibilidade para uso, resume

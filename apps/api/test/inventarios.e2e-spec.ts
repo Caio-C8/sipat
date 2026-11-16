@@ -5,6 +5,7 @@ import {
   ConcluirSetorInventarioResponseSchema,
   ConsultarInventarioResponseSchema,
   CriarInventarioResponseSchema,
+  EditarInventarioResponseSchema,
   FinalizarInventarioResponseSchema,
   IniciarSetorInventarioResponseSchema,
   ItemJaVerificadoOutroSetorResponseSchema,
@@ -82,6 +83,7 @@ describe("inventários", () => {
     listarSetores: jest.fn(),
     listarItens: jest.fn(),
     criar: jest.fn(),
+    editar: jest.fn(),
     iniciarSetor: jest.fn(),
     verificarItem: jest.fn(),
     corrigirItem: jest.fn(),
@@ -267,6 +269,11 @@ describe("inventários", () => {
         corretos: 1,
       },
     });
+    service.editar.mockResolvedValue({
+      ...inventario(),
+      nome: "Inventário revisado",
+      updatedAt: new Date("2026-11-16T12:00:00.000Z"),
+    });
   });
 
   afterAll(async () => app.close());
@@ -287,6 +294,18 @@ describe("inventários", () => {
   const postAdministrador = (path: string) =>
     request(app.getHttpServer())
       .post(path)
+      .set("Cookie", cookie(tokenAdministrador))
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1");
+  const patchDiretor = (path: string) =>
+    request(app.getHttpServer())
+      .patch(path)
+      .set("Cookie", cookie(tokenDiretor))
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1");
+  const patchAdministrador = (path: string) =>
+    request(app.getHttpServer())
+      .patch(path)
       .set("Cookie", cookie(tokenAdministrador))
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1");
@@ -390,6 +409,13 @@ describe("inventários", () => {
         nome: "Inventário anual",
         comissaoId: COMISSAO_ID,
       }),
+      patchAdministrador(`/api/inventarios/${INVENTARIO_ID}`).send({
+        nome: "Inventário revisado",
+        descricao: null,
+        observacao: null,
+        comissaoId: COMISSAO_ID,
+        versaoEsperada: null,
+      }),
       postAdministrador(`${rotaSetor}/iniciar`).send({}),
       postAdministrador(`${rotaSetor}/verificacoes`).send({
         numeroPatrimonial: "1001",
@@ -410,11 +436,40 @@ describe("inventários", () => {
       );
     }
     expect(service.criar).not.toHaveBeenCalled();
+    expect(service.editar).not.toHaveBeenCalled();
     expect(service.iniciarSetor).not.toHaveBeenCalled();
     expect(service.verificarItem).not.toHaveBeenCalled();
     expect(service.corrigirItem).not.toHaveBeenCalled();
     expect(service.concluirSetor).not.toHaveBeenCalled();
     expect(service.finalizar).not.toHaveBeenCalled();
+  });
+
+  it("protege e serializa a edição do inventário", async () => {
+    const body = {
+      nome: "Inventário revisado",
+      descricao: "Escopo atualizado",
+      observacao: null,
+      comissaoId: COMISSAO_ID,
+      versaoEsperada: null,
+    };
+    const semCsrf = await request(app.getHttpServer())
+      .patch(`/api/inventarios/${INVENTARIO_ID}`)
+      .set("Cookie", cookie(tokenDiretor))
+      .set("Origin", ORIGEM)
+      .send(body);
+    const editado = await patchDiretor(
+      `/api/inventarios/${INVENTARIO_ID}`,
+    ).send(body);
+
+    expect(semCsrf.status).toBe(403);
+    expect(editado.status).toBe(200);
+    expect(EditarInventarioResponseSchema.safeParse(editado.body).success).toBe(
+      true,
+    );
+    expect(service.editar).toHaveBeenCalledWith(
+      INVENTARIO_ID,
+      expect.objectContaining({ nome: "Inventário revisado" }),
+    );
   });
 
   it("protege e serializa as transições operacionais", async () => {

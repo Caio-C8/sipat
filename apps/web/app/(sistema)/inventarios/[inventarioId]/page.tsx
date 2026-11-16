@@ -5,14 +5,28 @@ import {
   InventarioParamsSchema,
   ListarItensInventarioQuerySchema,
 } from "@repo/contracts";
-import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
-import { ResolverCorrecaoDialog } from "@/features/inventarios/components/resolver-correcao-dialog";
+import { PaginationSummary } from "@/components/shared/pagination-summary";
 import { PageHeader } from "@/components/shared/page-header";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
+import { FinalizarInventarioDialog } from "@/features/inventarios/components/finalizar-inventario-dialog";
+import { ResolverCorrecaoDialog } from "@/features/inventarios/components/resolver-correcao-dialog";
 import { isApiError } from "@/lib/api/core/api-error";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = { title: "Detalhe do inventário" };
-const painel = "rounded-xl border border-[#dfe7f1] bg-white p-5";
 const data = (valor: string | null) =>
   valor
     ? new Intl.DateTimeFormat("pt-BR", {
@@ -33,25 +47,19 @@ export default async function InventarioDetalhePage({
   const { inventarioId } = await params;
   if (!InventarioParamsSchema.safeParse({ inventarioId }).success)
     return (
-      <main className="grid gap-5 p-7">
-        <PageHeader
-          title="Inventário não encontrado"
-          description="Confira o endereço informado ou retorne à lista de inventários."
-          actions={
-            <Link className="underline" href="/inventarios">
-              Voltar aos inventários
-            </Link>
-          }
-        />
+      <main className="p-7">
+        <Alert variant="destructive">
+          <AlertTitle>Inventário não encontrado</AlertTitle>
+          <AlertDescription>
+            Confira o endereço ou volte para a lista de inventários.
+          </AlertDescription>
+        </Alert>
       </main>
     );
-  const paramsTela = await searchParams;
-  const visao =
-    typeof paramsTela.visao === "string" ? paramsTela.visao : "pendentes";
-  const busca =
-    typeof paramsTela.busca === "string" ? paramsTela.busca : undefined;
-  const pagina =
-    typeof paramsTela.pagina === "string" ? paramsTela.pagina : "1";
+  const tela = await searchParams;
+  const visao = typeof tela.visao === "string" ? tela.visao : "pendentes";
+  const busca = typeof tela.busca === "string" ? tela.busca : undefined;
+  const pagina = typeof tela.pagina === "string" ? tela.pagina : "1";
   const query = {
     pagina,
     limite: "50",
@@ -63,7 +71,6 @@ export default async function InventarioDetalhePage({
         : {}),
   };
   const queryValidada = ListarItensInventarioQuerySchema.safeParse(query);
-  const cookie = (await headers()).get("cookie") ?? "";
   let detalhe: Awaited<
     ReturnType<typeof serverInventarioOperations.consultar>
   > | null = null;
@@ -73,272 +80,255 @@ export default async function InventarioDetalhePage({
   let erro = "";
   try {
     if (!queryValidada.success) throw new Error("Filtros inválidos.");
-    const resultados = await Promise.all([
+    const cookie = (await headers()).get("cookie") ?? "";
+    [detalhe, itens] = await Promise.all([
       serverInventarioOperations.consultar(inventarioId, { cookie }),
       serverInventarioOperations.itens(inventarioId, query, { cookie }),
     ]);
-    detalhe = resultados[0];
-    itens = resultados[1];
   } catch (falha) {
     erro = isApiError(falha)
       ? falha.message
-      : "Não foi possível consultar este inventário.";
+      : "Não foi possível consultar este inventário. Tente novamente.";
   }
   const hrefVisao = (v: string, p = "1") =>
     `/inventarios/${inventarioId}?${new URLSearchParams({ visao: v, ...(busca ? { busca } : {}), pagina: p })}`;
   return (
-    <main className="grid min-w-0 gap-5 p-4 text-[#17253d] sm:p-7">
+    <main className="grid min-w-0 gap-5 p-4 sm:p-7">
+      <Link
+        className="text-sm font-medium text-muted-foreground hover:underline"
+        href="/inventarios"
+      >
+        ← Todos os inventários
+      </Link>
       {erro ? (
-        <>
-          <PageHeader
-            title="Detalhes do inventário"
-            description="Consulte os dados e o andamento do inventário."
-            actions={
-              <Link
-                className="text-sm font-medium underline"
-                href="/inventarios"
-              >
-                Todos os inventários
-              </Link>
-            }
-          />
-          <p role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
-            {erro}
-          </p>
-        </>
+        <Alert variant="destructive">
+          <AlertTitle>Não foi possível mostrar o inventário</AlertTitle>
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
       ) : detalhe && itens ? (
-        <>
-          <PageHeader
-            title={detalhe.dados.nome}
-            description={`${detalhe.dados.comissao.nome} · Criado ${data(detalhe.dados.createdAt)}`}
-            actions={
-              <>
-                <span className="rounded-full bg-[#eef5ff] px-3 py-1 text-sm font-semibold text-[#203e66]">
-                  {detalhe.dados.status === "FINALIZADO"
-                    ? "Finalizado"
-                    : detalhe.dados.status === "EM_ANDAMENTO"
-                      ? "Em andamento"
-                      : "Pendente"}
-                </span>
-                <Link
-                  className="text-sm font-medium underline"
-                  href="/inventarios"
-                >
-                  Todos os inventários
-                </Link>
-              </>
-            }
-          />
-          <section
-            className={`${painel} grid gap-4 sm:grid-cols-4`}
-            aria-label="Resumo do inventário"
-          >
-            <div>
-              <span className="text-xs text-[#627996]">Setores incluídos</span>
-              <p className="mt-1 text-xl font-bold">
-                {detalhe.dados.progresso.totalSetores}
-              </p>
-            </div>
-            <div>
-              <span className="text-xs text-[#627996]">Bens incluídos</span>
-              <p className="mt-1 text-xl font-bold">
-                {detalhe.dados.progresso.totalItens}
-              </p>
-            </div>
-            <div>
-              <span className="text-xs text-[#627996]">Bens verificados</span>
-              <p className="mt-1 text-xl font-bold">
-                {detalhe.dados.progresso.itensVerificados}
-              </p>
-            </div>
-            <div>
-              <span className="text-xs text-[#627996]">
-                Correções pendentes
-              </span>
-              <p className="mt-1 text-xl font-bold">
-                {detalhe.dados.progresso.correcoesPendentes}
-              </p>
-            </div>
-          </section>
-          <section className={`${painel} min-h-[440px]`}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <nav
-                className="flex flex-wrap gap-2"
-                aria-label="Filtros de itens"
+        (() => {
+          const inventario = detalhe.dados;
+          return (
+            <>
+              <PageHeader
+                title={
+                  <span className="flex flex-wrap items-center gap-3">
+                    <span>{inventario.nome}</span>
+                    <Badge variant="outline">
+                      {inventario.status === "FINALIZADO"
+                        ? "Finalizado"
+                        : inventario.status === "EM_ANDAMENTO"
+                          ? "Em andamento"
+                          : "Pendente"}
+                    </Badge>
+                  </span>
+                }
+                description={`${inventario.comissao.nome} · Criado em ${data(inventario.createdAt)}`}
+                actions={
+                  identidade.perfil === "DIRETOR_PATRIMONIO" ? (
+                    <div className="flex flex-wrap items-start justify-end gap-3">
+                      {inventario.status === "PENDENTE" ? (
+                        <Button variant="outline" asChild>
+                          <Link href={`/inventarios/${inventario.id}/editar`}>
+                            Editar dados
+                          </Link>
+                        </Button>
+                      ) : null}
+                      <FinalizarInventarioDialog inventario={inventario} />
+                    </div>
+                  ) : undefined
+                }
+              />
+              {inventario.status === "FINALIZADO" ? (
+                <Alert>
+                  <AlertTitle>Inventário finalizado</AlertTitle>
+                  <AlertDescription>
+                    Os dados e resultados permanecem disponíveis somente para
+                    consulta.
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              <section
+                className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                aria-label="Resumo do inventário"
               >
-                <Link
-                  aria-current={visao === "pendentes" ? "page" : undefined}
-                  className={`rounded-md px-3 py-2 text-sm font-semibold ${visao === "pendentes" ? "bg-[#eef5ff] text-blue-700" : "text-[#627996]"}`}
-                  href={hrefVisao("pendentes")}
-                >
-                  Correções pendentes
-                </Link>
-                <Link
-                  aria-current={visao === "todos" ? "page" : undefined}
-                  className={`rounded-md px-3 py-2 text-sm font-semibold ${visao === "todos" ? "bg-[#eef5ff] text-blue-700" : "text-[#627996]"}`}
-                  href={hrefVisao("todos")}
-                >
-                  Todos os itens
-                </Link>
-                <Link
-                  aria-current={
-                    visao === "nao-localizados" ? "page" : undefined
-                  }
-                  className={`rounded-md px-3 py-2 text-sm font-semibold ${visao === "nao-localizados" ? "bg-[#eef5ff] text-blue-700" : "text-[#627996]"}`}
-                  href={hrefVisao("nao-localizados")}
-                >
-                  Não localizados
-                </Link>
-              </nav>
-              <form
-                action={`/inventarios/${inventarioId}`}
-                method="get"
-                className="flex gap-2"
-              >
-                <input type="hidden" name="visao" value={visao} />
-                <label className="sr-only" htmlFor="busca-itens">
-                  Buscar bens
-                </label>
-                <input
-                  id="busca-itens"
-                  name="busca"
-                  defaultValue={busca ?? ""}
-                  placeholder="Patrimônio ou descrição"
-                  className="rounded-md border border-[#d8e1ed] px-3 py-2 text-sm"
-                />
-                <button className="rounded-md border border-[#d8e1ed] px-3 text-sm font-semibold">
-                  Buscar
-                </button>
-              </form>
-            </div>
-            <p className="mt-3 text-right text-xs text-[#627996]">
-              {itens.meta.total} itens nesta consulta
-            </p>
-            {itens.dados.length ? (
-              <div
-                className="mt-4 overflow-x-auto"
-                role="region"
-                aria-label="Itens do inventário"
-                tabIndex={0}
-              >
-                <table className="w-full min-w-[900px] text-left text-sm">
-                  <thead className="bg-[#f6f8fb] text-xs uppercase text-[#627996]">
-                    <tr>
-                      <th className="p-3">Patrimônio / bem</th>
-                      <th className="p-3">Resultado</th>
-                      <th className="p-3">Setor cadastrado</th>
-                      <th className="p-3">Setor encontrado</th>
-                      <th className="p-3">Correção</th>
-                      <th className="p-3">Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {itens.dados.map((item) => {
-                      const corrigivel =
-                        item.situacao === "DIVERGENCIA" ||
-                        item.situacao === "NAO_LOCALIZADO";
-                      const setorEncontrado =
-                        item.situacao === "DIVERGENCIA"
-                          ? item.setorEncontrado.nome
-                          : item.situacao === "NAO_LOCALIZADO"
-                            ? (item.localizacaoPosterior?.setorEncontrado
-                                .nome ?? "—")
-                            : "—";
-                      const estado =
-                        item.situacao === null
-                          ? "Aguardando conferência"
-                          : item.situacao === "DIVERGENCIA"
-                            ? item.statusCorrecao === "PENDENTE"
-                              ? "Pendente"
-                              : "Corrigido"
-                            : item.situacao === "NAO_LOCALIZADO"
-                              ? item.localizacaoPosterior?.statusCorrecao ===
-                                "PENDENTE"
-                                ? "Localizado depois · pendente"
-                                : item.localizacaoPosterior
-                                  ? "Localizado depois · corrigido"
-                                  : "Não localizado"
-                              : "Correto";
-                      return (
-                        <tr key={item.id} className="border-b border-[#e4eaf2]">
-                          <td className="p-4">
-                            <span className="text-xs text-[#627996]">
-                              {item.patrimonio.numeroPatrimonio}
-                            </span>
-                            <strong className="mt-1 block">
-                              {item.patrimonio.descricao}
-                            </strong>
-                          </td>
-                          <td className="p-4">
-                            {item.situacao === "DIVERGENCIA"
-                              ? "Setor divergente"
-                              : item.situacao === "NAO_LOCALIZADO"
-                                ? "Não localizado"
-                                : item.situacao === "CORRETO"
-                                  ? "Correto"
-                                  : "Pendente"}
-                          </td>
-                          <td className="p-4">{item.setorEsperado.nome}</td>
-                          <td className="p-4">{setorEncontrado}</td>
-                          <td className="p-4">{estado}</td>
-                          <td className="p-4">
-                            {corrigivel ? (
-                              <ResolverCorrecaoDialog
-                                inventarioId={inventarioId}
-                                item={item}
-                                bloqueado={
-                                  detalhe.dados.status === "FINALIZADO" ||
-                                  identidade.perfil !== "DIRETOR_PATRIMONIO"
-                                }
-                              />
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="py-12 text-center text-sm text-[#627996]">
-                Nenhum item encontrado nesta consulta.
-              </p>
-            )}
-            <nav
-              className="mt-5 flex justify-between"
-              aria-label="Paginação de itens"
-            >
-              {itens.meta.pagina > 1 ? (
-                <Link
-                  className="underline"
-                  href={hrefVisao(visao, String(itens.meta.pagina - 1))}
-                >
-                  Anterior
-                </Link>
-              ) : (
-                <span />
-              )}
-              {itens.meta.pagina < itens.meta.ultimaPagina && (
-                <Link
-                  className="underline"
-                  href={hrefVisao(visao, String(itens.meta.pagina + 1))}
-                >
-                  Próxima
-                </Link>
-              )}
-            </nav>
-          </section>
-          <aside className="rounded-lg bg-[#eef5ff] p-4 text-sm text-[#35577e]">
-            <strong className="block text-[#203e66]">
-              A conferência ocorre no aplicativo móvel
-            </strong>
-            O resultado original permanece no histórico. Um bem não localizado
-            só pode ser corrigido após a equipe móvel registrar onde ele foi
-            encontrado.
-          </aside>
-        </>
+                {[
+                  [
+                    "Setores concluídos",
+                    `${inventario.progresso.setoresConcluidos} de ${inventario.progresso.totalSetores}`,
+                  ],
+                  ["Bens incluídos", String(inventario.progresso.totalItens)],
+                  [
+                    "Bens verificados",
+                    String(inventario.progresso.itensVerificados),
+                  ],
+                  [
+                    "Correções pendentes",
+                    String(inventario.progresso.correcoesPendentes),
+                  ],
+                ].map(([rotulo, valor]) => (
+                  <Card key={rotulo}>
+                    <CardContent>
+                      <span className="text-sm text-muted-foreground">
+                        {rotulo}
+                      </span>
+                      <p className="mt-1 text-2xl font-bold">{valor}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </section>
+              <Card className="min-w-0">
+                <CardHeader>
+                  <CardTitle>Itens do inventário</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-5">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <nav
+                      className="flex flex-wrap gap-2"
+                      aria-label="Filtros de itens"
+                    >
+                      {(
+                        [
+                          ["pendentes", "Correções pendentes"],
+                          ["todos", "Todos os itens"],
+                          ["nao-localizados", "Não localizados"],
+                        ] as const
+                      ).map(([valor, rotulo]) => (
+                        <Button
+                          key={valor}
+                          variant={visao === valor ? "secondary" : "ghost"}
+                          asChild
+                        >
+                          <Link
+                            aria-current={visao === valor ? "page" : undefined}
+                            href={hrefVisao(valor)}
+                          >
+                            {rotulo}
+                          </Link>
+                        </Button>
+                      ))}
+                    </nav>
+                    <form
+                      action={`/inventarios/${inventarioId}`}
+                      method="get"
+                      className="grid w-full min-w-0 gap-2 sm:flex sm:w-auto"
+                    >
+                      <input type="hidden" name="visao" value={visao} />
+                      <label className="sr-only" htmlFor="busca-itens">
+                        Buscar bens
+                      </label>
+                      <Input
+                        id="busca-itens"
+                        name="busca"
+                        defaultValue={busca ?? ""}
+                        placeholder="Patrimônio ou descrição"
+                        className="w-full sm:w-64"
+                      />
+                      <Button variant="outline">Buscar</Button>
+                    </form>
+                  </div>
+                  {itens.dados.length ? (
+                    <div
+                      role="region"
+                      aria-label="Itens do inventário"
+                      tabIndex={0}
+                      className="min-w-0"
+                    >
+                      <Table className="min-w-[900px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Patrimônio / bem</TableHead>
+                            <TableHead>Resultado</TableHead>
+                            <TableHead>Setor cadastrado</TableHead>
+                            <TableHead>Setor encontrado</TableHead>
+                            <TableHead>Correção</TableHead>
+                            <TableHead>Ação</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {itens.dados.map((item) => {
+                            const corrigivel =
+                              item.situacao === "DIVERGENCIA" ||
+                              item.situacao === "NAO_LOCALIZADO";
+                            const setorEncontrado =
+                              item.situacao === "DIVERGENCIA"
+                                ? item.setorEncontrado.nome
+                                : item.situacao === "NAO_LOCALIZADO"
+                                  ? (item.localizacaoPosterior?.setorEncontrado
+                                      .nome ?? "—")
+                                  : "—";
+                            const estado =
+                              item.situacao === null
+                                ? "Aguardando conferência"
+                                : item.situacao === "DIVERGENCIA"
+                                  ? item.statusCorrecao === "PENDENTE"
+                                    ? "Pendente"
+                                    : "Corrigido"
+                                  : item.situacao === "NAO_LOCALIZADO"
+                                    ? item.localizacaoPosterior
+                                        ?.statusCorrecao === "PENDENTE"
+                                      ? "Localizado depois · pendente"
+                                      : item.localizacaoPosterior
+                                        ? "Localizado depois · corrigido"
+                                        : "Não localizado"
+                                    : "Correto";
+                            return (
+                              <TableRow key={item.id}>
+                                <TableCell className="min-w-64 whitespace-normal">
+                                  <span className="text-xs text-muted-foreground">
+                                    {item.patrimonio.numeroPatrimonio}
+                                  </span>
+                                  <strong className="mt-1 block">
+                                    {item.patrimonio.descricao}
+                                  </strong>
+                                </TableCell>
+                                <TableCell>
+                                  {item.situacao === "DIVERGENCIA"
+                                    ? "Setor divergente"
+                                    : item.situacao === "NAO_LOCALIZADO"
+                                      ? "Não localizado"
+                                      : item.situacao === "CORRETO"
+                                        ? "Correto"
+                                        : "Pendente"}
+                                </TableCell>
+                                <TableCell>{item.setorEsperado.nome}</TableCell>
+                                <TableCell>{setorEncontrado}</TableCell>
+                                <TableCell>{estado}</TableCell>
+                                <TableCell>
+                                  {corrigivel ? (
+                                    <ResolverCorrecaoDialog
+                                      inventarioId={inventarioId}
+                                      item={item}
+                                      bloqueado={
+                                        inventario.status === "FINALIZADO" ||
+                                        identidade.perfil !==
+                                          "DIRETOR_PATRIMONIO"
+                                      }
+                                    />
+                                  ) : (
+                                    "—"
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <p className="py-12 text-center text-sm text-muted-foreground">
+                      Nenhum item encontrado nesta consulta.
+                    </p>
+                  )}
+                  <PaginationSummary
+                    meta={itens.meta}
+                    href={(p) => hrefVisao(visao, String(p))}
+                  />
+                </CardContent>
+              </Card>
+            </>
+          );
+        })()
       ) : null}
     </main>
   );

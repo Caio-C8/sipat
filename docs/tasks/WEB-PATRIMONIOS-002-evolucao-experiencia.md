@@ -1,6 +1,6 @@
 # `WEB-PATRIMONIOS-002` — Evoluir pesquisa, cadastro e ficha patrimonial
 
-**Status:** `implementada` em 15/11/2026
+**Status:** `implementada` em 16/11/2026.
 
 ## Objetivo
 

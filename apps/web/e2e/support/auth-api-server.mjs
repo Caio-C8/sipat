@@ -41,6 +41,57 @@ const comissaoDepreciacao = {
   dataVigenciaFim: "2026-12-31",
 };
 
+const inventarioPendenteId = "10000000-0000-4000-8000-000000000001";
+const inventarioAndamentoId = "10000000-0000-4000-8000-000000000002";
+const progressoInventario = {
+  totalSetores: 2,
+  setoresPendentes: 2,
+  setoresEmAndamento: 0,
+  setoresConcluidos: 0,
+  totalItens: 2,
+  itensPendentes: 2,
+  itensVerificados: 0,
+  corretos: 0,
+  divergencias: 0,
+  naoLocalizados: 0,
+  correcoesPendentes: 0,
+  correcoesCorrigidas: 0,
+};
+const inventarioPendente = {
+  id: inventarioPendenteId,
+  nome: "Inventário anual 2026",
+  descricao: "Conferência patrimonial anual.",
+  observacao: null,
+  status: "PENDENTE",
+  dataInicio: null,
+  dataFim: null,
+  iniciadoPorId: null,
+  finalizadoPorId: null,
+  createdById: identities.director.id,
+  comissao: { id: comissaoDepreciacao.id, nome: comissaoDepreciacao.nome },
+  progresso: progressoInventario,
+  createdAt: "2026-11-16T12:00:00.000Z",
+  updatedAt: null,
+};
+const inventarioAndamento = {
+  ...inventarioPendente,
+  id: inventarioAndamentoId,
+  nome: "Inventário em conclusão",
+  status: "EM_ANDAMENTO",
+  dataInicio: "2026-11-15",
+  iniciadoPorId: identities.director.id,
+  progresso: {
+    ...progressoInventario,
+    setoresPendentes: 0,
+    setoresConcluidos: 2,
+    itensPendentes: 0,
+    itensVerificados: 2,
+    corretos: 1,
+    divergencias: 1,
+    correcoesPendentes: 1,
+  },
+};
+
 const patrimonioBaixaId = "7041c62b-5f83-432c-a178-889977d839b1";
 const baixaId = "47c53ba5-2ea3-494a-b5ea-b1b52181b752";
 const patrimonioBaixa = {
@@ -674,6 +725,95 @@ const server = createServer(async (request, response) => {
       mensagem: "Comissões consultadas.",
       dados: [comissaoDepreciacao],
       meta: { total: 1, pagina: 1, limite: 50, ultimaPagina: 1 },
+    });
+    return;
+  }
+  if (request.method === "GET" && requestUrl.pathname === "/api/inventarios") {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Inventários consultados.",
+      dados: [inventarioPendente, inventarioAndamento].map((item) => {
+        const resumo = { ...item };
+        delete resumo.descricao;
+        delete resumo.observacao;
+        delete resumo.createdById;
+        return resumo;
+      }),
+      meta: { total: 2, pagina: 1, limite: 20, ultimaPagina: 1 },
+    });
+    return;
+  }
+  const detalheInventario = /^\/api\/inventarios\/([0-9a-f-]+)$/.exec(
+    requestUrl.pathname,
+  );
+  if (request.method === "GET" && detalheInventario) {
+    const inventario =
+      detalheInventario[1] === inventarioAndamentoId
+        ? inventarioAndamento
+        : inventarioPendente;
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Inventário consultado.",
+      dados: inventario,
+    });
+    return;
+  }
+  const itensInventario = /^\/api\/inventarios\/([0-9a-f-]+)\/itens$/.exec(
+    requestUrl.pathname,
+  );
+  if (request.method === "GET" && itensInventario) {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Itens consultados.",
+      dados: [],
+      meta: { total: 0, pagina: 1, limite: 50, ultimaPagina: 1 },
+    });
+    return;
+  }
+  if (request.method === "POST" && requestUrl.pathname === "/api/inventarios") {
+    json(response, 201, {
+      status: 201,
+      sucesso: true,
+      mensagem: "Inventário criado.",
+      dados: inventarioPendente,
+    });
+    return;
+  }
+  if (request.method === "PATCH" && detalheInventario) {
+    const body = await lerJson(request);
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Inventário atualizado.",
+      dados: {
+        ...inventarioPendente,
+        nome: body.nome,
+        descricao: body.descricao,
+        observacao: body.observacao,
+        updatedAt: "2026-11-16T13:00:00.000Z",
+      },
+    });
+    return;
+  }
+  if (
+    request.method === "POST" &&
+    requestUrl.pathname ===
+      `/api/inventarios/${inventarioAndamentoId}/finalizar`
+  ) {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Inventário finalizado.",
+      dados: {
+        ...inventarioAndamento,
+        status: "FINALIZADO",
+        dataFim: "2026-11-16",
+        finalizadoPorId: identities.director.id,
+        updatedAt: "2026-11-16T13:00:00.000Z",
+      },
     });
     return;
   }

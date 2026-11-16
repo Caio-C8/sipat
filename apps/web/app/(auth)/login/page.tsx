@@ -26,9 +26,6 @@ export default async function LoginPage() {
         Informe suas credenciais para entrar no SIPAT.
       </p>
       <LoginForm />
-      <p className="mt-5 text-center text-xs text-[#596b84]">
-        Acesso destinado aos usuários autorizados da Câmara.
-      </p>
     </div>
   );
 }

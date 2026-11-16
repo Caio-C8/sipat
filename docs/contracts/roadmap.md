@@ -620,8 +620,9 @@ geral. [Tarefa e critérios](../tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes
 
 ## Contratos da evolução Web de usabilidade e padronização
 
-**Status:** aprovados em 14/11/2026; implementação pendente nas respectivas
-fatias verticais.
+**Status:** aprovados em 14/11/2026; a fatia de `WEB-PATRIMONIOS-002` foi
+implementada em 16/11/2026 e as demais permanecem vinculadas às respectivas
+tasks.
 
 Estes contratos não devem ser implementados como uma entrega isolada. Cada
 schema compartilhado nasce junto da regra na API e do consumidor Web indicado,

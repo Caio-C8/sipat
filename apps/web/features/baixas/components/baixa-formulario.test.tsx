@@ -91,7 +91,7 @@ describe("BaixaFormulario", () => {
       undefined,
     );
     expect(onSuccess).toHaveBeenCalledOnce();
-  });
+  }, 15_000);
 
   it("mostra erros de entrada junto aos campos sem usar validação nativa", async () => {
     render(

@@ -208,6 +208,37 @@ describeComPostgres("inventários no PostgreSQL", () => {
     ).toMatchObject({ totalItens: 0, itensPendentes: 0 });
   });
 
+  it("edita somente a versão pendente consultada", async () => {
+    const inventario = await service.criar(
+      dadosInventario("Inventário para edição"),
+      identidade,
+    );
+    const editado = await service.editar(inventario.id, {
+      nome: "Inventário revisado",
+      descricao: "Escopo revisado",
+      observacao: null,
+      comissaoId,
+      versaoEsperada: inventario.updatedAt?.toISOString() ?? null,
+    });
+
+    expect(editado).toMatchObject({
+      nome: "Inventário revisado",
+      descricao: "Escopo revisado",
+      status: "PENDENTE",
+    });
+    await expect(
+      service.editar(inventario.id, {
+        nome: "Sobrescrita desatualizada",
+        descricao: null,
+        observacao: null,
+        comissaoId,
+        versaoEsperada: inventario.updatedAt?.toISOString() ?? null,
+      }),
+    ).rejects.toMatchObject({
+      response: { codigo: "CONFLITO_CONCORRENTE_INVENTARIO" },
+    });
+  });
+
   it("desfaz toda a criação quando um patrimônio ativo aponta para setor inativo", async () => {
     await database.patrimonio.update({
       where: { numeroPatrimonio: "1001" },

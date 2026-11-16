@@ -5,6 +5,10 @@ import {
   CriarInventarioResponseSchema,
   CorrigirItemInventarioBodySchema,
   CorrigirItemInventarioResponseSchema,
+  EditarInventarioBodySchema,
+  EditarInventarioResponseSchema,
+  FinalizarInventarioBodySchema,
+  FinalizarInventarioResponseSchema,
   InventarioParamsSchema,
   ItemInventarioParamsSchema,
   ListarInventariosQuerySchema,
@@ -14,6 +18,8 @@ import {
   ConsultarInventarioResponseSchema,
   type CriarInventarioBodyInput,
   type CorrigirItemInventarioBodyData,
+  type EditarInventarioBodyInput,
+  type FinalizarInventarioBodyData,
   type ListarInventariosQueryInput,
   type ListarItensInventarioQueryInput,
 } from "@repo/contracts";
@@ -64,6 +70,30 @@ export function criarOperacoesInventarios(client: ApiClient) {
         body: CriarInventarioBodySchema.parse(body),
         headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
         responseSchema: CriarInventarioResponseSchema,
+      });
+    },
+    editar(id: string, body: EditarInventarioBodyInput) {
+      const { inventarioId } = InventarioParamsSchema.parse({
+        inventarioId: id,
+      });
+      return client.request({
+        path: `/inventarios/${inventarioId}`,
+        method: "PATCH",
+        body: EditarInventarioBodySchema.parse(body),
+        headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+        responseSchema: EditarInventarioResponseSchema,
+      });
+    },
+    finalizar(id: string, body: FinalizarInventarioBodyData) {
+      const { inventarioId } = InventarioParamsSchema.parse({
+        inventarioId: id,
+      });
+      return client.request({
+        path: `/inventarios/${inventarioId}/finalizar`,
+        method: "POST",
+        body: FinalizarInventarioBodySchema.parse(body),
+        headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
+        responseSchema: FinalizarInventarioResponseSchema,
       });
     },
     corrigir(

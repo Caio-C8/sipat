@@ -29,8 +29,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className="my-auto py-8">
           <p className="max-w-lg text-[clamp(2rem,2.65vw,3.5rem)] leading-[1.15] font-bold tracking-[-0.035em] text-white">
             Gestão patrimonial
-            <br />
-            da Câmara.
           </p>
           <p className="mt-5 max-w-md text-[clamp(0.95rem,1vw,1.25rem)] leading-[1.7] text-[#b9cce2]">
             Consulte os bens, acompanhe as operações

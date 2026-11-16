@@ -93,8 +93,9 @@ No estado atual:
   `/api/notas-fiscais/:notaFiscalId/anexo`, além das quatro operações de
   comissão em `/api/comissoes` e das três mutações de integrantes em
   `/api/comissoes/:comissaoId/membros`, além de criação, listagem, detalhe,
-  setores e itens paginados em `/api/inventarios` e das cinco mutações para
-  iniciar/concluir setor, verificar/corrigir item e finalizar inventário;
+  setores e itens paginados em `/api/inventarios` e das seis mutações para
+  editar inventário pendente, iniciar/concluir setor, verificar/corrigir item e
+  finalizar inventário;
 - `AuthModule` registra autenticação, autorização e CSRF como Guards globais,
   nessa ordem;
 - rotas não públicas exigem sessão válida e declaração de perfis; a ausência de
@@ -127,7 +128,7 @@ No estado atual:
   presidente único no PostgreSQL e congela ato, vigência e composição após o
   primeiro uso patrimonial;
 - `InventariosModule` permite a `ADMINISTRADOR` e `DIRETOR_PATRIMONIO` as
-  quatro consultas de inventários e restringe criação e as cinco mutações ao
+  quatro consultas de inventários e restringe criação e as seis mutações ao
   `DIRETOR_PATRIMONIO`; valida comissão vigente, materializa setores ativos e
   patrimônios `ATIVO`, consulta progresso em lote e executa início, conferência
   idempotente, correção, conclusão e finalização em transações serializáveis;
@@ -297,15 +298,15 @@ notas e anexos. A implementação de `COMPRAS-001` permanece em validação.
 
 ## Evolução Web aprovada com impacto na API
 
-As próximas mudanças de API decorrentes da evolução Web estão delimitadas nas
-tarefas, e não representam estado implementado:
+As mudanças de API decorrentes da evolução Web estão delimitadas nas tarefas;
+o status de cada uma deve ser lido na task correspondente:
 
 - [SEC-002](../../tasks/SEC-002-matriz-leitura-compartilhada.md) ajusta somente
   as consultas compartilhadas da matriz de acesso;
 - [WEB-PATRIMONIOS-002](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)
   entregou a prévia não reservada de numeração;
 - [WEB-INVENTARIOS-002](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)
-  adiciona a edição transacional do inventário ainda pendente;
+  entregou a edição transacional do inventário ainda pendente;
 - [WEB-MANUTENCOES-003](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)
   adiciona o número global `BIGINT` do pedido, serializado como string;
 - [WEB-DASHBOARD-002](../../tasks/WEB-DASHBOARD-002-visao-operacional.md) e

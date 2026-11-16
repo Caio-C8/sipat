@@ -5,6 +5,8 @@ import {
   CorrigirItemInventarioResponseSchema,
   CriarInventarioBodySchema,
   CriarInventarioResponseSchema,
+  EditarInventarioBodySchema,
+  EditarInventarioResponseSchema,
   FinalizarInventarioBodySchema,
   FinalizarInventarioResponseSchema,
   IniciarSetorInventarioBodySchema,
@@ -41,6 +43,9 @@ export class ItemInventarioParamsDto extends createZodDto(
 export class CriarInventarioBodyDto extends createZodDto(
   CriarInventarioBodySchema,
 ) {}
+export class EditarInventarioBodyDto extends createZodDto(
+  EditarInventarioBodySchema,
+) {}
 export class ListarInventariosQueryDto extends createZodDto(
   ListarInventariosQuerySchema,
 ) {}
@@ -67,6 +72,9 @@ export class FinalizarInventarioBodyDto extends createZodDto(
 ) {}
 export class CriarInventarioResponseDto extends createZodDto(
   CriarInventarioResponseSchema,
+) {}
+export class EditarInventarioResponseDto extends createZodDto(
+  EditarInventarioResponseSchema,
 ) {}
 export class ConsultarInventarioResponseDto extends createZodDto(
   ConsultarInventarioResponseSchema,

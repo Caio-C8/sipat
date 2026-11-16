@@ -5,29 +5,40 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --brand-deep: #0f2644;
-  --brand-support: #2a4f7a;
-  --brand-gold: #d4a017;
-  --brand-gold-light: #f5c842;
-  --interactive: #2563eb;
+  --sipat-primary: #1e3a5f;
+  --sipat-deep-blue: #0f2644;
+  --sipat-support: #2a4f7a;
+  --sipat-gold: #d4a017;
+  --sipat-light-gold: #f5c842;
+  --sipat-interactive: #2563eb;
+  --sipat-background: #f8fafc;
+  --sipat-surface: #ffffff;
+  --sipat-text: #0f172a;
+  --sipat-muted-text: #64748b;
+  --sipat-border: #e2e8f0;
+  --brand-deep: var(--sipat-deep-blue);
+  --brand-support: var(--sipat-support);
+  --brand-gold: var(--sipat-gold);
+  --brand-gold-light: var(--sipat-light-gold);
+  --interactive: var(--sipat-interactive);
   --muted: #f1f5f9;
-  --border: #e2e8f0;
+  --border: var(--sipat-border);
   --accent: #eff6ff;
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #1e3a5f;
+  --background: var(--sipat-background);
+  --foreground: var(--sipat-text);
+  --card: var(--sipat-surface);
+  --card-foreground: var(--sipat-text);
+  --popover: var(--sipat-surface);
+  --popover-foreground: var(--sipat-text);
+  --primary: var(--sipat-primary);
   --primary-foreground: #ffffff;
-  --secondary: #e2e8f0;
-  --secondary-foreground: #0f2644;
-  --muted-foreground: #64748b;
-  --accent-foreground: #0f2644;
+  --secondary: #e8eef5;
+  --secondary-foreground: var(--sipat-deep-blue);
+  --muted-foreground: var(--sipat-muted-text);
+  --accent-foreground: var(--sipat-support);
   --destructive: oklch(0.55 0.245 27.325);
-  --input: #e2e8f0;
-  --ring: #d4a017;
+  --input: var(--sipat-border);
+  --ring: var(--sipat-gold);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -172,4 +183,15 @@
 
 .system-sidebar-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--interactive);
+}
+
+.cn-toast[data-type="success"],
+.cn-toast[data-type="success"] [data-title] {
+  color: #14532d !important;
+  opacity: 1 !important;
+}
+
+.cn-toast[data-type="success"] {
+  border-color: #86efac !important;
+  background: #f0fdf4 !important;
 }

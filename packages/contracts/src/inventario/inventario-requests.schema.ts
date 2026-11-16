@@ -2,6 +2,7 @@ import * as z from "zod";
 import { ChaveIdempotenciaSchema, PaginacaoQuerySchema } from "../common";
 import { NumeroPatrimonialSchema } from "../patrimonio";
 import {
+  DateTimeUtcInventarioSchema,
   NomeInventarioSchema,
   SituacaoItemInventarioSchema,
   StatusCorrecaoItemInventarioSchema,
@@ -49,6 +50,16 @@ export const CriarInventarioBodySchema = z.strictObject({
   comissaoId: z.uuid({
     error: "O identificador da comissão deve ser um UUID válido.",
   }),
+});
+
+export const EditarInventarioBodySchema = z.strictObject({
+  nome: NomeInventarioSchema,
+  descricao: TextoLongoInventarioSchema.nullable(),
+  observacao: TextoLongoInventarioSchema.nullable(),
+  comissaoId: z.uuid({
+    error: "O identificador da comissão deve ser um UUID válido.",
+  }),
+  versaoEsperada: DateTimeUtcInventarioSchema.nullable(),
 });
 
 export const ListarInventariosQuerySchema = PaginacaoQuerySchema.extend({
@@ -131,6 +142,12 @@ export type CriarInventarioBodyInput = z.input<
 >;
 export type CriarInventarioBodyData = z.output<
   typeof CriarInventarioBodySchema
+>;
+export type EditarInventarioBodyInput = z.input<
+  typeof EditarInventarioBodySchema
+>;
+export type EditarInventarioBodyData = z.output<
+  typeof EditarInventarioBodySchema
 >;
 export type ListarInventariosQueryInput = z.input<
   typeof ListarInventariosQuerySchema
