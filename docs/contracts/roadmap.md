@@ -636,6 +636,10 @@ da sequence dentro da transação. A consulta não muda o body de cadastro nem
 aceita número escolhido pelo cliente.
 [Tarefa e critérios](../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md).
 
+Implementado em 15/11/2026 por
+`GET /api/patrimonios/numeracao/previa`, com response estrita e
+`reservaValor: false`.
+
 ### Edição de inventário pendente
 
 `WEB-INVENTARIOS-002` adiciona params UUID, body estrito com `nome`,

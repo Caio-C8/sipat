@@ -6,6 +6,7 @@ import { isApiError } from "@/lib/api/core/api-error";
 import { serverRelatorios } from "@/features/relatorios/api/server";
 import { BaixasLista } from "@/features/baixas/components/baixas-lista";
 import { prepararFiltrosBaixas } from "@/features/baixas/filtros";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = {
   title: "Baixa",
@@ -23,8 +24,11 @@ export default async function BaixasPage({
   const query = queryRelatorio("baixas").safeParse(valores);
   if (!query.success)
     return (
-      <main className="p-7 text-[#19355d]">
-        <h1 className="text-2xl font-bold">Baixa</h1>
+      <main className="grid gap-5 p-7 text-[#19355d]">
+        <PageHeader
+          title="Baixa"
+          description="Consulte as baixas patrimoniais registradas."
+        />
         <p role="alert" className="mt-4 text-red-800">
           Filtros inválidos. Revise datas, seleções e paginação.
         </p>
@@ -41,8 +45,11 @@ export default async function BaixasPage({
   }
   if (!resposta) {
     return (
-      <main className="p-7 text-[#19355d]">
-        <h1 className="text-2xl font-bold">Baixa</h1>
+      <main className="grid gap-5 p-7 text-[#19355d]">
+        <PageHeader
+          title="Baixa"
+          description="Consulte as baixas patrimoniais registradas."
+        />
         <p role="alert" className="mt-4 text-red-800">
           {isApiError(falha)
             ? falha.message

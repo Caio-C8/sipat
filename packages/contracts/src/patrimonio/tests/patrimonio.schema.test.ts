@@ -9,6 +9,7 @@ import {
   CriarPatrimonioBodySchema,
   ConfirmarDisponibilidadeUsoBodySchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   DataCivilSchema,
   Decimal19_7Schema,
   ListarPatrimoniosQuerySchema,
@@ -125,6 +126,39 @@ function criarBodyValido() {
 }
 
 describe("contratos de patrimônios", () => {
+  it("valida a prévia não reservada dos dois tipos de numeração", () => {
+    const resposta = parseValido(
+      ConsultarPreviaNumeracaoPatrimonialResponseSchema,
+      {
+        status: 200,
+        sucesso: true,
+        mensagem: "Prévia consultada.",
+        dados: {
+          numeroOficial: "2656",
+          numeroSemOficial: "SP-91",
+          reservaValor: false,
+        },
+      },
+    );
+
+    assert.deepEqual(resposta.dados, {
+      numeroOficial: "2656",
+      numeroSemOficial: "SP-91",
+      reservaValor: false,
+    });
+    esperaInvalidos(ConsultarPreviaNumeracaoPatrimonialResponseSchema, [
+      {
+        status: 200,
+        sucesso: true,
+        mensagem: "Prévia consultada.",
+        dados: {
+          numeroOficial: "2656",
+          numeroSemOficial: "SP-91",
+          reservaValor: true,
+        },
+      },
+    ]);
+  });
   it("aceita e normaliza somente a representação aprovada do cadastro", () => {
     const resultado = parseValido(CriarPatrimonioBodySchema, criarBodyValido());
 
@@ -166,6 +200,20 @@ describe("contratos de patrimônios", () => {
       ...depreciavel,
       depreciavel: false,
     });
+  });
+
+  it("orienta a seleção de espécie e setor sem expor termos técnicos", () => {
+    const resposta = CriarPatrimonioBodySchema.safeParse({
+      ...criarBodyValido(),
+      especieId: undefined,
+      setorAtualId: undefined,
+    });
+    assert.equal(resposta.success, false);
+    if (!resposta.success)
+      assert.deepEqual(
+        resposta.error.issues.map((issue) => issue.message),
+        ["Selecione uma espécie.", "Selecione o setor de destino."],
+      );
   });
 
   it("exige o bloco inicial de depreciação", () => {

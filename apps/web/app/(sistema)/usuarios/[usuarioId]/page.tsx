@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { ChevronLeft, Pencil, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
 import {
   SituacaoUsuario,
@@ -42,13 +43,18 @@ export default async function UsuarioDetalhePage({
   if (!usuario)
     return (
       <main className="mx-auto grid max-w-[1400px] gap-4 px-4 py-6 text-[#17253d] sm:px-7">
-        <Link
-          href="/usuarios"
-          className="inline-flex items-center gap-1 text-sm font-semibold"
-        >
-          <ChevronLeft className="size-4" /> Voltar aos usuários
-        </Link>
-        <h1 className="text-2xl font-bold">Consulta de usuário</h1>
+        <PageHeader
+          title="Consulta de usuário"
+          description="Não foi possível carregar os dados deste usuário."
+          actions={
+            <Link
+              href="/usuarios"
+              className="inline-flex items-center gap-1 text-sm font-semibold"
+            >
+              <ChevronLeft className="size-4" /> Voltar aos usuários
+            </Link>
+          }
+        />
         <p
           role="alert"
           className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
@@ -59,27 +65,25 @@ export default async function UsuarioDetalhePage({
     );
   return (
     <main className="mx-auto grid w-full max-w-[1600px] gap-5 px-4 py-5 text-[#17253d] sm:px-7 sm:py-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link
-            href="/usuarios"
-            className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-[#526b8c] hover:text-[#203b61]"
-          >
-            <ChevronLeft className="size-4" /> Voltar aos usuários
-          </Link>
-          <h1 className="text-2xl font-bold text-[#111d34] sm:text-3xl">
-            {usuario.nome}
-          </h1>
-          <p className="mt-1 text-sm text-[#7188a5]">
-            Consulte e gerencie o acesso deste usuário.
-          </p>
-        </div>
-        <Button asChild variant="outline" className="min-h-10 px-4">
-          <Link href={`/usuarios/${usuario.id}/editar`}>
-            <Pencil /> Editar usuário
-          </Link>
-        </Button>
-      </header>
+      <PageHeader
+        title={usuario.nome}
+        description="Consulte e gerencie o acesso deste usuário."
+        actions={
+          <>
+            <Link
+              href="/usuarios"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-[#526b8c] hover:text-[#203b61]"
+            >
+              <ChevronLeft className="size-4" /> Voltar aos usuários
+            </Link>
+            <Button asChild variant="outline" className="min-h-10 px-4">
+              <Link href={`/usuarios/${usuario.id}/editar`}>
+                <Pencil /> Editar usuário
+              </Link>
+            </Button>
+          </>
+        }
+      />
       <section className={cartao} aria-labelledby="dados-usuario">
         <h2
           id="dados-usuario"

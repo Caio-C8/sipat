@@ -17,12 +17,18 @@ import {
 
 export const LIMITE_ITENS_REAVALIACAO = 20;
 const UuidSchema = z.uuid().transform((id) => id.toLowerCase());
+const UuidCampoSchema = (mensagem: string) =>
+  z.uuid({ error: mensagem }).transform((id) => id.toLowerCase());
 const BuscaSchema = z.string().trim().min(1).max(200);
 const DateTimeSchema = z.iso.datetime({ precision: 3 });
 const PercentualSchema = z
   .string()
-  .regex(/^(?:0|[1-9]\d?|100)(?:\.\d{1,2})?$/)
-  .refine((valor) => Number(valor) <= 100);
+  .regex(/^(?:0|[1-9]\d?|100)(?:\.\d{1,2})?$/, {
+    error: "Informe um percentual entre 0 e 100, com até duas casas decimais.",
+  })
+  .refine((valor) => Number(valor) <= 100, {
+    error: "O percentual residual não pode ser maior que 100%.",
+  });
 
 export const ResidualReavaliacaoSchema = z.discriminatedUnion("tipo", [
   z.strictObject({ tipo: z.literal("VALOR"), valor: Decimal19_7Schema }),
@@ -33,20 +39,26 @@ export const ResidualReavaliacaoSchema = z.discriminatedUnion("tipo", [
 ]);
 
 export const ItemReavaliacaoBodySchema = z.strictObject({
-  patrimonioId: UuidSchema,
+  patrimonioId: UuidCampoSchema("Selecione um patrimônio válido."),
   valorReavaliado: Decimal19_7PositivoSchema,
-  vidaUtilNovaMeses: z.number().int().min(1).max(1_200),
+  vidaUtilNovaMeses: z
+    .number({ error: "Informe a nova vida útil em meses." })
+    .int({ error: "A vida útil deve ser informada em meses inteiros." })
+    .min(1, { error: "A vida útil deve possuir ao menos 1 mês." })
+    .max(1_200, { error: "A vida útil deve possuir no máximo 1200 meses." }),
   residual: ResidualReavaliacaoSchema,
   definirPrimeiroParametro: z.literal(true).optional(),
 });
 
 const PedidoBaseSchema = z.strictObject({
   dataReferencia: DataCivilSchema,
-  comissaoId: UuidSchema,
+  comissaoId: UuidCampoSchema("Selecione uma comissão vigente."),
   itens: z
     .array(ItemReavaliacaoBodySchema)
-    .min(1)
-    .max(LIMITE_ITENS_REAVALIACAO),
+    .min(1, { error: "Selecione ao menos um patrimônio." })
+    .max(LIMITE_ITENS_REAVALIACAO, {
+      error: `Selecione no máximo ${LIMITE_ITENS_REAVALIACAO} patrimônios.`,
+    }),
 });
 
 function rejeitarDuplicatas(

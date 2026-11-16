@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PatrimonioDetalhe } from "@repo/contracts";
+import { ApiError } from "@/lib/api/core/api-error";
 import { DisponibilidadeUso } from "./disponibilidade-uso";
 
 const mocks = vi.hoisted(() => ({
@@ -84,10 +85,12 @@ describe("DisponibilidadeUso", () => {
     );
     expect(screen.getByText("Aguardando disponibilidade")).toBeTruthy();
     expect(
-      screen.queryByRole("button", {
-        name: "Confirmar disponibilidade para uso",
-      }),
-    ).toBeNull();
+      screen
+        .getByRole("button", {
+          name: "Confirmar disponibilidade para uso",
+        })
+        .hasAttribute("disabled"),
+    ).toBe(true);
   });
 
   it("preserva a chave em resultado incerto e usa a response confirmada", async () => {
@@ -111,9 +114,8 @@ describe("DisponibilidadeUso", () => {
         name: "Confirmar disponibilidade para uso",
       }),
     );
-    expect(
-      screen.getByText(/Primeira competência prevista:/).textContent,
-    ).toContain("Dezembro de 2026");
+    expect(screen.getByText("Primeira competência prevista")).toBeTruthy();
+    expect(screen.getByText("Dezembro de 2026")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /^Confirmar$/ }));
     await screen.findByText(
       "O resultado não pôde ser confirmado. A tentativa foi preservada; confira os dados antes de reenviar.",
@@ -126,5 +128,35 @@ describe("DisponibilidadeUso", () => {
     );
     await screen.findByText("Confirmada em 08/11/2026 por João Diretor.");
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("explica que a regra antiga, e não o status, bloqueou a confirmação", async () => {
+    mocks.confirmar.mockRejectedValueOnce(
+      new ApiError({
+        status: 409,
+        codigo: "REGRA_DISPONIBILIDADE_DESATUALIZADA",
+        mensagem: "Regra anterior ainda aplicada.",
+        categoria: "http",
+      }),
+    );
+    render(
+      <DisponibilidadeUso
+        patrimonio={{ ...patrimonio, status: "EM_MANUTENCAO" }}
+        diretor
+        hoje="2026-11-08"
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Confirmar disponibilidade para uso",
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^Confirmar$/ }));
+
+    const tituloErro = await screen.findByText("Revise antes de confirmar");
+    expect(tituloErro.parentElement?.textContent).toContain(
+      "Este patrimônio precisa ser atualizado antes da confirmação. Solicite a atualização e tente novamente; o status do bem não é a causa.",
+    );
   });
 });

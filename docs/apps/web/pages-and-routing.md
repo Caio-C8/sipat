@@ -71,9 +71,11 @@ ancestrais reais são links. A correspondência por segmentos evita colisões co
 `/patrimonios/novo` e `/patrimonios/[patrimonioId]`.
 
 `WEB-SHELL-002` removeu Configurações e Histórico da sidebar, manteve Minha
-conta no menu do usuário e eliminou o sino e a consulta de notificações. O
-dashboard é a única página com saudação e data; as demais preservam cabeçalho
-de título, descrição e ações da própria vertical.
+conta no menu do usuário e eliminou o sino e a consulta de notificações. A
+extensão implementada padroniza todas as páginas autenticadas com `PageHeader`:
+título e descrição à esquerda e ações opcionais à direita. No dashboard, a
+saudação ocupa o título e a data ocupa a descrição. `SystemFooter` permanece o
+único rodapé de página; os rodapés legados das verticais foram removidos.
 
 `WEB-DASHBOARD-001` adicionou `loading.tsx` ao segmento e integrou os totais
 geral e por status por uma operação Server. Erro de integração e zero registros

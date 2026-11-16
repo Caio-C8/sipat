@@ -93,6 +93,19 @@ test("duplicidade e destino igual apontam índices públicos originais", () => {
       ],
     );
 });
+test("mensagens de campos obrigatórios são claras para a interface", () => {
+  const resposta = CriarMovimentacaoBodySchema.safeParse({
+    ...body(),
+    comissaoId: undefined,
+    itens: [{ ...item(), setorDestinoId: undefined }],
+  });
+  assert.equal(resposta.success, false);
+  if (!resposta.success)
+    assert.deepEqual(
+      resposta.error.issues.map((issue) => issue.message),
+      ["Selecione uma comissão vigente.", "Selecione o setor de destino."],
+    );
+});
 test("consulta combina filtros, paginação 20/50 e dias civis com extremos independentes", () => {
   assert.deepEqual(ListarMovimentacoesQuerySchema.parse({}), {
     pagina: 1,

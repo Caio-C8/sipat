@@ -14,6 +14,16 @@ import {
   type PreviaReavaliacao,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { IntegerInput, MoneyInput } from "@/components/shared/numeric-inputs";
+import {
+  ComboboxField,
+  SelectField,
+  TextField,
+} from "@/components/shared/form-fields";
+import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import {
   Dialog,
@@ -37,7 +47,6 @@ import {
   usePreviaReavaliacao,
 } from "../api/hooks";
 import {
-  campoReavaliacao,
   formatarDataCivil,
   formatarDecimal,
   mensagemReavaliacao,
@@ -75,8 +84,8 @@ function EtapasReavaliacao({ etapa }: { etapa: Etapa }) {
             <span
               className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
                 concluida || atual
-                  ? "bg-[#2863ec] text-white"
-                  : "bg-[#e9eef5] text-[#526580]"
+                  ? "bg-interactive text-white"
+                  : "bg-muted text-muted-foreground"
               }`}
             >
               {concluida ? (
@@ -87,7 +96,7 @@ function EtapasReavaliacao({ etapa }: { etapa: Etapa }) {
             </span>
             <span
               className={`hidden truncate text-xs font-semibold sm:block ${
-                atual ? "text-[#203b61]" : "text-[#526580]"
+                atual ? "text-brand-deep" : "text-muted-foreground"
               }`}
             >
               {item.rotulo}
@@ -95,7 +104,7 @@ function EtapasReavaliacao({ etapa }: { etapa: Etapa }) {
             {item.numero < 3 ? (
               <span
                 aria-hidden="true"
-                className="h-px min-w-3 flex-1 bg-[#dce5f0]"
+                className="h-px min-w-3 flex-1 bg-border"
               />
             ) : null}
           </li>
@@ -175,6 +184,7 @@ export function NovaReavaliacao({
   const [decisaoIdempotencia, setDecisaoIdempotencia] =
     useState<DecisaoIdempotencia | null>(null);
   const painelAviso = useRef<HTMLDivElement>(null);
+  const camposFormulario = useRef<HTMLElement>(null);
   const chaveStorage = `sipat.reavaliacao.pendente.${usuarioId}${
     modoDetalhe && patrimonioInicial ? `.${patrimonioInicial.id}` : ""
   }`;
@@ -213,8 +223,8 @@ export function NovaReavaliacao({
     return () => window.clearTimeout(temporizador);
   }, [chaveStorage]);
   useEffect(() => {
-    if (erro || errosCampos.length || aviso) painelAviso.current?.focus();
-  }, [erro, errosCampos, aviso]);
+    if (erro || aviso) painelAviso.current?.focus();
+  }, [erro, aviso]);
   useEffect(() => {
     onPendingChange?.(criacao.pending);
   }, [criacao.pending, onPendingChange]);
@@ -299,7 +309,14 @@ export function NovaReavaliacao({
           mensagem: issue.message,
         })),
       );
-      setAviso("Corrija os campos indicados antes de revisar.");
+      setAviso("");
+      requestAnimationFrame(() => {
+        const campo = camposFormulario.current?.querySelector<HTMLElement>(
+          '[aria-invalid="true"]',
+        );
+        campo?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+        campo?.focus();
+      });
       return;
     }
     setErro(null);
@@ -322,6 +339,13 @@ export function NovaReavaliacao({
       setErro(e);
       if (isApiError(e)) setErrosCampos(e.erros);
     }
+  }
+
+  function campoErro(campo: string) {
+    return errosCampos
+      .filter((erroCampo) => erroCampo.campo === campo)
+      .map((erroCampo) => erroCampo.mensagem)
+      .join(" ");
   }
 
   async function confirmar(pedidoAnterior?: CriarReavaliacaoBodyData) {
@@ -410,8 +434,8 @@ export function NovaReavaliacao({
     <Conteiner
       className={
         modoDetalhe
-          ? "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-6"
-          : "grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7"
+          ? "grid min-w-0 gap-5 p-4 text-foreground sm:p-6"
+          : "grid min-w-0 gap-5 bg-background p-4 text-foreground sm:p-6 lg:p-7"
       }
     >
       <Dialog
@@ -495,34 +519,30 @@ export function NovaReavaliacao({
         </DialogContent>
       </Dialog>
       {!modoDetalhe ? (
-        <header className="grid gap-5">
-          <div>
-            <Link
-              prefetch={false}
-              href="/reavaliacoes"
-              className="inline-flex items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
-            >
-              <ChevronLeft aria-hidden="true" className="size-4" />
-              Voltar às reavaliações
-            </Link>
-            <h1 className="mt-4 text-2xl font-bold tracking-tight">
-              Nova reavaliação
-            </h1>
-            <p className="mt-1 text-sm text-[#526580]">
-              Selecione os bens, preencha os novos parâmetros e revise a prévia
-              calculada pela API.
-            </p>
-          </div>
-          <div className="rounded-lg border border-[#dce4ef] bg-white px-4 py-4 sm:px-6">
+        <div className="grid gap-5">
+          <PageHeader
+            title="Nova reavaliação"
+            description="Selecione os bens, preencha os novos parâmetros e revise a prévia calculada na confirmação."
+            actions={
+              <Button asChild variant="outline">
+                <Link prefetch={false} href="/reavaliacoes">
+                  <ChevronLeft aria-hidden="true" className="size-4" />
+                  Voltar às reavaliações
+                </Link>
+              </Button>
+            }
+          />
+          <div className="rounded-lg border border-border bg-card px-4 py-4 sm:px-6">
             <EtapasReavaliacao etapa={etapa} />
           </div>
-        </header>
+        </div>
       ) : null}
       <div ref={painelAviso} tabIndex={-1} className="outline-none">
         {erro && !decisaoIdempotencia ? (
-          <div role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
-            {mensagemReavaliacao(erro)}
-          </div>
+          <Alert variant="destructive">
+            <AlertTitle>Não foi possível concluir a reavaliação</AlertTitle>
+            <AlertDescription>{mensagemReavaliacao(erro)}</AlertDescription>
+          </Alert>
         ) : null}
         {erro && decisaoIdempotencia ? (
           <AlertaIdempotencia
@@ -541,18 +561,10 @@ export function NovaReavaliacao({
           />
         ) : null}
         {aviso ? (
-          <p role="status" className="rounded-md bg-blue-50 p-4 text-blue-900">
-            {aviso}
-          </p>
-        ) : null}
-        {errosCampos.length ? (
-          <ul className="mt-2 list-disc pl-5 text-sm text-red-800">
-            {errosCampos.map((item, indice) => (
-              <li key={`${item.campo}-${indice}`}>
-                {item.campo}: {item.mensagem}
-              </li>
-            ))}
-          </ul>
+          <Alert>
+            <AlertTitle>Confira a reavaliação</AlertTitle>
+            <AlertDescription>{aviso}</AlertDescription>
+          </Alert>
         ) : null}
       </div>
       {resultado && !modoDetalhe ? (
@@ -615,7 +627,7 @@ export function NovaReavaliacao({
                 1. Selecionar bens
               </h2>
               <form
-                className="mt-4 flex flex-wrap items-end gap-3 rounded-md bg-[#f7f9fc] p-3"
+                className="mt-4 flex flex-wrap items-end gap-3 rounded-md bg-muted p-3"
                 onSubmit={(e) => {
                   e.preventDefault();
                   setPagina(1);
@@ -630,18 +642,15 @@ export function NovaReavaliacao({
               >
                 <label className="grid min-w-56 flex-1 gap-2 text-sm">
                   Descrição ou características
-                  <input
-                    className={campoReavaliacao}
+                  <Input
+                    className="mt-2 h-10"
                     type="search"
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}
                     maxLength={200}
                   />
                 </label>
-                <Button
-                  type="submit"
-                  className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
-                >
+                <Button type="submit" className="h-10 gap-2 px-5">
                   <Search aria-hidden="true" className="size-4" /> Pesquisar
                 </Button>
               </form>
@@ -658,12 +667,12 @@ export function NovaReavaliacao({
                   {bens.dados?.dados.map((bem) => (
                     <li
                       key={bem.id}
-                      className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4eaf2] px-1 py-3 last:border-b-0"
+                      className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-1 py-3 last:border-b-0"
                     >
                       <div>
                         <strong>{bem.numeroPatrimonio}</strong> ·{" "}
                         {bem.descricao}
-                        <p className="text-xs text-[#526580]">
+                        <p className="text-xs text-muted-foreground">
                           {bem.status.replaceAll("_", " ")}
                         </p>
                       </div>
@@ -723,7 +732,7 @@ export function NovaReavaliacao({
                 className={
                   modoDetalhe
                     ? "mt-5 flex flex-wrap items-center gap-3"
-                    : "mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4eaf2] pt-4"
+                    : "mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
                 }
               >
                 <Button asChild variant="outline">
@@ -732,7 +741,7 @@ export function NovaReavaliacao({
                 <Button
                   type="button"
                   disabled={selecionados.length === 0 || detalhe.pending}
-                  className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                  className="h-10 gap-2 px-5"
                   onClick={() => setEtapa(2)}
                 >
                   Preencher parâmetros{" "}
@@ -743,6 +752,7 @@ export function NovaReavaliacao({
           ) : null}
           {modoDetalhe || etapa === 2 ? (
             <section
+              ref={camposFormulario}
               className={painelReavaliacao}
               aria-labelledby="parametros-title"
             >
@@ -750,64 +760,56 @@ export function NovaReavaliacao({
                 2. Data, comissão e parâmetros
               </h2>
               {!modoDetalhe ? (
-                <p className="mt-1 text-xs text-[#526580]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   A data deve estar no mês atual. A comissão e os valores serão
-                  revalidados pela API.
+                  revalidados na confirmação.
                 </p>
               ) : null}
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-2 text-sm">
-                  Data de referência
-                  <input
-                    className={campoReavaliacao}
-                    type="date"
-                    min={`${hojeSaoPaulo().slice(0, 7)}-01`}
-                    max={hojeSaoPaulo()}
-                    value={dataReferencia}
-                    onChange={(e) => {
-                      setDataReferencia(e.target.value);
-                      setComissaoId("");
-                      setSelecionados((atuais) =>
-                        atuais.map((item) => ({
-                          ...item,
-                          definirPrimeiroParametro: undefined,
-                        })),
-                      );
-                      invalidarPrevia();
-                    }}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm">
-                  Comissão vigente
-                  <select
-                    className={campoReavaliacao}
-                    value={comissaoId}
-                    onChange={(e) => {
-                      setComissaoId(e.target.value);
-                      invalidarPrevia();
-                    }}
-                  >
-                    <option value="">Selecione</option>
-                    {comissaoId && !comissaoSelecionada ? (
-                      <option value={comissaoId}>Comissão selecionada</option>
-                    ) : null}
-                    {comissoes.dados?.dados.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nome}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm sm:col-span-2">
-                  Pesquisar comissão
-                  <input
-                    className={campoReavaliacao}
-                    type="search"
-                    value={buscaComissao}
-                    onChange={(e) => setBuscaComissao(e.target.value)}
-                    maxLength={200}
-                  />
-                </label>
+                <TextField
+                  id="dataReferenciaReavaliacao"
+                  label="Data de referência"
+                  type="date"
+                  min={`${hojeSaoPaulo().slice(0, 7)}-01`}
+                  max={hojeSaoPaulo()}
+                  value={dataReferencia}
+                  error={campoErro("dataReferencia") || undefined}
+                  onChange={(e) => {
+                    setDataReferencia(e.target.value);
+                    setComissaoId("");
+                    setSelecionados((atuais) =>
+                      atuais.map((item) => ({
+                        ...item,
+                        definirPrimeiroParametro: undefined,
+                      })),
+                    );
+                    invalidarPrevia();
+                  }}
+                />
+                <ComboboxField
+                  id="comissaoReavaliacao"
+                  label="Comissão vigente"
+                  value={comissaoId}
+                  error={campoErro("comissaoId") || undefined}
+                  onValueChange={(value) => {
+                    setComissaoId(value);
+                    invalidarPrevia();
+                  }}
+                  onSearchChange={setBuscaComissao}
+                  options={[
+                    ...(comissaoId && !comissaoSelecionada
+                      ? [{ value: comissaoId, label: "Comissão selecionada" }]
+                      : []),
+                    ...(comissoes.dados?.dados ?? []).map((item) => ({
+                      value: item.id,
+                      label: item.nome,
+                    })),
+                  ]}
+                  loading={comissoes.loading}
+                  placeholder="Selecione"
+                  searchPlaceholder="Buscar comissão…"
+                  fieldClassName="sm:col-span-1"
+                />
               </div>
               {comissoes.loading ? (
                 <p role="status" className="mt-2 text-sm">
@@ -827,14 +829,14 @@ export function NovaReavaliacao({
                       className={
                         modoDetalhe
                           ? "rounded-md border p-4"
-                          : "rounded-md border border-[#dce4ef] bg-[#fbfcfe] p-4"
+                          : "rounded-md border border-border bg-background p-4"
                       }
                     >
                       <legend className="px-1 font-semibold">
                         Bem {indice + 1}: {item.bem.numeroPatrimonio} ·{" "}
                         {item.bem.descricao}
                       </legend>
-                      <p className="mb-3 text-xs text-[#526580]">
+                      <p className="mb-3 text-xs text-muted-foreground">
                         Bruto atual:{" "}
                         {formatarDecimal(
                           item.bem.situacaoContabil.valorBrutoAtual,
@@ -849,111 +851,220 @@ export function NovaReavaliacao({
                         )}
                       </p>
                       {!item.bem.parametroDepreciacaoAtual ? (
-                        <div
-                          role="alert"
-                          className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm"
-                        >
-                          <p>
-                            Este patrimônio foi cadastrado sem parâmetros de
-                            depreciação. A reavaliação exige um parâmetro.
-                            Deseja definir um agora?
-                          </p>
-                          <p className="mt-1 text-xs">
-                            Enquanto não houver parâmetro vigente, o patrimônio
-                            não deprecia.
-                          </p>
-                          <Button
-                            className="mt-3"
-                            type="button"
-                            variant="outline"
-                            onClick={() => setParametroPendenteId(item.bem.id)}
-                          >
-                            {item.definirPrimeiroParametro
-                              ? "Revisar primeiro parâmetro"
-                              : "Definir primeiro parâmetro"}
-                          </Button>
-                          {item.definirPrimeiroParametro ? (
-                            <p className="mt-2 text-xs">
-                              Primeiro parâmetro confirmado para a prévia.
+                        <Alert className="mb-4">
+                          <AlertTitle>
+                            Parâmetro de depreciação necessário
+                          </AlertTitle>
+                          <AlertDescription>
+                            <p>
+                              Este patrimônio foi cadastrado sem parâmetros de
+                              depreciação. A reavaliação exige um parâmetro.
+                              Deseja definir um agora?
                             </p>
-                          ) : null}
-                        </div>
+                            <p className="text-xs">
+                              Enquanto não houver parâmetro vigente, o
+                              patrimônio não deprecia.
+                            </p>
+                            <Button
+                              className="mt-3"
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                setParametroPendenteId(item.bem.id)
+                              }
+                            >
+                              {item.definirPrimeiroParametro
+                                ? "Revisar primeiro parâmetro"
+                                : "Definir primeiro parâmetro"}
+                            </Button>
+                            {item.definirPrimeiroParametro ? (
+                              <p className="mt-2 text-xs">
+                                Primeiro parâmetro confirmado para a prévia.
+                              </p>
+                            ) : null}
+                          </AlertDescription>
+                        </Alert>
                       ) : null}
                       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <label className="grid gap-2 text-sm">
-                          Novo valor bruto (R$)
-                          <input
-                            className={campoReavaliacao}
-                            type="text"
-                            inputMode="decimal"
-                            value={item.valorReavaliado}
-                            onChange={(e) =>
-                              alterarItem(item.bem.id, {
-                                valorReavaliado: e.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label className="grid gap-2 text-sm">
-                          Nova vida útil (meses)
-                          <input
-                            className={campoReavaliacao}
-                            type="number"
-                            min={1}
-                            max={1200}
-                            step={1}
-                            value={item.vidaUtilNovaMeses}
-                            onChange={(e) =>
-                              alterarItem(item.bem.id, {
-                                vidaUtilNovaMeses: e.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label className="grid gap-2 text-sm">
-                          Modalidade residual
-                          <select
-                            className={campoReavaliacao}
-                            value={item.residualTipo}
-                            onChange={(e) => {
-                              const tipo = e.target
-                                .value as Selecionado["residualTipo"];
-                              alterarItem(item.bem.id, {
-                                residualTipo: tipo,
-                                residual:
-                                  tipo === "VALOR"
-                                    ? (item.bem.parametroDepreciacaoAtual
-                                        ?.valorResidual ?? "0")
-                                    : (item.bem.parametroDepreciacaoAtual
-                                        ?.percentualResidual ?? "0"),
-                              });
-                            }}
+                        <Field
+                          data-invalid={Boolean(
+                            campoErro(`itens.${indice}.valorReavaliado`),
+                          )}
+                        >
+                          <FieldLabel
+                            htmlFor={`valorReavaliado-${item.bem.id}`}
                           >
-                            <option value="VALOR">Valor em reais</option>
-                            <option value="PERCENTUAL">Percentual</option>
-                          </select>
-                        </label>
-                        <label className="grid gap-2 text-sm">
-                          {item.residualTipo === "VALOR"
-                            ? "Novo residual (R$)"
-                            : "Novo residual (%)"}
-                          <input
-                            className={campoReavaliacao}
-                            type="text"
-                            inputMode="decimal"
-                            value={item.residual}
-                            onChange={(e) =>
+                            Novo valor bruto (R$)
+                          </FieldLabel>
+                          <MoneyInput
+                            id={`valorReavaliado-${item.bem.id}`}
+                            className="h-10"
+                            value={item.valorReavaliado}
+                            aria-invalid={
+                              Boolean(
+                                campoErro(`itens.${indice}.valorReavaliado`),
+                              ) || undefined
+                            }
+                            aria-describedby={
+                              campoErro(`itens.${indice}.valorReavaliado`)
+                                ? `valorReavaliado-${item.bem.id}-error`
+                                : undefined
+                            }
+                            onValueChange={(valor) =>
                               alterarItem(item.bem.id, {
-                                residual: e.target.value,
+                                valorReavaliado: valor,
                               })
                             }
                           />
-                        </label>
+                          {campoErro(`itens.${indice}.valorReavaliado`) ? (
+                            <FieldError
+                              id={`valorReavaliado-${item.bem.id}-error`}
+                            >
+                              {campoErro(`itens.${indice}.valorReavaliado`)}
+                            </FieldError>
+                          ) : null}
+                        </Field>
+                        <Field
+                          data-invalid={Boolean(
+                            campoErro(`itens.${indice}.vidaUtilNovaMeses`),
+                          )}
+                        >
+                          <FieldLabel htmlFor={`vidaUtil-${item.bem.id}`}>
+                            Nova vida útil (meses)
+                          </FieldLabel>
+                          <IntegerInput
+                            id={`vidaUtil-${item.bem.id}`}
+                            className="h-10"
+                            value={item.vidaUtilNovaMeses}
+                            aria-invalid={
+                              Boolean(
+                                campoErro(`itens.${indice}.vidaUtilNovaMeses`),
+                              ) || undefined
+                            }
+                            aria-describedby={
+                              campoErro(`itens.${indice}.vidaUtilNovaMeses`)
+                                ? `vidaUtil-${item.bem.id}-error`
+                                : undefined
+                            }
+                            onValueChange={(valor) =>
+                              alterarItem(item.bem.id, {
+                                vidaUtilNovaMeses: valor,
+                              })
+                            }
+                          />
+                          {campoErro(`itens.${indice}.vidaUtilNovaMeses`) ? (
+                            <FieldError id={`vidaUtil-${item.bem.id}-error`}>
+                              {campoErro(`itens.${indice}.vidaUtilNovaMeses`)}
+                            </FieldError>
+                          ) : null}
+                        </Field>
+                        <SelectField
+                          id={`modalidadeResidual-${item.bem.id}`}
+                          label="Modalidade residual"
+                          value={item.residualTipo}
+                          onValueChange={(value) => {
+                            const tipo = value as Selecionado["residualTipo"];
+                            alterarItem(item.bem.id, {
+                              residualTipo: tipo,
+                              residual:
+                                tipo === "VALOR"
+                                  ? (item.bem.parametroDepreciacaoAtual
+                                      ?.valorResidual ?? "0")
+                                  : (item.bem.parametroDepreciacaoAtual
+                                      ?.percentualResidual ?? "0"),
+                            });
+                          }}
+                          options={[
+                            { value: "VALOR", label: "Valor em reais" },
+                            { value: "PERCENTUAL", label: "Percentual" },
+                          ]}
+                        />
+                        <Field
+                          data-invalid={Boolean(
+                            campoErro(
+                              `itens.${indice}.residual.${
+                                item.residualTipo === "VALOR"
+                                  ? "valor"
+                                  : "percentual"
+                              }`,
+                            ),
+                          )}
+                        >
+                          <FieldLabel htmlFor={`residual-${item.bem.id}`}>
+                            {item.residualTipo === "VALOR"
+                              ? "Novo residual (R$)"
+                              : "Novo residual (%)"}
+                          </FieldLabel>
+                          {item.residualTipo === "VALOR" ? (
+                            <MoneyInput
+                              id={`residual-${item.bem.id}`}
+                              className="h-10"
+                              value={item.residual}
+                              aria-invalid={
+                                Boolean(
+                                  campoErro(`itens.${indice}.residual.valor`),
+                                ) || undefined
+                              }
+                              aria-describedby={
+                                campoErro(`itens.${indice}.residual.valor`)
+                                  ? `residual-${item.bem.id}-error`
+                                  : undefined
+                              }
+                              onValueChange={(valor) =>
+                                alterarItem(item.bem.id, { residual: valor })
+                              }
+                            />
+                          ) : (
+                            <Input
+                              id={`residual-${item.bem.id}`}
+                              className="h-10"
+                              inputMode="decimal"
+                              value={item.residual}
+                              aria-invalid={
+                                Boolean(
+                                  campoErro(
+                                    `itens.${indice}.residual.percentual`,
+                                  ),
+                                ) || undefined
+                              }
+                              aria-describedby={
+                                campoErro(`itens.${indice}.residual.percentual`)
+                                  ? `residual-${item.bem.id}-error`
+                                  : undefined
+                              }
+                              onChange={(evento) =>
+                                alterarItem(item.bem.id, {
+                                  residual: evento.target.value.replace(
+                                    /[^\d,.]/g,
+                                    "",
+                                  ),
+                                })
+                              }
+                            />
+                          )}
+                          {campoErro(
+                            `itens.${indice}.residual.${
+                              item.residualTipo === "VALOR"
+                                ? "valor"
+                                : "percentual"
+                            }`,
+                          ) ? (
+                            <FieldError id={`residual-${item.bem.id}-error`}>
+                              {campoErro(
+                                `itens.${indice}.residual.${
+                                  item.residualTipo === "VALOR"
+                                    ? "valor"
+                                    : "percentual"
+                                }`,
+                              )}
+                            </FieldError>
+                          ) : null}
+                        </Field>
                       </div>
                     </fieldset>
                   ))
                 ) : (
-                  <p className="text-sm text-[#526580]">
+                  <p className="text-sm text-muted-foreground">
                     Selecione ao menos um patrimônio acima.
                   </p>
                 )}
@@ -970,7 +1081,7 @@ export function NovaReavaliacao({
                   {previaOperacao.pending ? "Calculando…" : "Calcular prévia"}
                 </Button>
               ) : (
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4eaf2] pt-4">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
                   <Button
                     type="button"
                     variant="outline"
@@ -980,7 +1091,7 @@ export function NovaReavaliacao({
                     <ChevronLeft aria-hidden="true" className="size-4" /> Voltar
                   </Button>
                   <Button
-                    className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                    className="h-10 gap-2 px-5"
                     type="button"
                     disabled={
                       bloqueado || selecionados.length === 0 || !!pedidoPendente
@@ -1004,9 +1115,10 @@ export function NovaReavaliacao({
               <h2 id="revisao-title" className="font-bold">
                 3. Revisar antes de confirmar
               </h2>
-              <p className="mt-2 text-xs text-[#526580]">
-                Os valores anteriores e a estimativa abaixo foram calculados
-                pela API. A quota é apenas a estimativa inicial do novo ciclo.
+              <p className="mt-2 text-xs text-muted-foreground">
+                Os valores anteriores e a estimativa abaixo foram calculados na
+                confirmação. A quota é apenas a estimativa inicial do novo
+                ciclo.
               </p>
               <ul className="mt-4 grid gap-4">
                 {previa.itens.map((item) => (
@@ -1089,7 +1201,7 @@ export function NovaReavaliacao({
                   </li>
                 ))}
               </ul>
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4eaf2] pt-4">
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
                 {!modoDetalhe ? (
                   <Button
                     type="button"
@@ -1113,11 +1225,7 @@ export function NovaReavaliacao({
                     {comissaoSelecionada?.nome ?? "Selecionada"}
                   </p>
                   <Button
-                    className={
-                      modoDetalhe
-                        ? undefined
-                        : "h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
-                    }
+                    className={modoDetalhe ? undefined : "h-10 px-5"}
                     type="button"
                     disabled={
                       !previa.versaoPrevia || bloqueado || !!pedidoPendente

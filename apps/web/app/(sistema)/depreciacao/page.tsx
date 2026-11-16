@@ -13,6 +13,7 @@ import { serverDepreciacaoOperations } from "@/features/depreciacoes/api/server-
 import { serverReavaliacaoOperations } from "@/features/reavaliacoes/api/server-reavaliacao-operations";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = {
   title: "Depreciação",
@@ -61,8 +62,11 @@ export default async function DepreciacaoPage({
       resposta.dados.competenciaMaisAntigaPendente;
   } catch (erro) {
     return (
-      <main className="p-6 text-[#17253d]">
-        <h1 className="text-2xl font-bold">Depreciação</h1>
+      <main className="grid gap-5 p-6 text-[#17253d]">
+        <PageHeader
+          title="Depreciação"
+          description="Consulte e processe as competências patrimoniais pendentes."
+        />
         <p
           role="alert"
           className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
@@ -79,7 +83,10 @@ export default async function DepreciacaoPage({
   if (competencias.length === 0) {
     return (
       <main className="mx-auto grid w-full max-w-[1900px] gap-5 p-6 text-[#17253d]">
-        <h1 className="text-2xl font-bold">Depreciação</h1>
+        <PageHeader
+          title="Depreciação"
+          description="Consulte e processe as competências patrimoniais pendentes."
+        />
         <section
           role="status"
           className="rounded-lg border border-[#dfe7f1] bg-white p-8 text-center"
@@ -110,8 +117,11 @@ export default async function DepreciacaoPage({
     : false;
   if (!competenciaValidada.success || !competenciaDisponivel) {
     return (
-      <main className="p-6 text-[#17253d]">
-        <h1 className="text-2xl font-bold">Depreciação</h1>
+      <main className="grid gap-5 p-6 text-[#17253d]">
+        <PageHeader
+          title="Depreciação"
+          description="Consulte e processe as competências patrimoniais pendentes."
+        />
         <p
           role="alert"
           className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
@@ -136,8 +146,11 @@ export default async function DepreciacaoPage({
   });
   if (!query.success) {
     return (
-      <main className="p-6 text-[#17253d]">
-        <h1 className="text-2xl font-bold">Depreciação</h1>
+      <main className="grid gap-5 p-6 text-[#17253d]">
+        <PageHeader
+          title="Depreciação"
+          description="Consulte e processe as competências patrimoniais pendentes."
+        />
         <p
           role="alert"
           className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
@@ -162,8 +175,11 @@ export default async function DepreciacaoPage({
 
   if (resultadoPendentes.status === "rejected") {
     return (
-      <main className="p-6 text-[#17253d]">
-        <h1 className="text-2xl font-bold">Depreciação</h1>
+      <main className="grid gap-5 p-6 text-[#17253d]">
+        <PageHeader
+          title="Depreciação"
+          description="Consulte e processe as competências patrimoniais pendentes."
+        />
         <p
           role="alert"
           className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"

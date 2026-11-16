@@ -4,6 +4,7 @@ import {
   CABECALHO_CSRF,
   ConsultarPatrimonioResponseSchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   CriarPatrimonioResponseSchema,
   DashboardPatrimonialResponseSchema,
   ListarPatrimoniosResponseSchema,
@@ -168,6 +169,9 @@ describe("patrimônios", () => {
         ];
       }
       if (sql.includes("FROM parametros_depreciacao")) return [];
+      if (sql.includes("FROM patrimonios_numero_oficial_seq oficial")) {
+        return [{ numeroOficial: "1", numeroSemOficial: "SP-1" }];
+      }
       if (sql.includes("patrimonios_numero_oficial_seq")) {
         return [{ valor: proximoOficial++ }];
       }
@@ -353,6 +357,24 @@ describe("patrimônios", () => {
         ListarPatrimoniosResponseSchema.safeParse(response.body).success,
       ).toBe(true);
     }
+  });
+
+  it("restringe a prévia não reservada ao diretor", async () => {
+    const rota = "/api/patrimonios/numeracao/previa";
+    await request(app.getHttpServer()).get(rota).expect(401);
+    await getAutenticado(tokenAdministrador, rota).expect(403);
+
+    const response = await getAutenticado(tokenDiretor, rota)
+      .expect(200)
+      .expect("Cache-Control", "private, no-store");
+    expect(
+      ConsultarPreviaNumeracaoPatrimonialResponseSchema.parse(response.body)
+        .dados,
+    ).toEqual({
+      numeroOficial: "1",
+      numeroSemOficial: "SP-1",
+      reservaValor: false,
+    });
   });
 
   it("aplica paginação, busca normalizada, filtros e seleção mínima", async () => {

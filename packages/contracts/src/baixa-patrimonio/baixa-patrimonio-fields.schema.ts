@@ -23,7 +23,9 @@ export const CODIGOS_ERRO_BAIXA_PATRIMONIO = [
 
 export const LIMITE_CARACTERES_TEXTO_BAIXA_PATRIMONIO = 2_000;
 
-export const TipoBaixaPatrimonioSchema = z.enum(TIPOS_BAIXA_PATRIMONIO);
+export const TipoBaixaPatrimonioSchema = z.enum(TIPOS_BAIXA_PATRIMONIO, {
+  error: "Selecione o tipo da baixa.",
+});
 export const CodigoErroBaixaPatrimonioSchema = z.enum(
   CODIGOS_ERRO_BAIXA_PATRIMONIO,
 );
@@ -31,7 +33,7 @@ export const CodigoErroBaixaPatrimonioSchema = z.enum(
 export const MotivoBaixaPatrimonioSchema = z
   .string()
   .trim()
-  .min(1, { error: "O motivo da baixa é obrigatório." })
+  .min(1, { error: "Informe o motivo da baixa." })
   .max(LIMITE_CARACTERES_TEXTO_BAIXA_PATRIMONIO, {
     error: `O motivo da baixa deve possuir no máximo ${LIMITE_CARACTERES_TEXTO_BAIXA_PATRIMONIO} caracteres.`,
   });

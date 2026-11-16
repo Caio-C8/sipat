@@ -69,6 +69,12 @@ schema compartilhado e o sinal CSRF; a chave e o payload são preservados na
 sessão quando o resultado da operação fica incerto. Processo de compra é
 opcional conforme o contrato atual.
 
+A mesma página consulta `GET /patrimonios/numeracao/previa`, disponível somente
+ao Diretor e sempre com `no-store`. A resposta informa os próximos valores
+oficial e `SP-` e declara `reservaValor: false`; a consulta não avança as
+sequences. `POST /patrimonios` continua sendo o único boundary que obtém o
+número definitivo dentro da transação, sem aceitar número no body.
+
 Em manutenção, a listagem e o detalhe usam operações Server com cookie
 encaminhado por requisição e cache desabilitado. Criação, orçamento, retorno e
 upload usam operações do navegador com CSRF; `FormData` deixa o navegador
@@ -115,7 +121,12 @@ e conclusão de setores ficam no aplicativo móvel.
 O detalhe confirma `POST /patrimonios/:id/disponibilidade-uso` somente para o
 Diretor, com data civil, CSRF e chave idempotente preservada enquanto o
 resultado estiver incerto. Administrador e Diretor consultam o fato e o resumo
-contábil retornados no detalhe. O shell não consulta
+contábil retornados no detalhe. A confirmação aceita bens ativos, emprestados e
+em manutenção; bem baixado permanece inelegível. A função anterior à migration
+`20261115143000_corrige_disponibilidade_apos_reavaliacao` é distinguida como
+`409 REGRA_DISPONIBILIDADE_DESATUALIZADA`; as demais inconsistências de
+parâmetro usam `409 ESTADO_CONTABIL_INCONSISTENTE`, sem converter a falha de
+constraint em erro interno genérico. O shell não consulta
 `GET /depreciacoes/pendencias/resumo` nem implementa central de notificações; o
 endpoint permanece na API, sem consumidor no topbar. O relatório
 `pendencias-depreciacao` continua separado do histórico de depreciações e usa

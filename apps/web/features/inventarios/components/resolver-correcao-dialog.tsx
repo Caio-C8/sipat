@@ -179,7 +179,7 @@ export function ResolverCorrecaoDialog({
                   {erro}
                 </p>
               )}
-              <footer className="mt-2 flex justify-end gap-3">
+              <div className="mt-2 flex justify-end gap-3">
                 <button
                   type="button"
                   disabled={enviando}
@@ -195,7 +195,7 @@ export function ResolverCorrecaoDialog({
                 >
                   {enviando ? "Registrando…" : "Registrar correção"}
                 </button>
-              </footer>
+              </div>
             </form>
           </section>
         </div>

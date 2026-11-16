@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Info, KeyRound, UserRound } from "lucide-react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { nomesPerfis } from "@/lib/navigation/system-navigation";
 import { ConfiguracoesAbas } from "./configuracoes-abas";
 
@@ -31,14 +32,10 @@ export function MinhaConta({
 }) {
   return (
     <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-4 text-[#17253d] sm:px-5 sm:py-5 min-[1500px]:gap-5 min-[1500px]:px-[30px] min-[1500px]:py-6">
-      <header>
-        <h1 className="text-xl font-bold leading-tight text-[#111d34] min-[1500px]:text-[27px]">
-          Minha conta
-        </h1>
-        <p className="mt-1 text-xs text-[#62748e]">
-          Consulte sua identificação e gerencie a senha de acesso.
-        </p>
-      </header>
+      <PageHeader
+        title="Minha conta"
+        description="Consulte sua identificação e gerencie a senha de acesso."
+      />
 
       <ConfiguracoesAbas perfil={identidade.perfil} />
 

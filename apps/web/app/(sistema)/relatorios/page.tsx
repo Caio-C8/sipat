@@ -19,6 +19,8 @@ import {
 } from "@/features/relatorios/apresentacao";
 import { TabelaPrevia } from "@/features/relatorios/components/tabela-previa";
 import { FiltrosAplicados } from "@/features/relatorios/components/filtros-aplicados";
+import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
 export const metadata: Metadata = { title: "Relatórios" };
 const descricoes: Record<string, string> = {
   patrimonios: "Bens, localização, responsável e valores atuais.",
@@ -54,8 +56,11 @@ export default async function RelatoriosPage({
     catalogo = await serverRelatorios.catalogo(opcoes);
   } catch (e) {
     return (
-      <main className="p-6">
-        <h1 className="text-2xl font-bold">Relatórios</h1>
+      <main className="grid gap-5 p-6">
+        <PageHeader
+          title="Relatórios"
+          description="Consulte dados do patrimônio e emita relatórios."
+        />
         <p role="alert" className="mt-4">
           {mensagemRelatorio(e)}
         </p>
@@ -110,26 +115,28 @@ export default async function RelatoriosPage({
     (valores.tipo && !legado && !valores.relatorio)
   )
     return (
-      <main className="p-6">
-        <h1 className="text-2xl font-bold">Relatório inválido</h1>
+      <main className="grid gap-5 p-6">
+        <PageHeader
+          title="Relatório inválido"
+          description="Escolha um relatório disponível no catálogo."
+          actions={
+            <Button asChild variant="outline">
+              <Link href="/relatorios">Todos os relatórios</Link>
+            </Button>
+          }
+        />
         <p role="alert" className="mt-3">
           Escolha um relatório do catálogo.
         </p>
-        <Link href="/relatorios" className="mt-4 inline-block underline">
-          Todos os relatórios
-        </Link>
       </main>
     );
   if (!valores.relatorio && !legado && !valores.consultar)
     return (
       <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
-        <header>
-          <h1 className="text-2xl font-bold">Relatórios</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Consulte dados do patrimônio, acompanhe as operações e emita
-            relatórios com os filtros desejados.
-          </p>
-        </header>
+        <PageHeader
+          title="Relatórios"
+          description="Consulte dados do patrimônio, acompanhe as operações e emita relatórios com os filtros desejados."
+        />
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-950">
           <strong>
             Escolha o relatório, defina os filtros e confira a prévia.
@@ -182,35 +189,27 @@ export default async function RelatoriosPage({
     );
   return (
     <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <nav aria-label="Etapas do relatório" className="mb-2 text-xs">
-            <Link href="/relatorios" className="underline">
-              Relatórios
-            </Link>{" "}
-            / {resposta ? "Prévia · " : "Configuração · "}
-            {escolhido?.titulo}
-          </nav>
-          <h1 className="text-2xl font-bold">
-            {resposta ? `Prévia · ${escolhido?.titulo}` : escolhido?.titulo}
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            {resposta
-              ? "Confira os registros e os filtros antes de emitir o documento."
-              : "Selecione o recorte dos dados e gere uma prévia antes de exportar."}
-          </p>
-        </div>
-        <Link
-          href={
-            resposta
-              ? `/relatorios?${new URLSearchParams({ ...formValues, relatorio: tipo }).toString()}`
-              : "/relatorios"
-          }
-          className="rounded-md border bg-white px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-blue-700"
-        >
-          {resposta ? "Ajustar filtros" : "Todos os relatórios"}
-        </Link>
-      </header>
+      <PageHeader
+        title={resposta ? `Prévia · ${escolhido.titulo}` : escolhido.titulo}
+        description={
+          resposta
+            ? "Confira os registros e os filtros antes de emitir o documento."
+            : "Selecione o recorte dos dados e gere uma prévia antes de exportar."
+        }
+        actions={
+          <Button asChild variant="outline">
+            <Link
+              href={
+                resposta
+                  ? `/relatorios?${new URLSearchParams({ ...formValues, relatorio: tipo }).toString()}`
+                  : "/relatorios"
+              }
+            >
+              {resposta ? "Ajustar filtros" : "Todos os relatórios"}
+            </Link>
+          </Button>
+        }
+      />
       {(!resposta || erro) && (
         <FormularioRelatorios
           key={JSON.stringify(formValues)}

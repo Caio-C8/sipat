@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { ListarInventariosQuerySchema } from "@repo/contracts";
+import { PageHeader } from "@/components/shared/page-header";
 import { AbrirInventarioDialog } from "@/features/inventarios/components/abrir-inventario-dialog";
 import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
 import { isApiError } from "@/lib/api/core/api-error";
@@ -60,17 +61,15 @@ export default async function InventariosPage({
     `/inventarios?${new URLSearchParams({ ...(busca ? { busca } : {}), ...(status ? { status } : {}), pagina: String(n) }).toString()}`;
   return (
     <main className="grid min-w-0 gap-5 p-4 text-[#17253d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Inventários</h1>
-          <p className="mt-2 text-sm text-[#627996]">
-            Consulte inventários, acompanhe divergências e registre correções.
-          </p>
-        </div>
-        {identidade.perfil === "DIRETOR_PATRIMONIO" && (
-          <AbrirInventarioDialog />
-        )}
-      </header>
+      <PageHeader
+        title="Inventários"
+        description="Consulte inventários, acompanhe divergências e registre correções."
+        actions={
+          identidade.perfil === "DIRETOR_PATRIMONIO" ? (
+            <AbrirInventarioDialog />
+          ) : undefined
+        }
+      />
       <form
         action="/inventarios"
         method="get"

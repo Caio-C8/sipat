@@ -33,6 +33,11 @@ export class PatrimoniosService {
     return this.patrimonios.obterDashboard();
   }
 
+  async consultarPreviaNumeracao() {
+    const previa = await this.patrimonios.consultarPreviaNumeracao();
+    return { ...previa, reservaValor: false as const };
+  }
+
   async confirmarDisponibilidadeUso(
     patrimonioId: string,
     dados: ConfirmarDisponibilidadeUsoBodyData,
@@ -144,6 +149,15 @@ export class PatrimoniosService {
             codigo: "CONFLITO_CONCORRENTE_DISPONIBILIDADE",
             mensagem:
               "A disponibilidade concorreu com outra alteração. Atualize os dados.",
+            erros: [],
+          });
+        }
+        const falhaIntegridade =
+          this.obterFalhaIntegridadeDisponibilidade(erro);
+        if (falhaIntegridade) {
+          throw new ConflictException({
+            codigo: falhaIntegridade.codigo,
+            mensagem: falhaIntegridade.mensagem,
             erros: [],
           });
         }
@@ -512,6 +526,61 @@ export class PatrimoniosService {
       erro instanceof Prisma.PrismaClientKnownRequestError &&
       erro.code === codigo
     );
+  }
+
+  private obterFalhaIntegridadeDisponibilidade(erro: unknown): {
+    codigo: string;
+    mensagem: string;
+  } | null {
+    if (typeof erro !== "object" || erro === null) return null;
+    const falha = erro as {
+      message?: unknown;
+      cause?: unknown;
+      meta?: {
+        code?: unknown;
+        driverAdapterError?: { cause?: unknown };
+      };
+    };
+    const partes = [
+      falha.message,
+      falha,
+      falha.cause,
+      falha.meta,
+      falha.meta?.driverAdapterError?.cause,
+    ];
+    const texto = partes
+      .map((parte) => {
+        if (typeof parte === "string") return parte;
+        if (typeof parte !== "object" || parte === null) return "";
+        try {
+          return JSON.stringify(parte);
+        } catch {
+          return String(parte);
+        }
+      })
+      .join(" ")
+      .toLowerCase();
+    if (
+      texto.includes("parâmetro inicial deve começar") &&
+      !texto.includes("parâmetro inicial vigente")
+    ) {
+      return {
+        codigo: "REGRA_DISPONIBILIDADE_DESATUALIZADA",
+        mensagem:
+          "Este patrimônio precisa ser atualizado antes da confirmação. Solicite a atualização e tente novamente.",
+      };
+    }
+    if (
+      texto.includes("23514") ||
+      texto.includes("parametro_inicial_disponibilidade_ck")
+    ) {
+      return {
+        codigo: "ESTADO_CONTABIL_INCONSISTENTE",
+        mensagem:
+          "A disponibilidade não pôde ser confirmada porque os parâmetros contábeis do patrimônio estão inconsistentes.",
+      };
+    }
+    return null;
   }
 
   private ehConflitoNumeroSerie(

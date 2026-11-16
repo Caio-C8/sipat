@@ -11,6 +11,7 @@ import {
   ListarOpcoesComissoesBaixaResponseSchema,
   DashboardPatrimonialResponseSchema,
   SubstituirNumeroPatrimonialResponseSchema,
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   VALOR_CABECALHO_CSRF,
 } from "@repo/contracts";
 import { createApiClient } from "@/lib/api/core/create-api-client";
@@ -33,6 +34,29 @@ function respostaPaginada(total: number) {
 }
 
 describe("operações de patrimônios", () => {
+  it("consulta a prévia não reservada sem enviar body", async () => {
+    const request = vi.fn().mockResolvedValue({
+      status: 200,
+      sucesso: true,
+      mensagem: "Prévia consultada.",
+      dados: {
+        numeroOficial: "2656",
+        numeroSemOficial: "SP-91",
+        reservaValor: false,
+      },
+    });
+    const operacoes = criarOperacoesPatrimonios({
+      request,
+    } as unknown as ApiClient);
+    await operacoes.consultarPreviaNumeracao();
+    expect(request).toHaveBeenCalledWith({
+      path: "/patrimonios/numeracao/previa",
+      method: "GET",
+      cache: "no-store",
+      signal: undefined,
+      responseSchema: ConsultarPreviaNumeracaoPatrimonialResponseSchema,
+    });
+  });
   const patrimonioId = "7041c62b-5f83-432c-a178-889977d839b1";
   const comissaoId = "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab";
   it("valida a query e encaminha cookie sem permitir cache", async () => {

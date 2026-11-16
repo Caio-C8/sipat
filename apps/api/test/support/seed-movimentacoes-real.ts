@@ -39,6 +39,7 @@ async function main() {
       cookieDiretor: f.cookieDiretor,
       cookieAdmin: f.cookieAdmin,
       comissaoId: f.comissao.id,
+      comissaoNome: f.comissao.nome,
       setores: f.setores.map((s) => ({ id: s.id, nome: s.nome })),
       bens: f.bens.map((b) => ({
         id: b.id,

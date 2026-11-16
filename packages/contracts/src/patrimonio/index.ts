@@ -6,3 +6,4 @@ export * from "./patrimonio-response.schema";
 export * from "./substituir-numero-patrimonial.schema";
 export * from "./dashboard.schema";
 export * from "./disponibilidade-uso.schema";
+export * from "./previa-numeracao.schema";

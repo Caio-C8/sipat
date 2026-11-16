@@ -8,6 +8,7 @@ import {
   type ListarOpcoesComissoesEmprestimoResponse,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
 import {
@@ -210,32 +211,32 @@ export function NovoEmprestimo({
 
   return (
     <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {etapa === "selecionar"
-              ? "Selecionar bens"
-              : etapa === "revisao"
-                ? "Revisar empréstimo"
-                : etapa === "resultado"
-                  ? "Empréstimo registrado"
-                  : "Novo empréstimo"}
-          </h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            {etapa === "selecionar"
-              ? "A consulta apresenta bens ativos elegíveis. O servidor confirma a elegibilidade ao registrar."
-              : etapa === "revisao"
-                ? "Confira os dados antes de registrar. A revisão não reserva os bens."
-                : "Informe o destinatário, o período e os bens do empréstimo."}
-          </p>
-        </div>
-        <Link
-          className="inline-flex rounded-md border border-[#dce5f0] px-4 py-2 text-sm font-semibold"
-          href="/emprestimos"
-        >
-          Voltar à consulta
-        </Link>
-      </header>
+      <PageHeader
+        title={
+          etapa === "selecionar"
+            ? "Selecionar bens"
+            : etapa === "revisao"
+              ? "Revisar empréstimo"
+              : etapa === "resultado"
+                ? "Empréstimo registrado"
+                : "Novo empréstimo"
+        }
+        description={
+          etapa === "selecionar"
+            ? "A consulta apresenta bens ativos elegíveis. O servidor confirma a elegibilidade ao registrar."
+            : etapa === "revisao"
+              ? "Confira os dados antes de registrar. A revisão não reserva os bens."
+              : "Informe o destinatário, o período e os bens do empréstimo."
+        }
+        actions={
+          <Link
+            className="inline-flex rounded-md border border-[#dce5f0] px-4 py-2 text-sm font-semibold"
+            href="/emprestimos"
+          >
+            Voltar à consulta
+          </Link>
+        }
+      />
       {etapa === "selecionar" && (
         <>
           <form

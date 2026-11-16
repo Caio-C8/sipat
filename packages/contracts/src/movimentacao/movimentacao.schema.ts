@@ -14,6 +14,8 @@ import {
 import { ComissaoResumoSchema } from "../comissao";
 
 const UuidMovimentacaoSchema = z.uuid().transform((id) => id.toLowerCase());
+const UuidCampoMovimentacaoSchema = (mensagem: string) =>
+  z.uuid({ error: mensagem }).transform((id) => id.toLowerCase());
 export const LIMITE_ITENS_MOVIMENTACAO = 10;
 export const ORIGENS_REGISTRO_MOVIMENTACAO = [
   "COMUM",
@@ -41,23 +43,29 @@ export const OrigemRegistroMovimentacaoSchema = z.enum(
   ORIGENS_REGISTRO_MOVIMENTACAO,
 );
 export const ItemMovimentacaoBodySchema = z.strictObject({
-  patrimonioId: UuidMovimentacaoSchema,
-  setorOrigemEsperadoId: UuidMovimentacaoSchema,
-  setorDestinoId: UuidMovimentacaoSchema,
+  patrimonioId: UuidCampoMovimentacaoSchema("Selecione um patrimônio válido."),
+  setorOrigemEsperadoId: UuidCampoMovimentacaoSchema(
+    "Atualize os dados do patrimônio e tente novamente.",
+  ),
+  setorDestinoId: UuidCampoMovimentacaoSchema("Selecione o setor de destino."),
 });
 export const CriarMovimentacaoBodySchema = z
   .strictObject({
     chaveIdempotencia: ChaveIdempotenciaSchema,
-    comissaoId: UuidMovimentacaoSchema,
+    comissaoId: UuidCampoMovimentacaoSchema("Selecione uma comissão vigente."),
     observacao: z
       .string()
       .trim()
       .min(1, { error: "Informe o motivo da movimentação." })
-      .max(2_000),
+      .max(2_000, {
+        error: "O motivo deve possuir no máximo 2000 caracteres.",
+      }),
     itens: z
       .array(ItemMovimentacaoBodySchema)
-      .min(1)
-      .max(LIMITE_ITENS_MOVIMENTACAO),
+      .min(1, { error: "Selecione ao menos um patrimônio." })
+      .max(LIMITE_ITENS_MOVIMENTACAO, {
+        error: `Selecione no máximo ${LIMITE_ITENS_MOVIMENTACAO} patrimônios.`,
+      }),
   })
   .superRefine((dados, contexto) => {
     const ids = new Set<string>();

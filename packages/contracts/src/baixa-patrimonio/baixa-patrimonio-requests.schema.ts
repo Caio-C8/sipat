@@ -13,7 +13,7 @@ export const BaixarPatrimonioDadosSchema = z.strictObject({
   motivo: MotivoBaixaPatrimonioSchema,
   observacao: ObservacaoBaixaPatrimonioSchema.optional(),
   comissaoId: z.uuid({
-    error: "O identificador da comissão deve ser um UUID válido.",
+    error: "Selecione uma comissão vigente na data da baixa.",
   }),
 });
 

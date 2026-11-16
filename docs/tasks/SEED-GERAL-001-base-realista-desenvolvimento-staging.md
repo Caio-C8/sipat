@@ -172,7 +172,7 @@ podem afirmar vínculo com pessoa ou empresa real.
 - Datas preservam a sequência processo/aquisição, emissão e tombamento aceita
   pelos contratos e regras vigentes.
 - Cada setor recebe exatamente quatro patrimônios oficiais e um sem número
-  oficial, totalizando 40 oficiais e 10 provisórios.
+  oficial, totalizando 40 oficiais e 10 não oficiais (S/P).
 - Descrições, marcas, modelos, séries, datas, valores, espécies e formas de
   incorporação variam por uma matriz explícita e reproduzível, não por geração
   aleatória opaca.
@@ -248,7 +248,7 @@ podem afirmar vínculo com pessoa ou empresa real.
       localizados e três divergentes sem transferência de correção.
 - [x] A manutenção concluída preserva histórico e devolve três bens a `ATIVO`;
       a aberta deixa três bens em `EM_MANUTENCAO`.
-- [x] O estado final contém 40 números oficiais, dez provisórios, 47 bens
+- [x] O estado final contém 40 números oficiais, dez não oficiais (S/P), 47 bens
       `ATIVO` e três `EM_MANUTENCAO`.
 - [x] Banco parcialmente preenchido e segunda execução são recusados sem
       duplicação ou sobrescrita.

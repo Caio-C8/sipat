@@ -5,6 +5,7 @@ import { ListarPatrimoniosQuerySchema } from "@repo/contracts";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 import { NovaBaixa } from "@/features/baixas/components/nova-baixa";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = { title: "Nova baixa" };
 
@@ -28,8 +29,11 @@ export default async function NovaBaixaPage({
   });
   if (!query.success)
     return (
-      <main className="p-7">
-        <h1 className="text-2xl font-bold">Registrar baixa</h1>
+      <main className="grid gap-5 p-7">
+        <PageHeader
+          title="Registrar baixa"
+          description="Selecione o patrimônio que será baixado."
+        />
         <p role="alert" className="mt-4 text-red-800">
           A busca informada é inválida.
         </p>

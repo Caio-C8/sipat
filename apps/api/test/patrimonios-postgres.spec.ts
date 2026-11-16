@@ -149,6 +149,24 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     expect(await database.parametroDepreciacao.count()).toBe(16);
   });
 
+  it("mantém a prévia informativa diante de confirmações concorrentes", async () => {
+    const [previaConcorrente, primeiro] = await Promise.all([
+      service.consultarPreviaNumeracao(),
+      service.criar(dados(201), identidade),
+    ]);
+    const segundo = await service.criar(dados(202), identidade);
+
+    expect(previaConcorrente).toMatchObject({ reservaValor: false });
+    expect(["1", "2"]).toContain(previaConcorrente.numeroOficial);
+    expect(
+      new Set([primeiro.numeroPatrimonio, segundo.numeroPatrimonio]),
+    ).toEqual(new Set(["1", "2"]));
+    await expect(service.consultarPreviaNumeracao()).resolves.toMatchObject({
+      numeroOficial: "3",
+      reservaValor: false,
+    });
+  });
+
   it("persiste as duas classificações e mantém parâmetro somente na depreciável", async () => {
     const depreciavel = await service.criar(dados(1), identidade);
     const base = dados(2);
@@ -172,6 +190,97 @@ describeComPostgres("patrimônios no PostgreSQL", () => {
     expect(depreciavel.parametrosDepreciacao).toHaveLength(1);
     expect(naoDepreciavel.depreciavel).toBe(false);
     expect(naoDepreciavel.parametrosDepreciacao).toHaveLength(0);
+  });
+
+  it("confirma disponibilidade após reavaliação prévia em bem em manutenção", async () => {
+    const criado = await service.criar(dados(301), identidade);
+    const comissao = await database.comissao.create({
+      data: {
+        nome: "Comissão de reavaliação",
+        dataVigenciaInicio: new Date("2026-01-01T00:00:00.000Z"),
+        dataVigenciaFim: new Date("2026-12-31T00:00:00.000Z"),
+        createdById: identidade.id,
+      },
+    });
+
+    await database.$transaction(async (transacao) => {
+      const inicial = await transacao.parametroDepreciacao.findFirstOrThrow({
+        where: { patrimonioId: criado.id, dataFim: null },
+      });
+      const reavaliacao = await transacao.reavaliacaoPatrimonio.create({
+        data: {
+          dataReavaliacao: new Date("2026-10-18T12:00:00.000Z"),
+          dataReferencia: new Date("2026-10-18T00:00:00.000Z"),
+          valorLiquidoAnterior: "1000",
+          valorBrutoAnterior: "1000",
+          depreciacaoAcumuladaAnterior: "0",
+          valorBaseAnterior: "1000",
+          percentualResidualAnterior: "10",
+          vidaUtilInicialAnteriorMeses: 60,
+          quantidadeDepreciacoesAnteriores: 0,
+          dataInicioAnterior: null,
+          parametroAnteriorId: inicial.id,
+          valorReavaliado: "1200",
+          valorBaseNovo: "1200",
+          percentualResidualNovo: "10",
+          valorResidualAnterior: "100",
+          valorResidualNovo: "120",
+          vidaUtilRestanteAnteriorMeses: 60,
+          vidaUtilNovaMeses: 72,
+          patrimonioId: criado.id,
+          comissaoId: comissao.id,
+          createdById: identidade.id,
+        },
+      });
+      await transacao.parametroDepreciacao.update({
+        where: { id: inicial.id },
+        data: { dataFim: new Date("2026-10-18T00:00:00.000Z") },
+      });
+      await transacao.parametroDepreciacao.create({
+        data: {
+          metodo: "LINEAR",
+          vidaUtilInicialMeses: 72,
+          percentualResidual: "10",
+          valorResidual: "120",
+          valorBaseInicial: "1200",
+          dataInicio: null,
+          reavaliacaoId: reavaliacao.id,
+          patrimonioId: criado.id,
+        },
+      });
+      await transacao.situacaoContabilPatrimonio.update({
+        where: { patrimonioId: criado.id },
+        data: { valorBrutoAtual: "1200", depreciacaoAcumuladaAtual: "0" },
+      });
+      await transacao.patrimonio.update({
+        where: { id: criado.id },
+        data: { status: "EM_MANUTENCAO" },
+      });
+    });
+
+    await expect(
+      service.confirmarDisponibilidadeUso(
+        criado.id,
+        {
+          dataDisponibilidade: "2026-10-19",
+          chaveIdempotencia: randomUUID(),
+        },
+        identidade,
+      ),
+    ).resolves.toMatchObject({
+      dataDisponibilidade: "2026-10-19",
+      primeiraCompetencia: "2026-11",
+    });
+
+    const parametros = await database.parametroDepreciacao.findMany({
+      where: { patrimonioId: criado.id },
+      orderBy: { createdAt: "asc" },
+    });
+    expect(parametros).toHaveLength(2);
+    expect(parametros[0]?.dataInicio).toBeNull();
+    expect(parametros[1]?.dataInicio?.toISOString().slice(0, 10)).toBe(
+      "2026-10-19",
+    );
   });
 
   it("constraint diferida rejeita as duas combinações incoerentes no commit", async () => {

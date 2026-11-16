@@ -6,6 +6,7 @@ import {
   type ListarEmprestimosQueryInput,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverEmprestimoOperations } from "@/features/emprestimos/api/server-emprestimo-operations";
 import {
@@ -74,21 +75,19 @@ export default async function EmprestimosPage({
   };
   return (
     <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Empréstimos</h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Acompanhe os bens emprestados e as devoluções registradas.
-          </p>
-        </div>
-        {identidade.perfil === "DIRETOR_PATRIMONIO" && (
-          <Button asChild className={botaoPrimarioEmprestimo}>
-            <Link prefetch={false} href="/emprestimos/nova">
-              Novo empréstimo
-            </Link>
-          </Button>
-        )}
-      </header>
+      <PageHeader
+        title="Empréstimos"
+        description="Acompanhe os bens emprestados e as devoluções registradas."
+        actions={
+          identidade.perfil === "DIRETOR_PATRIMONIO" ? (
+            <Button asChild className={botaoPrimarioEmprestimo}>
+              <Link prefetch={false} href="/emprestimos/nova">
+                Novo empréstimo
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
       <nav
         className="flex rounded-xl border border-[#e1e7ef] bg-white px-4"
         aria-label="Situação dos empréstimos"

@@ -6,8 +6,9 @@ define a ordem, as dependências e os critérios comuns do produto.
 
 ## Evolução Web de usabilidade e padronização
 
-**Status:** em implementação; `WEB-AUTH-003`, `SEC-002` e `WEB-UI-001` foram
-implementadas e validadas até 15/11/2026.
+**Status:** em implementação; `WEB-AUTH-003`, `SEC-002`, `WEB-UI-001` e
+`WEB-SHELL-002`, incluindo cabeçalho e rodapé únicos, foram implementados e
+validados até 15/11/2026.
 
 A sequência completa, os critérios e as referências por objetivo estão no
 [roadmap Web](./apps/web/roadmap.md#evolução-web-de-usabilidade-e-padronização).
@@ -17,9 +18,9 @@ As entregas transversais seguem esta ordem:
    corrigir entrada, sessão e recuperação em staging;
 2. [SEC-002](./tasks/SEC-002-matriz-leitura-compartilhada.md) — aplicar a matriz
    de leitura compartilhada, implementada e validada em 15/11/2026;
-3. [WEB-UI-001](./tasks/WEB-UI-001-fundacao-visual-formularios.md), implementada,
-   e [WEB-SHELL-002](./tasks/WEB-SHELL-002-navegacao-estados-globais.md),
-   pendente — criar a fundação visual, feedback e navegação;
+3. [WEB-UI-001](./tasks/WEB-UI-001-fundacao-visual-formularios.md) e
+   [WEB-SHELL-002](./tasks/WEB-SHELL-002-navegacao-estados-globais.md),
+   implementadas — fundação visual, feedback, navegação, cabeçalho e rodapé;
 4. [WEB-PATRIMONIOS-002](./tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md),
    [WEB-INVENTARIOS-002](./tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md) e
    [WEB-MANUTENCOES-003](./tasks/WEB-MANUTENCOES-003-identificacao-itens.md) —

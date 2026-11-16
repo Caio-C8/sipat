@@ -10,6 +10,7 @@ import {
   SubstituirNumeroPatrimonialResponseSchema,
   ConfirmarDisponibilidadeUsoBodySchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
 } from "@repo/contracts";
 import type { CriarPatrimonioBodyData } from "@repo/contracts";
 import { createZodDto } from "nestjs-zod";
@@ -56,4 +57,7 @@ export class ConfirmarDisponibilidadeUsoBodyDto extends createZodDto(
 ) {}
 export class ConfirmarDisponibilidadeUsoResponseDto extends createZodDto(
   ConfirmarDisponibilidadeUsoResponseSchema,
+) {}
+export class ConsultarPreviaNumeracaoPatrimonialResponseDto extends createZodDto(
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
 ) {}

@@ -25,6 +25,7 @@ import { serverCadastros } from "@/features/cadastros/api/server";
 import type { Leitura } from "@/features/cadastros/api/cadastro-operations";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
+import { PageHeader } from "@/components/shared/page-header";
 export type SearchCadastros = Promise<
   Record<string, string | string[] | undefined>
 >;
@@ -125,7 +126,10 @@ export async function CadastrosPage({
   if (!parsed.success)
     return (
       <main className={pagina}>
-        <h1 className="text-xl font-bold">Consulta inválida</h1>
+        <PageHeader
+          title="Consulta inválida"
+          description="Revise os filtros ou o identificador do cadastro."
+        />
         <p role="alert">Revise os filtros ou o identificador do cadastro.</p>
       </main>
     );
@@ -348,7 +352,10 @@ export async function CadastrosPage({
     if (!isApiError(e) && !(e instanceof z.ZodError)) throw e;
     return (
       <main className={pagina}>
-        <h1 className="text-xl font-bold">Cadastros</h1>
+        <PageHeader
+          title="Cadastros"
+          description="Consulte e gerencie os cadastros administrativos."
+        />
         <ErroCadastro mensagem={mensagemErro(e)} />
         <Link
           href={secao === "processos" ? "/cadastros" : "/cadastros/" + secao}

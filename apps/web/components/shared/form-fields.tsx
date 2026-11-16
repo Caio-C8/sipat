@@ -9,6 +9,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ type FieldMetadata = {
   description?: string;
   error?: string;
   required?: boolean;
+  fieldClassName?: string;
 };
 
 function FieldLabelText({
@@ -52,8 +54,11 @@ type TextFieldProps = Omit<React.ComponentProps<typeof Input>, "id"> &
   FieldMetadata & { id: string };
 
 const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ id, label, description, error, required, ...props }, ref) => (
-    <Field data-invalid={Boolean(error)}>
+  (
+    { id, label, description, error, required, fieldClassName, ...props },
+    ref,
+  ) => (
+    <Field className={fieldClassName} data-invalid={Boolean(error)}>
       <FieldLabel htmlFor={id}>
         <FieldLabelText label={label} required={required} />
       </FieldLabel>
@@ -75,6 +80,37 @@ const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
   ),
 );
 TextField.displayName = "TextField";
+
+type TextareaFieldProps = Omit<React.ComponentProps<typeof Textarea>, "id"> &
+  FieldMetadata & { id: string };
+
+const TextareaField = React.forwardRef<HTMLTextAreaElement, TextareaFieldProps>(
+  (
+    { id, label, description, error, required, fieldClassName, ...props },
+    ref,
+  ) => (
+    <Field className={fieldClassName} data-invalid={Boolean(error)}>
+      <FieldLabel htmlFor={id}>
+        <FieldLabelText label={label} required={required} />
+      </FieldLabel>
+      <Textarea
+        ref={ref}
+        id={id}
+        required={required}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={describedBy(id, description, error)}
+        {...props}
+      />
+      {description ? (
+        <FieldDescription id={`${id}-description`}>
+          {description}
+        </FieldDescription>
+      ) : null}
+      {error ? <FieldError id={`${id}-error`}>{error}</FieldError> : null}
+    </Field>
+  ),
+);
+TextareaField.displayName = "TextareaField";
 
 type SelectFieldProps = FieldMetadata & {
   id: string;
@@ -98,14 +134,19 @@ function SelectField({
   options,
   placeholder = "Selecione uma opção",
   disabled,
+  fieldClassName,
 }: SelectFieldProps) {
   return (
-    <Field data-invalid={Boolean(error)} data-disabled={disabled || undefined}>
+    <Field
+      className={fieldClassName}
+      data-invalid={Boolean(error)}
+      data-disabled={disabled || undefined}
+    >
       <FieldLabel htmlFor={id}>
         <FieldLabelText label={label} required={required} />
       </FieldLabel>
       <Select
-        value={value}
+        value={value ?? ""}
         onValueChange={onValueChange}
         disabled={disabled}
         name={name}
@@ -154,10 +195,12 @@ function ComboboxField({
   description,
   error,
   required,
+  fieldClassName,
   ...props
 }: ComboboxFieldProps) {
   return (
     <Field
+      className={fieldClassName}
       data-invalid={Boolean(error)}
       data-disabled={props.disabled || undefined}
     >
@@ -180,4 +223,4 @@ function ComboboxField({
   );
 }
 
-export { ComboboxField, SelectField, TextField };
+export { ComboboxField, SelectField, TextareaField, TextField };

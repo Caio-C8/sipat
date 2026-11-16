@@ -71,7 +71,7 @@ function Combobox({
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
-        if (!nextOpen) updateSearch("");
+        if (!nextOpen && search) updateSearch("");
       }}
     >
       <Popover.Trigger asChild>

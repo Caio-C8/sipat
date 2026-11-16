@@ -7,6 +7,7 @@ import {
   type EmprestimoDetalhe,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
 import {
@@ -176,29 +177,31 @@ export function DetalheEmprestimo({
   );
   return (
     <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {exibirDevolucao
-              ? "Registrar devolução"
-              : identificacaoEmprestimo(detalhe.id)}
-          </h1>
-          <p className="mt-1 text-sm text-[#526580]">
+      <PageHeader
+        title={
+          exibirDevolucao
+            ? "Registrar devolução"
+            : identificacaoEmprestimo(detalhe.id)
+        }
+        description={
+          <>
             {exibirDevolucao
               ? "Confira os bens recebidos e registre a devolução."
               : `${detalhe.modoAgrupamento === "EM_GRUPO" ? "Em grupo" : detalhe.modoAgrupamento === "SEPARADAMENTE" ? "Separadamente" : "Agrupamento não informado"} · ${detalhe.destinatario ?? "Destinatário não informado"}`}
-          </p>
-          <p className="mt-1 break-all text-xs text-[#526580]">
-            ID completo: {detalhe.id}
-          </p>
-        </div>
-        <Link
-          className="inline-flex rounded-md border border-[#dce5f0] px-4 py-2 text-sm font-semibold"
-          href={retorno}
-        >
-          Voltar à consulta
-        </Link>
-      </header>
+            <span className="mt-1 block break-all text-xs">
+              ID completo: {detalhe.id}
+            </span>
+          </>
+        }
+        actions={
+          <Link
+            className="inline-flex rounded-md border border-[#dce5f0] px-4 py-2 text-sm font-semibold"
+            href={retorno}
+          >
+            Voltar à consulta
+          </Link>
+        }
+      />
       {!exibirDevolucao ? (
         <>
           <section

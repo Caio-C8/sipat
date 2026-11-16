@@ -11,6 +11,7 @@ import {
   RotateCw,
   ShieldAlert,
 } from "lucide-react";
+import { PageHeader } from "./page-header";
 
 const icones = {
   acesso: ShieldAlert,
@@ -52,10 +53,10 @@ export function SystemState({
         <span className="mb-5 grid size-11 place-items-center rounded-xl bg-[#eef5ff] text-[#2864b5]">
           <Icon aria-hidden="true" size={22} />
         </span>
-        <h1 className="text-2xl font-bold tracking-[-0.025em]">{title}</h1>
-        <p role="alert" className="mt-3 leading-7 text-[#52647f]">
-          {description}
-        </p>
+        <PageHeader
+          title={title}
+          description={<p role="alert">{description}</p>}
+        />
         <div className="mt-6 flex flex-wrap gap-3">
           {retryHref ? (
             <Link

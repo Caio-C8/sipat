@@ -170,6 +170,7 @@ import {
   ResultadoDepreciacoesEmMassaSchema,
   ConfirmarDisponibilidadeUsoBodySchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   DisponibilidadeUsoPatrimonioSchema,
   ListarCompetenciasDepreciacaoResponseSchema,
   ResumoPendenciasDepreciacaoResponseSchema,
@@ -260,6 +261,7 @@ describe("@repo/contracts — API pública", () => {
       SubstituirNumeroPatrimonialResponseSchema,
       DisponibilidadeUsoPatrimonioSchema,
       ConfirmarDisponibilidadeUsoResponseSchema,
+      ConsultarPreviaNumeracaoPatrimonialResponseSchema,
     ];
 
     for (const schema of schemas) {

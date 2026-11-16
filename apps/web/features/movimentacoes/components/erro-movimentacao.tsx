@@ -1,24 +1,26 @@
 import Link from "next/link";
 import { isApiError } from "@/lib/api/core/api-error";
 import { mensagemMovimentacao } from "../presentation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 export function ErroMovimentacao({ erro }: { erro: unknown }) {
   return (
-    <div
-      role="alert"
-      className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
-    >
-      <p>
-        {isApiError(erro) && erro.status === 401
-          ? "Sua sessão expirou. Entre novamente para continuar."
-          : isApiError(erro) && erro.status === 403
-            ? "Você não tem permissão para esta operação."
-            : mensagemMovimentacao(erro)}
-      </p>
-      {isApiError(erro) && erro.status === 401 ? (
-        <Link href="/login" className="mt-2 inline-block underline">
-          Entrar novamente
-        </Link>
-      ) : null}
-    </div>
+    <Alert variant="destructive">
+      <AlertTitle>Não foi possível continuar</AlertTitle>
+      <AlertDescription>
+        <p>
+          {isApiError(erro) && erro.status === 401
+            ? "Sua sessão expirou. Entre novamente para continuar."
+            : isApiError(erro) && erro.status === 403
+              ? "Você não tem permissão para esta operação."
+              : mensagemMovimentacao(erro)}
+        </p>
+        {isApiError(erro) && erro.status === 401 ? (
+          <Button asChild variant="outline" className="mt-2">
+            <Link href="/login">Entrar novamente</Link>
+          </Button>
+        ) : null}
+      </AlertDescription>
+    </Alert>
   );
 }

@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/shared/page-header";
+
 export default function InventariosLoading() {
   return (
     <main
@@ -5,7 +7,10 @@ export default function InventariosLoading() {
       aria-busy="true"
       aria-label="Carregando inventários"
     >
-      <div className="h-9 w-64 animate-pulse rounded bg-slate-200" />
+      <PageHeader
+        title="Inventários"
+        description="Acompanhe as conferências e correções patrimoniais."
+      />
       <div className="h-24 animate-pulse rounded-xl bg-slate-100" />
       <div className="h-96 animate-pulse rounded-xl bg-slate-100" />
     </main>
