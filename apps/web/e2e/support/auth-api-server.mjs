@@ -1,4 +1,5 @@
 import movimentacoesFixtures from "./movimentacoes-fixtures.json" with { type: "json" };
+import webDomainFixtures from "./web-domain-fixtures.json" with { type: "json" };
 import { createServer } from "node:http";
 
 const port = Number(process.env.PLAYWRIGHT_API_PORT ?? 3201);
@@ -166,6 +167,137 @@ const pendenteDepreciacao = {
   competenciaEsperada: "2026-10",
 };
 
+const relacionadoTeste = {
+  id: webDomainFixtures.manutencao.comissaoId,
+  nome: "Comissão patrimonial vigente",
+};
+const manutencaoResumo = {
+  id: webDomainFixtures.manutencao.id,
+  numeroRequisicao: "MAN-2026-001",
+  dataEnvio: "2026-11-10",
+  dataRetorno: null,
+  status: "EM_ANDAMENTO",
+  totalItens: 1,
+  itensPendentes: 1,
+  itensRetornados: 0,
+  temPdfPedido: false,
+};
+const manutencaoItem = {
+  id: webDomainFixtures.manutencao.itemId,
+  patrimonio: {
+    id: webDomainFixtures.manutencao.patrimonioId,
+    numeroPatrimonio: "101",
+    descricao: "Notebook em manutenção",
+    status: "EM_MANUTENCAO",
+  },
+  tipo: "CORRETIVA",
+  fornecedor: {
+    id: webDomainFixtures.manutencao.fornecedorId,
+    nome: "Oficina credenciada",
+  },
+  previsaoRetorno: "2026-11-30",
+  descricaoProblema: "Equipamento não inicializa.",
+  versaoOrcamento: 0,
+  orcamentoAtual: null,
+  revisoesOrcamento: [],
+  dataRetorno: null,
+  descricaoServicoRealizado: null,
+  valorRealizado: null,
+  garantia: null,
+  recebidoPor: null,
+  recebidoEm: null,
+  documentos: [],
+};
+const manutencaoDetalhe = {
+  ...manutencaoResumo,
+  justificativa: "Correção necessária para continuidade do trabalho.",
+  comissao: relacionadoTeste,
+  criadoPor: { id: identities.director.id, nome: identities.director.nome },
+  criadoEm: "2026-11-10T12:00:00.000Z",
+  itens: [manutencaoItem],
+  documentos: [],
+};
+const emprestimoResumo = {
+  id: webDomainFixtures.emprestimo.id,
+  modoAgrupamento: "EM_GRUPO",
+  destinatario: "Instituição parceira",
+  dataEmprestimo: "2026-11-10T12:00:00.000Z",
+  dataPrevistaDevolucao: "2026-11-30T12:00:00.000Z",
+  total: 1,
+  pendentes: 1,
+  situacao: "EM_ANDAMENTO",
+  emAtraso: false,
+  createdAt: "2026-11-10T12:00:00.000Z",
+};
+const emprestimoDetalhe = {
+  ...emprestimoResumo,
+  finalidade: "Atividade institucional",
+  observacao: "Devolver no prazo previsto.",
+  comissao: {
+    id: webDomainFixtures.emprestimo.comissaoId,
+    nome: "Comissão patrimonial vigente",
+  },
+  registradoPor: { id: identities.director.id, nome: identities.director.nome },
+  itens: [
+    {
+      id: webDomainFixtures.emprestimo.itemId,
+      patrimonio: {
+        id: webDomainFixtures.emprestimo.patrimonioId,
+        numeroPatrimonio: "201",
+        descricao: "Projetor multimídia",
+      },
+      setorVinculo: {
+        id: "22222222-2222-4222-8222-222222222225",
+        nome: "Plenário",
+      },
+      pendente: true,
+      devolucao: null,
+    },
+  ],
+};
+const tiposRelatorio = [
+  ["patrimonios", "Relação de patrimônios"],
+  ["ficha-bem", "Ficha individual do bem"],
+  ["movimentacoes", "Movimentações"],
+  ["manutencoes", "Manutenções"],
+  ["depreciacoes", "Depreciações"],
+  ["pendencias-depreciacao", "Pendências de depreciação"],
+  ["reavaliacoes", "Reavaliações"],
+  ["inventarios", "Inventário e inconsistências"],
+  ["emprestimos", "Empréstimos"],
+  ["baixas", "Baixas patrimoniais"],
+].map(([tipo, titulo]) => ({
+  tipo,
+  titulo,
+  disponivel: true,
+  motivo: null,
+  previa: true,
+  pdf: true,
+}));
+const catalogoRelatorios = {
+  status: 200,
+  sucesso: true,
+  mensagem: "Catálogo consultado.",
+  dados: {
+    tipos: tiposRelatorio,
+    limites: {
+      previaPadrao: 20,
+      previaMaxima: 50,
+      offsetMaximo: 50000,
+      dias: 366,
+      competencias: 12,
+      linhasPdf: 1000,
+      paginasPdf: 200,
+      bytesPdf: 10485760,
+      bytesDataset: 8388608,
+      emissoesUsuario: 1,
+      emissoesInstancia: 2,
+      prazoMs: 20000,
+      bancoMs: 10000,
+    },
+  },
+};
+
 let fornecedorCrud = null;
 
 async function lerJson(request) {
@@ -272,6 +404,120 @@ const server = createServer(async (request, response) => {
       dados: identity,
     });
     return;
+  }
+
+  if (
+    request.method === "GET" &&
+    request.headers.cookie?.includes("sipat_manutencoes_scenario=1")
+  ) {
+    if (requestUrl.pathname === "/api/manutencoes") {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Manutenções listadas.",
+        dados: [manutencaoResumo],
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+      });
+      return;
+    }
+    if (
+      requestUrl.pathname ===
+      `/api/manutencoes/${webDomainFixtures.manutencao.id}`
+    ) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Manutenção consultada.",
+        dados: manutencaoDetalhe,
+      });
+      return;
+    }
+  }
+
+  if (
+    request.method === "GET" &&
+    request.headers.cookie?.includes("sipat_emprestimos_scenario=1")
+  ) {
+    if (requestUrl.pathname === "/api/emprestimos") {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Empréstimos listados.",
+        dados: [emprestimoResumo],
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+      });
+      return;
+    }
+    if (
+      requestUrl.pathname ===
+      `/api/emprestimos/${webDomainFixtures.emprestimo.id}`
+    ) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Empréstimo consultado.",
+        dados: emprestimoDetalhe,
+      });
+      return;
+    }
+  }
+
+  if (
+    request.method === "GET" &&
+    request.headers.cookie?.includes("sipat_relatorios_scenario=1")
+  ) {
+    if (requestUrl.pathname === "/api/relatorios") {
+      json(response, 200, catalogoRelatorios);
+      return;
+    }
+    if (requestUrl.pathname === "/api/relatorios/patrimonios") {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Relatório consultado.",
+        tipo: "patrimonios",
+        dados: [
+          {
+            id: webDomainFixtures.relatorio.linhaId,
+            patrimonioId: webDomainFixtures.relatorio.patrimonioId,
+            numeroPatrimonio: "REL-301",
+            tipoNumeroPatrimonial: "OFICIAL",
+            descricao: "Notebook para relatório",
+            especie: "Notebook",
+            natureza: "Equipamento de informática",
+            setorAtual: "Tecnologia da Informação",
+            salaAtual: "Sala 1",
+            responsavelAtual: "Responsável patrimonial",
+            status: "ATIVO",
+            dataTombamento: "2026-01-10",
+            valorIncorporacao: "5000.0000000",
+            valorBrutoAtual: "5000.0000000",
+            depreciacaoAcumuladaAtual: "500.0000000",
+            valorLiquidoAtual: "4500.0000000",
+          },
+        ],
+        resumo: {
+          quantidade: 1,
+          semNumeroOficial: 0,
+          semContabilidade: 0,
+          incorporacao: "5000.0000000",
+          brutoAtual: "5000.0000000",
+          acumuladoAtual: "500.0000000",
+          liquidoAtual: "4500.0000000",
+        },
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+        consulta: {
+          id: webDomainFixtures.relatorio.consultaId,
+          instante: "2026-11-16T12:00:00.000Z",
+          filtros: {},
+          criterioTemporal: "Estado atual do patrimônio.",
+          ordenacao: "Número patrimonial crescente.",
+          avisos: [],
+          excluidosDataDesconhecida: 0,
+        },
+      });
+      return;
+    }
   }
 
   if (baixaScenarioFromCookie(request.headers.cookie)) {

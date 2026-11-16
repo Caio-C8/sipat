@@ -79,16 +79,15 @@ Em manutenção, a listagem e o detalhe usam operações Server com cookie
 encaminhado por requisição e cache desabilitado. Criação, orçamento, retorno e
 upload usam operações do navegador com CSRF; `FormData` deixa o navegador
 definir o boundary do multipart. Após sucesso, o detalhe consulta novamente a
-API. Nenhuma mutação recebe retry automático. O percurso Web → API →
-PostgreSQL descartável está registrado em
-[WEB-MANUTENCOES-001](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md).
+API. Nenhuma mutação recebe retry automático. A Web cobre esses fluxos com a
+fronteira HTTP simulada; a API mantém seus testes próprios com PostgreSQL.
 
 Em empréstimos, lista e detalhe usam operações Server; opções e mutações usam
 as operações tipadas do navegador. As confirmações enviam CSRF e conservam a
 chave de idempotência no reenvio do mesmo formulário. Após saída, a seleção
 de bens é atualizada; após devolução, o detalhe recebe o resultado real e
-atualiza a leitura Server. O percurso Web → API → PostgreSQL isolado está em
-[WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+atualiza a leitura Server. A Web cobre lista, detalhe e criação com a fronteira
+HTTP simulada; a API mantém seus testes próprios com PostgreSQL.
 
 Nas mutações idempotentes já consumidas por movimentações, manutenções,
 reavaliações e empréstimos, a Web conserva chave e payload em timeout, falha de

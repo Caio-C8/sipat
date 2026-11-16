@@ -145,13 +145,11 @@ somente nessa base de testes; não há nova rota de provisionamento.
    invalida a prévia; consultar novamente preserva os valores informados.
 5. Gere o PDF do conjunto completo. O arquivo identifica sua própria consulta.
 
-Reprodução da integração: `RELATORIOS_INTEGRATION_DATABASE_URL` deve apontar
-exatamente para o banco isolado acima. Execute a suíte API normalmente com essa
-variável. Para Web, inicie os builds API/Web locais e execute
-`pnpm --filter @repo/web exec playwright test --config playwright.relatorios-real.config.ts`,
-com a URL isolada e `SIPAT_RELATORIOS_EMAIL`/`SIPAT_RELATORIOS_SENHA` no ambiente.
-O suporte `test/support/seed-relatorios-real.ts` recusa outros bancos e contas
-existentes; não sobrescreve credenciais. A fixture JSON fica em test-results.
+Reprodução da integração da API: `RELATORIOS_INTEGRATION_DATABASE_URL` deve
+apontar exatamente para o banco isolado acima e a suíte PostgreSQL da API deve
+ser executada com essa variável. O E2E Web usa respostas HTTP simuladas; um
+percurso completo deverá ser reintroduzido somente em uma suíte de sistema com
+stack descartável fora de `apps/web` e `apps/api`.
 
 PDFKit 0.20.2 está fixado no manifesto/lockfile. O build Nest copia o brasão
 para `dist/modules/relatorios/assets`; a imagem runner usa o mesmo asset local.

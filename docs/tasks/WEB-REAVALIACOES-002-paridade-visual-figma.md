@@ -243,8 +243,7 @@ depois, abrir somente o conjunto do objetivo em execução.
    `apps/web/features/reavaliacoes/components/nova-reavaliacao.tsx`,
    `apps/web/components/ui/drawer.tsx` e o frame `298:1489`.
 5. **Verificação e regressão:**
-   `apps/web/e2e/reavaliacoes-real.e2e.ts`,
-   `apps/web/playwright.reavaliacoes-real.config.ts`,
+   `apps/web/e2e/reavaliacoes.e2e.ts`,
    `apps/api/src/modules/reavaliacoes/tests/reavaliacoes.service.spec.ts`,
    `apps/api/test/reavaliacoes-postgres.e2e-spec.ts`,
    `apps/web/features/reavaliacoes/`,
@@ -263,8 +262,6 @@ Arquivos de API e banco são referências de verificação, não alvos previstos
 - `pnpm --filter @repo/web test`
 - `pnpm --filter @repo/web build`
 - E2E Web padrão dos perfis e navegação afetada.
-- Percurso `reavaliacoes-real` contra API e PostgreSQL descartável, sem usar a
-  base de desenvolvimento.
 - E2E de API focado na matriz `GET` compartilhado versus `POST` exclusivo do
   Diretor somente se o código de autorização for tocado ou para provar a
   regressão completa.

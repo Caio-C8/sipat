@@ -201,9 +201,7 @@ preferido pelo implementador não autoriza mudanças nessas camadas.
   dedicado do formulário quando necessário;
 - `apps/web/lib/navigation/tests/system-navigation.test.ts`;
 - `apps/web/e2e/cadastros.e2e.ts` e
-  `apps/web/e2e/support/api-mock.ts`;
-- `apps/web/e2e/cadastros-real.e2e.ts` e
-  `apps/web/e2e/support/seed-cadastros-real.mjs`.
+  `apps/web/e2e/support/api-mock.ts`.
 
 Os caminhos são o ponto de partida confirmado em 12 de novembro de 2026. O
 implementador deve reinspecionar o worktree e evitar mudanças em arquivos que

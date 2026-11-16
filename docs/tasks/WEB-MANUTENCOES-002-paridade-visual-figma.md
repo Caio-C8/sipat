@@ -264,8 +264,6 @@ somente então ler o conjunto de arquivos correspondente.
    `apps/web/components/ui/dialog.tsx` e os nodes `212:8073` e `212:7784`,
    incluindo o ancestral da sobreposição.
 5. **Verificação visual, funcional e de perfis:**
-   `apps/web/e2e/manutencoes-real.e2e.ts`,
-   `apps/web/playwright.manutencoes-real.config.ts`,
    `apps/api/test/manutencoes-postgres.e2e-spec.ts`,
    `apps/api/test/manutencoes-postgres.spec.ts`,
    `apps/api/src/modules/manutencoes/manutencoes.controller.ts`,
@@ -283,8 +281,6 @@ Arquivos de API e banco são referências de verificação, não alvos previstos
 - `pnpm --filter @repo/web test`
 - `pnpm --filter @repo/web build`
 - E2E Web dos dois perfis, navegação, modais, teclado e estados afetados.
-- Percurso `manutencoes-real` contra API e PostgreSQL descartável, sem usar ou
-  popular a base de desenvolvimento.
 - Suíte HTTP/PostgreSQL de manutenção quando necessária para provar a matriz
   idêntica dos perfis ou se código de autorização for tocado.
 - Comparação manual com Figma em 1920 × 1080 e revisão responsiva em 1536, 900
