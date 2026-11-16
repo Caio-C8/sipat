@@ -82,10 +82,10 @@ describe("seed geral", () => {
   });
 
   it("recusa migration pendente ou build com histórico diferente", () => {
-    const concluidas = Array.from({ length: 28 }, (_, indice) => ({
+    const concluidas = Array.from({ length: 29 }, (_, indice) => ({
       migration_name:
-        indice === 27
-          ? "20261108120000_endurece_disponibilidade_competencias_depreciacao"
+        indice === 28
+          ? "20261115143000_corrige_disponibilidade_apos_reavaliacao"
           : `migration-${indice}`,
       finished_at: new Date(),
       rolled_back_at: null,
@@ -102,8 +102,8 @@ describe("seed geral", () => {
       ]),
     ).toThrow("migrations esperadas");
     expect(() => exigirMigrationsAtuais(concluidas.slice(0, -1))).toThrow(
-      "Esperado: 28 migrations, última " +
-        "20261108120000_endurece_disponibilidade_competencias_depreciacao",
+      "Esperado: 29 migrations, última " +
+        "20261115143000_corrige_disponibilidade_apos_reavaliacao",
     );
   });
 
