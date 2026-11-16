@@ -56,6 +56,10 @@ Permitir que Administrador e Diretor usem o ciclo aprovado de manutenção pela 
 
 ## Limites da verificação
 
+- O percurso Playwright real registrado acima foi removido em 16 de novembro de
+  2026 porque acessava o banco diretamente pelo teste Web. A cobertura de API
+  com PostgreSQL permanece; um novo E2E completo deverá preparar e observar o
+  estado por fronteiras próprias de teste, sem acoplar a Web à persistência.
 - O percurso visual automatizado usou Diretor de Patrimônio. As permissões do Administrador foram exercitadas por HTTP real, e a tela usa os mesmos componentes para ambos.
 - Percurso completo só com teclado, leitor de tela e navegadores além do Chromium não foram testados manualmente.
 

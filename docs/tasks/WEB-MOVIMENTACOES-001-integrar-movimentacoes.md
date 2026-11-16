@@ -225,13 +225,8 @@ $env:DATABASE_URL = $env:MOVIMENTACOES_INTEGRATION_DATABASE_URL
 pnpm --filter @repo/database db:migrate:deploy
 pnpm --filter @repo/api test --testPathPatterns=movimentac
 pnpm --filter @repo/api build
-$env:API_INTERNAL_URL = 'http://127.0.0.1:3201'
-$env:PLAYWRIGHT_TEST = '1'
-pnpm --filter @repo/web build
-pnpm --filter @repo/web test:e2e --config=playwright.movimentacoes-real.config.ts
 ```
 
-As portas 3100/3201 precisam estar livres. Os scripts reinicializam somente os
-dados desse banco de teste explicitamente validado; não a base `sipat`. A suíte
-real inicia e encerra seus próprios servidores. Use um processo de terminal
-exclusivo para essas variáveis, sem reutilizá-las na aplicação operacional.
+Esse comando valida a integração da API com o banco isolado. O E2E Web usa a
+fronteira HTTP simulada; um percurso completo deve ser reintroduzido em uma
+suíte de sistema fora de `apps/web`.

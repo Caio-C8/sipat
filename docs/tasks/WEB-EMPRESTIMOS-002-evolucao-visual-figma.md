@@ -64,7 +64,7 @@ Com API e Web iniciadas no ambiente desejado, abrir `/emprestimos`.
 Administrador consulta lista e detalhe. Diretor pode abrir
 `/emprestimos/nova`, selecionar bens, revisar e confirmar, depois abrir o
 detalhe e registrar devoluções. Para repetir escritas sem afetar dados locais,
-usar o banco RF16 descartável e o teste
-`apps/web/playwright.emprestimos-real.config.ts` conforme a tarefa anterior.
+use somente um ambiente de teste isolado. A suíte Web atual simula a fronteira
+HTTP; o percurso completo aguarda uma suíte de sistema fora de `apps/web`.
 
 Leitura manual com tecnologia assistiva permanece pendente.

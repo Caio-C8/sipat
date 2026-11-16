@@ -10,6 +10,7 @@ export default defineConfig({
     environment: "node",
     clearMocks: true,
     restoreMocks: true,
+    fsModuleCachePath: "../../node_modules/.vitest-cache/web",
     setupFiles: ["./test/setup.ts"],
     include: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
   },

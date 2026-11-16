@@ -53,13 +53,22 @@ endpoint, autenticação, formato de erro ou cache para desbloquear uma tela.
 O SIPAT usa:
 
 - Vitest 5 como runner;
+- caches de módulos separados para Web e Mobile, evitando invalidação
+  concorrente do mesmo diretório durante o `pnpm check`;
 - React Testing Library para hooks e componentes;
 - `jsdom` somente nos testes que precisam de DOM;
 - ambiente `node` como padrão para infraestrutura, parsers e operações;
 - `resolve.tsconfigPaths` nativo do Vite 8 para os aliases do TypeScript.
 
-O script de typecheck executa `next typegen` antes de `tsc --noEmit`, evitando
-que tipos de rota antigos em `.next` sejam usados pela verificação.
+O script de typecheck executa `next typegen` antes do `tsc` e usa
+`tsconfig.typecheck.json`. Essa configuração inclui os tipos de produção recém
+gerados em `.next/types` e exclui `.next/dev`, sem retirar do ambiente de
+desenvolvimento os tipos criados por `next dev`.
+
+O build também seleciona `tsconfig.typecheck.json` em produção. Assim, a
+verificação do artefato usa os tipos atuais em `.next/types` e não lê tipos de
+desenvolvimento deixados em `.next/dev/types` por uma árvore de rotas anterior.
+`next dev` continua usando o `tsconfig.json` principal.
 
 O SIPAT também usa:
 
@@ -180,27 +189,10 @@ O suporte de rede pode interceptar `/api/backend` e verifica expectations por
 método e path. Ele deve ser usado por novas features sem transformar fixtures
 de uma entrega em parte permanente da infraestrutura comum.
 
-### Cadastros contra API e banco reais
-
-`e2e/cadastros-real.e2e.ts` cobre os sete cadastros, integrantes, situações,
-notas e PDFs nos dois perfis, além de axe e reflow. A execução é opt-in:
-
-1. prepare um PostgreSQL descartável em `127.0.0.1:55434/sipat_cadastros`,
-   schema `public`, e aplique as migrations existentes;
-2. inicie a API com `DATABASE_URL` apontando somente para esse banco, uploads
-   isolados e CORS para a origem Web; inicie a Web apontando para essa API;
-3. na raiz, defina `CADASTROS_INTEGRATION_DATABASE_URL` com a mesma conexão e
-   execute
-   `node --import ./packages/database/node_modules/tsx/dist/loader.mjs apps/web/e2e/support/seed-cadastros-real.mjs`;
-4. defina `PLAYWRIGHT_BASE_URL=http://localhost:3000` (ou a origem utilizada) e
-   execute
-   `pnpm --filter @repo/web exec playwright test e2e/cadastros-real.e2e.ts --workers=1`.
-
-O seed recusa outra conexão, cria apenas dados sintéticos e salva sessões
-temporárias no arquivo ignorado `test-results/cadastros-real-fixture.json` da
-raiz, fora da pasta de resultados que o Playwright limpa. Não use banco
-operacional. Sem a variável opt-in, esses dois cenários são ignorados na suíte
-padrão.
+Os E2E mantidos em `apps/web/e2e` exercitam a interface e a fronteira HTTP com
+API simulada. Percursos completos Web → API → PostgreSQL não pertencem ao
+package Web; quando reintroduzidos, devem usar uma suíte de sistema isolada e
+uma stack descartável fora dos escopos das aplicações.
 
 ### Verificação local do artefato standalone
 

@@ -294,8 +294,6 @@ do objetivo em execução.
    de regressão, não alvos previstos.
 6. **Verificação visual, funcional e de perfis:**
    `apps/web/e2e/movimentacoes.e2e.ts`,
-   `apps/web/e2e/movimentacoes-real.e2e.ts`,
-   `apps/web/playwright.movimentacoes-real.config.ts`,
    `apps/web/features/movimentacoes/tests/movimentacao-operations.test.ts`,
    `apps/api/test/movimentacoes-postgres.e2e-spec.ts`,
    `apps/api/src/modules/movimentacoes/movimentacoes.controller.ts` e todos os
@@ -312,8 +310,6 @@ Arquivos de API e banco são referências de verificação, não alvos previstos
 - `pnpm --filter @repo/web test`
 - `pnpm --filter @repo/web build`
 - E2E Web padrão de movimentações, perfis, navegação e drawer patrimonial.
-- Percurso `movimentacoes-real` contra API e PostgreSQL descartável, sem usar a
-  base de desenvolvimento.
 - E2E de API focado na matriz `GET` compartilhado versus `POST` exclusivo do
   Diretor se a autorização for tocada ou para provar a regressão completa.
 - Comparação manual com Figma em 1920 × 1080 e revisão responsiva em 1536, 900 e

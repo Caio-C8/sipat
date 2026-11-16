@@ -45,12 +45,11 @@ fronteiras entre UI, contratos e integração HTTP.
   `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
 - `/manutencoes`, `/manutencoes/nova` e o detalhe permitem aos dois perfis
   consultar, criar, revisar orçamento, registrar retorno e anexar/abrir PDFs
-  pela API real; o percurso Chromium com banco isolado está em
-  [WEB-MANUTENCOES-001](../../tasks/WEB-MANUTENCOES-001-interface-manutencoes.md);
+  pela API real; a API mantém cobertura de integração com PostgreSQL isolado em
+  seus testes de manutenção;
 - `/reavaliacoes`, `/reavaliacoes/nova` e o detalhe oferecem consultas,
-  prévia e confirmação na API real; o percurso Chromium com PostgreSQL
-  isolado está em
-  [WEB-REAVALIACOES-001](../../tasks/WEB-REAVALIACOES-001-interface-reavaliacoes.md).
+  prévia e confirmação na API real; a Web cobre os perfis com a fronteira HTTP
+  simulada e a API mantém cobertura própria com PostgreSQL isolado.
   A evolução visual entregue em
   [WEB-REAVALIACOES-002](../../tasks/WEB-REAVALIACOES-002-paridade-visual-figma.md)
   reproduz na tela independente a lista, a criação em etapas e o detalhe
@@ -66,8 +65,8 @@ fronteiras entre UI, contratos e integração HTTP.
   primeira, última e próxima competência e liga para a pendência; o relatório
   de pendências preserva essa semântica sem criar central de notificações;
 - `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
-  devolução parcial na API real; o percurso com PostgreSQL isolado está em
-  [WEB-EMPRESTIMOS-001](../../tasks/WEB-EMPRESTIMOS-001-interface-emprestimos.md).
+  devolução parcial na API real; a Web cobre lista, detalhe e criação com a
+  fronteira HTTP simulada e a API mantém cobertura própria com PostgreSQL.
   A evolução visual com abas, seleção, revisão, detalhe e devolução está em
   [WEB-EMPRESTIMOS-002](../../tasks/WEB-EMPRESTIMOS-002-evolucao-visual-figma.md);
 - movimentações, manutenções, reavaliações e empréstimos distinguem os três

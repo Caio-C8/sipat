@@ -52,12 +52,16 @@ Permitir consulta, saída e devolução parcial pela API real no shell autentica
 - Web: 50 testes, lint, typecheck e build aprovados; as três rotas constam do build de produção. Inspeção em tela de 390 px concluiu sem corte horizontal no detalhe.
 - Após acrescentar o link de Empréstimos à barra lateral, o E2E de autenticação passou a esperar cinco links e a conferir o destino `/emprestimos` para Diretor e Administrador. A suíte Web E2E padrão passou com 26 testes e 8 pulados; uma expectativa de consulta opcional no mock antigo de movimentações foi ajustada para eliminar uma falha intermitente observada nesta execução.
 - No ambiente local, `pnpm security:patches`, `pnpm format:check`, `pnpm check`, `pnpm build`, a construção da imagem mobile Web de CI e seu health check passaram. Essas verificações locais não constituem execução no GitHub Actions.
-- Playwright real (`playwright.emprestimos-real.config.ts`): 1 teste Chromium aprovado com Web → API → PostgreSQL; grupo de 2, devolução parcial, conclusão, recarga do histórico, axe e largura de 390 px. Consulta SQL posterior: 2 bens `ATIVO`, 2 devoluções e 1 grupo.
+- O percurso Playwright real registrado originalmente foi removido do package
+  Web; a evidência histórica de grupo, devolução parcial e conclusão permanece
+  registrada, enquanto a suíte atual da Web usa a fronteira HTTP simulada.
 - Homologação manual com leitor de tela permanece pendente; a inspeção automatizada não a substitui.
 - Em 31/10/2026, após autorização específica, as migrations de localizações posteriores ao inventário e RF16 foram aplicadas ao banco local de desenvolvimento `sipat` em `localhost:5433` com `prisma migrate deploy`: 22 → 24 migrations aplicadas. As imagens de migration, API e Web foram reconstruídas; API e Web responderam HTTP 200 nos health checks. Nenhum reset ou exclusão foi executado.
 - No Chrome em `localhost:3000`, a conta Diretor abriu Empréstimos pela sidebar, registrou saída em grupo dos bens de demonstração SP-1 e SP-4 para destinatário fictício, devolveu SP-1, observou SP-4 pendente, devolveu SP-4 e recarregou o detalhe concluído. Os filtros mostraram zero em andamento e um concluído. Consulta SQL do grupo `222865e5-8398-4637-bdec-2d75e5600314` confirmou duas devoluções, ambos os bens `ATIVO` e setores cadastrais preservados. O histórico de teste permanece no banco de desenvolvimento.
 
-Para reproduzir o E2E, iniciar PostgreSQL descartável em `127.0.0.1:55416/sipat_rf16`, aplicar as migrations nele, compilar API e Web com `API_INTERNAL_URL=http://127.0.0.1:3202`, definir `EMPRESTIMOS_INTEGRATION_DATABASE_URL` para esse banco e executar `pnpm --filter @repo/web exec playwright test --config playwright.emprestimos-real.config.ts`. O teste cria apenas dados sintéticos e recusa outros endereços de banco.
+Um novo percurso completo deve ser implementado futuramente em uma suíte de
+sistema isolada, fora de `apps/web`, sem entregar acesso direto ao banco ao
+teste de navegador.
 
 ## Roteiro manual
 
