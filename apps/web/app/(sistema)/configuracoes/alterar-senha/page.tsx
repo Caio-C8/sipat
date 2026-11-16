@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LockKeyhole } from "lucide-react";
 import { AlterarSenhaForm } from "@/features/configuracoes/components/alterar-senha-form";
 import { ConfiguracoesAbas } from "@/features/configuracoes/components/configuracoes-abas";
+import { PageHeader } from "@/components/shared/page-header";
 import { nomesPerfis } from "@/lib/navigation/system-navigation";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
@@ -15,14 +16,10 @@ export default async function AlterarSenhaPage() {
 
   return (
     <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-4 text-[#17253d] sm:px-5 sm:py-5 min-[1500px]:gap-5 min-[1500px]:px-[30px] min-[1500px]:py-6">
-      <header>
-        <h1 className="text-xl font-bold leading-tight text-[#111d34] min-[1500px]:text-[27px]">
-          Alterar senha
-        </h1>
-        <p className="mt-1 text-xs text-[#62748e]">
-          Atualize a senha utilizada para entrar no SIPAT.
-        </p>
-      </header>
+      <PageHeader
+        title="Alterar senha"
+        description="Atualize a senha utilizada para entrar no SIPAT."
+      />
 
       <ConfiguracoesAbas perfil={identidade.perfil} />
 

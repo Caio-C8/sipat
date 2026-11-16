@@ -10,6 +10,7 @@ import {
   Paginacao,
 } from "./cadastro-ui";
 import { FormularioSetor } from "./formularios-basicos";
+import { PageHeader } from "@/components/shared/page-header";
 export function ListaSetores({
   resposta,
   busca,
@@ -30,21 +31,17 @@ export function ListaSetores({
     }).toString();
   return (
     <main className={pagina}>
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold min-[1500px]:text-[27px]">
-            Setores
-          </h1>
-          <p className="mt-1 text-sm text-[#62748e]">
-            Consulte os setores, seus responsáveis, salas e bens vinculados.
-          </p>
-        </div>
-        {admin && (
-          <Link className={principal} href="/cadastros/setores/novo">
-            Cadastrar setor
-          </Link>
-        )}
-      </header>
+      <PageHeader
+        title="Setores"
+        description="Consulte os setores, seus responsáveis, salas e bens vinculados."
+        actions={
+          admin ? (
+            <Link className={principal} href="/cadastros/setores/novo">
+              Cadastrar setor
+            </Link>
+          ) : undefined
+        }
+      />
       <AbasCadastros secao="setores" mostrarFornecedores />
       <form
         action="/cadastros/setores"
@@ -131,7 +128,10 @@ export function ListaSetores({
 export function NovoSetor() {
   return (
     <main className={pagina}>
-      <h1 className="text-xl font-bold">Cadastrar setor</h1>
+      <PageHeader
+        title="Cadastrar setor"
+        description="Informe os dados, a localização e o responsável pelo setor."
+      />
       <AbasCadastros secao="setores" mostrarFornecedores />
       <FormularioSetor />
     </main>
@@ -150,18 +150,20 @@ export function DetalheSetor({
 }) {
   return (
     <main className={pagina}>
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold">Consultar setor · {setor.nome}</h1>
-          <p className="mt-1 text-sm">
+      <PageHeader
+        title={`Consultar setor · ${setor.nome}`}
+        description={
+          <>
             {setor.ativo ? "Ativo" : "Inativo"} · Responsável:{" "}
             {setor.responsavel.nome}
-          </p>
-        </div>
-        <Link className={botao} href="/cadastros/setores">
-          Voltar aos setores
-        </Link>
-      </header>
+          </>
+        }
+        actions={
+          <Link className={botao} href="/cadastros/setores">
+            Voltar aos setores
+          </Link>
+        }
+      />
       <AbasCadastros secao="setores" mostrarFornecedores />
       {salvo && (
         <p role="status" className="rounded-md bg-emerald-50 p-3 text-sm">

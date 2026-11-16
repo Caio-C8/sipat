@@ -6,6 +6,7 @@ import {
   ConsultarBaixaPatrimonioResponseSchema,
   CriarPatrimonioBodySchema,
   CriarPatrimonioResponseSchema,
+  ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   ConfirmarDisponibilidadeUsoBodySchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
   ListarEspeciesQuerySchema,
@@ -223,6 +224,15 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
         body: CriarPatrimonioBodySchema.parse(body),
         headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
         responseSchema: CriarPatrimonioResponseSchema,
+      });
+    },
+    consultarPreviaNumeracao(signal?: AbortSignal) {
+      return apiClient.request({
+        path: "/patrimonios/numeracao/previa",
+        method: "GET",
+        cache: "no-store",
+        signal,
+        responseSchema: ConsultarPreviaNumeracaoPatrimonialResponseSchema,
       });
     },
     consultar,

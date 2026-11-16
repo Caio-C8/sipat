@@ -76,6 +76,16 @@ vi.mock("../api/hooks", () => ({
     carregar: mocks.carregar,
   }),
   useCriarPatrimonio: () => ({ pending: false, confirmar: mocks.confirmar }),
+  usePreviaNumeracaoPatrimonio: () => ({
+    dados: {
+      numeroOficial: "2656",
+      numeroSemOficial: "SP-91",
+      reservaValor: false,
+    },
+    erro: null,
+    loading: false,
+    carregar: mocks.carregar,
+  }),
 }));
 
 vi.mock("../api/use-patrimonio-pendente", () => ({
@@ -100,24 +110,25 @@ beforeEach(() => {
 });
 
 describe("CadastroPatrimonio", () => {
+  function selecionar(rotulo: string, opcao: string) {
+    fireEvent.click(screen.getByRole("combobox", { name: rotulo }));
+    fireEvent.click(screen.getByRole("option", { name: opcao }));
+  }
+
   it("atualiza natureza, responsável e resumo ao trocar as opções selecionadas", () => {
     render(<CadastroPatrimonio usuarioId="usuario-teste" />);
 
-    fireEvent.change(screen.getByLabelText("Espécie *"), {
-      target: { value: mocks.especies[1]!.id },
-    });
-    fireEvent.change(screen.getByLabelText("Setor de destino *"), {
-      target: { value: mocks.setores[1]!.id },
-    });
+    selecionar("Espécie", "Imóveis");
+    selecionar("Setor de destino", "Administrativo");
     fireEvent.change(screen.getByLabelText("Descrição do bem *"), {
       target: { value: "Mesa de reunião" },
     });
 
-    expect(screen.getByDisplayValue("Bens imóveis")).toBeTruthy();
-    expect(screen.getByDisplayValue("Ana Oliveira")).toBeTruthy();
+    expect(screen.getByText("Bens imóveis")).toBeTruthy();
+    expect(screen.getByText("Ana Oliveira")).toBeTruthy();
     expect(screen.getByText("Imóveis · Bens imóveis")).toBeTruthy();
     expect(screen.getByText("Administrativo", { selector: "p" })).toBeTruthy();
-    expect(screen.getByText("Mesa de reunião")).toBeTruthy();
+    expect(screen.getAllByText("Mesa de reunião")).toHaveLength(2);
   });
 
   it("recalcula a estimativa e envia o contrato ao cadastrar", async () => {
@@ -128,29 +139,29 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText("Descrição do bem *"), {
       target: { value: "Notebook corporativo" },
     });
-    fireEvent.change(screen.getByLabelText("Espécie *"), {
-      target: { value: mocks.especies[0]!.id },
-    });
-    fireEvent.change(screen.getByLabelText("Setor de destino *"), {
-      target: { value: mocks.setores[0]!.id },
-    });
+    selecionar("Espécie", "Notebooks");
+    selecionar("Setor de destino", "Tecnologia da Informação");
     fireEvent.change(screen.getByLabelText(/Valor de incorporação/), {
       target: { value: "6.000,00" },
     });
     fireEvent.change(screen.getByLabelText("Vida útil (meses) *"), {
       target: { value: "60" },
     });
-    fireEvent.change(screen.getByLabelText("Valor residual"), {
+    fireEvent.change(screen.getByLabelText(/Valor residual \(R\$\)/), {
       target: { value: "600,00" },
     });
 
     expect(
-      (screen.getByLabelText("Valor de incorporação (R$)") as HTMLInputElement)
-        .value,
-    ).toBe("6.000,00");
+      (
+        screen.getByLabelText(
+          /Valor de incorporação \(R\$\)/,
+        ) as HTMLInputElement
+      ).value,
+    ).toBe("R$ 6.000,00");
     expect(
-      (screen.getByLabelText("Valor residual") as HTMLInputElement).value,
-    ).toBe("600,00");
+      (screen.getByLabelText(/Valor residual \(R\$\)/) as HTMLInputElement)
+        .value,
+    ).toBe("R$ 600,00");
     expect(screen.getByText(/90,00/)).toBeTruthy();
     fireEvent.click(
       screen.getByRole("button", { name: "Cadastrar patrimônio" }),
@@ -177,19 +188,15 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText("Descrição do bem *"), {
       target: { value: "Notebook corporativo" },
     });
-    fireEvent.change(screen.getByLabelText("Espécie *"), {
-      target: { value: mocks.especies[0]!.id },
-    });
-    fireEvent.change(screen.getByLabelText("Setor de destino *"), {
-      target: { value: mocks.setores[0]!.id },
-    });
+    selecionar("Espécie", "Notebooks");
+    selecionar("Setor de destino", "Tecnologia da Informação");
     fireEvent.change(screen.getByLabelText(/Valor de incorporação/), {
       target: { value: "1.000,00" },
     });
     fireEvent.change(screen.getByLabelText("Vida útil (meses) *"), {
       target: { value: "60" },
     });
-    fireEvent.change(screen.getByLabelText("Valor residual"), {
+    fireEvent.change(screen.getByLabelText(/Valor residual \(R\$\)/), {
       target: { value: "100,00" },
     });
     fireEvent.click(
@@ -241,13 +248,15 @@ describe("CadastroPatrimonio", () => {
       "Dell",
     );
     expect(
-      (screen.getByLabelText("Tipo de tombamento *") as HTMLSelectElement)
-        .value,
-    ).toBe("DOACAO");
+      screen.getByRole("combobox", { name: "Tipo de tombamento" }).textContent,
+    ).toContain("Doação");
     expect(
-      (screen.getByLabelText("Valor de incorporação (R$)") as HTMLInputElement)
-        .value,
-    ).toBe("5490,00");
+      (
+        screen.getByLabelText(
+          /Valor de incorporação \(R\$\)/,
+        ) as HTMLInputElement
+      ).value,
+    ).toBe("R$ 5.490,00");
     expect(
       screen.getByLabelText("Descrição do bem *").closest("fieldset")?.disabled,
     ).toBe(true);
@@ -269,17 +278,18 @@ describe("CadastroPatrimonio", () => {
     fireEvent.change(screen.getByLabelText("Vida útil (meses) *"), {
       target: { value: "60" },
     });
-    fireEvent.change(screen.getByLabelText("Valor residual"), {
+    fireEvent.change(screen.getByLabelText(/Valor residual \(R\$\)/), {
       target: { value: "100" },
     });
     fireEvent.click(checkbox);
-    expect(screen.queryByLabelText("Valor residual")).toBeNull();
+    expect(screen.queryByLabelText(/Valor residual \(R\$\)/)).toBeNull();
     fireEvent.click(checkbox);
     expect(
       (screen.getByLabelText("Vida útil (meses) *") as HTMLInputElement).value,
     ).toBe("");
     expect(
-      (screen.getByLabelText("Valor residual") as HTMLInputElement).value,
-    ).toBe("");
+      (screen.getByLabelText(/Valor residual \(R\$\)/) as HTMLInputElement)
+        .value,
+    ).toBe("R$ 0,00");
   });
 });

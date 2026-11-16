@@ -1,19 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, FileText, PackageCheck } from "lucide-react";
+import { AlertTriangle, PackageCheck } from "lucide-react";
 import {
+  BaixarPatrimonioDadosSchema,
   TIPOS_BAIXA_PATRIMONIO,
   type BaixaPatrimonioDetalhe,
   type PatrimonioResumo,
-  type TipoBaixaPatrimonio,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldError,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import {
+  SelectField,
+  TextareaField,
+  TextField,
+} from "@/components/shared/form-fields";
 import { browserPatrimonioOperations } from "@/features/patrimonios/api/browser-patrimonio-operations";
 import { mensagemErroBaixa, rotulosTipoBaixa } from "../apresentacao";
-
-const campo =
-  "mt-1 min-h-10 w-full rounded-md border border-[#dce5f0] bg-white px-3 py-2 text-sm text-[#19355d] focus-visible:outline-2 focus-visible:outline-[#2863ec] disabled:bg-slate-100";
 
 function hojeSaoPaulo() {
   return new Intl.DateTimeFormat("sv-SE", {
@@ -38,14 +51,19 @@ export function BaixaFormulario({
   onSuccess: (baixa: BaixaPatrimonioDetalhe) => void;
 }) {
   const hoje = hojeSaoPaulo();
-  const feedback = useRef<HTMLParagraphElement>(null);
+  const feedback = useRef<HTMLDivElement>(null);
+  const formulario = useRef<HTMLFormElement>(null);
   const [dataBaixa, setDataBaixa] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [comissaoId, setComissaoId] = useState("");
   const [comissoes, setComissoes] = useState<
     Array<{ id: string; nome: string }>
   >([]);
   const [carregandoComissoes, setCarregandoComissoes] = useState(false);
   const [pending, setPending] = useState(false);
   const [erro, setErro] = useState("");
+  const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
+  const [confirmado, setConfirmado] = useState(false);
   const controleComissoes = useRef<AbortController | null>(null);
 
   async function carregarComissoes(data: string) {
@@ -74,27 +92,84 @@ export function BaixaFormulario({
 
   useEffect(() => onPendingChange?.(pending), [onPendingChange, pending]);
   useEffect(() => {
-    if (erro) feedback.current?.focus();
+    if (erro) {
+      feedback.current?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "center",
+      });
+      feedback.current?.focus();
+    }
   }, [erro]);
+
+  function limparErroCampo(campo: string) {
+    setErrosCampos((atuais) => {
+      if (!atuais[campo]) return atuais;
+      const proximos = { ...atuais };
+      delete proximos[campo];
+      return proximos;
+    });
+  }
+
+  function focarPrimeiroCampoInvalido() {
+    requestAnimationFrame(() => {
+      const campo = formulario.current?.querySelector<HTMLElement>(
+        '[aria-invalid="true"]',
+      );
+      campo?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+      campo?.focus();
+    });
+  }
 
   async function confirmar(formData: FormData) {
     if (pending) return;
     const documento = formData.get("documento");
+    const validacao = BaixarPatrimonioDadosSchema.safeParse({
+      dataBaixa: String(formData.get("dataBaixa")),
+      tipo: String(formData.get("tipo")),
+      comissaoId: String(formData.get("comissaoId")),
+      motivo: String(formData.get("motivo")),
+      observacao: String(formData.get("observacao")).trim() || undefined,
+    });
+    const proximosErros: Record<string, string> = {};
+    if (!validacao.success) {
+      for (const issue of validacao.error.issues) {
+        const campo = issue.path.join(".");
+        if (proximosErros[campo]) continue;
+        proximosErros[campo] =
+          campo === "dataBaixa"
+            ? "Informe uma data da baixa válida."
+            : campo === "tipo"
+              ? "Selecione o tipo da baixa."
+              : issue.message;
+      }
+    }
+    if (!confirmado)
+      proximosErros.confirmacao =
+        "Confirme que revisou os dados e reconhece que a baixa é irreversível.";
     if (documento instanceof File && documento.size > 10 * 1024 * 1024) {
-      setErro("O PDF deve possuir no máximo 10 MiB.");
+      proximosErros.documento = "O PDF deve possuir no máximo 10 MiB.";
+    } else if (
+      documento instanceof File &&
+      documento.size > 0 &&
+      documento.type &&
+      documento.type !== "application/pdf"
+    ) {
+      proximosErros.documento = "Selecione um arquivo PDF.";
+    }
+    if (!validacao.success || Object.keys(proximosErros).length) {
+      setErro("");
+      setErrosCampos(proximosErros);
+      focarPrimeiroCampoInvalido();
       return;
     }
     setPending(true);
     setErro("");
+    setErrosCampos({});
     try {
       const resposta = await browserPatrimonioOperations.baixar(
         patrimonio.id,
         {
-          dataBaixa: String(formData.get("dataBaixa")),
-          tipo: String(formData.get("tipo")) as TipoBaixaPatrimonio,
-          comissaoId: String(formData.get("comissaoId")),
-          motivo: String(formData.get("motivo")),
-          observacao: String(formData.get("observacao")).trim() || undefined,
+          ...validacao.data,
         },
         documento instanceof File && documento.size ? documento : undefined,
       );
@@ -108,155 +183,176 @@ export function BaixaFormulario({
 
   return (
     <form
+      ref={formulario}
       action={(dados) => void confirmar(dados)}
+      noValidate
       className={compacto ? "grid gap-5 p-5 sm:p-7" : "grid gap-5"}
     >
-      <section
-        className="rounded-lg border border-[#dce5f0] bg-white p-4"
-        aria-labelledby="bem-baixa"
-      >
-        <div className="flex items-start gap-3">
-          <PackageCheck
-            aria-hidden="true"
-            className="mt-0.5 size-5 text-[#2863ec]"
-          />
-          <div className="min-w-0">
-            <h2 id="bem-baixa" className="font-bold">
-              Patrimônio selecionado
-            </h2>
-            <p className="mt-1 break-words text-sm text-[#526580]">
-              {patrimonio.numeroPatrimonio} · {patrimonio.descricao}
-            </p>
+      {erro ? (
+        <Alert ref={feedback} tabIndex={-1} variant="destructive">
+          <AlertTitle>Não foi possível registrar a baixa</AlertTitle>
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
+      ) : null}
+      <Card asChild className="p-4 shadow-none">
+        <section aria-labelledby="bem-baixa">
+          <div className="flex items-start gap-3">
+            <PackageCheck
+              aria-hidden="true"
+              className="mt-0.5 size-5 text-interactive"
+            />
+            <div className="min-w-0">
+              <h2 id="bem-baixa" className="font-bold">
+                Patrimônio selecionado
+              </h2>
+              <p className="mt-1 break-words text-sm text-muted-foreground">
+                {patrimonio.numeroPatrimonio} · {patrimonio.descricao}
+              </p>
+            </div>
+            <Badge className="ml-auto" variant="outline">
+              1 de 1
+            </Badge>
           </div>
-          <span className="ml-auto rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-            1 de 1
-          </span>
-        </div>
-      </section>
+        </section>
+      </Card>
 
-      <fieldset className="grid gap-4 rounded-lg border border-[#dce5f0] bg-white p-4 sm:grid-cols-2">
-        <legend className="px-2 font-bold">Dados da baixa</legend>
-        <label className="text-sm font-medium">
-          Data da baixa
-          <input
-            className={campo}
-            type="date"
-            name="dataBaixa"
-            required
-            max={hoje}
-            value={dataBaixa}
-            onChange={(e) => {
-              setDataBaixa(e.target.value);
-              setComissoes([]);
-              void carregarComissoes(e.target.value);
-            }}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          Tipo
-          <select className={campo} name="tipo" required defaultValue="">
-            <option value="" disabled>
-              Selecione
-            </option>
-            {TIPOS_BAIXA_PATRIMONIO.map((tipo) => (
-              <option key={tipo} value={tipo}>
-                {rotulosTipoBaixa[tipo]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-medium sm:col-span-2">
-          Comissão vigente na data
-          <select
-            className={campo}
-            name="comissaoId"
-            required
-            disabled={carregandoComissoes || comissoes.length === 0}
-            defaultValue=""
+      <FieldSet className="grid gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-2">
+        <FieldLegend className="px-2 font-bold">Dados da baixa</FieldLegend>
+        <TextField
+          id="dataBaixa"
+          label="Data da baixa"
+          type="date"
+          name="dataBaixa"
+          required
+          max={hoje}
+          value={dataBaixa}
+          error={errosCampos.dataBaixa}
+          onChange={(e) => {
+            limparErroCampo("dataBaixa");
+            setDataBaixa(e.target.value);
+            setComissaoId("");
+            setComissoes([]);
+            void carregarComissoes(e.target.value);
+          }}
+        />
+        <SelectField
+          id="tipoBaixa"
+          name="tipo"
+          label="Tipo"
+          required
+          value={tipo}
+          error={errosCampos.tipo}
+          onValueChange={(value) => {
+            limparErroCampo("tipo");
+            setTipo(value);
+          }}
+          options={TIPOS_BAIXA_PATRIMONIO.map((value) => ({
+            value,
+            label: rotulosTipoBaixa[value] ?? value,
+          }))}
+          placeholder="Selecione"
+        />
+        <SelectField
+          id="comissaoBaixa"
+          name="comissaoId"
+          label="Comissão vigente na data"
+          required
+          value={comissaoId}
+          error={errosCampos.comissaoId}
+          onValueChange={(value) => {
+            limparErroCampo("comissaoId");
+            setComissaoId(value);
+          }}
+          options={comissoes.map((comissao) => ({
+            value: comissao.id,
+            label: comissao.nome,
+          }))}
+          disabled={carregandoComissoes || comissoes.length === 0}
+          placeholder={
+            carregandoComissoes
+              ? "Carregando…"
+              : comissoes.length
+                ? "Selecione"
+                : "Nenhuma comissão elegível"
+          }
+          fieldClassName="sm:col-span-2"
+        />
+      </FieldSet>
+
+      <FieldSet className="grid gap-4 rounded-lg border border-border bg-card p-4">
+        <FieldLegend className="px-2 font-bold">
+          Justificativa e documento
+        </FieldLegend>
+        <TextareaField
+          id="motivoBaixa"
+          label="Motivo"
+          name="motivo"
+          required
+          maxLength={2000}
+          rows={4}
+          error={errosCampos.motivo}
+          onChange={() => limparErroCampo("motivo")}
+        />
+        <TextareaField
+          id="observacaoBaixa"
+          label="Observação (opcional)"
+          name="observacao"
+          maxLength={2000}
+          rows={3}
+          error={errosCampos.observacao}
+          onChange={() => limparErroCampo("observacao")}
+        />
+        <TextField
+          id="documentoBaixa"
+          label="Documento PDF (opcional, até 10 MiB)"
+          type="file"
+          name="documento"
+          accept="application/pdf,.pdf"
+          error={errosCampos.documento}
+          onChange={() => limparErroCampo("documento")}
+        />
+      </FieldSet>
+
+      <Alert>
+        <AlertTriangle aria-hidden="true" />
+        <AlertTitle>Operação irreversível</AlertTitle>
+        <AlertDescription>
+          <p>
+            A baixa altera o patrimônio para BAIXADO e não pode ser editada,
+            excluída ou estornada.
+          </p>
+          <Field
+            className="mt-4"
+            data-invalid={Boolean(errosCampos.confirmacao)}
           >
-            <option value="">
-              {carregandoComissoes
-                ? "Carregando…"
-                : comissoes.length
-                  ? "Selecione"
-                  : "Nenhuma comissão elegível"}
-            </option>
-            {comissoes.map((comissao) => (
-              <option key={comissao.id} value={comissao.id}>
-                {comissao.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-      </fieldset>
+            <Label className="flex items-start gap-2 text-sm font-medium">
+              <Checkbox
+                className="mt-1"
+                checked={confirmado}
+                aria-invalid={Boolean(errosCampos.confirmacao) || undefined}
+                aria-describedby={
+                  errosCampos.confirmacao
+                    ? "confirmacao-baixa-error"
+                    : undefined
+                }
+                onCheckedChange={(checked) => {
+                  limparErroCampo("confirmacao");
+                  setConfirmado(checked === true);
+                }}
+              />
+              Revisei o patrimônio, a data, o tipo, a comissão, a justificativa
+              e o documento e confirmo a baixa irreversível.
+            </Label>
+            {errosCampos.confirmacao ? (
+              <FieldError id="confirmacao-baixa-error">
+                {errosCampos.confirmacao}
+              </FieldError>
+            ) : null}
+          </Field>
+        </AlertDescription>
+      </Alert>
 
-      <fieldset className="grid gap-4 rounded-lg border border-[#dce5f0] bg-white p-4">
-        <legend className="px-2 font-bold">Justificativa e documento</legend>
-        <label className="text-sm font-medium">
-          Motivo
-          <textarea
-            className={campo}
-            name="motivo"
-            required
-            maxLength={2000}
-            rows={4}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          Observação (opcional)
-          <textarea
-            className={campo}
-            name="observacao"
-            maxLength={2000}
-            rows={3}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          <span className="flex items-center gap-2">
-            <FileText aria-hidden="true" className="size-4" /> Documento PDF
-            (opcional, até 10 MiB)
-          </span>
-          <input
-            className={campo}
-            type="file"
-            name="documento"
-            accept="application/pdf,.pdf"
-          />
-        </label>
-      </fieldset>
-
-      <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950">
-        <div className="flex gap-3">
-          <AlertTriangle
-            aria-hidden="true"
-            className="mt-0.5 size-5 shrink-0"
-          />
-          <div>
-            <h2 className="font-bold">Operação irreversível</h2>
-            <p className="mt-1 text-sm">
-              A baixa altera o patrimônio para BAIXADO e não pode ser editada,
-              excluída ou estornada.
-            </p>
-          </div>
-        </div>
-        <label className="mt-4 flex items-start gap-2 text-sm font-medium">
-          <input className="mt-1" type="checkbox" required />
-          Revisei o patrimônio, a data, o tipo, a comissão, a justificativa e o
-          documento e confirmo a baixa irreversível.
-        </label>
-      </section>
-
-      <p
-        ref={feedback}
-        tabIndex={-1}
-        role={erro ? "alert" : "status"}
-        className={
-          erro ? "rounded-md bg-red-50 p-3 text-sm text-red-900" : "sr-only"
-        }
-      >
-        {erro}
-      </p>
-      <div className="flex flex-wrap justify-end gap-3 border-t border-[#dce5f0] pt-4">
+      <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-4">
         {onCancelar ? (
           <Button
             type="button"

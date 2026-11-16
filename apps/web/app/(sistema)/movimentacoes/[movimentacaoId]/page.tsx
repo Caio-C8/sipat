@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft } from "lucide-react";
 import { MovimentacaoParamsSchema } from "@repo/contracts";
+import { PageHeader } from "@/components/shared/page-header";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverMovimentacaoOperations } from "@/features/movimentacoes/api/server-movimentacao-operations";
@@ -32,8 +33,11 @@ export default async function MovimentacaoDetalhePage({
   } catch (e) {
     if (isApiError(e) && e.status === 404) notFound();
     return (
-      <main className="p-7">
-        <h1 className="mb-4 text-2xl font-bold">Detalhes da movimentação</h1>
+      <main className="grid gap-5 p-7">
+        <PageHeader
+          title="Detalhes da movimentação"
+          description="Não foi possível carregar os dados desta transferência."
+        />
         <ErroMovimentacao erro={e} />
       </main>
     );
@@ -41,23 +45,25 @@ export default async function MovimentacaoDetalhePage({
   const item = resposta.dados;
   return (
     <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
-      <header>
-        <Link
-          prefetch={false}
-          href="/movimentacoes"
-          className="inline-flex items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
-        >
-          <ChevronLeft aria-hidden="true" className="size-4" />
-          Voltar às movimentações
-        </Link>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight">
-          Detalhes da movimentação
-        </h1>
-        <p className="mt-2 text-sm">
-          Patrimônio {item.patrimonio.numeroPatrimonio} ·{" "}
-          {item.patrimonio.descricao}
-        </p>
-      </header>
+      <PageHeader
+        title="Detalhes da movimentação"
+        description={
+          <>
+            Patrimônio {item.patrimonio.numeroPatrimonio} ·{" "}
+            {item.patrimonio.descricao}
+          </>
+        }
+        actions={
+          <Link
+            prefetch={false}
+            href="/movimentacoes"
+            className="inline-flex items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
+          >
+            <ChevronLeft aria-hidden="true" className="size-4" />
+            Voltar às movimentações
+          </Link>
+        }
+      />
       <section className={painelMovimentacao}>
         <h2 className="mb-5 font-bold">Transferência individual</h2>
         <dl className="grid gap-5 text-sm sm:grid-cols-2 xl:grid-cols-3">

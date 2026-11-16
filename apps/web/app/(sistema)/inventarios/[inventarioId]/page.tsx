@@ -7,6 +7,7 @@ import {
 } from "@repo/contracts";
 import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
 import { ResolverCorrecaoDialog } from "@/features/inventarios/components/resolver-correcao-dialog";
+import { PageHeader } from "@/components/shared/page-header";
 import { isApiError } from "@/lib/api/core/api-error";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
@@ -32,11 +33,16 @@ export default async function InventarioDetalhePage({
   const { inventarioId } = await params;
   if (!InventarioParamsSchema.safeParse({ inventarioId }).success)
     return (
-      <main className="p-7">
-        <h1 className="text-2xl font-bold">Inventário não encontrado</h1>
-        <Link className="mt-4 inline-block underline" href="/inventarios">
-          Voltar aos inventários
-        </Link>
+      <main className="grid gap-5 p-7">
+        <PageHeader
+          title="Inventário não encontrado"
+          description="Confira o endereço informado ou retorne à lista de inventários."
+          actions={
+            <Link className="underline" href="/inventarios">
+              Voltar aos inventários
+            </Link>
+          }
+        />
       </main>
     );
   const paramsTela = await searchParams;
@@ -82,36 +88,47 @@ export default async function InventarioDetalhePage({
     `/inventarios/${inventarioId}?${new URLSearchParams({ visao: v, ...(busca ? { busca } : {}), pagina: p })}`;
   return (
     <main className="grid min-w-0 gap-5 p-4 text-[#17253d] sm:p-7">
-      <Link
-        className="text-sm font-medium text-[#526580] hover:underline"
-        href="/inventarios"
-      >
-        ← Todos os inventários
-      </Link>
       {erro ? (
-        <p role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
-          {erro}
-        </p>
+        <>
+          <PageHeader
+            title="Detalhes do inventário"
+            description="Consulte os dados e o andamento do inventário."
+            actions={
+              <Link
+                className="text-sm font-medium underline"
+                href="/inventarios"
+              >
+                Todos os inventários
+              </Link>
+            }
+          />
+          <p role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
+            {erro}
+          </p>
+        </>
       ) : detalhe && itens ? (
         <>
-          <header>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold">{detalhe.dados.nome}</h1>
-                <p className="mt-2 text-sm text-[#627996]">
-                  {detalhe.dados.comissao.nome} · Criado{" "}
-                  {data(detalhe.dados.createdAt)}
-                </p>
-              </div>
-              <span className="rounded-full bg-[#eef5ff] px-3 py-1 text-sm font-semibold text-[#203e66]">
-                {detalhe.dados.status === "FINALIZADO"
-                  ? "Finalizado"
-                  : detalhe.dados.status === "EM_ANDAMENTO"
-                    ? "Em andamento"
-                    : "Pendente"}
-              </span>
-            </div>
-          </header>
+          <PageHeader
+            title={detalhe.dados.nome}
+            description={`${detalhe.dados.comissao.nome} · Criado ${data(detalhe.dados.createdAt)}`}
+            actions={
+              <>
+                <span className="rounded-full bg-[#eef5ff] px-3 py-1 text-sm font-semibold text-[#203e66]">
+                  {detalhe.dados.status === "FINALIZADO"
+                    ? "Finalizado"
+                    : detalhe.dados.status === "EM_ANDAMENTO"
+                      ? "Em andamento"
+                      : "Pendente"}
+                </span>
+                <Link
+                  className="text-sm font-medium underline"
+                  href="/inventarios"
+                >
+                  Todos os inventários
+                </Link>
+              </>
+            }
+          />
           <section
             className={`${painel} grid gap-4 sm:grid-cols-4`}
             aria-label="Resumo do inventário"

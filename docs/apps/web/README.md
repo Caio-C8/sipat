@@ -25,15 +25,22 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/dashboard` apresenta a visão geral autenticada com totais patrimoniais
   reais, obtidos da metadata de `GET /patrimonios`, e estados explícitos para
   blocos ainda sem integração;
-- `/patrimonios/novo` carrega espécies, setores ativos e processos de compra
-  pela API, atualiza os campos relacionados conforme a seleção e registra o
-  bem por `POST /patrimonios` com validação e idempotência;
+- `/patrimonios/novo` carrega espécies, setores ativos, processos de compra e a
+  prévia não reservada dos dois tipos de numeração. Número, natureza e
+  responsável são informações automáticas fora de inputs; o residual é
+  informado explicitamente em reais ou percentual. O cadastro registra o bem
+  por `POST /patrimonios` com validação e idempotência;
 - `/configuracoes` exibe a identidade autenticada; a aba de usuários permanece
   indisponível. `/configuracoes/alterar-senha` consome o `AUTH-002`, encerra as
   sessões no backend e orienta um novo login;
-- `/patrimonios` e seu detalhe oferecem pesquisa, histórico, ficha PDF e as
-  quatro ações reais do Diretor; movimentação e reavaliação mantêm o bem fixo
-  em drawers laterais da própria ficha;
+- `/patrimonios` oferece pesquisa com filtros relacionais pesquisáveis e
+  compartilháveis pela URL; o detalhe organiza todos os atributos, usa filtros
+  e paginação compartilhados no histórico e mantém as quatro ações em drawers.
+  Ações incompatíveis com perfil, status, numeração ou classificação continuam
+  visíveis e desativadas com explicação; a substituição mostra prévia não
+  reservada do próximo número oficial. Pesquisa, cadastro, ficha e drawers usam
+  as primitives e os tokens do design system, com campos semânticos, erros
+  persistentes e foco acessível padronizado;
 - `/movimentacoes` e seu detalhe consultam transferências reais para os dois perfis;
   `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
 - `/manutencoes`, `/manutencoes/nova` e o detalhe permitem aos dois perfis
@@ -87,9 +94,10 @@ fronteiras entre UI, contratos e integração HTTP.
 - as rotas `/login`, `/redefinir-senha`, `/senha-atualizada`,
   `/esqueci-senha`, `/recuperar-senha` e `/recuperacao-concluida` estão
   integradas à API por operações tipadas quando há mutation;
-- o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb navegável, rodapé
-  derivado da tela e menu do usuário, com navegação ordenada e filtrada por
-  perfil; Minha conta fica no menu e o shell não consulta notificações;
+- o grupo `(sistema)` compartilha sidebar, topbar, breadcrumb navegável,
+  `PageHeader`, rodapé derivado da tela e menu do usuário, com navegação
+  ordenada e filtrada por perfil; Minha conta fica no menu, o shell não consulta
+  notificações e `SystemFooter` é o único rodapé de página autenticada;
 - não existem biblioteca de cache remoto nem estado global na Web;
 - `WEB-AUTH-001` está implementado com backend mockado estrito no E2E; a
   validação adicional contra uma stack real permanece pendente.

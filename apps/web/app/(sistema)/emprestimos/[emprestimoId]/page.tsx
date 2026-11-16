@@ -7,6 +7,7 @@ import { isApiError } from "@/lib/api/core/api-error";
 import { serverEmprestimoOperations } from "@/features/emprestimos/api/server-emprestimo-operations";
 import { DetalheEmprestimo } from "@/features/emprestimos/components/detalhe-emprestimo";
 import { mensagemEmprestimo } from "@/features/emprestimos/apresentacao";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = { title: "Detalhes do empréstimo" };
 export default async function EmprestimoDetalhePage({
@@ -60,8 +61,11 @@ export default async function EmprestimoDetalhePage({
       />
     );
   return (
-    <main className="p-4 sm:p-7">
-      <h1 className="mb-4 text-2xl font-bold">Detalhes do empréstimo</h1>
+    <main className="grid gap-5 p-4 sm:p-7">
+      <PageHeader
+        title="Detalhes do empréstimo"
+        description="Consulte os dados do empréstimo patrimonial."
+      />
       <p role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
         {mensagemEmprestimo(falha)}
       </p>

@@ -22,6 +22,24 @@ import {
   type ErroCampo,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ComboboxField,
+  TextareaField,
+  TextField,
+} from "@/components/shared/form-fields";
+import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
 import {
@@ -36,11 +54,7 @@ import {
   useAtualizarPatrimonioMovimentacao,
   useCriarMovimentacao,
 } from "../api/hooks";
-import {
-  campoMovimentacao,
-  painelMovimentacao,
-  formatarDataMovimentacao,
-} from "../presentation";
+import { painelMovimentacao, formatarDataMovimentacao } from "../presentation";
 import { ErroMovimentacao } from "./erro-movimentacao";
 type Selecionado = {
   bem: PatrimonioResumo;
@@ -66,8 +80,8 @@ function EtapasMovimentacao({ etapa }: { etapa: number }) {
             <span
               className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
                 concluida || atual
-                  ? "bg-[#2863ec] text-white"
-                  : "bg-[#e9eef5] text-[#526580]"
+                  ? "bg-interactive text-white"
+                  : "bg-muted text-muted-foreground"
               }`}
             >
               {concluida ? (
@@ -78,7 +92,7 @@ function EtapasMovimentacao({ etapa }: { etapa: number }) {
             </span>
             <span
               className={`hidden truncate text-xs font-semibold sm:block ${
-                atual ? "text-[#203b61]" : "text-[#526580]"
+                atual ? "text-brand-deep" : "text-muted-foreground"
               }`}
             >
               {nome}
@@ -86,7 +100,7 @@ function EtapasMovimentacao({ etapa }: { etapa: number }) {
             {numero < 3 ? (
               <span
                 aria-hidden="true"
-                className="ml-auto hidden h-px min-w-4 flex-1 bg-[#dce4ef] md:block"
+                className="ml-auto hidden h-px min-w-4 flex-1 bg-border md:block"
               />
             ) : null}
           </li>
@@ -132,8 +146,6 @@ export function NovaMovimentacao({
     [observacao, setObservacao] = useState("");
   const [busca, setBusca] = useState(""),
     [setorFiltro, setSetorFiltro] = useState(""),
-    [buscaSetor, setBuscaSetor] = useState(""),
-    [buscaComissao, setBuscaComissao] = useState(""),
     [destinoTodos, setDestinoTodos] = useState("");
   const [erro, setErro] = useState<unknown>(null),
     [errosCampos, setErrosCampos] = useState<ErroCampo[]>([]),
@@ -147,6 +159,7 @@ export function NovaMovimentacao({
     );
 
   const painelErro = useRef<HTMLDivElement>(null),
+    camposFormulario = useRef<HTMLFieldSetElement>(null),
     tituloEtapa = useRef<HTMLHeadingElement>(null);
   const chaveStorage = `sipat.movimentacao.pendente.${usuarioId}${
     modoDetalhe && patrimonioInicial ? `.${patrimonioInicial.id}` : ""
@@ -166,8 +179,8 @@ export function NovaMovimentacao({
     onPendingChange?.(criacao.pending);
   }, [criacao.pending, onPendingChange]);
   useEffect(() => {
-    if (erro || errosCampos.length || desconhecido) painelErro.current?.focus();
-  }, [erro, errosCampos, desconhecido]);
+    if (erro || desconhecido) painelErro.current?.focus();
+  }, [erro, desconhecido]);
   function irEtapa(valor: number) {
     setEtapa(valor);
     setErro(null);
@@ -229,6 +242,13 @@ export function NovaMovimentacao({
           mensagem: issue.message,
         })),
       );
+      requestAnimationFrame(() => {
+        const campo = camposFormulario.current?.querySelector<HTMLElement>(
+          '[aria-invalid="true"]',
+        );
+        campo?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+        campo?.focus();
+      });
       return;
     }
     irEtapa(3);
@@ -313,35 +333,39 @@ export function NovaMovimentacao({
       .map((e) => e.mensagem)
       .join(" ");
   }
+  function limparErroCampo(campo: string) {
+    setErrosCampos((atuais) => atuais.filter((erro) => erro.campo !== campo));
+  }
   const desabilitado =
     criacao.pending ||
     desconhecido ||
     decisaoIdempotencia?.tipo === "ja_processada";
   if (resultado && !modoDetalhe)
     return (
-      <main className="grid min-w-0 gap-6 bg-[#f7f9fc] p-4 sm:p-6 lg:p-7">
+      <main className="grid min-w-0 gap-6 bg-background p-4 sm:p-6 lg:p-7">
+        <PageHeader
+          title={
+            <span ref={tituloEtapa} tabIndex={-1}>
+              Movimentação confirmada
+            </span>
+          }
+          description="As transferências foram registradas com sucesso."
+        />
         <section className={painelMovimentacao}>
           <span className="mb-4 grid size-11 place-items-center rounded-full bg-emerald-50 text-emerald-700">
             <Check aria-hidden="true" className="size-6" />
           </span>
-          <h1
-            ref={tituloEtapa}
-            tabIndex={-1}
-            className="text-2xl font-bold text-[#19355d]"
-          >
-            Movimentação confirmada
-          </h1>
           <p role="status" className="mt-3">
             {resultado.dados.length} transferência(s) registrada(s) em{" "}
             {formatarDataMovimentacao(resultado.dados[0]!.dataTransferencia)}{" "}
             (São Paulo).
           </p>
-          <ul className="my-5 grid divide-y divide-[#e4eaf2] rounded-lg border border-[#dce4ef]">
+          <ul className="my-5 grid divide-y divide-border rounded-lg border border-border">
             {resultado.dados.map((item) => (
               <li key={item.id} className="flex flex-wrap gap-x-3 gap-y-1 p-4">
                 <Link
                   prefetch={false}
-                  className="text-[#19355d] underline"
+                  className="text-interactive underline"
                   href={`/movimentacoes/${item.id}`}
                 >
                   Ver transferência do patrimônio{" "}
@@ -350,7 +374,7 @@ export function NovaMovimentacao({
                 {" · "}
                 <Link
                   prefetch={false}
-                  className="text-[#19355d] underline"
+                  className="text-interactive underline"
                   href={`/patrimonios/${item.patrimonio.id}?aba=historico`}
                 >
                   Ver histórico atualizado
@@ -358,7 +382,7 @@ export function NovaMovimentacao({
               </li>
             ))}
           </ul>
-          <Button asChild className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]">
+          <Button asChild className="h-10 px-5">
             <Link prefetch={false} href="/movimentacoes">
               Consultar movimentações
             </Link>
@@ -383,40 +407,36 @@ export function NovaMovimentacao({
     <Conteiner
       className={
         modoDetalhe
-          ? "grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-6"
-          : "grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7"
+          ? "grid min-w-0 gap-5 p-4 text-foreground sm:p-6"
+          : "grid min-w-0 gap-5 bg-background p-4 text-foreground sm:p-6 lg:p-7"
       }
     >
       {!modoDetalhe ? (
-        <header className="grid gap-5">
-          <Link
-            prefetch={false}
-            href="/movimentacoes"
-            className="flex w-fit items-center gap-1 text-sm font-medium text-[#526580] hover:text-[#173d6b]"
-          >
-            <ArrowLeft size={15} aria-hidden="true" />
-            Voltar às movimentações
-          </Link>
-          <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.9fr)]">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Nova movimentação
-              </h1>
-              <p className="mt-1 text-sm text-[#526580]">
-                {
-                  [
-                    "Selecione os bens que serão transferidos.",
-                    "Defina o destino de cada bem e os dados da movimentação.",
-                    "Confira os dados antes de registrar as transferências.",
-                  ][etapa - 1]
-                }
-              </p>
-            </div>
+        <div className="grid gap-5">
+          <PageHeader
+            title="Nova movimentação"
+            description={
+              [
+                "Selecione os bens que serão transferidos.",
+                "Defina o destino de cada bem e os dados da movimentação.",
+                "Confira os dados antes de registrar as transferências.",
+              ][etapa - 1]
+            }
+            actions={
+              <Button asChild variant="outline">
+                <Link prefetch={false} href="/movimentacoes">
+                  <ArrowLeft size={15} aria-hidden="true" />
+                  Voltar às movimentações
+                </Link>
+              </Button>
+            }
+          />
+          <div className="rounded-lg border border-border bg-card px-4 py-4 sm:px-6">
             <EtapasMovimentacao etapa={etapa} />
           </div>
-        </header>
+        </div>
       ) : null}
-      {erro || errosCampos.length || desconhecido ? (
+      {erro || desconhecido ? (
         <div
           ref={painelErro}
           tabIndex={-1}
@@ -439,50 +459,34 @@ export function NovaMovimentacao({
             />
           ) : null}
           {desconhecido && !decisaoIdempotencia ? (
-            <section
-              role="alert"
-              className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
-            >
-              <h2 className="font-bold">Resultado ainda não confirmado</h2>
-              <p className="my-2">
-                {restaurado ? "Há uma confirmação anterior a recuperar. " : ""}A
-                resposta pode ter sido perdida após a gravação. Recupere o
-                resultado com o mesmo pedido antes de iniciar outra
-                movimentação.
-              </p>
-              <Button
-                type="button"
-                disabled={criacao.pending}
-                onClick={() => void confirmar()}
-              >
-                {criacao.pending ? "Recuperando…" : "Recuperar confirmação"}
-              </Button>
-            </section>
-          ) : null}
-          {errosCampos.length ? (
-            <section
-              role="alert"
-              className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
-            >
-              <h2 className="font-bold">Revise os campos indicados</h2>
-              <ul className="mt-2 list-disc pl-5">
-                {errosCampos.map((e, i) => (
-                  <li key={`${e.campo}:${i}`}>
-                    {e.campo.startsWith("itens.")
-                      ? `Item ${Number(e.campo.split(".")[1]) + 1}: `
-                      : ""}
-                    {e.mensagem}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <Alert>
+              <AlertTitle>Resultado ainda não confirmado</AlertTitle>
+              <AlertDescription>
+                <p>
+                  {restaurado
+                    ? "Há uma confirmação anterior a recuperar. "
+                    : ""}
+                  A resposta pode ter sido perdida após a gravação. Recupere o
+                  resultado com o mesmo pedido antes de iniciar outra
+                  movimentação.
+                </p>
+                <Button
+                  type="button"
+                  disabled={criacao.pending}
+                  onClick={() => void confirmar()}
+                >
+                  {criacao.pending ? "Recuperando…" : "Recuperar confirmação"}
+                </Button>
+              </AlertDescription>
+            </Alert>
           ) : null}
         </div>
       ) : null}
       {aviso ? (
-        <p role="status" className="rounded-md bg-blue-50 p-3 text-sm">
-          {aviso}
-        </p>
+        <Alert>
+          <AlertTitle>Confira a movimentação</AlertTitle>
+          <AlertDescription>{aviso}</AlertDescription>
+        </Alert>
       ) : null}
       <h2 ref={tituloEtapa} tabIndex={-1} className="sr-only">
         Etapa {etapa}:{" "}
@@ -493,6 +497,7 @@ export function NovaMovimentacao({
         }
       </h2>
       <fieldset
+        ref={camposFormulario}
         disabled={desabilitado}
         className="grid min-w-0 gap-5 disabled:opacity-70"
       >
@@ -507,20 +512,20 @@ export function NovaMovimentacao({
                 <h3 id="bens-movimentacao-title" className="font-bold">
                   Bens disponíveis para movimentação
                 </h3>
-                <p className="mt-1 text-xs text-[#526580]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Bens baixados, emprestados ou em manutenção não podem ser
                   selecionados.
                 </p>
               </div>
               <p
                 aria-live="polite"
-                className="text-sm font-semibold text-[#2860eb]"
+                className="text-sm font-semibold text-interactive"
               >
                 {selecionados.length} de 10 selecionados
               </p>
             </div>
             <form
-              className="mb-4 grid items-end gap-3 rounded-md bg-[#f7f9fc] p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(14rem,0.8fr)_auto]"
+              className="mb-4 grid items-end gap-3 rounded-lg bg-muted p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(14rem,0.8fr)_auto]"
               onSubmit={(e) => {
                 e.preventDefault();
                 void carregarBens({
@@ -530,36 +535,35 @@ export function NovaMovimentacao({
                 });
               }}
             >
-              <label className="grid min-w-0 flex-1 gap-2 text-sm">
-                Buscar patrimônios
-                <input
-                  type="search"
-                  className={campoMovimentacao}
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  maxLength={200}
-                  placeholder="Número patrimonial ou descrição"
-                />
-              </label>
-              <label className="grid min-w-0 gap-2 text-sm">
-                Setor atual
-                <select
-                  className={campoMovimentacao}
-                  value={setorFiltro}
-                  onChange={(e) => setSetorFiltro(e.target.value)}
-                >
-                  <option value="">Todos os setores</option>
-                  {(setores.dados?.dados ?? []).map((setor) => (
-                    <option key={setor.id} value={setor.id}>
-                      {setor.nome}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <TextField
+                id="buscaPatrimonioMovimentacao"
+                label="Buscar patrimônios"
+                type="search"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                maxLength={200}
+                placeholder="Número patrimonial ou descrição"
+              />
+              <ComboboxField
+                id="setorAtualMovimentacao"
+                label="Setor atual"
+                value={setorFiltro}
+                onValueChange={setSetorFiltro}
+                options={[
+                  { value: "", label: "Todos os setores" },
+                  ...(setores.dados?.dados ?? []).map((setor) => ({
+                    value: setor.id,
+                    label: setor.nome,
+                  })),
+                ]}
+                loading={setores.loading}
+                placeholder="Todos os setores"
+                searchPlaceholder="Buscar setor…"
+              />
               <Button
                 type="submit"
                 disabled={bens.loading}
-                className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+                className="h-10 gap-2 px-5"
               >
                 <Search aria-hidden="true" className="size-4" />
                 Pesquisar bens
@@ -570,87 +574,80 @@ export function NovaMovimentacao({
             ) : bens.erro ? (
               <ErroMovimentacao erro={bens.erro} />
             ) : bens.dados?.dados.length ? (
-              <div
-                className="overflow-x-auto"
-                role="region"
-                aria-label="Patrimônios disponíveis para seleção"
-                tabIndex={0}
+              <Table
+                containerProps={{
+                  role: "region",
+                  "aria-label": "Patrimônios disponíveis para seleção",
+                  tabIndex: 0,
+                }}
               >
-                <table className="w-full text-left text-sm">
-                  <caption className="sr-only">
-                    Patrimônios disponíveis para seleção
-                  </caption>
-                  <thead className="bg-[#f7f9fc] text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
-                    <tr>
-                      {[
-                        "Selecionar",
-                        "Patrimônio / bem",
-                        "Setor atual",
-                        "Responsável do setor",
-                        "Situação",
-                      ].map((texto) => (
-                        <th className="px-3 py-3" key={texto} scope="col">
-                          {texto}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bens.dados.dados.map((bem) => {
-                      const checked = selecionados.some(
-                        (item) => item.bem.id === bem.id,
-                      );
-                      const bloqueado = bem.status !== "ATIVO";
-                      return (
-                        <tr key={bem.id} className="border-b border-[#e4eaf2]">
-                          <td className="px-3 py-4">
-                            <input
-                              type="checkbox"
-                              aria-label={`Selecionar patrimônio ${bem.numeroPatrimonio}`}
-                              checked={checked}
-                              disabled={
-                                bloqueado ||
-                                (!checked && selecionados.length >= 10)
-                              }
-                              onChange={() => alternar(bem)}
-                              className="size-4 accent-[#2860eb]"
-                            />
-                          </td>
-                          <td className="max-w-sm px-3 py-4 wrap-anywhere">
-                            <span className="text-xs text-[#526580]">
-                              {bem.numeroPatrimonio}
-                            </span>
-                            <p className="font-semibold">{bem.descricao}</p>
-                          </td>
-                          <td className="px-3 py-4 align-top">
-                            {bem.setorAtual.nome}
-                          </td>
-                          <td className="px-3 py-4 align-top text-[#526580]">
-                            {bem.setorAtual.responsavel.nome}
-                          </td>
-                          <td className="px-3 py-4">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${
-                                bloqueado
-                                  ? "bg-amber-50 text-amber-900"
-                                  : "bg-emerald-50 text-emerald-800"
-                              }`}
-                            >
-                              {bem.status === "ATIVO"
-                                ? "Ativo"
-                                : bem.status === "EM_MANUTENCAO"
-                                  ? "Em manutenção — indisponível"
-                                  : bem.status === "EMPRESTADO"
-                                    ? "Emprestado — indisponível"
-                                    : "Baixado — indisponível"}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                <TableCaption className="sr-only">
+                  Patrimônios disponíveis para seleção
+                </TableCaption>
+                <TableHeader className="bg-muted text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  <TableRow>
+                    {[
+                      "Selecionar",
+                      "Patrimônio / bem",
+                      "Setor atual",
+                      "Responsável do setor",
+                      "Situação",
+                    ].map((texto) => (
+                      <TableHead className="px-3 py-3" key={texto} scope="col">
+                        {texto}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bens.dados.dados.map((bem) => {
+                    const checked = selecionados.some(
+                      (item) => item.bem.id === bem.id,
+                    );
+                    const bloqueado = bem.status !== "ATIVO";
+                    return (
+                      <TableRow key={bem.id}>
+                        <TableCell className="px-3 py-4">
+                          <Checkbox
+                            aria-label={`Selecionar patrimônio ${bem.numeroPatrimonio}`}
+                            checked={checked}
+                            disabled={
+                              bloqueado ||
+                              (!checked && selecionados.length >= 10)
+                            }
+                            onCheckedChange={() => alternar(bem)}
+                          />
+                        </TableCell>
+                        <TableCell className="max-w-sm px-3 py-4 whitespace-normal wrap-anywhere">
+                          <span className="text-xs text-muted-foreground">
+                            {bem.numeroPatrimonio}
+                          </span>
+                          <p className="font-semibold">{bem.descricao}</p>
+                        </TableCell>
+                        <TableCell className="px-3 py-4 align-top">
+                          {bem.setorAtual.nome}
+                        </TableCell>
+                        <TableCell className="px-3 py-4 align-top text-muted-foreground">
+                          {bem.setorAtual.responsavel.nome}
+                        </TableCell>
+                        <TableCell className="px-3 py-4">
+                          <Badge
+                            variant={bloqueado ? "destructive" : "outline"}
+                          >
+                            {bem.status === "ATIVO"
+                              ? "Ativo"
+                              : bem.status === "EM_MANUTENCAO"
+                                ? "Em manutenção — indisponível"
+                                : bem.status === "EMPRESTADO"
+                                  ? "Emprestado — indisponível"
+                                  : "Baixado — indisponível"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             ) : (
               <p className="py-10 text-center text-sm">
                 Nenhum patrimônio encontrado.
@@ -730,7 +727,7 @@ export function NovaMovimentacao({
               {!modoDetalhe ? (
                 <div>
                   <h3 className="font-bold">Dados da movimentação</h3>
-                  <p className="mt-1 text-xs text-[#526580]">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Estes dados serão usados em todas as transferências.
                   </p>
                 </div>
@@ -745,204 +742,88 @@ export function NovaMovimentacao({
                 {!modoDetalhe ? (
                   <div className="grid min-w-0 content-start gap-2 text-sm">
                     <span className="font-medium">Data e horário</span>
-                    <div
-                      className={`${campoMovimentacao} flex items-center gap-2 bg-[#f7f9fc] text-[#526580]`}
-                    >
+                    <div className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
                       <Clock3 aria-hidden="true" className="size-4 shrink-0" />
                       Registrados na confirmação
                     </div>
                   </div>
                 ) : null}
                 <div className="grid min-w-0 gap-2">
-                  <label className="grid gap-2 text-sm">
-                    Comissão vigente
-                    <select
-                      className={campoMovimentacao}
-                      value={comissao?.id ?? ""}
-                      aria-invalid={!!campoErro("comissaoId")}
-                      aria-describedby="erro-comissao"
-                      onChange={(e) =>
-                        setComissao(
-                          opcoesComissoes.find(
-                            (c) => c.id === e.target.value,
-                          ) ?? null,
-                        )
-                      }
-                    >
-                      <option value="">Selecione a comissão</option>
-                      {opcoesComissoes.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <p id="erro-comissao" className="text-sm text-red-800">
-                    {campoErro("comissaoId")}
-                  </p>
-                  <details
-                    open={modoDetalhe || undefined}
-                    className={
-                      modoDetalhe
-                        ? "contents"
-                        : "rounded-md border border-[#e4eaf2] bg-[#f7f9fc] p-2 text-xs"
+                  <ComboboxField
+                    id="comissaoMovimentacao"
+                    label="Comissão vigente"
+                    value={comissao?.id ?? ""}
+                    error={campoErro("comissaoId") || undefined}
+                    onValueChange={(value) => {
+                      limparErroCampo("comissaoId");
+                      setComissao(
+                        opcoesComissoes.find((c) => c.id === value) ?? null,
+                      );
+                    }}
+                    onSearchChange={(busca) =>
+                      void carregarComissoes({
+                        contexto: "REGISTRO",
+                        busca: busca.trim() || undefined,
+                      })
                     }
-                  >
-                    <summary
-                      className={
-                        modoDetalhe
-                          ? "hidden"
-                          : "cursor-pointer font-semibold text-[#31577f]"
-                      }
-                    >
-                      Localizar outra comissão vigente
-                    </summary>
-                    <div
-                      className={modoDetalhe ? "grid gap-2" : "mt-3 grid gap-2"}
-                    >
-                      <label className="text-xs">
-                        Buscar comissão vigente
-                        <input
-                          className={campoMovimentacao}
-                          value={buscaComissao}
-                          maxLength={200}
-                          onChange={(e) => setBuscaComissao(e.target.value)}
-                        />
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={comissoes.loading}
-                          onClick={() =>
-                            void carregarComissoes({
-                              contexto: "REGISTRO",
-                              busca: buscaComissao.trim() || undefined,
-                            })
-                          }
-                        >
-                          Buscar comissões
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={
-                            comissoes.loading ||
-                            !comissoes.dados ||
-                            comissoes.dados.meta.pagina <= 1
-                          }
-                          onClick={() =>
-                            void carregarComissoes({
-                              contexto: "REGISTRO",
-                              busca: buscaComissao.trim() || undefined,
-                              pagina: String(comissoes.dados!.meta.pagina - 1),
-                            })
-                          }
-                        >
-                          Comissões anteriores
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={
-                            comissoes.loading ||
-                            !comissoes.dados ||
-                            comissoes.dados.meta.pagina >=
-                              comissoes.dados.meta.ultimaPagina
-                          }
-                          onClick={() =>
-                            void carregarComissoes({
-                              contexto: "REGISTRO",
-                              busca: buscaComissao.trim() || undefined,
-                              pagina: String(comissoes.dados!.meta.pagina + 1),
-                            })
-                          }
-                        >
-                          Mais comissões
-                        </Button>
-                      </div>
-                      {comissoes.loading ? (
-                        <p role="status">Carregando comissões…</p>
-                      ) : comissoes.erro ? (
-                        <ErroMovimentacao erro={comissoes.erro} />
-                      ) : !comissoes.dados?.dados.length ? (
-                        <p className="text-sm">
-                          Nenhuma comissão vigente encontrada.
-                        </p>
-                      ) : null}
-                    </div>
-                  </details>
-                </div>
-                <label className="grid min-w-0 content-start gap-2 text-sm">
-                  Motivo da movimentação *
-                  <textarea
-                    className={`${campoMovimentacao} min-h-32 min-w-0`}
-                    maxLength={2000}
-                    value={observacao}
-                    aria-invalid={!!campoErro("observacao")}
-                    aria-describedby="erro-observacao"
-                    onChange={(e) => setObservacao(e.target.value)}
+                    options={opcoesComissoes.map((item) => ({
+                      value: item.id,
+                      label: item.nome,
+                    }))}
+                    loading={comissoes.loading}
+                    placeholder="Selecione a comissão"
+                    searchPlaceholder="Buscar comissão…"
                   />
-                  <span id="erro-observacao" className="text-red-800">
-                    {campoErro("observacao")}
-                  </span>
-                  {modoDetalhe ? (
-                    <span className="text-xs text-[#526580]">
-                      Comissão e motivo serão usados em todas as transferências
-                      desta confirmação.
-                    </span>
-                  ) : null}
-                </label>
+                </div>
+                <TextareaField
+                  id="motivoMovimentacao"
+                  label="Motivo da movimentação"
+                  required
+                  className="min-h-32 min-w-0"
+                  maxLength={2000}
+                  value={observacao}
+                  error={campoErro("observacao") || undefined}
+                  description={
+                    modoDetalhe
+                      ? "Comissão e motivo serão usados em todas as transferências desta confirmação."
+                      : undefined
+                  }
+                  onChange={(e) => {
+                    limparErroCampo("observacao");
+                    setObservacao(e.target.value);
+                  }}
+                />
               </div>
             </section>
             <section className={painelMovimentacao}>
               <h3 className="font-bold">Destino por patrimônio</h3>
-              <p className="mt-1 text-xs text-[#526580]">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Cada bem pode ter um destino diferente. O responsável atual é
                 informado pelo setor.
               </p>
-              <div className="my-4 grid gap-3 lg:grid-cols-2">
-                <div className="flex flex-wrap items-end gap-2">
-                  <label className="grid min-w-0 flex-1 gap-2 text-sm">
-                    Buscar setores de destino
-                    <input
-                      className={campoMovimentacao}
-                      value={buscaSetor}
-                      maxLength={200}
-                      onChange={(e) => setBuscaSetor(e.target.value)}
-                    />
-                  </label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={setores.loading}
-                    onClick={() =>
-                      void carregarSetores({
-                        contexto: "REGISTRO",
-                        busca: buscaSetor.trim() || undefined,
-                      })
-                    }
-                  >
-                    Buscar setores
-                  </Button>
-                </div>
+              <div className="my-4 grid gap-3">
                 {!modoDetalhe ? (
                   <div className="flex flex-wrap items-end gap-2">
-                    <label className="grid min-w-0 flex-1 gap-2 text-sm">
-                      Destino para todos
-                      <select
-                        className={campoMovimentacao}
-                        value={destinoTodos}
-                        onChange={(e) => setDestinoTodos(e.target.value)}
-                      >
-                        <option value="">Selecione um destino</option>
-                        {opcoesSetores.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.nome}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <ComboboxField
+                      id="destinoTodosMovimentacao"
+                      label="Destino para todos"
+                      fieldClassName="min-w-0 flex-1"
+                      value={destinoTodos}
+                      onValueChange={setDestinoTodos}
+                      onSearchChange={(busca) =>
+                        void carregarSetores({
+                          contexto: "REGISTRO",
+                          busca: busca.trim() || undefined,
+                        })
+                      }
+                      options={opcoesSetores.map((item) => ({
+                        value: item.id,
+                        label: item.nome,
+                      }))}
+                      loading={setores.loading}
+                      placeholder="Selecione um destino"
+                      searchPlaceholder="Buscar setor…"
+                    />
                     <Button
                       type="button"
                       variant="outline"
@@ -954,44 +835,6 @@ export function NovaMovimentacao({
                   </div>
                 ) : null}
               </div>
-              <div className="mb-3 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={
-                    setores.loading ||
-                    !setores.dados ||
-                    setores.dados.meta.pagina <= 1
-                  }
-                  onClick={() =>
-                    void carregarSetores({
-                      contexto: "REGISTRO",
-                      busca: buscaSetor.trim() || undefined,
-                      pagina: String(setores.dados!.meta.pagina - 1),
-                    })
-                  }
-                >
-                  Setores anteriores
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={
-                    setores.loading ||
-                    !setores.dados ||
-                    setores.dados.meta.pagina >= setores.dados.meta.ultimaPagina
-                  }
-                  onClick={() =>
-                    void carregarSetores({
-                      contexto: "REGISTRO",
-                      busca: buscaSetor.trim() || undefined,
-                      pagina: String(setores.dados!.meta.pagina + 1),
-                    })
-                  }
-                >
-                  Mais setores
-                </Button>
-              </div>
               {setores.loading ? (
                 <p role="status">Carregando setores…</p>
               ) : setores.erro ? (
@@ -999,14 +842,14 @@ export function NovaMovimentacao({
               ) : !setores.dados?.dados.length ? (
                 <p>Nenhum setor ativo encontrado.</p>
               ) : null}
-              <div className="grid divide-y divide-[#dce4ef]">
+              <div className="grid divide-y divide-border">
                 {selecionados.map((item, i) => (
                   <article
                     key={item.bem.id}
                     className="grid min-w-0 gap-3 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
                   >
                     <div className="min-w-0 wrap-anywhere">
-                      <p className="text-xs text-[#526580]">
+                      <p className="text-xs text-muted-foreground">
                         {item.bem.numeroPatrimonio}
                       </p>
                       <h4 className="text-sm font-semibold">
@@ -1023,41 +866,39 @@ export function NovaMovimentacao({
                       ) : null}
                     </div>
                     <div className="grid min-w-0 gap-2">
-                      <label className="grid gap-2 text-sm">
-                        Destino do patrimônio {item.bem.numeroPatrimonio}
-                        <select
-                          className={campoMovimentacao}
-                          value={item.destino?.id ?? ""}
-                          aria-invalid={
-                            !!campoErro(`itens.${i}.setorDestinoId`)
-                          }
-                          aria-describedby={`erro-destino-${i}`}
-                          onChange={(e) =>
-                            destinoItem(item.bem.id, e.target.value)
-                          }
-                        >
-                          <option value="">Selecione o setor</option>
-                          {opcoesSetores
-                            .filter(
-                              (s) => s.ativo && s.id !== item.bem.setorAtual.id,
-                            )
-                            .map((s) => (
-                              <option value={s.id} key={s.id}>
-                                {s.nome}
-                              </option>
-                            ))}
-                        </select>
-                      </label>
-                      <p className="text-xs text-[#526580]">
+                      <ComboboxField
+                        id={`destinoMovimentacao-${item.bem.id}`}
+                        label={`Destino do patrimônio ${item.bem.numeroPatrimonio}`}
+                        value={item.destino?.id ?? ""}
+                        error={
+                          campoErro(`itens.${i}.setorDestinoId`) || undefined
+                        }
+                        onValueChange={(value) => {
+                          limparErroCampo(`itens.${i}.setorDestinoId`);
+                          destinoItem(item.bem.id, value);
+                        }}
+                        onSearchChange={(busca) =>
+                          void carregarSetores({
+                            contexto: "REGISTRO",
+                            busca: busca.trim() || undefined,
+                          })
+                        }
+                        options={opcoesSetores
+                          .filter(
+                            (s) => s.ativo && s.id !== item.bem.setorAtual.id,
+                          )
+                          .map((item) => ({
+                            value: item.id,
+                            label: item.nome,
+                          }))}
+                        loading={setores.loading}
+                        placeholder="Selecione o setor"
+                        searchPlaceholder="Buscar setor…"
+                      />
+                      <p className="text-xs text-muted-foreground">
                         Responsável atual:{" "}
                         {item.destino?.responsavelAtual.nome ??
                           "Definido pelo destino"}
-                      </p>
-                      <p
-                        id={`erro-destino-${i}`}
-                        className="text-sm text-red-800"
-                      >
-                        {campoErro(`itens.${i}.setorDestinoId`)}
                       </p>
                     </div>
                     {!modoDetalhe ? (
@@ -1086,17 +927,17 @@ export function NovaMovimentacao({
             <h3 className="font-bold">Revise antes de confirmar</h3>
             <dl className="my-4 grid gap-3 text-sm">
               <div>
-                <dt className="text-[#526580]">Comissão</dt>
+                <dt className="text-muted-foreground">Comissão</dt>
                 <dd className="font-semibold">{comissao?.nome}</dd>
               </div>
               <div>
-                <dt className="text-[#526580]">Motivo</dt>
+                <dt className="text-muted-foreground">Motivo</dt>
                 <dd className="whitespace-pre-wrap wrap-anywhere">
                   {observacao.trim()}
                 </dd>
               </div>
             </dl>
-            <ul className="grid divide-y divide-[#dce4ef]">
+            <ul className="grid divide-y divide-border">
               {selecionados.map((item, i) => (
                 <li key={item.bem.id} className="grid gap-2 py-4 text-sm">
                   <p className="font-semibold">
@@ -1130,10 +971,10 @@ export function NovaMovimentacao({
                 </li>
               ))}
             </ul>
-            <div className="mt-4 rounded-md bg-[#edf4fd] p-4 text-sm leading-relaxed">
+            <div className="mt-4 rounded-md bg-accent p-4 text-sm leading-relaxed">
               <p>
-                Data e horário serão definidos pelo servidor ao confirmar, com
-                exibição em São Paulo.
+                Data e horário serão definidos na confirmação, com exibição em
+                São Paulo.
               </p>
               <p className="mt-1 font-semibold">
                 Se qualquer item estiver impedido, nenhuma transferência desta
@@ -1147,7 +988,7 @@ export function NovaMovimentacao({
               <h3 className="font-bold">Dados da movimentação</h3>
               <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2 xl:grid-cols-4">
                 <div>
-                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                  <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     Data e horário
                   </dt>
                   <dd className="mt-1 font-semibold">
@@ -1155,13 +996,13 @@ export function NovaMovimentacao({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                  <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     Comissão
                   </dt>
                   <dd className="mt-1 font-semibold">{comissao?.nome}</dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                  <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     Registrado por
                   </dt>
                   <dd className="mt-1 font-semibold">
@@ -1169,15 +1010,15 @@ export function NovaMovimentacao({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                  <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     Bens selecionados
                   </dt>
-                  <dd className="mt-1 text-lg font-bold text-[#2860eb]">
+                  <dd className="mt-1 text-lg font-bold text-interactive">
                     {selecionados.length}
                   </dd>
                 </div>
                 <div className="sm:col-span-2 xl:col-span-4">
-                  <dt className="text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                  <dt className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     Motivo
                   </dt>
                   <dd className="mt-1 whitespace-pre-wrap wrap-anywhere">
@@ -1195,11 +1036,11 @@ export function NovaMovimentacao({
                   <h3 id="conferir-transferencias-title" className="font-bold">
                     Confira as transferências
                   </h3>
-                  <p className="mt-1 text-xs text-[#526580]">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Cada patrimônio produzirá um registro individual.
                   </p>
                 </div>
-                <p className="text-xs text-[#526580]">
+                <p className="text-xs text-muted-foreground">
                   {selecionados.length} bem(ns)
                 </p>
               </div>
@@ -1210,20 +1051,20 @@ export function NovaMovimentacao({
                 tabIndex={0}
               >
                 <div className="min-w-[44rem]">
-                  <div className="grid grid-cols-[1.2fr_1fr_auto_1fr] gap-4 bg-[#f7f9fc] px-3 py-3 text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
+                  <div className="grid grid-cols-[1.2fr_1fr_auto_1fr] gap-4 bg-muted px-3 py-3 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     <span>Patrimônio / bem</span>
                     <span>Origem</span>
                     <span aria-hidden="true" />
                     <span>Destino</span>
                   </div>
-                  <ul className="grid divide-y divide-[#dce4ef]">
+                  <ul className="grid divide-y divide-border">
                     {selecionados.map((item, i) => (
                       <li
                         key={item.bem.id}
                         className="grid grid-cols-[1.2fr_1fr_auto_1fr] items-center gap-4 px-3 py-4 text-sm"
                       >
                         <div className="min-w-0 wrap-anywhere">
-                          <p className="text-xs text-[#526580]">
+                          <p className="text-xs text-muted-foreground">
                             {item.bem.numeroPatrimonio}
                           </p>
                           <p className="font-semibold">{item.bem.descricao}</p>
@@ -1232,17 +1073,17 @@ export function NovaMovimentacao({
                           <p className="font-semibold">
                             {item.bem.setorAtual.nome}
                           </p>
-                          <p className="text-xs text-[#526580]">
+                          <p className="text-xs text-muted-foreground">
                             {item.bem.setorAtual.responsavel.nome}
                           </p>
                         </div>
                         <ArrowRight
                           aria-hidden="true"
-                          className="size-4 text-[#2860eb]"
+                          className="size-4 text-interactive"
                         />
                         <div className="min-w-0 wrap-anywhere">
                           <p className="font-semibold">{item.destino?.nome}</p>
-                          <p className="text-xs text-[#526580]">
+                          <p className="text-xs text-muted-foreground">
                             {item.destino?.responsavelAtual.nome}
                           </p>
                         </div>
@@ -1277,21 +1118,21 @@ export function NovaMovimentacao({
                   </ul>
                 </div>
               </div>
-              <div className="mt-4 flex gap-3 rounded-md bg-[#edf4fd] p-4 text-sm leading-relaxed text-[#31577f]">
+              <div className="mt-4 flex gap-3 rounded-md bg-accent p-4 text-sm leading-relaxed text-brand-support">
                 <ArrowLeftRight
                   aria-hidden="true"
                   className="mt-0.5 size-4 shrink-0"
                 />
                 <p>
-                  O servidor define o instante da confirmação. Se qualquer item
-                  estiver impedido, nenhuma transferência será gravada.
+                  O instante é definido na confirmação. Se qualquer item estiver
+                  impedido, nenhuma transferência será gravada.
                 </p>
               </div>
             </section>
           </div>
         ) : null}
       </fieldset>
-      <footer
+      <div
         className={`${painelMovimentacao} flex flex-wrap items-center justify-between gap-3 !p-3`}
       >
         <div className="flex flex-wrap gap-2">
@@ -1326,7 +1167,7 @@ export function NovaMovimentacao({
         {etapa === 1 ? (
           <Button
             type="button"
-            className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+            className="h-10 px-5"
             disabled={!selecionados.length || desabilitado}
             onClick={() => irEtapa(2)}
           >
@@ -1336,7 +1177,7 @@ export function NovaMovimentacao({
         ) : etapa === 2 ? (
           <Button
             type="button"
-            className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+            className="h-10 px-5"
             disabled={
               !selecionados.length ||
               selecionados.some((i) => i.bem.status !== "ATIVO") ||
@@ -1351,7 +1192,7 @@ export function NovaMovimentacao({
           <Button
             type="button"
             aria-label="Confirmar movimentação"
-            className="h-10 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+            className="h-10 px-5"
             disabled={
               desabilitado ||
               errosCampos.some((e) => e.codigo === "ORIGEM_ALTERADA")
@@ -1366,7 +1207,7 @@ export function NovaMovimentacao({
                 }`}
           </Button>
         )}
-      </footer>
+      </div>
     </Conteiner>
   );
 }

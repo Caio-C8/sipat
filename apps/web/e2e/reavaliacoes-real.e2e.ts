@@ -2,10 +2,12 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { selecionarOpcaoComponente } from "./support/form-controls";
 
 type Fixture = {
   token: string;
   comissaoId: string;
+  comissaoNome: string;
   bemId: string;
   numero: string;
   busca: string;
@@ -53,9 +55,11 @@ test.describe("reavaliação Web → API → PostgreSQL descartável", () => {
     await page.getByRole("button", { name: "Preencher parâmetros" }).click();
     const grupo = page.getByRole("group", { name: new RegExp(fixture.numero) });
     await expect(grupo).toBeVisible();
-    await page
-      .getByRole("combobox", { name: "Comissão vigente" })
-      .selectOption(fixture.comissaoId);
+    await selecionarOpcaoComponente(
+      page,
+      "Comissão vigente",
+      fixture.comissaoNome,
+    );
     await grupo
       .getByRole("textbox", { name: "Novo valor bruto (R$)" })
       .fill("1200");

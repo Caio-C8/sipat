@@ -7,6 +7,9 @@ import { PatrimonioDetalheView } from "./patrimonio-detalhe";
 
 vi.mock("./patrimonio-acoes", () => ({ PatrimonioAcoes: () => null }));
 vi.mock("./disponibilidade-uso", () => ({ DisponibilidadeUso: () => null }));
+vi.mock("./patrimonio-historico-filtros", () => ({
+  PatrimonioHistoricoFiltros: () => <div>Filtros do histórico</div>,
+}));
 
 afterEach(cleanup);
 

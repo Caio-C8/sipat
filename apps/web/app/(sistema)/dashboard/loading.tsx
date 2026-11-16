@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/shared/page-header";
+
 export default function DashboardLoading() {
   return (
     <main
@@ -5,7 +7,10 @@ export default function DashboardLoading() {
       aria-busy="true"
       aria-label="Carregando visão geral"
     >
-      <div className="h-12 w-full max-w-[360px] animate-pulse rounded-lg bg-muted motion-reduce:animate-none" />
+      <PageHeader
+        title="Visão geral"
+        description="Acompanhe o patrimônio da Câmara e veja o que precisa da sua atenção."
+      />
       <div className="grid grid-cols-1 gap-2 min-[361px]:grid-cols-2 min-[421px]:gap-3.5 min-[801px]:grid-cols-4 min-[1500px]:gap-[18px]">
         {Array.from({ length: 4 }, (_, index) => (
           <div

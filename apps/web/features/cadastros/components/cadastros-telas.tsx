@@ -6,6 +6,7 @@ import {
   SimpleQueryFilters,
   type SimpleQueryFilter,
 } from "@/components/shared/simple-query-filters";
+import { PageHeader } from "@/components/shared/page-header";
 export type SecaoCadastro = Exclude<SecaoAbas, "setores">;
 export const paginasCadastros = {
   processos: {
@@ -111,19 +112,19 @@ export function CadastrosTelas({
     }).toString();
   return (
     <main className={pagina}>
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold min-[1500px]:text-[27px]">
-            {somenteLeitura ? config.lista : config.titulo}
-          </h1>
-          <p className="mt-1 text-sm text-[#62748e]">{config.subtitulo}</p>
-        </div>
-        <span className="text-xs text-[#62748e]">
-          {somenteLeitura
-            ? "Consulta somente leitura"
-            : "* Campos obrigatórios"}
-        </span>
-      </header>
+      <PageHeader
+        title={somenteLeitura ? config.lista : config.titulo}
+        description={
+          <>
+            <span>{config.subtitulo}</span>{" "}
+            <span>
+              {somenteLeitura
+                ? "Consulta somente leitura"
+                : "Campos obrigatórios estão identificados com asterisco."}
+            </span>
+          </>
+        }
+      />
       <AbasCadastros secao={secao} mostrarFornecedores={mostrarFornecedores} />
       {salvo && (
         <p
@@ -184,9 +185,6 @@ export function CadastrosTelas({
         </aside>
         {children}
       </div>
-      <footer className="py-2 text-xs text-[#62748e]">
-        SIPAT · Organização dos dados patrimoniais
-      </footer>
     </main>
   );
 }

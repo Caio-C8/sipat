@@ -17,6 +17,7 @@ import {
   type ListarPatrimoniosResponse,
   type SubstituirNumeroPatrimonialResponse,
   type ConfirmarDisponibilidadeUsoResponse,
+  type ConsultarPreviaNumeracaoPatrimonialResponse,
 } from "@repo/contracts";
 import { ZodSerializerDto } from "nestjs-zod";
 import type { RequisicaoAutenticada } from "../auth/auth.types";
@@ -33,6 +34,7 @@ import {
   SubstituirNumeroPatrimonialResponseDto,
   ConfirmarDisponibilidadeUsoBodyDto,
   ConfirmarDisponibilidadeUsoResponseDto,
+  ConsultarPreviaNumeracaoPatrimonialResponseDto,
 } from "./dtos";
 import { PatrimonioResponseMapper } from "./mappers";
 import { PatrimoniosService } from "./patrimonios.service";
@@ -73,6 +75,19 @@ export class PatrimoniosController {
       sucesso: true,
       mensagem: "Resumo patrimonial consultado.",
       dados: await this.patrimoniosService.obterDashboard(),
+    };
+  }
+
+  @Get("numeracao/previa")
+  @Header("Cache-Control", "private, no-store")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(ConsultarPreviaNumeracaoPatrimonialResponseDto)
+  async consultarPreviaNumeracao(): Promise<ConsultarPreviaNumeracaoPatrimonialResponse> {
+    return {
+      status: HttpStatus.OK,
+      sucesso: true,
+      mensagem: "Prévia de numeração consultada com sucesso.",
+      dados: await this.patrimoniosService.consultarPreviaNumeracao(),
     };
   }
 

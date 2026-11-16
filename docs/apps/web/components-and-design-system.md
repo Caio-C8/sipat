@@ -45,6 +45,20 @@ sidebar e topbar. O layout e a topbar permanecem Server Components; sidebar
 móvel, breadcrumb dependente do pathname, notificações e menu do usuário são as
 fronteiras Client que possuem comportamento interativo.
 
+`PageHeader` é a única composição de cabeçalho principal das páginas
+autenticadas. Ele recebe título, descrição e ações opcionais por composição:
+texto à esquerda, ações à direita em telas amplas e reflow vertical em telas
+estreitas. Uma página sem ações não cria botão, placeholder ou contêiner vazio.
+Cabeçalhos de cards, seções, dialogs e drawers continuam locais, mas não repetem
+o `h1` ou as ações principais da página.
+
+`SystemFooter`, renderizado uma única vez pelo shell autenticado, é o único
+rodapé de página. Features não renderizam assinatura, nome da tela ou outro
+footer concorrente. `DialogFooter` e áreas de ações de formulários não são
+rodapés da página e permanecem permitidos quando semanticamente necessários.
+Essa consolidação foi executada pela extensão de
+[WEB-SHELL-002](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md).
+
 ### Componentes de feature
 
 `features/<dominio>/components` contém componentes que conhecem o vocabulário
@@ -88,6 +102,13 @@ As composições em `components/shared` cobrem campos, resumo focável de erros,
 filtros simples, paginação e inputs numéricos. Regras, contratos e operações
 continuam nas respectivas features.
 
+O tema claro centraliza a identidade visual nos tokens: primário `#1E3A5F`,
+azul profundo `#0F2644`, apoio `#2A4F7A`, dourado `#D4A017`, dourado claro
+`#F5C842`, interativo `#2563EB`, fundo `#F8FAFC`, superfície `#FFFFFF`, texto
+`#0F172A`, texto auxiliar `#64748B` e borda `#E2E8F0`. Controles interativos
+usam foco dourado de 3 px com afastamento de 2 px; estados continuam
+identificados também por texto, ícone ou semântica, e não somente pela cor.
+
 Não há composição de domínio no baseline. Ao iniciar as telas do SIPAT, remova
 primitives que não forem usadas ou mantenha-as somente quando fizerem parte
 conscientemente do kit visual do produto. A presença de uma primitive não
@@ -125,6 +146,11 @@ telas continua incremental para preservar o comportamento de cada vertical:
 
 O contrato executável está em
 [WEB-UI-001](../../tasks/WEB-UI-001-fundacao-visual-formularios.md).
+
+`WEB-PATRIMONIOS-002` aplicou esse padrão à pesquisa, ao cadastro, à ficha e
+aos quatro drawers patrimoniais: campos semânticos compartilhados, tabelas e
+cards sobre primitives, `Alert` persistente para correção, erro de campo junto
+ao controle e toast somente para confirmação não bloqueante.
 
 ## Composição
 

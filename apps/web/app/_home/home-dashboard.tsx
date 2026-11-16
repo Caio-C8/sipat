@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { IdentidadeAutenticada } from "@repo/contracts";
 import type { ResumoPatrimonialDashboard } from "@/features/patrimonios/api/patrimonio-operations";
+import { PageHeader } from "@/components/shared/page-header";
 
 type EstadoResumoPatrimonial =
   | Readonly<{ status: "sucesso"; dados: ResumoPatrimonialDashboard }>
@@ -188,21 +189,21 @@ export function HomeDashboard({
 
   return (
     <main className="mx-auto grid w-full max-w-[1900px] gap-3 px-4 py-4 text-[#17253d] min-[651px]:px-5 min-[651px]:pt-[15px] min-[651px]:pb-[17px] min-[1500px]:gap-[17px] min-[1500px]:px-[30px] min-[1500px]:pt-[22px] min-[1500px]:pb-[26px]">
-      <div className="flex flex-col items-start justify-between gap-4 min-[651px]:flex-row min-[651px]:items-center">
-        <div>
-          <h1 className="text-xl leading-tight font-bold text-[#111d34] min-[1500px]:text-[27px]">
-            Bem-vindo, {identidade.nome}!
-          </h1>
-          <p className="mt-0.5 text-[10px] leading-tight text-[#62748e] max-[1100px]:text-[11px] min-[1500px]:text-[13px]">
-            Acompanhe o patrimônio da Câmara e veja o que precisa da sua
-            atenção.
-          </p>
-        </div>
-        <span className="flex min-w-0 items-center gap-2.5 self-stretch rounded-md border border-[#dfe7f1] bg-white px-2.5 py-2 text-[10px] whitespace-nowrap text-[#3f587b] min-[361px]:min-w-[196px] min-[651px]:self-auto max-[1100px]:text-[11px] min-[1500px]:min-w-60 min-[1500px]:px-[13px] min-[1500px]:py-2.5 min-[1500px]:text-xs">
-          <CalendarDays size={16} aria-hidden="true" />
-          <time dateTime={data.iso}>{data.texto}</time>
-        </span>
-      </div>
+      <PageHeader
+        title={`Bem-vindo, ${identidade.nome}!`}
+        description={
+          <div className="grid gap-2">
+            <span>
+              Acompanhe o patrimônio da Câmara e veja o que precisa da sua
+              atenção.
+            </span>
+            <span className="flex min-w-0 items-center gap-2 text-xs text-[#3f587b]">
+              <CalendarDays size={16} aria-hidden="true" />
+              <time dateTime={data.iso}>{data.texto}</time>
+            </span>
+          </div>
+        }
+      />
 
       {resumoPatrimonial.status === "erro" ? (
         <div

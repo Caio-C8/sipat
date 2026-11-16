@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { Plus, Search } from "lucide-react";
 import { ListarUsuariosQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { AccessDenied } from "@/components/shared/access-denied";
 import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
@@ -58,25 +59,20 @@ export default async function UsuariosPage({
     `/usuarios?${new URLSearchParams({ ...valores, pagina: String(numero) }).toString()}`;
   return (
     <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-5 text-[#17253d] sm:px-7 sm:py-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-[#111d34] sm:text-3xl">
-            Usuários
-          </h1>
-          <p className="mt-1 text-sm text-[#7188a5]">
-            Defina quem pode acessar o sistema e quais operações estão
-            disponíveis.
-          </p>
-        </div>
-        <Button
-          asChild
-          className="min-h-10 bg-[#203b61] px-4 text-white hover:bg-[#31537f]"
-        >
-          <Link href="/usuarios/novo">
-            <Plus /> Cadastrar usuário
-          </Link>
-        </Button>
-      </header>
+      <PageHeader
+        title="Usuários"
+        description="Defina quem pode acessar o sistema e quais operações estão disponíveis."
+        actions={
+          <Button
+            asChild
+            className="min-h-10 bg-[#203b61] px-4 text-white hover:bg-[#31537f]"
+          >
+            <Link href="/usuarios/novo">
+              <Plus /> Cadastrar usuário
+            </Link>
+          </Button>
+        }
+      />
       <section className="rounded-lg border border-[#dfe7f1] bg-white p-5">
         <form className="grid gap-4 md:grid-cols-[minmax(220px,1fr)_minmax(180px,0.5fr)_minmax(160px,0.4fr)_auto] md:items-end">
           <label className="text-xs font-medium text-[#425875]">

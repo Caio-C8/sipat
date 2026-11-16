@@ -42,7 +42,7 @@ function DrawerContent({
       <DialogPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col overflow-hidden border-l border-[#dfe7f1] bg-white text-[#19355d] shadow-2xl duration-200 outline-none data-open:animate-in data-open:slide-in-from-right data-closed:animate-out data-closed:slide-out-to-right sm:w-[min(92vw,44rem)]",
+          "fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col overflow-hidden border-l border-border bg-card text-foreground shadow-2xl duration-200 outline-none data-open:animate-in data-open:slide-in-from-right data-closed:animate-out data-closed:slide-out-to-right sm:w-[min(92vw,44rem)]",
           className,
         )}
         onEscapeKeyDown={(event) => {
@@ -58,7 +58,7 @@ function DrawerContent({
         {children}
         <DialogPrimitive.Close
           data-slot="drawer-close"
-          className="absolute top-4 right-4 rounded-md p-2 text-[#526580] transition hover:bg-[#edf4fd] focus-visible:ring-2 focus-visible:ring-[#2863ec] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
+          className="absolute top-4 right-4 rounded-md p-2 text-muted-foreground transition hover:bg-accent focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30"
           disabled={closeDisabled}
         >
           <XIcon aria-hidden="true" className="size-5" />
@@ -74,7 +74,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="drawer-header"
       className={cn(
-        "shrink-0 border-b border-[#dfe7f1] px-5 py-5 pr-14 sm:px-7 sm:py-6 sm:pr-16",
+        "shrink-0 border-b border-border px-5 py-5 pr-14 sm:px-7 sm:py-6 sm:pr-16",
         className,
       )}
       {...props}
@@ -115,7 +115,7 @@ function DrawerDescription({
   return (
     <DialogPrimitive.Description
       data-slot="drawer-description"
-      className={cn("mt-2 text-sm leading-6 text-[#526580]", className)}
+      className={cn("mt-2 text-sm leading-6 text-muted-foreground", className)}
       {...props}
     />
   );

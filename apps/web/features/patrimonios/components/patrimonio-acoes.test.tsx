@@ -11,14 +11,25 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PatrimonioDetalhe } from "@repo/contracts";
 import { PatrimonioAcoes } from "./patrimonio-acoes";
 
-const refresh = vi.fn();
+const { refresh, substituirNumero } = vi.hoisted(() => ({
+  refresh: vi.fn(),
+  substituirNumero: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
 }));
 
 vi.mock("../api/browser-patrimonio-operations", () => ({
-  browserPatrimonioOperations: {},
+  browserPatrimonioOperations: { substituirNumero },
+}));
+
+vi.mock("../api/hooks", () => ({
+  usePreviaNumeracaoPatrimonio: () => ({
+    dados: { numeroOficial: "124", numeroSemOficial: "SP-10" },
+    loading: false,
+    carregar: vi.fn(async () => undefined),
+  }),
 }));
 
 vi.mock("@/features/movimentacoes/components/nova-movimentacao", () => ({
@@ -43,6 +54,8 @@ vi.mock("@/features/reavaliacoes/components/nova-reavaliacao", () => ({
 afterEach(() => {
   cleanup();
   refresh.mockClear();
+  substituirNumero.mockReset();
+  substituirNumero.mockResolvedValue({ dados: patrimonio });
 });
 
 const id = "5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab";
@@ -55,7 +68,7 @@ const patrimonio = {
   modelo: null,
   numeroSerie: "SERIE-1",
   status: "ATIVO",
-  depreciavel: false,
+  depreciavel: true,
   situacaoContabil: {
     valorBrutoAtual: "1000.0000000",
     depreciacaoAcumuladaAtual: "100.0000000",
@@ -89,7 +102,7 @@ const patrimonio = {
 
 describe("PatrimonioAcoes", () => {
   it("abre movimentação e reavaliação em drawers sem links para páginas gerais", async () => {
-    render(<PatrimonioAcoes patrimonio={patrimonio} usuarioId={id} />);
+    render(<PatrimonioAcoes patrimonio={patrimonio} usuarioId={id} diretor />);
 
     const movimentar = screen.getByRole("button", { name: "Movimentar" });
     const reavaliar = screen.getByRole("button", { name: "Reavaliar" });
@@ -122,5 +135,59 @@ describe("PatrimonioAcoes", () => {
       screen.getByRole("heading", { name: "Reavaliar patrimônio" }),
     ).toBeTruthy();
     expect(screen.getByText("Formulário de reavaliação")).toBeTruthy();
+  });
+
+  it("substitui o número em drawer e atualiza a ficha após sucesso", async () => {
+    render(<PatrimonioAcoes patrimonio={patrimonio} usuarioId={id} diretor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Substituir número" }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Substituir número patrimonial" }),
+    ).toBeTruthy();
+    expect(screen.getByText(/número atual 123/)).toBeTruthy();
+    expect(screen.getByText("124")).toBeTruthy();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Confirmar substituição" }),
+    );
+
+    await waitFor(() =>
+      expect(substituirNumero).toHaveBeenCalledWith(id, "123"),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it("mantém ações visíveis e desativadas quando o status não permite", () => {
+    render(
+      <PatrimonioAcoes
+        patrimonio={{ ...patrimonio, status: "EM_MANUTENCAO" }}
+        usuarioId={id}
+        diretor
+      />,
+    );
+
+    expect(
+      screen
+        .getByRole("button", { name: "Movimentar" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole("button", { name: "Registrar baixa" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole("button", { name: "Substituir número" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(
+      screen
+        .getByRole("button", { name: "Reavaliar" })
+        .hasAttribute("disabled"),
+    ).toBe(false);
+    expect(screen.getByText(/em manutenção/i)).toBeTruthy();
   });
 });

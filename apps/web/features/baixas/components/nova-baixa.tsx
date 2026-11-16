@@ -9,6 +9,7 @@ import type {
   PatrimonioResumo,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { BaixaFormulario } from "./baixa-formulario";
 
 export function NovaBaixa({
@@ -25,23 +26,23 @@ export function NovaBaixa({
     `/baixas/nova?${new URLSearchParams({ ...valores, pagina: String(pagina) }).toString()}`;
   return (
     <main className="mx-auto grid w-full max-w-[1900px] gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-[#2863ec]">
+      <PageHeader
+        title="Registrar baixa"
+        description={
+          <>
             Nova baixa · {etapa === "selecao" ? "Etapa 1 de 2" : "Etapa 2 de 2"}
-          </p>
-          <h1 className="mt-1 text-2xl font-bold">Registrar baixa</h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Selecione um único patrimônio ativo e confira todos os dados antes
-            da confirmação.
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="/baixas">
-            <ArrowLeft aria-hidden="true" /> Voltar à consulta
-          </Link>
-        </Button>
-      </header>
+            . Selecione um único patrimônio ativo e confira os dados antes da
+            confirmação.
+          </>
+        }
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/baixas">
+              <ArrowLeft aria-hidden="true" /> Voltar à consulta
+            </Link>
+          </Button>
+        }
+      />
       {etapa === "selecao" ? (
         <>
           <form

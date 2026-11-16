@@ -155,8 +155,13 @@ No estado atual:
   status, normalização, situação contábil e auditoria dentro de uma transação;
   a criação declara se o bem é depreciável. Bens depreciáveis recebem parâmetro
   inicial ainda sem início, enquanto bens não depreciáveis não recebem parâmetro;
+  a prévia de numeração, restrita ao Diretor, lê os próximos valores oficial e
+  `SP-` sem avançar as sequences nem reservar o valor;
   o Diretor confirma a disponibilidade uma única vez pela operação pública
-  idempotente, que inicia o parâmetro na mesma transação;
+  idempotente, que inicia o parâmetro vigente na mesma transação. Reavaliação
+  anterior à disponibilidade pode deixar o parâmetro inicial encerrado sem
+  início; a constraint valida o inicial somente quando ele ainda é vigente e a
+  API traduz inconsistência contábil remanescente para conflito público;
 - `ProcessosCompraModule` permite aos dois perfis criar, listar, consultar e
   alterar processos; a criação recebe até 20 notas e PDFs, valida fornecedores
   ativos, assinatura dos documentos e persiste notas e auditoria na mesma
@@ -298,7 +303,7 @@ tarefas, e não representam estado implementado:
 - [SEC-002](../../tasks/SEC-002-matriz-leitura-compartilhada.md) ajusta somente
   as consultas compartilhadas da matriz de acesso;
 - [WEB-PATRIMONIOS-002](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)
-  adiciona a prévia não reservada de numeração;
+  entregou a prévia não reservada de numeração;
 - [WEB-INVENTARIOS-002](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)
   adiciona a edição transacional do inventário ainda pendente;
 - [WEB-MANUTENCOES-003](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)

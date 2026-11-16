@@ -57,9 +57,11 @@ const CriarPatrimonioBaseShape = {
   modelo: TextoOpcionalSchema("O modelo", 100),
   numeroSerie: TextoOpcionalSchema("O número de série", 100),
   valorIncorporacao: Decimal19_7PositivoSchema,
-  especieId: z.uuid(),
-  setorAtualId: z.uuid(),
-  processoCompraId: z.uuid().optional(),
+  especieId: z.uuid({ error: "Selecione uma espécie." }),
+  setorAtualId: z.uuid({ error: "Selecione o setor de destino." }),
+  processoCompraId: z
+    .uuid({ error: "Selecione um processo de compra válido." })
+    .optional(),
 } as const;
 
 const CriarPatrimonioDepreciavelBodySchema = z.strictObject({

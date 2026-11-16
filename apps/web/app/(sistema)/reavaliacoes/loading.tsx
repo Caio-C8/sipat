@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/shared/page-header";
 
 export default function ReavaliacoesLoading() {
   return (
@@ -6,13 +7,10 @@ export default function ReavaliacoesLoading() {
       <p role="status" className="sr-only">
         Carregando reavaliações…
       </p>
-      <div className="flex items-center justify-between gap-4">
-        <div className="grid gap-2">
-          <Skeleton className="h-7 w-44" />
-          <Skeleton className="h-4 w-80 max-w-full" />
-        </div>
-        <Skeleton className="h-10 w-40" />
-      </div>
+      <PageHeader
+        title="Reavaliações"
+        description="Consulte os registros e inicie uma nova reavaliação patrimonial."
+      />
       <Skeleton className="h-48 w-full rounded-lg" />
       <Skeleton className="h-80 w-full rounded-lg" />
     </main>

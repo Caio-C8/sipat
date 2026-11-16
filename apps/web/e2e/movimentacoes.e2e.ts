@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./support/test";
 import type { ApiMock } from "./support/api-mock";
+import { selecionarOpcaoComponente } from "./support/form-controls";
 import fixture from "./support/movimentacoes-fixtures.json";
 
 const bens = fixture.bens.map((bem) => ({
@@ -79,13 +80,17 @@ async function preencher(page: Page, api: ApiMock, quantidade = 1) {
   await page
     .getByRole("button", { name: "Definir destinos", exact: true })
     .click();
-  await page
-    .getByRole("combobox", { name: "Comissão vigente", exact: true })
-    .selectOption(fixture.comissoes[0]!.id);
+  await selecionarOpcaoComponente(
+    page,
+    "Comissão vigente",
+    fixture.comissoes[0]!.nome,
+  );
   await page.getByLabel("Motivo da movimentação").fill("Mudança de sala");
-  await page
-    .getByRole("combobox", { name: "Destino para todos", exact: true })
-    .selectOption(fixture.setores[1]!.id);
+  await selecionarOpcaoComponente(
+    page,
+    "Destino para todos",
+    fixture.setores[1]!.nome,
+  );
   await page
     .getByRole("button", { name: "Aplicar a todos", exact: true })
     .click();
@@ -187,19 +192,25 @@ test.describe("Movimentações integradas — mocks estritos", () => {
     await page
       .getByRole("button", { name: "Definir destinos", exact: true })
       .click();
-    await page
-      .getByRole("combobox", { name: "Comissão vigente", exact: true })
-      .selectOption(fixture.comissoes[0]!.id);
+    await selecionarOpcaoComponente(
+      page,
+      "Comissão vigente",
+      fixture.comissoes[0]!.nome,
+    );
     await page.getByLabel("Motivo da movimentação").fill("Mudança de sala");
-    await page
-      .getByRole("combobox", { name: "Destino para todos", exact: true })
-      .selectOption(fixture.setores[1]!.id);
+    await selecionarOpcaoComponente(
+      page,
+      "Destino para todos",
+      fixture.setores[1]!.nome,
+    );
     await page
       .getByRole("button", { name: "Aplicar a todos", exact: true })
       .click();
-    await page
-      .getByRole("combobox", { name: "Destino do patrimônio 2", exact: true })
-      .selectOption(fixture.setores[2]!.id);
+    await selecionarOpcaoComponente(
+      page,
+      "Destino do patrimônio 2",
+      fixture.setores[2]!.nome,
+    );
     await page
       .getByRole("button", { name: "Voltar aos bens", exact: true })
       .click();
@@ -214,7 +225,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
         name: "Destino do patrimônio 2",
         exact: true,
       }),
-    ).toHaveValue(fixture.setores[2]!.id);
+    ).toContainText(fixture.setores[2]!.nome);
     await page
       .getByRole("button", { name: "Revisar movimentação", exact: true })
       .click();
@@ -395,7 +406,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       .getByRole("button", { name: "Confirmar movimentação", exact: true })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Resultado ainda não confirmado" }),
+      page.getByText("Resultado ainda não confirmado", { exact: true }),
     ).toBeVisible();
     apiMock.expectPost("/movimentacoes", ({ body }) => {
       expect(body).toEqual(original);
@@ -418,7 +429,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
       page.getByText("Sua sessão expirou. Entre novamente para continuar."),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Resultado ainda não confirmado" }),
+      page.getByText("Resultado ainda não confirmado", { exact: true }),
     ).toBeVisible();
     auxiliares(apiMock);
     apiMock.expectGet("/patrimonios", () => ({ body: paginada(bens) }), 2);

@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import type {
   ConfirmarDisponibilidadeUsoBodyData,
   CriarPatrimonioBodyInput,
+  PreviaNumeracaoPatrimonial,
 } from "@repo/contracts";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 import { useMutacaoSemRepeticao } from "@/lib/api/client/use-mutacao-sem-repeticao";
@@ -69,6 +70,28 @@ export function useSetoresPatrimonio() {
 
 export function useProcessosCompraPatrimonio() {
   return useConsultaOpcoes(carregarProcessosCompra);
+}
+
+export function usePreviaNumeracaoPatrimonio() {
+  const [dados, setDados] = useState<PreviaNumeracaoPatrimonial | null>(null);
+  const [erro, setErro] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+  const atual = useRef(0);
+  const carregar = useCallback(async () => {
+    const id = ++atual.current;
+    setLoading(true);
+    setErro(null);
+    try {
+      const resposta = await operacoes.consultarPreviaNumeracao();
+      if (id === atual.current) setDados(resposta.dados);
+    } catch (erroConsulta) {
+      if (id === atual.current) setErro(erroConsulta);
+    } finally {
+      if (id === atual.current) setLoading(false);
+    }
+  }, []);
+
+  return { dados, erro, loading, carregar };
 }
 
 const criarPatrimonio = (body: CriarPatrimonioBodyInput) =>

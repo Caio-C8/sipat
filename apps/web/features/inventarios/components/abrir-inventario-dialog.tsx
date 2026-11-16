@@ -182,7 +182,7 @@ export function AbrirInventarioDialog() {
                   {erro}
                 </p>
               )}
-              <footer className="mt-2 flex justify-end gap-3">
+              <div className="mt-2 flex justify-end gap-3">
                 <button
                   type="button"
                   disabled={carregando}
@@ -198,7 +198,7 @@ export function AbrirInventarioDialog() {
                 >
                   {carregando ? "Abrindo…" : "Abrir inventário"}
                 </button>
-              </footer>
+              </div>
             </form>
           </section>
         </div>

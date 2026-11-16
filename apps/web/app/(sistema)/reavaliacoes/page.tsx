@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Plus } from "lucide-react";
 import { ListarReavaliacoesQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverReavaliacaoOperations } from "@/features/reavaliacoes/api/server-reavaliacao-operations";
 import { ErroReavaliacao } from "@/features/reavaliacoes/components/erro-reavaliacao";
@@ -49,25 +50,23 @@ async function ReavaliacoesContent({
     : "/reavaliacoes";
   return (
     <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reavaliações</h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Consulte os registros e inicie uma nova reavaliação patrimonial.
-          </p>
-        </div>
-        {identidade.perfil === "DIRETOR_PATRIMONIO" ? (
-          <Button
-            asChild
-            className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
-          >
-            <Link prefetch={false} href="/reavaliacoes/nova">
-              <Plus aria-hidden="true" className="size-4" />
-              Nova reavaliação
-            </Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Reavaliações"
+        description="Consulte os registros e inicie uma nova reavaliação patrimonial."
+        actions={
+          identidade.perfil === "DIRETOR_PATRIMONIO" ? (
+            <Button
+              asChild
+              className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+            >
+              <Link prefetch={false} href="/reavaliacoes/nova">
+                <Plus aria-hidden="true" className="size-4" />
+                Nova reavaliação
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
       <section
         className={painelReavaliacao}
         aria-label="Filtros de reavaliações"

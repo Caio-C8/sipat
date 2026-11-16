@@ -93,6 +93,33 @@ export class PatrimoniosRepository {
     return tipo === "OFICIAL" ? valor.toString() : `SP-${valor.toString()}`;
   }
 
+  async consultarPreviaNumeracao(): Promise<{
+    numeroOficial: string;
+    numeroSemOficial: string;
+  }> {
+    const [previa] = await this.database.$queryRaw<
+      readonly { numeroOficial: string; numeroSemOficial: string }[]
+    >`
+      SELECT
+        (CASE WHEN oficial.is_called
+          THEN oficial.last_value + 1
+          ELSE oficial.last_value
+        END)::text AS "numeroOficial",
+        'SP-' || (CASE WHEN sem_oficial.is_called
+          THEN sem_oficial.last_value + 1
+          ELSE sem_oficial.last_value
+        END)::text AS "numeroSemOficial"
+      FROM patrimonios_numero_oficial_seq oficial,
+           patrimonios_sem_numero_oficial_seq sem_oficial
+    `;
+
+    if (!previa) {
+      throw new Error("As sequences patrimoniais não retornaram uma prévia.");
+    }
+
+    return previa;
+  }
+
   async buscarSetor(setorId: string): Promise<{ ativo: boolean } | null> {
     const setores = await this.database.$queryRaw<
       readonly { ativo: boolean }[]

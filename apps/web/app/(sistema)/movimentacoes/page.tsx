@@ -11,6 +11,7 @@ import {
 import { ListarMovimentacoesQuerySchema } from "@repo/contracts";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { serverMovimentacaoOperations } from "@/features/movimentacoes/api/server-movimentacao-operations";
 import { FiltrosMovimentacoes } from "@/features/movimentacoes/components/filtros-movimentacoes";
 import { ErroMovimentacao } from "@/features/movimentacoes/components/erro-movimentacao";
@@ -59,26 +60,23 @@ export default async function MovimentacoesPage({
   }
   return (
     <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Movimentações</h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Consulte as transferências entre setores e registre novas
-            movimentações.
-          </p>
-        </div>
-        {identidade.perfil === "DIRETOR_PATRIMONIO" ? (
-          <Button
-            asChild
-            className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
-          >
-            <Link prefetch={false} href="/movimentacoes/nova">
-              <Plus aria-hidden="true" className="size-4" />
-              Nova movimentação
-            </Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Movimentações"
+        description="Consulte as transferências entre setores e registre novas movimentações."
+        actions={
+          identidade.perfil === "DIRETOR_PATRIMONIO" ? (
+            <Button
+              asChild
+              className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+            >
+              <Link prefetch={false} href="/movimentacoes/nova">
+                <Plus aria-hidden="true" className="size-4" />
+                Nova movimentação
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
       <section
         className={painelMovimentacao}
         aria-label="Filtros de movimentações"

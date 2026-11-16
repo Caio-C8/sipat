@@ -3,10 +3,12 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { selecionarOpcaoComponente } from "./support/form-controls";
 type Fixture = {
   cookieDiretor: string;
   cookieAdmin: string;
   comissaoId: string;
+  comissaoNome: string;
   setores: { id: string; nome: string }[];
   bens: { id: string; numeroPatrimonio: string }[];
 };
@@ -53,15 +55,15 @@ test.describe("Web → API → PostgreSQL isolado", () => {
     await page
       .getByRole("button", { name: "Definir destinos", exact: true })
       .click();
-    await page
-      .getByRole("combobox", { name: "Comissão vigente", exact: true })
-      .selectOption(f.comissaoId);
+    await selecionarOpcaoComponente(page, "Comissão vigente", f.comissaoNome);
     await page
       .getByLabel("Motivo da movimentação")
       .fill("Transferência de integração real");
-    await page
-      .getByRole("combobox", { name: "Destino para todos", exact: true })
-      .selectOption(f.setores[destino]!.id);
+    await selecionarOpcaoComponente(
+      page,
+      "Destino para todos",
+      f.setores[destino]!.nome,
+    );
     await page
       .getByRole("button", { name: "Aplicar a todos", exact: true })
       .click();
@@ -122,7 +124,7 @@ test.describe("Web → API → PostgreSQL isolado", () => {
       .getByRole("button", { name: "Confirmar movimentação", exact: true })
       .click();
     await expect(
-      page.getByRole("heading", { name: "Resultado ainda não confirmado" }),
+      page.getByText("Resultado ainda não confirmado", { exact: true }),
     ).toBeVisible();
     await page.reload();
     await page
@@ -240,7 +242,7 @@ test.describe("Web → API → PostgreSQL isolado", () => {
         name: "Destino do patrimônio 2",
         exact: true,
       }),
-    ).toHaveValue(f.setores[2]!.id);
+    ).toContainText(f.setores[2]!.nome);
     const lista = await (
       await page.request.get("/api/backend/movimentacoes")
     ).json();

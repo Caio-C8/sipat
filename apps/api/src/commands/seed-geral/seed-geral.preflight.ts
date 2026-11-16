@@ -5,8 +5,8 @@ export interface EstadoMigrationSeed {
 }
 
 const ULTIMA_MIGRATION =
-  "20261108120000_endurece_disponibilidade_competencias_depreciacao";
-const TOTAL_MIGRATIONS = 28;
+  "20261115143000_corrige_disponibilidade_apos_reavaliacao";
+const TOTAL_MIGRATIONS = 29;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],

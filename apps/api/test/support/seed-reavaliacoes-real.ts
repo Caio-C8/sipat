@@ -139,6 +139,7 @@ async function main() {
       JSON.stringify({
         token,
         comissaoId: comissao.id,
+        comissaoNome: comissao.nome,
         bemId: bem.id,
         numero,
         busca: tag.slice(0, 8),

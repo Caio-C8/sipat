@@ -19,6 +19,7 @@ import {
   Paginacao,
 } from "@/features/cadastros/components/cadastro-ui";
 import type { SearchCadastros } from "../_cadastros-page";
+import { PageHeader } from "@/components/shared/page-header";
 const QuerySchema = z.object({
   busca: z.string().trim().max(100).optional(),
   ativo: z.enum(["", "true", "false"]).optional(),
@@ -42,7 +43,10 @@ export async function SetoresPage({
   if (!parsed.success)
     return (
       <main className={pagina}>
-        <h1>Consulta inválida</h1>
+        <PageHeader
+          title="Consulta inválida"
+          description="Revise os filtros dos setores."
+        />
         <p role="alert">Revise os filtros dos setores.</p>
       </main>
     );
@@ -62,7 +66,10 @@ export async function SetoresPage({
   } catch (e) {
     return (
       <main className={pagina}>
-        <h1>Setores</h1>
+        <PageHeader
+          title="Setores"
+          description="Consulte os setores cadastrados."
+        />
         <ErroCadastro mensagem={mensagemErro(e)} />
         <Link href="/cadastros/setores" className="underline">
           Tentar novamente
@@ -84,7 +91,10 @@ export async function NovoSetorPage() {
   if (identidade.perfil !== "ADMINISTRADOR")
     return (
       <main className={pagina}>
-        <h1>Acesso não permitido</h1>
+        <PageHeader
+          title="Acesso não permitido"
+          description="Somente o Administrador pode cadastrar setores."
+        />
         <p role="alert">Somente o Administrador pode cadastrar setores.</p>
       </main>
     );
@@ -104,7 +114,10 @@ export async function SetorPage({
   if (!parsed.success)
     return (
       <main className={pagina}>
-        <h1>Consulta inválida</h1>
+        <PageHeader
+          title="Consulta inválida"
+          description="Revise a página dos bens vinculados."
+        />
         <p role="alert">Revise a página dos bens vinculados.</p>
       </main>
     );
@@ -117,7 +130,10 @@ export async function SetorPage({
     if (isApiError(e) && e.status === 404) notFound();
     return (
       <main className={pagina}>
-        <h1>Consultar setor</h1>
+        <PageHeader
+          title="Consultar setor"
+          description="Consulte os dados e os bens vinculados ao setor."
+        />
         <ErroCadastro mensagem={mensagemErro(e)} />
       </main>
     );

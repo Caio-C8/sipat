@@ -101,6 +101,23 @@ describe("contratos de reavaliação", () => {
     );
   });
 
+  it("retorna mensagens de entrada adequadas para os campos", () => {
+    const resposta = PreviaReavaliacaoBodySchema.safeParse({
+      ...base,
+      comissaoId: undefined,
+      itens: [{ ...base.itens[0], vidaUtilNovaMeses: undefined }],
+    });
+    assert.equal(resposta.success, false);
+    if (!resposta.success)
+      assert.deepEqual(
+        resposta.error.issues.map((issue) => issue.message),
+        [
+          "Selecione uma comissão vigente.",
+          "Informe a nova vida útil em meses.",
+        ],
+      );
+  });
+
   it("limita paginação e intervalo dos filtros", () => {
     assert.equal(ListarReavaliacoesQuerySchema.safeParse({}).success, true);
     assert.equal(

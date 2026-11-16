@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { selecionarOpcaoComponente } from "./support/form-controls";
 
 const patrimonioId = "7041c62b-5f83-432c-a178-889977d839b1";
 
@@ -87,15 +88,13 @@ test.describe("Baixas patrimoniais", () => {
       .getByRole("button", { name: /Continuar com 1 patrimônio/ })
       .click();
     await page.getByLabel("Data da baixa").fill("2026-11-10");
-    await page
-      .getByRole("combobox", { name: "Tipo", exact: true })
-      .selectOption("ALIENACAO");
-    await expect(page.getByLabel("Comissão vigente na data")).toContainText(
+    await selecionarOpcaoComponente(page, "Tipo", "Alienação");
+    await expect(page.getByLabel("Comissão vigente na data")).toBeEnabled();
+    await selecionarOpcaoComponente(
+      page,
+      "Comissão vigente na data",
       "Comissão patrimonial vigente",
     );
-    await page
-      .getByLabel("Comissão vigente na data")
-      .selectOption("5c0945b2-7d3c-4b75-8bc6-5b0bf04086ab");
     await page
       .getByLabel("Motivo")
       .fill("Alienação autorizada após avaliação.");

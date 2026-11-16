@@ -63,6 +63,7 @@ describe("PatrimoniosService", () => {
     especieExiste: jest.fn(),
     processoCompraExiste: jest.fn(),
     gerarProximoNumero: jest.fn(),
+    consultarPreviaNumeracao: jest.fn(),
     criar: jest.fn(),
     listar: jest.fn(),
     contar: jest.fn(),
@@ -93,6 +94,10 @@ describe("PatrimoniosService", () => {
     repository.especieExiste.mockResolvedValue(true);
     repository.processoCompraExiste.mockResolvedValue(true);
     repository.gerarProximoNumero.mockResolvedValue("1");
+    repository.consultarPreviaNumeracao.mockResolvedValue({
+      numeroOficial: "2656",
+      numeroSemOficial: "SP-91",
+    });
     repository.criar.mockResolvedValue({ id: "patrimonio" });
     repository.listar.mockResolvedValue([{ id: "patrimonio" }]);
     repository.contar.mockResolvedValue(21);
@@ -119,6 +124,15 @@ describe("PatrimoniosService", () => {
     });
     repository.iniciarParametroVigente.mockResolvedValue({ count: 1 });
     repository.salvarIdempotenciaDisponibilidade.mockResolvedValue(undefined);
+  });
+
+  it("consulta os próximos números sem reservar valores", async () => {
+    await expect(service.consultarPreviaNumeracao()).resolves.toEqual({
+      numeroOficial: "2656",
+      numeroSemOficial: "SP-91",
+      reservaValor: false,
+    });
+    expect(repository.gerarProximoNumero).not.toHaveBeenCalled();
   });
 
   it("confirma disponibilidade e inicia o parâmetro depreciável atomicamente", async () => {
@@ -167,6 +181,82 @@ describe("PatrimoniosService", () => {
       ),
     ).resolves.toMatchObject({ primeiraCompetencia: null });
     expect(repository.iniciarParametroVigente).not.toHaveBeenCalled();
+  });
+
+  it.each(["EMPRESTADO", "EM_MANUTENCAO"] as const)(
+    "confirma disponibilidade para patrimônio com status %s",
+    async (status) => {
+      repository.bloquearParaDisponibilidade.mockResolvedValueOnce({
+        status,
+        depreciavel: true,
+        disponibilidadeId: null,
+      });
+
+      await expect(
+        service.confirmarDisponibilidadeUso(
+          "patrimonio",
+          {
+            dataDisponibilidade: "2026-10-18",
+            chaveIdempotencia: "00000000-0000-4000-8000-000000000011",
+          },
+          identidade,
+        ),
+      ).resolves.toMatchObject({ primeiraCompetencia: "2026-11" });
+    },
+  );
+
+  it("expõe a regra antiga de disponibilidade sem atribuir a falha ao status", async () => {
+    repository.executarTransacao.mockRejectedValueOnce({
+      name: "DriverAdapterError",
+      message:
+        "O parâmetro inicial deve começar na disponibilidade do patrimônio.",
+      meta: {
+        driverAdapterError: { cause: { originalCode: "23514" } },
+      },
+    });
+
+    await expect(
+      service.confirmarDisponibilidadeUso(
+        "patrimonio",
+        {
+          dataDisponibilidade: "2026-10-18",
+          chaveIdempotencia: "00000000-0000-4000-8000-000000000015",
+        },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: {
+        codigo: "REGRA_DISPONIBILIDADE_DESATUALIZADA",
+        mensagem:
+          "Este patrimônio precisa ser atualizado antes da confirmação. Solicite a atualização e tente novamente.",
+      },
+      status: 409,
+    });
+  });
+
+  it("mantém conflito contábil para a regra vigente", async () => {
+    repository.executarTransacao.mockRejectedValueOnce({
+      name: "DriverAdapterError",
+      message:
+        "O parâmetro inicial vigente deve começar na disponibilidade do patrimônio.",
+      meta: {
+        driverAdapterError: { cause: { originalCode: "23514" } },
+      },
+    });
+
+    await expect(
+      service.confirmarDisponibilidadeUso(
+        "patrimonio",
+        {
+          dataDisponibilidade: "2026-10-18",
+          chaveIdempotencia: "00000000-0000-4000-8000-000000000016",
+        },
+        identidade,
+      ),
+    ).rejects.toMatchObject({
+      response: { codigo: "ESTADO_CONTABIL_INCONSISTENTE" },
+      status: 409,
+    });
   });
 
   it("rejeita disponibilidade futura, baixada e duplicada sem escrita parcial", async () => {

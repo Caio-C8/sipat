@@ -7,6 +7,7 @@ import { isApiError } from "@/lib/api/core/api-error";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 import { serverRelatorios } from "@/features/relatorios/api/server";
 import { PatrimonioDetalheView } from "@/features/patrimonios/components/patrimonio-detalhe";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = { title: "Detalhes do patrimônio" };
 
@@ -40,8 +41,11 @@ export default async function PatrimonioDetalhePage({
     aba === "historico" ? queryRelatorio("ficha-bem").safeParse(filtros) : null;
   if (query && !query.success)
     return (
-      <main className="p-7">
-        <h1 className="text-2xl font-bold">Histórico do patrimônio</h1>
+      <main className="grid gap-5 p-7">
+        <PageHeader
+          title="Histórico do patrimônio"
+          description="Consulte os eventos registrados para este bem."
+        />
         <p role="alert" className="mt-4 text-red-800">
           Filtros do histórico inválidos.
         </p>
@@ -73,8 +77,11 @@ export default async function PatrimonioDetalhePage({
   if (isApiError(falhaDetalhe) && falhaDetalhe.status === 404) notFound();
   if (!detalhe)
     return (
-      <main className="p-7">
-        <h1 className="text-2xl font-bold">Detalhes do patrimônio</h1>
+      <main className="grid gap-5 p-7">
+        <PageHeader
+          title="Detalhes do patrimônio"
+          description="Consulte os dados cadastrais e o histórico do bem."
+        />
         <p role="alert" className="mt-4 text-red-800">
           {isApiError(falhaDetalhe)
             ? falhaDetalhe.message

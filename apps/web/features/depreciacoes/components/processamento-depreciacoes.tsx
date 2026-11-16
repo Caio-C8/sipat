@@ -10,6 +10,7 @@ import type {
   ListarDepreciacoesPendentesResponse,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import {
   Dialog,
   DialogContent,
@@ -207,16 +208,14 @@ export function ProcessamentoDepreciacoes({
   return (
     <>
       <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-5 text-[#17253d] sm:px-7 sm:py-6">
-        <header>
-          <h1 className="text-2xl font-bold text-[#111d34] sm:text-3xl">
-            Depreciação
-          </h1>
-          <p className="mt-1 text-sm text-[#526b8c]">
-            {podeProcessar
+        <PageHeader
+          title="Depreciação"
+          description={
+            podeProcessar
               ? `Consulte os bens elegíveis e processe a competência de ${tituloCompetencia}, individualmente ou em lote.`
-              : `Consulte os bens elegíveis e as pendências da competência de ${tituloCompetencia}.`}
-          </p>
-        </header>
+              : `Consulte os bens elegíveis e as pendências da competência de ${tituloCompetencia}.`
+          }
+        />
 
         <section
           className="grid gap-4 rounded-lg border border-[#dfe7f1] bg-white p-5 sm:grid-cols-[minmax(200px,260px)_1fr] sm:items-center"

@@ -28,8 +28,14 @@ export function formatarInstanteBaixa(valor: string) {
 
 export function mensagemErroBaixa(erro: unknown) {
   if (isApiError(erro)) {
+    if (erro.codigo === "PATRIMONIO_EM_INVENTARIO_ABERTO")
+      return "Este patrimônio participa de um inventário ainda não finalizado. Finalize o inventário antes de registrar a baixa.";
+    if (erro.codigo === "BAIXA_JA_EXISTENTE")
+      return "Este patrimônio já possui uma baixa registrada. Atualize a ficha para consultar a situação atual.";
+    if (erro.codigo === "PATRIMONIO_NAO_ATIVO")
+      return "Somente patrimônios ativos podem ser baixados. Atualize a ficha e confira a situação atual.";
     if (erro.status === 409)
-      return `${erro.message} Releia o patrimônio antes de tentar novamente.`;
+      return `${erro.message} Atualize a ficha do patrimônio antes de tentar novamente.`;
     return erro.message;
   }
   return "Não foi possível confirmar o resultado. Releia o patrimônio antes de tentar novamente.";

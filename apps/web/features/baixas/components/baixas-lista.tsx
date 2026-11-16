@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Eye, Plus } from "lucide-react";
 import type { RelatorioTabularResponse } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { FiltrosBaixas } from "./filtros-baixas";
 import {
   formatarDataBaixa,
@@ -31,21 +32,19 @@ export function BaixasLista({
     `/baixas?${new URLSearchParams({ ...valores, pagina: String(pagina) }).toString()}`;
   return (
     <main className="mx-auto grid w-full max-w-[1900px] gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Baixa</h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Consulte registros patrimoniais baixados e seus dados de auditoria.
-          </p>
-        </div>
-        {diretor ? (
-          <Button asChild>
-            <Link href="/baixas/nova">
-              <Plus aria-hidden="true" /> Registrar baixa
-            </Link>
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader
+        title="Baixa"
+        description="Consulte registros patrimoniais baixados e seus dados de auditoria."
+        actions={
+          diretor ? (
+            <Button asChild>
+              <Link href="/baixas/nova">
+                <Plus aria-hidden="true" /> Registrar baixa
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
       <FiltrosBaixas valores={valores} />
       <section
         className="min-w-0 rounded-lg border border-[#dfe7f1] bg-white"

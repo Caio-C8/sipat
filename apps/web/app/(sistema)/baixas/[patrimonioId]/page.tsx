@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, CircleUserRound, Scale } from "lucide-react";
 import { PatrimonioParamsSchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
@@ -47,9 +48,12 @@ export default async function BaixaDetalhePage({
   if (!resposta) {
     if (isApiError(falha) && falha.status === 404) notFound();
     return (
-      <main className="p-7">
-        <h1 className="text-2xl font-bold">Detalhe da baixa</h1>
-        <p role="alert" className="mt-4 text-red-800">
+      <main className="grid gap-5 p-7">
+        <PageHeader
+          title="Detalhe da baixa"
+          description="Não foi possível carregar este registro."
+        />
+        <p role="alert" className="text-red-800">
           {isApiError(falha)
             ? falha.message
             : "Não foi possível consultar a baixa."}
@@ -60,24 +64,17 @@ export default async function BaixaDetalhePage({
   const baixa = resposta.dados;
   return (
     <main className="mx-auto grid w-full max-w-[1900px] gap-5 p-4 text-[#19355d] sm:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-[#2863ec]">
-            Detalhe da baixa
-          </p>
-          <h1 className="mt-1 text-2xl font-bold">
-            Baixa — {baixa.patrimonio.numeroPatrimonio}
-          </h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Registro individual, irreversível e somente leitura.
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href={retorno}>
-            <ArrowLeft aria-hidden="true" /> Voltar à lista
-          </Link>
-        </Button>
-      </header>
+      <PageHeader
+        title={`Baixa — ${baixa.patrimonio.numeroPatrimonio}`}
+        description="Registro individual, irreversível e somente leitura."
+        actions={
+          <Button asChild variant="outline">
+            <Link href={retorno}>
+              <ArrowLeft aria-hidden="true" /> Voltar à lista
+            </Link>
+          </Button>
+        }
+      />
       {consulta.sucesso === "1" ? (
         <p
           role="status"

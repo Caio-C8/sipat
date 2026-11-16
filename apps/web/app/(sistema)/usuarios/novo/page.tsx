@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { PageHeader } from "@/components/shared/page-header";
 import { UsuarioForm } from "@/features/usuarios/components/usuario-form";
 import { AccessDenied } from "@/components/shared/access-denied";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
@@ -16,20 +17,18 @@ export default async function NovoUsuarioPage() {
   }
   return (
     <main className="mx-auto grid w-full max-w-[1400px] gap-5 px-4 py-5 text-[#17253d] sm:px-7 sm:py-6">
-      <header>
-        <Link
-          href="/usuarios"
-          className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-[#526b8c] hover:text-[#203b61]"
-        >
-          <ChevronLeft className="size-4" /> Voltar aos usuários
-        </Link>
-        <h1 className="text-2xl font-bold text-[#111d34] sm:text-3xl">
-          Cadastrar usuário
-        </h1>
-        <p className="mt-1 text-sm text-[#7188a5]">
-          Vincule um acesso ao sistema e selecione seu perfil.
-        </p>
-      </header>
+      <PageHeader
+        title="Cadastrar usuário"
+        description="Vincule um acesso ao sistema e selecione seu perfil."
+        actions={
+          <Link
+            href="/usuarios"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-[#526b8c] hover:text-[#203b61]"
+          >
+            <ChevronLeft className="size-4" /> Voltar aos usuários
+          </Link>
+        }
+      />
       <UsuarioForm />
     </main>
   );

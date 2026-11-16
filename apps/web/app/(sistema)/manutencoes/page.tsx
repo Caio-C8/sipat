@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { ListarManutencoesQuerySchema } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/page-header";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { ErroManutencao } from "@/features/manutencoes/components/erro-manutencao";
 import { serverManutencaoOperations } from "@/features/manutencoes/api/server-manutencao-operations";
@@ -57,22 +58,20 @@ export default async function ManutencoesPage({
 
   return (
     <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-6 lg:p-7">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manutenção</h1>
-          <p className="mt-1 text-sm text-[#526580]">
-            Acompanhe os pedidos, os atendimentos e o retorno de cada bem.
-          </p>
-        </div>
-        <Button
-          asChild
-          className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
-        >
-          <Link prefetch={false} href="/manutencoes/nova">
-            <Plus aria-hidden="true" className="size-4" /> Novo pedido
-          </Link>
-        </Button>
-      </header>
+      <PageHeader
+        title="Manutenção"
+        description="Acompanhe os pedidos, os atendimentos e o retorno de cada bem."
+        actions={
+          <Button
+            asChild
+            className="h-10 gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
+          >
+            <Link prefetch={false} href="/manutencoes/nova">
+              <Plus aria-hidden="true" className="size-4" /> Novo pedido
+            </Link>
+          </Button>
+        }
+      />
 
       <section className={painelManutencao} aria-label="Pesquisar pedidos">
         <form action="/manutencoes" method="get" className="grid gap-4">
