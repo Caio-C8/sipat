@@ -16,7 +16,7 @@
     "submit:ios": "npx eas-cli@latest submit --platform ios --profile production",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "expo customize tsconfig.json && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "healthcheck:web": "node scripts/check-web-health.mjs",

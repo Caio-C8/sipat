@@ -43,6 +43,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  typescript: {
+    tsconfigPath: isDevelopment ? "tsconfig.json" : "tsconfig.typecheck.json",
+  },
   output: isPlaywrightTest ? undefined : "standalone",
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   poweredByHeader: false,

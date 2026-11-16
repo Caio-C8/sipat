@@ -53,13 +53,22 @@ endpoint, autenticação, formato de erro ou cache para desbloquear uma tela.
 O SIPAT usa:
 
 - Vitest 5 como runner;
+- caches de módulos separados para Web e Mobile, evitando invalidação
+  concorrente do mesmo diretório durante o `pnpm check`;
 - React Testing Library para hooks e componentes;
 - `jsdom` somente nos testes que precisam de DOM;
 - ambiente `node` como padrão para infraestrutura, parsers e operações;
 - `resolve.tsconfigPaths` nativo do Vite 8 para os aliases do TypeScript.
 
-O script de typecheck executa `next typegen` antes de `tsc --noEmit`, evitando
-que tipos de rota antigos em `.next` sejam usados pela verificação.
+O script de typecheck executa `next typegen` antes do `tsc` e usa
+`tsconfig.typecheck.json`. Essa configuração inclui os tipos de produção recém
+gerados em `.next/types` e exclui `.next/dev`, sem retirar do ambiente de
+desenvolvimento os tipos criados por `next dev`.
+
+O build também seleciona `tsconfig.typecheck.json` em produção. Assim, a
+verificação do artefato usa os tipos atuais em `.next/types` e não lê tipos de
+desenvolvimento deixados em `.next/dev/types` por uma árvore de rotas anterior.
+`next dev` continua usando o `tsconfig.json` principal.
 
 O SIPAT também usa:
 

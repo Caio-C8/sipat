@@ -30,6 +30,11 @@ concorrência de renovação, matriz de redirects, home, completude do catálogo
 rotas, política de `/check`, topbar e faixa de desenvolvimento. Como o script `test`
 participa do grafo do Turborepo, `pnpm check` executa essa suíte no CI.
 
+O script `typecheck` executa `expo customize tsconfig.json` antes do `tsc` para
+regenerar em `.expo/types` as rotas tipadas a partir da árvore atual de
+`src/app`. Os arquivos gerados permanecem fora do Git, conforme o fluxo do Expo
+Router.
+
 O workflow também exporta o mobile Web com `EXPO_PUBLIC_APP_ENV=production`,
 constrói a imagem, inicia o container e executa `healthcheck:web`. A verificação
 aguarda no máximo 30 segundos, exige `200` com corpo `ok` em `/health`, confirma
