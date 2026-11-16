@@ -128,6 +128,7 @@ export type InventarioOperacional = {
   id: string;
   status: "PENDENTE" | "EM_ANDAMENTO" | "FINALIZADO";
   comissaoId: string;
+  updatedAt: Date | null;
 };
 
 export type SetorInventarioOperacional = {

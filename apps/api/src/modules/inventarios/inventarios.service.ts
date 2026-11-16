@@ -6,6 +6,7 @@ import {
 import type {
   CorrigirItemInventarioBodyData,
   CriarInventarioBodyData,
+  EditarInventarioBodyData,
   FinalizarInventarioBodyData,
   IdentidadeAutenticada,
   ListarInventariosQueryData,
@@ -39,6 +40,67 @@ export class InventariosService {
     private readonly inventarios: InventariosRepository,
     private readonly comissoes: ComissoesService,
   ) {}
+
+  async editar(
+    inventarioId: string,
+    dados: EditarInventarioBodyData,
+  ): Promise<
+    ComProgresso<InventarioDetalhePayload, ProgressoInventarioPayload>
+  > {
+    return this.executarOperacao(async (repository) => {
+      const inventario = await repository.bloquearInventario(inventarioId);
+      if (inventario === null) throw this.inventarioNaoEncontrado();
+      if (inventario.status !== "PENDENTE") {
+        throw this.conflitoEstado(
+          "INVENTARIO_FORA_DE_EDICAO",
+          "Somente um inventário pendente pode ser editado.",
+        );
+      }
+      const versaoAtual = inventario.updatedAt?.toISOString() ?? null;
+      if (versaoAtual !== dados.versaoEsperada) {
+        throw this.conflitoEstado(
+          "CONFLITO_CONCORRENTE_INVENTARIO",
+          "Este inventário foi alterado. Atualize a página e revise os dados antes de tentar novamente.",
+        );
+      }
+
+      const comissao = await repository.bloquearComissao(dados.comissaoId);
+      const hoje = new Date(
+        `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`,
+      );
+      if (
+        comissao === null ||
+        comissao.dataVigenciaInicio > hoje ||
+        comissao.dataVigenciaFim < hoje
+      ) {
+        throw this.conflitoEstado(
+          "COMISSAO_FORA_DA_VIGENCIA",
+          "Escolha uma comissão vigente para continuar.",
+        );
+      }
+
+      const alteracoes = {
+        nome: dados.nome,
+        descricao: dados.descricao,
+        observacao: dados.observacao,
+        comissaoId: dados.comissaoId,
+      };
+      const editado = await repository.editarInventario(
+        inventarioId,
+        alteracoes,
+      );
+      const progressos = await repository.obterProgressosInventarios([
+        inventarioId,
+      ]);
+      return {
+        ...editado,
+        progresso: this.exigirProgresso(
+          progressos.get(inventarioId),
+          inventarioId,
+        ),
+      };
+    });
+  }
 
   async iniciarSetor(
     inventarioId: string,
@@ -705,6 +767,17 @@ export class InventariosService {
 
   private ehConflitoSerializacao(erro: unknown): boolean {
     if (this.ehErroPrisma(erro, "P2034")) return true;
+    if (
+      typeof erro === "object" &&
+      erro !== null &&
+      "cause" in erro &&
+      typeof erro.cause === "object" &&
+      erro.cause !== null &&
+      "kind" in erro.cause &&
+      erro.cause.kind === "TransactionWriteConflict"
+    ) {
+      return true;
+    }
     if (!this.ehErroPrisma(erro, "P2010")) return false;
     const erroPrisma = erro as {
       meta?: { code?: unknown };

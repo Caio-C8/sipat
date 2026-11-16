@@ -72,6 +72,7 @@ describe("InventariosService", () => {
     contarSetoresNaoConcluidos: jest.fn(),
     contarCorrecoesPendentes: jest.fn(),
     finalizarInventario: jest.fn(),
+    editarInventario: jest.fn(),
   };
   const comissoes = { consultarVigente: jest.fn() };
   const service = new InventariosService(
@@ -123,6 +124,7 @@ describe("InventariosService", () => {
       id: INVENTARIO_ID,
       status: "PENDENTE",
       comissaoId: COMISSAO_ID,
+      updatedAt: null,
     });
     repository.bloquearSetorInventario.mockResolvedValue({
       id: SETOR_INVENTARIO_ID,
@@ -154,8 +156,84 @@ describe("InventariosService", () => {
         ],
       ]),
     );
+    repository.editarInventario.mockResolvedValue({
+      id: INVENTARIO_ID,
+      nome: "Inventário revisado",
+      descricao: "Escopo atualizado",
+      observacao: null,
+      status: "PENDENTE",
+      dataInicio: null,
+      dataFim: null,
+      iniciadoPorId: null,
+      finalizadoPorId: null,
+      createdById: IDENTIDADE.id,
+      createdAt: new Date("2026-10-24T12:00:00.000Z"),
+      updatedAt: new Date("2026-11-16T12:00:00.000Z"),
+      comissao: { id: COMISSAO_ID, nome: "Comissão" },
+    });
     repository.contarAusenciasSemJustificativaVigente.mockResolvedValue(0);
     repository.bloquearUltimaLocalizacaoPosterior.mockResolvedValue(null);
+  });
+
+  it("edita o inventário pendente sob lock e devolve o progresso", async () => {
+    const resultado = await service.editar(INVENTARIO_ID, {
+      nome: "Inventário revisado",
+      descricao: "Escopo atualizado",
+      observacao: null,
+      comissaoId: COMISSAO_ID,
+      versaoEsperada: null,
+    });
+
+    expect(repository.bloquearComissao).toHaveBeenCalledWith(COMISSAO_ID);
+    expect(repository.editarInventario).toHaveBeenCalledWith(INVENTARIO_ID, {
+      nome: "Inventário revisado",
+      descricao: "Escopo atualizado",
+      observacao: null,
+      comissaoId: COMISSAO_ID,
+    });
+    expect(resultado).toMatchObject({
+      nome: "Inventário revisado",
+      progresso: progressoVazio(),
+    });
+  });
+
+  it("recusa edição iniciada ou baseada em versão desatualizada", async () => {
+    repository.bloquearInventario.mockResolvedValueOnce({
+      id: INVENTARIO_ID,
+      status: "EM_ANDAMENTO",
+      comissaoId: COMISSAO_ID,
+      updatedAt: new Date("2026-11-16T12:00:00.000Z"),
+    });
+    await expect(
+      service.editar(INVENTARIO_ID, {
+        nome: "Inventário revisado",
+        descricao: null,
+        observacao: null,
+        comissaoId: COMISSAO_ID,
+        versaoEsperada: "2026-11-16T12:00:00.000Z",
+      }),
+    ).rejects.toMatchObject({
+      response: { codigo: "INVENTARIO_FORA_DE_EDICAO" },
+    });
+
+    repository.bloquearInventario.mockResolvedValueOnce({
+      id: INVENTARIO_ID,
+      status: "PENDENTE",
+      comissaoId: COMISSAO_ID,
+      updatedAt: new Date("2026-11-16T12:00:00.000Z"),
+    });
+    await expect(
+      service.editar(INVENTARIO_ID, {
+        nome: "Inventário revisado",
+        descricao: null,
+        observacao: null,
+        comissaoId: COMISSAO_ID,
+        versaoEsperada: null,
+      }),
+    ).rejects.toMatchObject({
+      response: { codigo: "CONFLITO_CONCORRENTE_INVENTARIO" },
+    });
+    expect(repository.editarInventario).not.toHaveBeenCalled();
   });
 
   it("materializa setores e patrimônios ativos na mesma transação", async () => {
@@ -179,6 +257,30 @@ describe("InventariosService", () => {
       status: "PENDENTE",
       progresso: { totalSetores: 1, totalItens: 1 },
     });
+  });
+
+  it("repete a transação quando o driver sinaliza conflito de escrita", async () => {
+    const conflito = Object.assign(new Error("Transaction write conflict"), {
+      cause: { kind: "TransactionWriteConflict" },
+    });
+    repository.executarTransacao
+      .mockRejectedValueOnce(conflito)
+      .mockImplementationOnce(
+        (operacao: (repo: InventariosRepository) => Promise<unknown>) =>
+          operacao(repository as unknown as InventariosRepository),
+      );
+
+    await expect(
+      service.criar(
+        {
+          chaveIdempotencia: CHAVE_IDEMPOTENCIA,
+          nome: "Inventário anual",
+          comissaoId: COMISSAO_ID,
+        },
+        IDENTIDADE,
+      ),
+    ).resolves.toMatchObject({ id: INVENTARIO_ID });
+    expect(repository.executarTransacao).toHaveBeenCalledTimes(2);
   });
 
   it("rejeita criação sem setor ativo antes de persistir o inventário", async () => {

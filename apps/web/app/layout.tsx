@@ -19,11 +19,18 @@ export const metadata: Metadata = {
     "Sistema de Gestão Patrimonial da Câmara Municipal de Patos de Minas.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+  modal,
+}: {
+  children: ReactNode;
+  modal: ReactNode;
+}) {
   return (
     <html lang="pt-BR" className={geist.variable}>
       <body>
         {children}
+        {modal}
 
         <WebVitalsReporter />
 

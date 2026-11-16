@@ -467,6 +467,9 @@ export const ListarInventariosResponseSchema =
 export const CriarInventarioResponseSchema = criarRespostaSucessoSchema(
   InventarioDetalheSchema,
 );
+export const EditarInventarioResponseSchema = criarRespostaSucessoSchema(
+  InventarioDetalheSchema,
+);
 export const ConsultarInventarioResponseSchema = criarRespostaSucessoSchema(
   InventarioDetalheSchema,
 );
@@ -516,6 +519,9 @@ export type ListarInventariosResponse = z.output<
 >;
 export type CriarInventarioResponse = z.output<
   typeof CriarInventarioResponseSchema
+>;
+export type EditarInventarioResponse = z.output<
+  typeof EditarInventarioResponseSchema
 >;
 export type ConsultarInventarioResponse = z.output<
   typeof ConsultarInventarioResponseSchema

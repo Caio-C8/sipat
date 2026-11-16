@@ -2,7 +2,7 @@
 
 ## Evolução Web de usabilidade e padronização
 
-**Status:** objetivos 1 a 5 implementados e validados até 15/11/2026. Cada
+**Status:** objetivos 1 a 6 implementados e validados até 16/11/2026. Cada
 etapa restante só é marcada como implementada após as verificações da
 respectiva task.
 
@@ -12,21 +12,21 @@ autorização, estabelece um kit pequeno, aplica-o às verticais de maior valor 
 só então habilita a busca agregada. O Mobile fica fora da frente principal,
 salvo a proteção do leitor de inventário ao final.
 
-| Ordem | Objetivo                                                                          | Resultado observável                                                 | Status       | Dependências                           |
-| ----- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------ | -------------------------------------- |
-| 1     | [`WEB-AUTH-003`](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md)     | `/` e páginas protegidas sem vazio; recuperação correta em staging   | implementada | auth atual e configuração do ambiente  |
-| 2     | [`SEC-002`](../../tasks/SEC-002-matriz-leitura-compartilhada.md)                  | matriz de leitura/mutação provada na API para os dois perfis         | implementada | requisitos e Guards atuais             |
-| 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns       | implementada | primitives atuais                      |
-| 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | shell, `PageHeader` e `SystemFooter` únicos em todas as páginas      | implementada | objetivos 1–3                          |
-| 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final        | implementada | objetivos 2–4                          |
-| 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                   | aprovada     | objetivos 2–4                          |
-| 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | `Pedido #n`, seleção e dados por item simplificados                  | aprovada     | objetivos 2–4 e migration validada     |
-| 8     | [`WEB-DASHBOARD-002`](../../tasks/WEB-DASHBOARD-002-visao-operacional.md)         | uma rota agregada com pendências e atividades pessoais               | aprovada     | objetivos 5–7                          |
-| 9     | [`WEB-CADASTROS-002`](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md)          | cadastros independentes, modais roteáveis e situação junto da edição | aprovada     | objetivos 2–4                          |
-| 10    | [`WEB-OPERACOES-001`](../../tasks/WEB-OPERACOES-001-padronizar-operacoes.md)      | cinco áreas patrimoniais consistentes sem mudar domínio              | aprovada     | objetivos 2–5                          |
-| 11    | [`WEB-RELATORIOS-002`](../../tasks/WEB-RELATORIOS-002-padronizacao-visual.md)     | relatórios funcionais no kit final e valores com sete casas          | aprovada     | objetivos 2–4                          |
-| 12    | [`WEB-BUSCA-001`](../../tasks/WEB-BUSCA-001-busca-global.md)                      | busca única por quinze domínios e resultados autorizados             | aprovada     | objetivos 2, 4–11                      |
-| 13    | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) | leitor pausa após uma etiqueta e retoma por ação explícita           | aprovada     | fluxo Mobile atual; fora da frente Web |
+| Ordem | Objetivo                                                                          | Resultado observável                                                    | Status       | Dependências                           |
+| ----- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------ | -------------------------------------- |
+| 1     | [`WEB-AUTH-003`](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md)     | `/` e páginas protegidas sem vazio; recuperação correta em staging      | implementada | auth atual e configuração do ambiente  |
+| 2     | [`SEC-002`](../../tasks/SEC-002-matriz-leitura-compartilhada.md)                  | matriz de leitura/mutação provada na API para os dois perfis            | implementada | requisitos e Guards atuais             |
+| 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns          | implementada | primitives atuais                      |
+| 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | implementada | objetivos 1–3                          |
+| 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final           | implementada | objetivos 2–4                          |
+| 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                      | implementada | objetivos 2–4                          |
+| 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | `Pedido #n`, seleção e dados por item simplificados                     | aprovada     | objetivos 2–4 e migration validada     |
+| 8     | [`WEB-DASHBOARD-002`](../../tasks/WEB-DASHBOARD-002-visao-operacional.md)         | uma rota agregada com pendências e atividades pessoais                  | aprovada     | objetivos 5–7                          |
+| 9     | [`WEB-CADASTROS-002`](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md)          | cadastros independentes, modais roteáveis e situação junto da edição    | aprovada     | objetivos 2–4                          |
+| 10    | [`WEB-OPERACOES-001`](../../tasks/WEB-OPERACOES-001-padronizar-operacoes.md)      | cinco áreas patrimoniais consistentes sem mudar domínio                 | aprovada     | objetivos 2–5                          |
+| 11    | [`WEB-RELATORIOS-002`](../../tasks/WEB-RELATORIOS-002-padronizacao-visual.md)     | relatórios funcionais no kit final e valores com sete casas             | aprovada     | objetivos 2–4                          |
+| 12    | [`WEB-BUSCA-001`](../../tasks/WEB-BUSCA-001-busca-global.md)                      | busca única por quinze domínios e resultados autorizados                | aprovada     | objetivos 2, 4–11                      |
+| 13    | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) | leitor pausa após uma etiqueta e retoma por ação explícita              | aprovada     | fluxo Mobile atual; fora da frente Web |
 
 ### Regras de execução
 

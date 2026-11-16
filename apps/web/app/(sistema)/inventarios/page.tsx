@@ -2,28 +2,37 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { ListarInventariosQuerySchema } from "@repo/contracts";
+import { PaginationSummary } from "@/components/shared/pagination-summary";
 import { PageHeader } from "@/components/shared/page-header";
-import { AbrirInventarioDialog } from "@/features/inventarios/components/abrir-inventario-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { serverInventarioOperations } from "@/features/inventarios/api/server-inventario-operations";
+import { InventarioFilters } from "@/features/inventarios/components/inventario-filters";
 import { isApiError } from "@/lib/api/core/api-error";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = { title: "Inventários" };
-
-const painel = "rounded-xl border border-[#dfe7f1] bg-white p-5";
-const data = (valor: string | null) =>
-  valor
-    ? new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short",
-        timeZone: "America/Sao_Paulo",
-      }).format(new Date(valor))
-    : "—";
-const rotulos: Record<string, string> = {
+const rotulos = {
   PENDENTE: "Pendente",
   EM_ANDAMENTO: "Em andamento",
   FINALIZADO: "Finalizado",
-};
+} as const;
+const data = (valor: string) =>
+  new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(valor));
 
 export default async function InventariosPage({
   searchParams,
@@ -34,10 +43,13 @@ export default async function InventariosPage({
   const params = await searchParams;
   const busca = typeof params.busca === "string" ? params.busca : undefined;
   const status = typeof params.status === "string" ? params.status : undefined;
+  const comissaoId =
+    typeof params.comissaoId === "string" ? params.comissaoId : undefined;
   const pagina = typeof params.pagina === "string" ? params.pagina : "1";
   const validacao = ListarInventariosQuerySchema.safeParse({
     busca,
     status,
+    comissaoId,
     pagina,
     limite: "20",
   });
@@ -48,170 +60,140 @@ export default async function InventariosPage({
   if (validacao.success) {
     try {
       resposta = await serverInventarioOperations.listar(
-        { busca, status: validacao.data.status, pagina, limite: "20" },
+        {
+          pagina,
+          limite: "20",
+          ...(busca ? { busca } : {}),
+          ...(validacao.data.status ? { status: validacao.data.status } : {}),
+          ...(comissaoId ? { comissaoId } : {}),
+        },
         { cookie: (await headers()).get("cookie") ?? "" },
       );
     } catch (falha) {
       erro = isApiError(falha)
         ? falha.message
-        : "Não foi possível consultar os inventários.";
+        : "Não foi possível consultar os inventários. Tente novamente.";
     }
   }
-  const hrefPagina = (n: number) =>
-    `/inventarios?${new URLSearchParams({ ...(busca ? { busca } : {}), ...(status ? { status } : {}), pagina: String(n) }).toString()}`;
+  const hrefPagina = (numero: number) => {
+    const query = new URLSearchParams({ pagina: String(numero) });
+    if (busca) query.set("busca", busca);
+    if (status) query.set("status", status);
+    if (comissaoId) query.set("comissaoId", comissaoId);
+    return `/inventarios?${query}`;
+  };
   return (
-    <main className="grid min-w-0 gap-5 p-4 text-[#17253d] sm:p-7">
+    <main className="grid min-w-0 gap-5 p-4 sm:p-7">
       <PageHeader
         title="Inventários"
-        description="Consulte inventários, acompanhe divergências e registre correções."
+        description="Consulte o andamento, as divergências e as correções registradas."
         actions={
           identidade.perfil === "DIRETOR_PATRIMONIO" ? (
-            <AbrirInventarioDialog />
+            <Button size="lg" asChild>
+              <Link href="/inventarios/novo">Abrir inventário</Link>
+            </Button>
           ) : undefined
         }
       />
-      <form
-        action="/inventarios"
-        method="get"
-        className={`${painel} grid gap-4 sm:grid-cols-[1fr_220px_auto]`}
-        aria-label="Filtros de inventários"
-      >
-        <label className="text-sm">
-          Buscar inventário
-          <input
-            name="busca"
-            defaultValue={busca ?? ""}
-            className="mt-1 w-full rounded-md border border-[#d8e1ed] px-3 py-2.5"
-            placeholder="Nome ou comissão"
+      <Card>
+        <CardContent>
+          <InventarioFilters
+            buscaInicial={busca}
+            statusInicial={status}
+            comissaoInicial={comissaoId}
           />
-        </label>
-        <label className="text-sm">
-          Situação
-          <select
-            name="status"
-            defaultValue={status ?? ""}
-            className="mt-1 w-full rounded-md border border-[#d8e1ed] bg-white px-3 py-2.5"
-          >
-            <option value="">Todas</option>
-            <option value="PENDENTE">Pendente</option>
-            <option value="EM_ANDAMENTO">Em andamento</option>
-            <option value="FINALIZADO">Finalizado</option>
-          </select>
-        </label>
-        <button className="self-end rounded-md border border-[#d8e1ed] px-5 py-2.5 text-sm font-semibold text-[#203e66]">
-          Consultar
-        </button>
-      </form>
-      {!validacao.success ? (
-        <p role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
-          Os filtros informados são inválidos.
-        </p>
-      ) : erro ? (
-        <p role="alert" className="rounded-md bg-red-50 p-4 text-red-900">
-          {erro}
-        </p>
+        </CardContent>
+      </Card>
+      {!validacao.success || erro ? (
+        <Alert variant="destructive">
+          <AlertTitle>Não foi possível mostrar os inventários</AlertTitle>
+          <AlertDescription>
+            {erro || "Revise os filtros informados e tente novamente."}
+          </AlertDescription>
+        </Alert>
       ) : resposta ? (
-        <section
-          className={`${painel} min-h-[420px]`}
-          aria-labelledby="lista-inventarios-title"
-        >
-          <div className="flex flex-wrap justify-between gap-2">
-            <h2 id="lista-inventarios-title" className="text-lg font-bold">
-              Inventários registrados
-            </h2>
-            <span className="text-sm text-[#627996]">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Inventários registrados</CardTitle>
+            <span className="text-sm text-muted-foreground">
               {resposta.meta.total} registros
             </span>
-          </div>
-          {resposta.dados.length ? (
-            <div
-              className="mt-5 overflow-x-auto"
-              role="region"
-              aria-label="Inventários"
-              tabIndex={0}
-            >
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="bg-[#f6f8fb] text-xs uppercase text-[#627996]">
-                  <tr>
-                    <th className="p-3">Inventário</th>
-                    <th className="p-3">Comissão</th>
-                    <th className="p-3">Progresso</th>
-                    <th className="p-3">Situação</th>
-                    <th className="p-3">Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resposta.dados.map((item) => (
-                    <tr key={item.id} className="border-b border-[#e4eaf2]">
-                      <td className="p-4">
-                        <Link
-                          className="font-bold text-[#203e66] hover:underline"
-                          href={`/inventarios/${item.id}`}
-                        >
-                          {item.nome}
-                        </Link>
-                        <p className="mt-1 text-xs text-[#627996]">
-                          Criado {data(item.createdAt)}
-                        </p>
-                      </td>
-                      <td className="p-4">{item.comissao.nome}</td>
-                      <td className="p-4">
-                        {item.progresso.itensVerificados} de{" "}
-                        {item.progresso.totalItens} bens verificados
-                        <p className="mt-1 text-xs text-[#627996]">
-                          {item.progresso.correcoesPendentes} correções
-                          pendentes
-                        </p>
-                      </td>
-                      <td className="p-4">{rotulos[item.status]}</td>
-                      <td className="p-4">
-                        <Link
-                          className="rounded-md border border-[#d8e1ed] px-4 py-2 font-semibold text-[#203e66]"
-                          href={`/inventarios/${item.id}`}
-                        >
-                          Consultar
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="py-12 text-center text-sm text-[#627996]">
-              Nenhum inventário encontrado.
-            </p>
-          )}
-          <nav className="mt-5 flex justify-between" aria-label="Paginação">
-            {resposta.meta.pagina > 1 ? (
-              <Link
-                className="underline"
-                href={hrefPagina(resposta.meta.pagina - 1)}
-              >
-                Anterior
-              </Link>
+          </CardHeader>
+          <CardContent className="grid gap-5">
+            {resposta.dados.length ? (
+              <div role="region" aria-label="Inventários" tabIndex={0}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Inventário</TableHead>
+                      <TableHead>Comissão</TableHead>
+                      <TableHead>Progresso</TableHead>
+                      <TableHead>Situação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {resposta.dados.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="min-w-56 whitespace-normal">
+                          <Link
+                            className="font-semibold text-primary hover:underline"
+                            href={`/inventarios/${item.id}`}
+                          >
+                            {item.nome}
+                          </Link>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Criado em {data(item.createdAt)}
+                          </p>
+                        </TableCell>
+                        <TableCell className="min-w-48 whitespace-normal">
+                          {item.comissao.nome}
+                        </TableCell>
+                        <TableCell className="min-w-56 whitespace-normal">
+                          {item.progresso.itensVerificados} de{" "}
+                          {item.progresso.totalItens} bens verificados
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {item.progresso.correcoesPendentes} correções
+                            pendentes
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {rotulos[item.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" asChild>
+                              <Link href={`/inventarios/${item.id}`}>
+                                Consultar
+                              </Link>
+                            </Button>
+                            {identidade.perfil === "DIRETOR_PATRIMONIO" &&
+                            item.status === "PENDENTE" ? (
+                              <Button variant="ghost" asChild>
+                                <Link href={`/inventarios/${item.id}/editar`}>
+                                  Editar
+                                </Link>
+                              </Button>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             ) : (
-              <span />
+              <p className="py-12 text-center text-sm text-muted-foreground">
+                Nenhum inventário encontrado. Ajuste os filtros e tente
+                novamente.
+              </p>
             )}
-            {resposta.meta.pagina < resposta.meta.ultimaPagina && (
-              <Link
-                className="underline"
-                href={hrefPagina(resposta.meta.pagina + 1)}
-              >
-                Próxima
-              </Link>
-            )}
-          </nav>
-        </section>
+            <PaginationSummary meta={resposta.meta} href={hrefPagina} />
+          </CardContent>
+        </Card>
       ) : null}
-      <aside className="rounded-lg bg-[#eef5ff] p-4 text-sm text-[#35577e]">
-        <strong className="block text-[#203e66]">
-          Conferência no aplicativo móvel
-        </strong>
-        Esta interface permite abrir e consultar inventários e resolver
-        divergências. A conferência presencial e a conclusão dos setores são
-        realizadas no aplicativo móvel.
-      </aside>
     </main>
   );
 }

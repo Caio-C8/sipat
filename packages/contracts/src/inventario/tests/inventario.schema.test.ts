@@ -11,6 +11,7 @@ import {
   ConcluirSetorInventarioBodySchema,
   CorrigirItemInventarioBodySchema,
   CriarInventarioBodySchema,
+  EditarInventarioBodySchema,
   FinalizarInventarioBodySchema,
   InventarioDetalheSchema,
   InventarioParamsSchema,
@@ -153,6 +154,31 @@ describe("contratos de inventários", () => {
         createdById: ids.usuario,
       },
     ]);
+  });
+
+  it("normaliza a edição e exige a versão consultada", () => {
+    assert.deepEqual(
+      parseValido(EditarInventarioBodySchema, {
+        nome: "  Inventário anual  ",
+        descricao: null,
+        observacao: "  Conferir anexos.  ",
+        comissaoId: ids.comissao,
+        versaoEsperada: "2026-11-16T12:00:00.000Z",
+      }),
+      {
+        nome: "Inventário anual",
+        descricao: null,
+        observacao: "Conferir anexos.",
+        comissaoId: ids.comissao,
+        versaoEsperada: "2026-11-16T12:00:00.000Z",
+      },
+    );
+    esperaInvalido(EditarInventarioBodySchema, {
+      nome: "Inventário anual",
+      descricao: null,
+      observacao: null,
+      comissaoId: ids.comissao,
+    });
   });
 
   it("mantém params UUID próprios e listagens paginadas com filtros finitos", () => {

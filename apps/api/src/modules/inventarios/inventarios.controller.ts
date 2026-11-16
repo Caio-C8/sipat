@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -14,6 +15,7 @@ import type {
   ConsultarInventarioResponse,
   CorrigirItemInventarioResponse,
   CriarInventarioResponse,
+  EditarInventarioResponse,
   FinalizarInventarioResponse,
   IniciarSetorInventarioResponse,
   ListarInventariosResponse,
@@ -32,6 +34,8 @@ import {
   CorrigirItemInventarioResponseDto,
   CriarInventarioBodyDto,
   CriarInventarioResponseDto,
+  EditarInventarioBodyDto,
+  EditarInventarioResponseDto,
   FinalizarInventarioBodyDto,
   FinalizarInventarioResponseDto,
   IniciarSetorInventarioBodyDto,
@@ -148,6 +152,22 @@ export class InventariosController {
       status: HttpStatus.CREATED,
       sucesso: true,
       mensagem: "Inventário criado com sucesso.",
+      dados: InventarioResponseMapper.paraDetalhe(inventario),
+    };
+  }
+
+  @Patch(":inventarioId")
+  @PerfisPermitidos("DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(EditarInventarioResponseDto)
+  async editar(
+    @Param() params: InventarioParamsDto,
+    @Body() body: EditarInventarioBodyDto,
+  ): Promise<EditarInventarioResponse> {
+    const inventario = await this.inventarios.editar(params.inventarioId, body);
+    return {
+      status: HttpStatus.OK,
+      sucesso: true,
+      mensagem: "Inventário atualizado com sucesso.",
       dados: InventarioResponseMapper.paraDetalhe(inventario),
     };
   }

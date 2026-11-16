@@ -18,6 +18,48 @@ export const rotulosEvento = {
   CORRECAO_LOCALIZACAO: "Correção de localização",
 } as const;
 
+const rotulosValorEnum: Record<string, string> = {
+  ALIENACAO: "Alienação",
+  INUTILIZACAO: "Inutilização",
+  SINISTRO: "Sinistro",
+  FURTO: "Furto",
+  EXTRAVIO: "Extravio",
+  TRANSFERENCIA: "Transferência definitiva",
+  RECLASSIFICACAO: "Reclassificação",
+  ABANDONO: "Abandono",
+  ERRO_REGISTRO: "Erro de registro",
+  OUTRO: "Outro",
+  PREVENTIVA: "Preventiva",
+  CORRETIVA: "Corretiva",
+  PENDENTE: "Pendente",
+  RETORNADO: "Retornado",
+  EM_ANDAMENTO: "Em andamento",
+  CONCLUIDA: "Concluída",
+  FINALIZADO: "Finalizado",
+  CONCLUIDO: "Concluído",
+  CORRETO: "Correto",
+  DIVERGENCIA: "Divergência",
+  NAO_LOCALIZADO: "Não localizado",
+  VERIFICADO: "Verificado",
+  CORRIGIDO: "Corrigido",
+  RETORNO_AO_SETOR_CADASTRADO: "Retorno ao setor cadastrado",
+  TRANSFERENCIA_CADASTRAL: "Transferência cadastral",
+  ATIVO: "Ativo",
+  EMPRESTADO: "Emprestado",
+  EM_MANUTENCAO: "Em manutenção",
+};
+
+export function formatarRotuloEnum(valor: string): string {
+  const normalizado = valor.trim();
+  if (!normalizado) return normalizado;
+
+  const rotuloConhecido = rotulosValorEnum[normalizado.toUpperCase()];
+  if (rotuloConhecido) return rotuloConhecido;
+
+  const texto = normalizado.toLocaleLowerCase("pt-BR").replaceAll("_", " ");
+  return texto.charAt(0).toLocaleUpperCase("pt-BR") + texto.slice(1);
+}
+
 export function formatarData(valor: string | null) {
   if (!valor) return "Data não informada";
   const data = /^\d{4}-\d{2}-\d{2}$/.test(valor)
@@ -80,13 +122,13 @@ export function apresentarEvento(evento: EventoFicha): {
     case "BAIXA":
       return {
         titulo,
-        descricao: `${evento.atributos.tipo}: ${evento.atributos.motivo}`,
+        descricao: `${formatarRotuloEnum(evento.atributos.tipo)}: ${evento.atributos.motivo}`,
         detalhe: evento.atributos.observacao ?? "Sem observação informada.",
       };
     case "ENVIO_MANUTENCAO":
       return {
         titulo,
-        descricao: `${evento.atributos.tipo} · ${evento.atributos.situacao}`,
+        descricao: `${formatarRotuloEnum(evento.atributos.tipo)} · ${formatarRotuloEnum(evento.atributos.situacao)}`,
         detalhe: evento.atributos.servico ?? "Serviço não informado.",
       };
     case "REVISAO_ORCAMENTO":
@@ -98,19 +140,23 @@ export function apresentarEvento(evento: EventoFicha): {
     case "RETORNO_MANUTENCAO":
       return {
         titulo,
-        descricao: `Retorno da manutenção · ${evento.atributos.situacao}`,
+        descricao: `Retorno da manutenção · ${formatarRotuloEnum(evento.atributos.situacao)}`,
         detalhe: evento.atributos.servico ?? "Serviço não informado.",
       };
     case "CONFERENCIA_INVENTARIO":
       return {
         titulo,
-        descricao: evento.atributos.situacao ?? "Conferência registrada.",
+        descricao: evento.atributos.situacao
+          ? formatarRotuloEnum(evento.atributos.situacao)
+          : "Conferência registrada.",
         detalhe: evento.atributos.observacao ?? "Sem observação informada.",
       };
     case "CORRECAO_INVENTARIO":
       return {
         titulo,
-        descricao: evento.atributos.tipoCorrecao ?? "Correção registrada.",
+        descricao: evento.atributos.tipoCorrecao
+          ? formatarRotuloEnum(evento.atributos.tipoCorrecao)
+          : "Correção registrada.",
         detalhe: evento.atributos.observacao ?? "Sem observação informada.",
       };
     case "LOCALIZACAO_POSTERIOR":
@@ -124,9 +170,9 @@ export function apresentarEvento(evento: EventoFicha): {
     case "CORRECAO_LOCALIZACAO":
       return {
         titulo,
-        descricao:
-          evento.atributos.tipoCorrecaoPosterior ??
-          "Correção da localização registrada.",
+        descricao: evento.atributos.tipoCorrecaoPosterior
+          ? formatarRotuloEnum(evento.atributos.tipoCorrecaoPosterior)
+          : "Correção da localização registrada.",
         detalhe: evento.atributos.observacao ?? "Sem observação informada.",
       };
   }

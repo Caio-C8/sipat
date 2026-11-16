@@ -172,12 +172,29 @@ export class InventariosRepository {
     inventarioId: string,
   ): Promise<InventarioOperacional | null> {
     const registros = await this.database.$queryRaw<InventarioOperacional[]>`
-      SELECT "id", "status", "comissao_id" AS "comissaoId"
+      SELECT "id", "status", "comissao_id" AS "comissaoId",
+             "updated_at" AS "updatedAt"
       FROM "inventarios"
       WHERE "id" = ${inventarioId}::uuid
       FOR UPDATE
     `;
     return registros[0] ?? null;
+  }
+
+  editarInventario(
+    inventarioId: string,
+    dados: {
+      nome: string;
+      descricao: string | null;
+      observacao: string | null;
+      comissaoId: string;
+    },
+  ): Promise<InventarioDetalhePayload> {
+    return this.database.inventario.update({
+      where: { id: inventarioId },
+      data: { ...dados, updatedAt: new Date() },
+      ...inventarioDetalheArgs,
+    });
   }
 
   async bloquearSetorInventario(
