@@ -416,10 +416,12 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       .expect(409);
     expect(repetido.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
     for (const metodo of ["patch", "delete"] as const) {
-      const requisicao = request(app.getHttpServer())
-        [metodo](
-          `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
-        )
+      const endpoint = `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`;
+      const requisicao =
+        metodo === "patch"
+          ? request(app.getHttpServer()).patch(endpoint)
+          : request(app.getHttpServer()).delete(endpoint);
+      requisicao
         .set("Cookie", diretorCookie)
         .set("Origin", ORIGEM)
         .set(CABECALHO_CSRF, "1");
@@ -588,10 +590,12 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
     ).not.toBeNull();
 
     for (const metodo of ["patch", "delete"] as const) {
-      const requisicao = request(app.getHttpServer())
-        [metodo](
-          `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
-        )
+      const endpoint = `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`;
+      const requisicao =
+        metodo === "patch"
+          ? request(app.getHttpServer()).patch(endpoint)
+          : request(app.getHttpServer()).delete(endpoint);
+      requisicao
         .set("Cookie", diretorCookie)
         .set("Origin", ORIGEM)
         .set(CABECALHO_CSRF, "1");
