@@ -1,12 +1,13 @@
 import {
   AtualizarOrcamentoManutencaoBodySchema,
   AtualizarOrcamentoManutencaoResponseSchema,
+  AlterarAnexoObservacaoManutencaoResponseSchema,
   CABECALHO_CSRF,
   ConsultarManutencaoResponseSchema,
   CriarManutencaoBodySchema,
   CriarManutencaoResponseSchema,
-  DadosDocumentoManutencaoSchema,
-  EnviarDocumentoManutencaoResponseSchema,
+  DadosAnexoObservacaoManutencaoSchema,
+  EnviarAnexoObservacaoManutencaoResponseSchema,
   ItemManutencaoParamsSchema,
   ListarComissoesManutencaoQuerySchema,
   ListarComissoesManutencaoResponseSchema,
@@ -19,9 +20,10 @@ import {
   ManutencaoParamsSchema,
   RegistrarRetornoManutencaoBodySchema,
   RegistrarRetornoManutencaoResponseSchema,
+  RemoverAnexoObservacaoManutencaoResponseSchema,
   VALOR_CABECALHO_CSRF,
   type CriarManutencaoBodyInput,
-  type DadosDocumentoManutencao,
+  type DadosAnexoObservacaoManutencao,
   type ListarManutencoesQueryInput,
   type ListarPatrimoniosQueryInput,
 } from "@repo/contracts";
@@ -125,9 +127,10 @@ export function criarOperacoesManutencoes(client: ApiClient) {
         responseSchema: RegistrarRetornoManutencaoResponseSchema,
       });
     },
-    enviarDocumento(
+    enviarAnexoObservacao(
       pedidoId: string,
-      dados: DadosDocumentoManutencao,
+      itemId: string | null,
+      dados: DadosAnexoObservacaoManutencao,
       arquivo: File,
     ) {
       const { manutencaoId } = ManutencaoParamsSchema.parse({
@@ -136,15 +139,55 @@ export function criarOperacoesManutencoes(client: ApiClient) {
       const form = new FormData();
       form.append(
         "dados",
-        JSON.stringify(DadosDocumentoManutencaoSchema.parse(dados)),
+        JSON.stringify(DadosAnexoObservacaoManutencaoSchema.parse(dados)),
       );
       form.append("documento", arquivo);
       return client.request({
-        path: `/manutencoes/${manutencaoId}/documentos`,
+        path: itemId
+          ? `/manutencoes/${manutencaoId}/itens/${itemId}/anexo-observacao`
+          : `/manutencoes/${manutencaoId}/anexo-observacao`,
         method: "POST",
         body: form,
         headers: mutacao,
-        responseSchema: EnviarDocumentoManutencaoResponseSchema,
+        responseSchema: EnviarAnexoObservacaoManutencaoResponseSchema,
+      });
+    },
+    substituirAnexoObservacao(
+      pedidoId: string,
+      itemId: string | null,
+      dados: DadosAnexoObservacaoManutencao,
+      arquivo: File,
+    ) {
+      const { manutencaoId } = ManutencaoParamsSchema.parse({
+        manutencaoId: pedidoId,
+      });
+      const form = new FormData();
+      form.append(
+        "dados",
+        JSON.stringify(DadosAnexoObservacaoManutencaoSchema.parse(dados)),
+      );
+      form.append("documento", arquivo);
+      return client.request({
+        path: itemId
+          ? `/manutencoes/${manutencaoId}/itens/${itemId}/anexo-observacao`
+          : `/manutencoes/${manutencaoId}/anexo-observacao`,
+        method: "PATCH",
+        body: form,
+        headers: mutacao,
+        responseSchema: AlterarAnexoObservacaoManutencaoResponseSchema,
+      });
+    },
+    removerAnexoObservacao(pedidoId: string, itemId: string | null) {
+      const { manutencaoId } = ManutencaoParamsSchema.parse({
+        manutencaoId: pedidoId,
+      });
+      return client.request({
+        path: itemId
+          ? `/manutencoes/${manutencaoId}/itens/${itemId}/anexo-observacao`
+          : `/manutencoes/${manutencaoId}/anexo-observacao`,
+        method: "DELETE",
+        headers: mutacao,
+        responseSchema: RemoverAnexoObservacaoManutencaoResponseSchema,
       });
     },
   };

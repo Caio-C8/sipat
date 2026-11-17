@@ -10,8 +10,7 @@ import {
 import type {
   AtualizarOrcamentoManutencaoBodyData,
   CriarManutencaoBodyData,
-  DadosDocumentoManutencao,
-  DocumentoManutencao,
+  AnexoObservacaoManutencao,
   IdentidadeAutenticada,
   ListarComissoesManutencaoQueryData,
   ListarFornecedoresManutencaoQueryData,
@@ -20,10 +19,7 @@ import type {
   RegistrarRetornoManutencaoBodyData,
   RetornoManutencao,
 } from "@repo/contracts";
-import {
-  CampoDadosDocumentoManutencaoSchema,
-  LIMITE_DOCUMENTOS_ITEM_MANUTENCAO,
-} from "@repo/contracts";
+import { CampoDadosAnexoObservacaoManutencaoSchema } from "@repo/contracts";
 import { Prisma } from "@repo/database";
 import { ZodValidationException } from "nestjs-zod";
 import {
@@ -68,6 +64,7 @@ export class ManutencoesService {
   ) {}
 
   async listar(query: ListarManutencoesQueryData) {
+    const numeroPedido = query.busca ? this.numeroPedido(query.busca) : null;
     const where: Prisma.ManutencaoWhereInput = {
       ...(query.status ? { status: query.status } : {}),
       ...(query.dataEnvioInicio || query.dataEnvioFim
@@ -84,6 +81,7 @@ export class ManutencoesService {
         ? {
             OR: [
               ...(this.ehUuid(query.busca) ? [{ id: query.busca }] : []),
+              ...(numeroPedido !== null ? [{ numeroPedido }] : []),
               {
                 numeroRequisicao: {
                   contains: query.busca,
@@ -130,7 +128,7 @@ export class ManutencoesService {
           ...linha,
           totalItens: linha._count.itens,
           itensPendentes: linha.itens.length,
-          temPdfPedido: linha._count.documentos > 0,
+          temAnexoObservacao: Boolean(linha.caminhoAnexoObservacao),
         }),
       ),
       total,
@@ -138,6 +136,12 @@ export class ManutencoesService {
       limite: query.limite,
       ultimaPagina: Math.max(1, Math.ceil(total / query.limite)),
     };
+  }
+
+  private numeroPedido(busca: string): bigint | null {
+    if (!/^[1-9]\d*$/.test(busca)) return null;
+    const numero = BigInt(busca);
+    return numero <= 9_223_372_036_854_775_807n ? numero : null;
   }
 
   async consultar(id: string): Promise<ManutencaoPayload> {
@@ -422,6 +426,16 @@ export class ManutencoesService {
             throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
           return this.recuperarResultado(anterior, payloadHash, "RETORNO");
         }
+        if (!(await repo.bloquearPedido(pedidoId)))
+          throw this.naoEncontrado(
+            "MANUTENCAO_NAO_ENCONTRADA",
+            "Pedido de manutenção não encontrado.",
+          );
+        if (!(await repo.bloquearItem(itemId, pedidoId)))
+          throw this.naoEncontrado(
+            "ITEM_MANUTENCAO_NAO_ENCONTRADO",
+            "Item não encontrado neste pedido.",
+          );
         const pedidoAntes = await repo.consultar(pedidoId);
         const itemAntes = pedidoAntes?.itens.find(
           (linha) => linha.id === itemId,
@@ -460,7 +474,6 @@ export class ManutencoesService {
           [itemAntes.patrimonioId],
           tx,
         );
-        await repo.bloquearItem(itemId, pedidoId);
         const pedido = await repo.consultar(pedidoId);
         const item = pedido?.itens.find((linha) => linha.id === itemId);
         if (!pedido || !item)
@@ -524,19 +537,22 @@ export class ManutencoesService {
     );
   }
 
-  async enviarDocumento(
+  async enviarAnexoObservacao(
     pedidoId: string,
+    itemId: string | null,
     body: Record<string, unknown>,
     arquivo: ArquivoPdfTemporario | undefined,
     identidade: IdentidadeAutenticada,
   ) {
-    const resultado = CampoDadosDocumentoManutencaoSchema.safeParse(body.dados);
+    const resultado = CampoDadosAnexoObservacaoManutencaoSchema.safeParse(
+      body.dados,
+    );
     if (!resultado.success) throw new ZodValidationException(resultado.error);
     const dados = resultado.data;
     if (!arquivo)
       throw this.entradaInvalida(
         "DOCUMENTO_MANUTENCAO_INVALIDO",
-        "Envie um PDF no campo documento.",
+        "Selecione o anexo da observação em PDF.",
       );
     await validarArquivoPdf(arquivo, {
       campo: "documento",
@@ -551,6 +567,7 @@ export class ManutencoesService {
     const hashArquivo = arquivoHash.digest("hex");
     const payloadHash = calcularHashIdempotencia({
       pedidoId,
+      itemId,
       dados,
       hashArquivo,
     });
@@ -559,10 +576,10 @@ export class ManutencoesService {
       dados.chaveIdempotencia,
     );
     if (anterior)
-      return this.recuperarDocumento(anterior, pedidoId, payloadHash);
-    const chave = `uploads/manutencoes/${pedidoId}_${new Date().toISOString().slice(0, 10).replace(/-/g, "")}_${randomUUID()}.pdf`;
+      return this.recuperarAnexo(anterior, pedidoId, itemId, payloadHash);
+    const chave = `uploads/manutencoes/${pedidoId}_${itemId ?? "pedido"}_${new Date().toISOString().slice(0, 10).replace(/-/g, "")}_${randomUUID()}.pdf`;
     const conteudo = createReadStream(arquivo.path);
-    let criado: DocumentoManutencao | null = null;
+    let criado: AnexoObservacaoManutencao | null = null;
     try {
       await this.documentos.criar({ chave, conteudo }, async () => {
         criado = await this.repetirTransacao(async () =>
@@ -576,78 +593,256 @@ export class ManutencoesService {
               identidade.id,
               dados.chaveIdempotencia,
             );
-            if (existente) throw new DocumentoRepetido(existente);
-            const pedido = await repo.consultar(pedidoId);
-            if (!pedido)
-              throw this.naoEncontrado(
-                "MANUTENCAO_NAO_ENCONTRADA",
-                "Pedido de manutenção não encontrado.",
-              );
-            this.validarFaseDocumento(pedido, dados);
-            if (
-              dados.fase === "PEDIDO" &&
-              (await repo.contarDocumentosPedido(pedidoId)) > 0
-            )
+            if (existente) throw new AnexoRepetido(existente);
+            const { pedido, item } = await this.bloquearAlvoAnexo(
+              repo,
+              pedidoId,
+              itemId,
+            );
+            const caminhoAtual = item
+              ? item.caminhoAnexoObservacao
+              : pedido.caminhoAnexoObservacao;
+            if (caminhoAtual)
               throw this.conflito(
                 "LIMITE_DOCUMENTOS_MANUTENCAO",
-                "O pedido já possui um PDF comum.",
+                "Já existe um anexo da observação para este registro.",
               );
-            if (
-              dados.itemId &&
-              (await repo.contarDocumentosItem(dados.itemId)) >=
-                LIMITE_DOCUMENTOS_ITEM_MANUTENCAO
-            )
-              throw this.conflito(
-                "LIMITE_DOCUMENTOS_MANUTENCAO",
-                "O item já atingiu o limite de documentos.",
-              );
-            const doc = await repo.criarDocumento({
-              manutencaoId: pedidoId,
-              itemId: dados.itemId ?? null,
-              fase: dados.fase,
-              chave,
-              nome: "Documento de manutenção.pdf",
-              tamanhoBytes: arquivo.size,
-              hashSha256: hashArquivo,
-              createdById: identidade.id,
-            });
-            const resultado = ManutencaoResponseMapper.documento(pedidoId, doc);
+            if (item)
+              await repo.atualizarItem(item.id, {
+                caminhoAnexoObservacao: chave,
+                updatedAt: new Date(),
+              });
+            else
+              await repo.atualizarPedido(pedidoId, {
+                caminhoAnexoObservacao: chave,
+                updatedAt: new Date(),
+              });
+            const resultado = {
+              url: item
+                ? `/api/backend/manutencoes/${pedidoId}/itens/${item.id}/anexo-observacao`
+                : `/api/backend/manutencoes/${pedidoId}/anexo-observacao`,
+            };
             await repo.salvarIdempotencia({
               usuarioId: identidade.id,
               chave: dados.chaveIdempotencia,
               tipo: "DOCUMENTO",
               hashPayload: payloadHash,
               manutencaoId: pedidoId,
-              itemId: dados.itemId ?? null,
-              documentoId: doc.id,
+              itemId,
             });
             return resultado;
           }),
         );
       });
     } catch (erro) {
-      if (erro instanceof DocumentoRepetido)
-        return this.recuperarDocumento(erro.registro, pedidoId, payloadHash);
+      if (erro instanceof AnexoRepetido)
+        return this.recuperarAnexo(
+          erro.registro,
+          pedidoId,
+          itemId,
+          payloadHash,
+        );
       throw erro;
     } finally {
       conteudo.destroy();
     }
-    if (!criado) throw new Error("Documento criado não encontrado.");
+    if (!criado) throw new Error("Anexo criado não encontrado.");
     return criado;
   }
 
-  async abrirDocumento(pedidoId: string, documentoId: string) {
-    const documento = await this.manutencoes.consultarDocumento(
-      documentoId,
-      pedidoId,
+  async substituirAnexoObservacao(
+    pedidoId: string,
+    itemId: string | null,
+    body: Record<string, unknown>,
+    arquivo: ArquivoPdfTemporario | undefined,
+    identidade: IdentidadeAutenticada,
+  ): Promise<ManutencaoDetalhe> {
+    const resultado = CampoDadosAnexoObservacaoManutencaoSchema.safeParse(
+      body.dados,
     );
-    if (!documento)
+    if (!resultado.success) throw new ZodValidationException(resultado.error);
+    const dados = resultado.data;
+    if (!arquivo)
+      throw this.entradaInvalida(
+        "DOCUMENTO_MANUTENCAO_INVALIDO",
+        "Selecione o novo anexo da observação em PDF.",
+      );
+    await validarArquivoPdf(arquivo, {
+      campo: "documento",
+      codigoTipoInvalido: "DOCUMENTO_MANUTENCAO_INVALIDO",
+      mensagemTipoInvalido: "Envie um arquivo PDF.",
+      mensagemConteudoInvalido:
+        "O conteúdo do documento não corresponde a um PDF válido.",
+    });
+
+    const pedidoAtual = await this.consultar(pedidoId);
+    const itemAtual = itemId
+      ? pedidoAtual.itens.find((item) => item.id === itemId)
+      : null;
+    this.validarEstadoAnexo(pedidoAtual, itemId, itemAtual ?? null);
+    const chaveAtual = itemAtual
+      ? itemAtual.caminhoAnexoObservacao
+      : pedidoAtual.caminhoAnexoObservacao;
+    if (!chaveAtual) throw this.documentoManutencaoNaoEncontrado();
+
+    const arquivoHash = createHash("sha256");
+    for await (const bloco of createReadStream(arquivo.path))
+      arquivoHash.update(bloco);
+    const payloadHash = calcularHashIdempotencia({
+      pedidoId,
+      itemId,
+      dados,
+      hashArquivo: arquivoHash.digest("hex"),
+      operacao: "SUBSTITUIR",
+    });
+    const anterior = await this.manutencoes.buscarIdempotencia(
+      identidade.id,
+      dados.chaveIdempotencia,
+    );
+    if (anterior)
+      return this.recuperarAnexo(anterior, pedidoId, itemId, payloadHash);
+
+    const novaChave = `uploads/manutencoes/${pedidoId}_${itemId ?? "pedido"}_${new Date().toISOString().slice(0, 10).replace(/-/g, "")}_${randomUUID()}.pdf`;
+    const conteudo = createReadStream(arquivo.path);
+    try {
+      await this.documentos.substituir(
+        chaveAtual,
+        { chave: novaChave, conteudo },
+        async () => {
+          await this.repetirTransacao(async () =>
+            this.manutencoes.executarTransacao(async (repo) => {
+              await this.bloquearChave(
+                repo,
+                identidade.id,
+                dados.chaveIdempotencia,
+              );
+              const existente = await repo.buscarIdempotencia(
+                identidade.id,
+                dados.chaveIdempotencia,
+              );
+              if (existente) throw new AnexoRepetido(existente);
+              const { pedido, item } = await this.bloquearAlvoAnexo(
+                repo,
+                pedidoId,
+                itemId,
+              );
+              const referenciaAtual = item
+                ? item.caminhoAnexoObservacao
+                : pedido.caminhoAnexoObservacao;
+              if (!referenciaAtual)
+                throw this.documentoManutencaoNaoEncontrado();
+              if (referenciaAtual !== chaveAtual)
+                throw this.conflito(
+                  "CONFLITO_CONCORRENTE_MANUTENCAO",
+                  "O anexo mudou durante a operação. Consulte novamente.",
+                );
+              if (item)
+                await repo.atualizarItem(item.id, {
+                  caminhoAnexoObservacao: novaChave,
+                  updatedAt: new Date(),
+                });
+              else
+                await repo.atualizarPedido(pedidoId, {
+                  caminhoAnexoObservacao: novaChave,
+                  updatedAt: new Date(),
+                });
+              await repo.salvarIdempotencia({
+                usuarioId: identidade.id,
+                chave: dados.chaveIdempotencia,
+                tipo: "DOCUMENTO",
+                hashPayload: payloadHash,
+                manutencaoId: pedidoId,
+                itemId,
+              });
+            }),
+          );
+        },
+      );
+    } catch (erro) {
+      if (erro instanceof AnexoRepetido)
+        return this.recuperarAnexo(
+          erro.registro,
+          pedidoId,
+          itemId,
+          payloadHash,
+        );
+      throw erro;
+    } finally {
+      conteudo.destroy();
+    }
+    return ManutencaoResponseMapper.detalhe(await this.consultar(pedidoId));
+  }
+
+  async removerAnexoObservacao(
+    pedidoId: string,
+    itemId: string | null,
+  ): Promise<ManutencaoDetalhe> {
+    const pedidoAtual = await this.consultar(pedidoId);
+    const itemAtual = itemId
+      ? pedidoAtual.itens.find((item) => item.id === itemId)
+      : null;
+    this.validarEstadoAnexo(pedidoAtual, itemId, itemAtual ?? null);
+    const chaveAtual = itemAtual
+      ? itemAtual.caminhoAnexoObservacao
+      : pedidoAtual.caminhoAnexoObservacao;
+
+    if (!chaveAtual) {
+      return this.repetirTransacao(async () =>
+        this.manutencoes.executarTransacao(async (repo) => {
+          const { pedido } = await this.bloquearAlvoAnexo(
+            repo,
+            pedidoId,
+            itemId,
+          );
+          return ManutencaoResponseMapper.detalhe(pedido);
+        }),
+      );
+    }
+
+    await this.documentos.remover(chaveAtual, async () => {
+      await this.repetirTransacao(async () =>
+        this.manutencoes.executarTransacao(async (repo) => {
+          const { pedido, item } = await this.bloquearAlvoAnexo(
+            repo,
+            pedidoId,
+            itemId,
+          );
+          const referenciaAtual = item
+            ? item.caminhoAnexoObservacao
+            : pedido.caminhoAnexoObservacao;
+          if (referenciaAtual !== chaveAtual)
+            throw this.conflito(
+              "CONFLITO_CONCORRENTE_MANUTENCAO",
+              "O anexo mudou durante a operação. Consulte novamente.",
+            );
+          if (item)
+            await repo.atualizarItem(item.id, {
+              caminhoAnexoObservacao: null,
+              updatedAt: new Date(),
+            });
+          else
+            await repo.atualizarPedido(pedidoId, {
+              caminhoAnexoObservacao: null,
+              updatedAt: new Date(),
+            });
+        }),
+      );
+    });
+    return ManutencaoResponseMapper.detalhe(await this.consultar(pedidoId));
+  }
+
+  async abrirAnexoObservacao(pedidoId: string, itemId: string | null) {
+    const pedido = await this.manutencoes.consultar(pedidoId);
+    const chave = itemId
+      ? pedido?.itens.find((item) => item.id === itemId)?.caminhoAnexoObservacao
+      : pedido?.caminhoAnexoObservacao;
+    if (!chave)
       throw this.naoEncontrado(
         "DOCUMENTO_MANUTENCAO_NAO_ENCONTRADO",
         "Documento não encontrado neste pedido.",
       );
     try {
-      return await this.armazenamento.abrir(documento.chave);
+      return await this.armazenamento.abrir(chave);
     } catch (erro) {
       if (erro instanceof ErroArmazenamentoDocumentos)
         throw this.naoEncontrado(
@@ -658,44 +853,22 @@ export class ManutencoesService {
     }
   }
 
-  private validarFaseDocumento(
-    pedido: ManutencaoPayload,
-    dados: DadosDocumentoManutencao,
-  ) {
-    if (dados.fase === "PEDIDO") return;
-    const item = pedido.itens.find((linha) => linha.id === dados.itemId);
-    if (!item)
-      throw this.naoEncontrado(
-        "ITEM_MANUTENCAO_NAO_ENCONTRADO",
-        "Item não encontrado neste pedido.",
-      );
-    if (dados.fase === "ENVIO" && item.dataRetorno)
-      throw this.conflito(
-        "ITEM_JA_RECEBIDO",
-        "Documentos de envio só podem ser anexados antes do retorno.",
-      );
-    if (dados.fase === "RECEBIMENTO" && !item.dataRetorno)
-      throw this.conflito(
-        "ITEM_JA_RECEBIDO",
-        "Registre o retorno antes de anexar este documento.",
-      );
-  }
-
-  private recuperarDocumento(
+  private recuperarAnexo(
     registro: {
       tipo: string;
       hashPayload: string;
       manutencaoId: string;
-      documentoId: string | null;
+      itemId: string | null;
     },
     pedidoId: string,
+    itemId: string | null,
     payloadHash: string,
   ): never {
     if (
       registro.tipo !== "DOCUMENTO" ||
       registro.hashPayload !== payloadHash ||
       registro.manutencaoId !== pedidoId ||
-      !registro.documentoId
+      registro.itemId !== itemId
     )
       throw this.conflitoIdempotencia("CHAVE_IDEMPOTENCIA_REUTILIZADA");
     throw this.conflitoIdempotencia("OPERACAO_JA_PROCESSADA");
@@ -721,6 +894,60 @@ export class ManutencoesService {
   ) {
     if (!(await repo.tentarBloquearChave(usuarioId, chave)))
       throw this.conflitoIdempotencia("OPERACAO_EM_PROCESSAMENTO");
+  }
+  private async bloquearAlvoAnexo(
+    repo: ManutencoesRepository,
+    pedidoId: string,
+    itemId: string | null,
+  ) {
+    if (!(await repo.bloquearPedido(pedidoId)))
+      throw this.naoEncontrado(
+        "MANUTENCAO_NAO_ENCONTRADA",
+        "Pedido de manutenção não encontrado.",
+      );
+    if (itemId && !(await repo.bloquearItem(itemId, pedidoId)))
+      throw this.naoEncontrado(
+        "ITEM_MANUTENCAO_NAO_ENCONTRADO",
+        "Item não encontrado neste pedido.",
+      );
+    const pedido = await repo.consultar(pedidoId);
+    if (!pedido)
+      throw this.naoEncontrado(
+        "MANUTENCAO_NAO_ENCONTRADA",
+        "Pedido de manutenção não encontrado.",
+      );
+    const item = itemId
+      ? (pedido.itens.find((linha) => linha.id === itemId) ?? null)
+      : null;
+    this.validarEstadoAnexo(pedido, itemId, item);
+    return { pedido, item };
+  }
+  private validarEstadoAnexo(
+    pedido: ManutencaoPayload,
+    itemId: string | null,
+    item: ManutencaoPayload["itens"][number] | null,
+  ) {
+    if (itemId && !item)
+      throw this.naoEncontrado(
+        "ITEM_MANUTENCAO_NAO_ENCONTRADO",
+        "Item não encontrado neste pedido.",
+      );
+    if (pedido.status === "CONCLUIDA")
+      throw this.conflito(
+        "MANUTENCAO_CONCLUIDA",
+        "O anexo não pode ser alterado após a conclusão do pedido.",
+      );
+    if (item?.dataRetorno)
+      throw this.conflito(
+        "ITEM_JA_RECEBIDO",
+        "O anexo não pode ser alterado após o retorno do item.",
+      );
+  }
+  private documentoManutencaoNaoEncontrado() {
+    return this.naoEncontrado(
+      "DOCUMENTO_MANUTENCAO_NAO_ENCONTRADO",
+      "Anexo da observação não encontrado.",
+    );
   }
   private exigirFornecedorAtivo(
     id: string,
@@ -778,12 +1005,13 @@ export class ManutencoesService {
       try {
         return await operacao();
       } catch (erro) {
-        if (
-          erro instanceof Prisma.PrismaClientKnownRequestError &&
-          erro.code === "P2034" &&
-          tentativa < 2
-        )
-          continue;
+        if (this.ehConflitoSerializacao(erro)) {
+          if (tentativa < 2) continue;
+          throw this.conflito(
+            "CONFLITO_CONCORRENTE_MANUTENCAO",
+            "O estado mudou durante a operação. Consulte novamente.",
+          );
+        }
         if (
           erro instanceof Prisma.PrismaClientKnownRequestError &&
           erro.code === "P2002"
@@ -800,17 +1028,45 @@ export class ManutencoesService {
       "O estado mudou durante a operação. Consulte novamente.",
     );
   }
+
+  private ehConflitoSerializacao(erro: unknown): boolean {
+    if (
+      erro instanceof Prisma.PrismaClientKnownRequestError &&
+      erro.code === "P2034"
+    )
+      return true;
+    if (
+      typeof erro === "object" &&
+      erro !== null &&
+      "cause" in erro &&
+      typeof erro.cause === "object" &&
+      erro.cause !== null &&
+      "kind" in erro.cause &&
+      erro.cause.kind === "TransactionWriteConflict"
+    )
+      return true;
+    if (
+      !(erro instanceof Prisma.PrismaClientKnownRequestError) ||
+      erro.code !== "P2010"
+    )
+      return false;
+    return ["40001", "40P01"].some(
+      (codigo) =>
+        erro.meta?.code === codigo ||
+        erro.message.includes(`Code: \`${codigo}\``),
+    );
+  }
 }
 
-class DocumentoRepetido extends Error {
+class AnexoRepetido extends Error {
   constructor(
     readonly registro: {
       tipo: string;
       hashPayload: string;
       manutencaoId: string;
-      documentoId: string | null;
+      itemId: string | null;
     },
   ) {
-    super("Documento já registrado.");
+    super("Anexo já registrado.");
   }
 }

@@ -5,8 +5,7 @@ import {
   ConsultarManutencaoResponseSchema,
   CriarManutencaoBodySchema,
   CriarManutencaoResponseSchema,
-  DocumentoManutencaoParamsSchema,
-  EnviarDocumentoManutencaoResponseSchema,
+  EnviarAnexoObservacaoManutencaoResponseSchema,
   ItemManutencaoParamsSchema,
   ListarComissoesManutencaoQuerySchema,
   ListarComissoesManutencaoResponseSchema,
@@ -32,9 +31,6 @@ export class ManutencaoParamsDto extends createZodDto(ManutencaoParamsSchema) {}
 export class ItemManutencaoParamsDto extends createZodDto(
   ItemManutencaoParamsSchema,
 ) {}
-export class DocumentoManutencaoParamsDto extends createZodDto(
-  DocumentoManutencaoParamsSchema,
-) {}
 export class ListarManutencoesQueryDto extends createZodDto(
   ListarManutencoesQuerySchema,
 ) {}
@@ -59,8 +55,8 @@ export class AtualizarOrcamentoManutencaoResponseDto extends createZodDto(
 export class RegistrarRetornoManutencaoResponseDto extends createZodDto(
   RegistrarRetornoManutencaoResponseSchema,
 ) {}
-export class EnviarDocumentoManutencaoResponseDto extends createZodDto(
-  EnviarDocumentoManutencaoResponseSchema,
+export class EnviarAnexoObservacaoManutencaoResponseDto extends createZodDto(
+  EnviarAnexoObservacaoManutencaoResponseSchema,
 ) {}
 export class ListarFornecedoresManutencaoResponseDto extends createZodDto(
   ListarFornecedoresManutencaoResponseSchema,

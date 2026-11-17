@@ -1,31 +1,14 @@
 import type {
-  DocumentoManutencao,
   ItemManutencao,
   ManutencaoDetalhe,
   ManutencaoResumo,
 } from "@repo/contracts";
-import type { DocumentoManutencao as DocumentoPersistido } from "@repo/database";
 import type { ItemManutencaoPayload, ManutencaoPayload } from "../types";
 
 const dia = (valor: Date | null) => valor?.toISOString().slice(0, 10) ?? null;
 const instante = (valor: Date | null) => valor?.toISOString() ?? null;
 
 export class ManutencaoResponseMapper {
-  static documento(
-    pedidoId: string,
-    documento: DocumentoPersistido,
-  ): DocumentoManutencao {
-    return {
-      id: documento.id,
-      fase: documento.fase,
-      itemId: documento.itemId,
-      tamanhoBytes: documento.tamanhoBytes,
-      nome: documento.nome,
-      criadoEm: documento.createdAt.toISOString(),
-      url: `/api/backend/manutencoes/${pedidoId}/documentos/${documento.id}`,
-    };
-  }
-
   static item(pedidoId: string, item: ItemManutencaoPayload): ItemManutencao {
     const revisoes = item.revisoesOrcamento.map((revisao) => ({
       id: revisao.id,
@@ -64,22 +47,28 @@ export class ManutencaoResponseMapper {
         : null,
       recebidoPor: item.recebidoPor,
       recebidoEm: instante(item.recebidoEm),
-      documentos: item.documentos.map((doc) => this.documento(pedidoId, doc)),
+      anexoObservacao: item.caminhoAnexoObservacao
+        ? {
+            url: `/api/backend/manutencoes/${pedidoId}/itens/${item.id}/anexo-observacao`,
+          }
+        : null,
     };
   }
 
   static resumo(pedido: {
     id: string;
+    numeroPedido: bigint;
     numeroRequisicao: string | null;
     dataEnvio: Date;
     dataRetorno: Date | null;
     status: "EM_ANDAMENTO" | "CONCLUIDA";
     totalItens: number;
     itensPendentes: number;
-    temPdfPedido: boolean;
+    temAnexoObservacao: boolean;
   }): ManutencaoResumo {
     return {
       id: pedido.id,
+      numeroPedido: pedido.numeroPedido.toString(),
       numeroRequisicao: pedido.numeroRequisicao,
       dataEnvio: dia(pedido.dataEnvio)!,
       dataRetorno: dia(pedido.dataRetorno),
@@ -87,7 +76,7 @@ export class ManutencaoResponseMapper {
       totalItens: pedido.totalItens,
       itensPendentes: pedido.itensPendentes,
       itensRetornados: pedido.totalItens - pedido.itensPendentes,
-      temPdfPedido: pedido.temPdfPedido,
+      temAnexoObservacao: pedido.temAnexoObservacao,
     };
   }
 
@@ -95,22 +84,25 @@ export class ManutencaoResponseMapper {
     return {
       ...this.resumo({
         id: pedido.id,
+        numeroPedido: pedido.numeroPedido,
         numeroRequisicao: pedido.numeroRequisicao,
         dataEnvio: pedido.dataEnvio,
         dataRetorno: pedido.dataRetorno,
         status: pedido.status,
         totalItens: pedido.itens.length,
         itensPendentes: pedido.itens.filter((item) => !item.dataRetorno).length,
-        temPdfPedido: pedido.documentos.some((doc) => doc.itemId === null),
+        temAnexoObservacao: Boolean(pedido.caminhoAnexoObservacao),
       }),
       justificativa: pedido.justificativa,
       comissao: pedido.comissao,
       criadoPor: pedido.createdBy,
       criadoEm: pedido.createdAt.toISOString(),
       itens: pedido.itens.map((item) => this.item(pedido.id, item)),
-      documentos: pedido.documentos
-        .filter((doc) => doc.itemId === null)
-        .map((doc) => this.documento(pedido.id, doc)),
+      anexoObservacao: pedido.caminhoAnexoObservacao
+        ? {
+            url: `/api/backend/manutencoes/${pedido.id}/anexo-observacao`,
+          }
+        : null,
     };
   }
 }

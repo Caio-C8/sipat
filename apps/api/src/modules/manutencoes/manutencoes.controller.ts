@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
@@ -22,7 +23,7 @@ import type {
   AtualizarOrcamentoManutencaoResponse,
   ConsultarManutencaoResponse,
   CriarManutencaoResponse,
-  EnviarDocumentoManutencaoResponse,
+  EnviarAnexoObservacaoManutencaoResponse,
   ListarComissoesManutencaoResponse,
   ListarFornecedoresManutencaoResponse,
   ListarManutencoesResponse,
@@ -38,8 +39,7 @@ import {
   ConsultarManutencaoResponseDto,
   CriarManutencaoBodyDto,
   CriarManutencaoResponseDto,
-  DocumentoManutencaoParamsDto,
-  EnviarDocumentoManutencaoResponseDto,
+  EnviarAnexoObservacaoManutencaoResponseDto,
   ItemManutencaoParamsDto,
   ListarComissoesManutencaoQueryDto,
   ListarComissoesManutencaoResponseDto,
@@ -186,7 +186,7 @@ export class ManutencoesController {
     };
   }
 
-  @Post(":manutencaoId/documentos")
+  @Post(":manutencaoId/anexo-observacao")
   @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @UseInterceptors(
     FileInterceptor("documento", {
@@ -199,16 +199,17 @@ export class ManutencoesController {
     }),
   )
   @HttpCode(HttpStatus.CREATED)
-  @ZodSerializerDto(EnviarDocumentoManutencaoResponseDto)
-  async enviarDocumento(
+  @ZodSerializerDto(EnviarAnexoObservacaoManutencaoResponseDto)
+  async enviarAnexoObservacaoPedido(
     @Param() params: ManutencaoParamsDto,
     @Body() body: Record<string, unknown>,
     @UploadedFile() arquivo: ArquivoPdfTemporario | undefined,
     @Req() request: RequisicaoAutenticada,
-  ): Promise<EnviarDocumentoManutencaoResponse> {
+  ): Promise<EnviarAnexoObservacaoManutencaoResponse> {
     try {
-      const doc = await this.manutencoes.enviarDocumento(
+      const anexo = await this.manutencoes.enviarAnexoObservacao(
         params.manutencaoId,
+        null,
         body,
         arquivo,
         request.identidadeAutenticada!,
@@ -216,8 +217,8 @@ export class ManutencoesController {
       return {
         status: 201,
         sucesso: true,
-        mensagem: "Documento anexado.",
-        dados: doc,
+        mensagem: "Anexo da observação incluído.",
+        dados: anexo,
       };
     } finally {
       if (arquivo)
@@ -229,20 +230,195 @@ export class ManutencoesController {
     }
   }
 
-  @Get(":manutencaoId/documentos/:documentoId")
+  @Post(":manutencaoId/itens/:itemId/anexo-observacao")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @UseInterceptors(
+    FileInterceptor("documento", {
+      limits: {
+        fields: 1,
+        files: 1,
+        parts: 2,
+        fileSize: LIMITE_BYTES_DOCUMENTO_MANUTENCAO,
+      },
+    }),
+  )
+  @HttpCode(HttpStatus.CREATED)
+  @ZodSerializerDto(EnviarAnexoObservacaoManutencaoResponseDto)
+  async enviarAnexoObservacaoItem(
+    @Param() params: ItemManutencaoParamsDto,
+    @Body() body: Record<string, unknown>,
+    @UploadedFile() arquivo: ArquivoPdfTemporario | undefined,
+    @Req() request: RequisicaoAutenticada,
+  ): Promise<EnviarAnexoObservacaoManutencaoResponse> {
+    try {
+      const anexo = await this.manutencoes.enviarAnexoObservacao(
+        params.manutencaoId,
+        params.itemId,
+        body,
+        arquivo,
+        request.identidadeAutenticada!,
+      );
+      return {
+        status: 201,
+        sucesso: true,
+        mensagem: "Anexo da observação incluído.",
+        dados: anexo,
+      };
+    } finally {
+      if (arquivo)
+        await rm(arquivo.path, { force: true }).catch(() =>
+          this.logger.error(
+            "Falha ao remover arquivo temporário de manutenção.",
+          ),
+        );
+    }
+  }
+
+  @Patch(":manutencaoId/anexo-observacao")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @UseInterceptors(
+    FileInterceptor("documento", {
+      limits: {
+        fields: 1,
+        files: 1,
+        parts: 2,
+        fileSize: LIMITE_BYTES_DOCUMENTO_MANUTENCAO,
+      },
+    }),
+  )
+  @ZodSerializerDto(ConsultarManutencaoResponseDto)
+  async substituirAnexoObservacaoPedido(
+    @Param() params: ManutencaoParamsDto,
+    @Body() body: Record<string, unknown>,
+    @UploadedFile() arquivo: ArquivoPdfTemporario | undefined,
+    @Req() request: RequisicaoAutenticada,
+  ): Promise<ConsultarManutencaoResponse> {
+    try {
+      return {
+        status: 200,
+        sucesso: true,
+        mensagem: "Anexo da observação substituído.",
+        dados: await this.manutencoes.substituirAnexoObservacao(
+          params.manutencaoId,
+          null,
+          body,
+          arquivo,
+          request.identidadeAutenticada!,
+        ),
+      };
+    } finally {
+      if (arquivo) await this.removerTemporario(arquivo.path);
+    }
+  }
+
+  @Patch(":manutencaoId/itens/:itemId/anexo-observacao")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @UseInterceptors(
+    FileInterceptor("documento", {
+      limits: {
+        fields: 1,
+        files: 1,
+        parts: 2,
+        fileSize: LIMITE_BYTES_DOCUMENTO_MANUTENCAO,
+      },
+    }),
+  )
+  @ZodSerializerDto(ConsultarManutencaoResponseDto)
+  async substituirAnexoObservacaoItem(
+    @Param() params: ItemManutencaoParamsDto,
+    @Body() body: Record<string, unknown>,
+    @UploadedFile() arquivo: ArquivoPdfTemporario | undefined,
+    @Req() request: RequisicaoAutenticada,
+  ): Promise<ConsultarManutencaoResponse> {
+    try {
+      return {
+        status: 200,
+        sucesso: true,
+        mensagem: "Anexo da observação substituído.",
+        dados: await this.manutencoes.substituirAnexoObservacao(
+          params.manutencaoId,
+          params.itemId,
+          body,
+          arquivo,
+          request.identidadeAutenticada!,
+        ),
+      };
+    } finally {
+      if (arquivo) await this.removerTemporario(arquivo.path);
+    }
+  }
+
+  @Delete(":manutencaoId/anexo-observacao")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(ConsultarManutencaoResponseDto)
+  async removerAnexoObservacaoPedido(
+    @Param() params: ManutencaoParamsDto,
+  ): Promise<ConsultarManutencaoResponse> {
+    return {
+      status: 200,
+      sucesso: true,
+      mensagem: "Anexo da observação removido.",
+      dados: await this.manutencoes.removerAnexoObservacao(
+        params.manutencaoId,
+        null,
+      ),
+    };
+  }
+
+  @Delete(":manutencaoId/itens/:itemId/anexo-observacao")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @ZodSerializerDto(ConsultarManutencaoResponseDto)
+  async removerAnexoObservacaoItem(
+    @Param() params: ItemManutencaoParamsDto,
+  ): Promise<ConsultarManutencaoResponse> {
+    return {
+      status: 200,
+      sucesso: true,
+      mensagem: "Anexo da observação removido.",
+      dados: await this.manutencoes.removerAnexoObservacao(
+        params.manutencaoId,
+        params.itemId,
+      ),
+    };
+  }
+
+  @Get(":manutencaoId/anexo-observacao")
   @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
   @Header("Cache-Control", "private, no-store")
-  async abrirDocumento(
-    @Param() params: DocumentoManutencaoParamsDto,
+  async abrirAnexoObservacaoPedido(
+    @Param() params: ManutencaoParamsDto,
   ): Promise<StreamableFile> {
-    const doc = await this.manutencoes.abrirDocumento(
+    const doc = await this.manutencoes.abrirAnexoObservacao(
       params.manutencaoId,
-      params.documentoId,
+      null,
     );
     return new StreamableFile(doc.conteudo, {
       type: "application/pdf",
-      disposition: `attachment; filename="manutencao-${params.documentoId}.pdf"`,
+      disposition: `attachment; filename="anexo-observacao-manutencao.pdf"`,
       length: doc.tamanho,
     });
+  }
+
+  @Get(":manutencaoId/itens/:itemId/anexo-observacao")
+  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
+  @Header("Cache-Control", "private, no-store")
+  async abrirAnexoObservacaoItem(
+    @Param() params: ItemManutencaoParamsDto,
+  ): Promise<StreamableFile> {
+    const doc = await this.manutencoes.abrirAnexoObservacao(
+      params.manutencaoId,
+      params.itemId,
+    );
+    return new StreamableFile(doc.conteudo, {
+      type: "application/pdf",
+      disposition: `attachment; filename="anexo-observacao-item.pdf"`,
+      length: doc.tamanho,
+    });
+  }
+
+  private async removerTemporario(caminho: string): Promise<void> {
+    await rm(caminho, { force: true }).catch(() =>
+      this.logger.error("Falha ao remover arquivo temporário de manutenção."),
+    );
   }
 }

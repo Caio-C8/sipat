@@ -308,7 +308,9 @@ o status de cada uma deve ser lido na task correspondente:
 - [WEB-INVENTARIOS-002](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)
   entregou a edição transacional do inventário ainda pendente;
 - [WEB-MANUTENCOES-003](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)
-  adiciona o número global `BIGINT` do pedido, serializado como string;
+  entregou o número global `BIGINT` do pedido, serializado como string; sua
+  extensão aprovada adiciona substituição/remoção segura do anexo único do
+  pedido e do item, bloqueadas após conclusão/retorno;
 - [WEB-DASHBOARD-002](../../tasks/WEB-DASHBOARD-002-visao-operacional.md) e
   [WEB-BUSCA-001](../../tasks/WEB-BUSCA-001-busca-global.md) criam agregações
   próprias, finitas e autorizadas.

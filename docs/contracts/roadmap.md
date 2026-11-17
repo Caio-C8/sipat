@@ -620,9 +620,9 @@ geral. [Tarefa e critérios](../tasks/WEB-PATRIMONIOS-001-pesquisa-detalhe-acoes
 
 ## Contratos da evolução Web de usabilidade e padronização
 
-**Status:** aprovados em 14/11/2026; a fatia de `WEB-PATRIMONIOS-002` foi
-implementada em 16/11/2026 e as demais permanecem vinculadas às respectivas
-tasks.
+**Status:** aprovados em 14/11/2026; as fatias de `WEB-PATRIMONIOS-002`,
+`WEB-INVENTARIOS-002` e `WEB-MANUTENCOES-003` foram implementadas até
+16/11/2026 e as demais permanecem vinculadas às respectivas tasks.
 
 Estes contratos não devem ser implementados como uma entrega isolada. Cada
 schema compartilhado nasce junto da regra na API e do consumidor Web indicado,
@@ -659,6 +659,26 @@ número sem converter o `BIGINT` do banco em `number`; UUID permanece como chave
 técnica da rota. A ampliação deve cobrir dashboard, relatórios, seed, fixtures e
 todos os consumidores dos schemas existentes.
 [Tarefa e critérios](../tasks/WEB-MANUTENCOES-003-identificacao-itens.md).
+
+Implementado em 16/11/2026 com `numeroPedido` decimal obrigatório nas respostas,
+busca segura por `BIGINT`, backfill determinístico e consumidores Web
+atualizados sem expor o UUID como identificação humana.
+
+### Mutação do anexo da observação de manutenção
+
+A extensão de `WEB-MANUTENCOES-003` mantém os `POST` atuais para inclusão e
+adiciona `PUT` para substituição e `DELETE` para remoção nos recursos de pedido
+e item. As responses de mutação retornam envelope tipado com o detalhe
+atualizado. `PUT` preserva a chave de idempotência do multipart e exige anexo
+existente; `DELETE` é idempotente mesmo se a referência já estiver ausente. Os
+contratos públicos distinguem pedido concluído, item recebido, documento
+ausente na substituição e conflito concorrente; download permanece disponível
+depois da conclusão. Pedido e item continuam contendo no máximo um anexo, sem
+lista ou histórico de versões.
+
+O contrato não autoriza a mutação por si só: a API deve revalidar sob lock que o
+pedido está `EM_ANDAMENTO` e, para item, que `dataRetorno` permanece `null`.
+[Extensão e critérios](../tasks/WEB-MANUTENCOES-003-identificacao-itens.md#extensão-aprovada--anexos-e-detalhes-por-item).
 
 ### Dashboard operacional agregado
 

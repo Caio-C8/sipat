@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
+  ChevronDown,
+  ChevronUp,
   Download,
   FilePlus2,
   FileText,
   Pencil,
-  RefreshCw,
   RotateCcw,
+  Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import type {
-  DocumentoManutencao,
+  AnexoObservacaoManutencao,
   ItemManutencao,
   ManutencaoDetalhe,
 } from "@repo/contracts";
@@ -19,7 +22,20 @@ import {
   RegistrarRetornoManutencaoBodySchema,
 } from "@repo/contracts";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
+import { MoneyInput } from "@/components/shared/numeric-inputs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +44,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 import { addDecimal } from "@/lib/format/decimal";
 import {
@@ -54,164 +72,189 @@ const hoje = () =>
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
+const formatarDataHora = (valor: string | null) =>
+  valor
+    ? new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short",
+        timeZone: "America/Sao_Paulo",
+      }).format(new Date(valor))
+    : "Não informado";
 
-function ListaDocumentos({
-  documentos,
+function AnexoObservacao({
+  anexo,
 }: {
-  documentos: DocumentoManutencao[];
+  anexo: AnexoObservacaoManutencao | null;
 }) {
-  return documentos.length ? (
-    <ul className="grid gap-2">
-      {documentos.map((doc) => (
-        <li key={doc.id}>
-          <a
-            href={doc.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-[#2863ec] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2863ec]"
-          >
-            <FileText aria-hidden="true" className="size-4" />
-            {doc.nome}
-            <Download aria-hidden="true" className="size-3.5" />
-          </a>
-          <p className="ml-6 text-xs text-[#526580]">
-            {doc.fase.toLowerCase()} ·{" "}
-            {formatarDataCivil(doc.criadoEm.slice(0, 10))}
-          </p>
-        </li>
-      ))}
-    </ul>
+  return anexo ? (
+    <a
+      href={anexo.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-primary hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      <FileText aria-hidden="true" className="size-4" />
+      Anexo da observação
+      <Download aria-hidden="true" className="size-3.5" />
+    </a>
   ) : (
-    <p className="text-sm text-[#526580]">Nenhum documento anexado.</p>
+    <p className="text-sm text-foreground/80">Nenhum anexo da observação.</p>
   );
 }
 
-function EnviarDocumento({
+function GerenciarAnexoObservacao({
   pedidoId,
   item,
+  anexo,
+  mutavel,
   onAtualizar,
-  onJaProcessada,
 }: {
   pedidoId: string;
   item?: ItemManutencao;
+  anexo: AnexoObservacaoManutencao | null;
+  mutavel: boolean;
   onAtualizar: () => Promise<void>;
-  onJaProcessada: (erro: unknown, decisao: DecisaoIdempotencia) => void;
 }) {
-  const [fase, setFase] = useState<"PEDIDO" | "ENVIO" | "RECEBIMENTO">(
-    item ? (item.dataRetorno ? "RECEBIMENTO" : "ENVIO") : "PEDIDO",
-  );
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erro, setErro] = useState<unknown>(null);
-  const [decisaoIdempotencia, setDecisaoIdempotencia] =
-    useState<DecisaoIdempotencia | null>(null);
-  const [ocupado, setOcupado] = useState(false);
+  const [ocupado, setOcupado] = useState<
+    "anexar" | "substituir" | "remover" | null
+  >(null);
   const input = useRef<HTMLInputElement>(null);
   const chave = useRef<string | null>(null);
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!arquivo || ocupado) return;
-    setOcupado(true);
+    const operacao = anexo ? "substituir" : "anexar";
+    setOcupado(operacao);
     setErro(null);
-    setDecisaoIdempotencia(null);
     chave.current ??= crypto.randomUUID();
     try {
-      await operacoes.enviarDocumento(
-        pedidoId,
-        {
-          chaveIdempotencia: chave.current,
-          fase,
-          ...(item ? { itemId: item.id } : {}),
-        },
-        arquivo,
-      );
+      const dados = { chaveIdempotencia: chave.current };
+      if (anexo)
+        await operacoes.substituirAnexoObservacao(
+          pedidoId,
+          item?.id ?? null,
+          dados,
+          arquivo,
+        );
+      else
+        await operacoes.enviarAnexoObservacao(
+          pedidoId,
+          item?.id ?? null,
+          dados,
+          arquivo,
+        );
       chave.current = null;
       setArquivo(null);
       if (input.current) input.current.value = "";
       await onAtualizar();
-    } catch (e) {
-      const decisao = decidirAposFalha(e);
-      setErro(e);
-      setDecisaoIdempotencia(
-        isConflitoIdempotencia(e) && decisao.tipo !== "ja_processada"
-          ? decisao
-          : null,
+      toast.success(
+        anexo
+          ? "Anexo da observação substituído."
+          : "Anexo da observação incluído.",
       );
+    } catch (e) {
+      setErro(e);
+      const decisao = decidirAposFalha(e);
       if (!decisao.manterChave) chave.current = null;
-      if (decisao.atualizarConsultas) {
-        onJaProcessada(e, decisao);
-        await onAtualizar();
-      }
+      await onAtualizar();
     } finally {
-      setOcupado(false);
+      setOcupado(null);
     }
   }
+  async function remover() {
+    if (ocupado) return;
+    setOcupado("remover");
+    setErro(null);
+    try {
+      await operacoes.removerAnexoObservacao(pedidoId, item?.id ?? null);
+      await onAtualizar();
+      toast.success("Anexo da observação removido.");
+    } catch (e) {
+      setErro(e);
+      await onAtualizar();
+    } finally {
+      setOcupado(null);
+    }
+  }
+  const alvo = item
+    ? `o patrimônio ${item.patrimonio.numeroPatrimonio}`
+    : "o pedido";
   return (
-    <form onSubmit={enviar} className="grid gap-3 text-sm">
-      {item ? (
-        <label className="grid gap-2">
-          Fase
-          <select
-            value={fase}
-            onChange={(e) => {
-              setFase(e.target.value as "ENVIO" | "RECEBIMENTO");
-              chave.current = null;
-              setErro(null);
-            }}
-            className={campoManutencao}
-          >
-            <option value="ENVIO" disabled={!!item.dataRetorno}>
-              Envio
-            </option>
-            <option value="RECEBIMENTO" disabled={!item.dataRetorno}>
-              Recebimento
-            </option>
-          </select>
-        </label>
+    <div className="grid gap-3 text-sm">
+      <AnexoObservacao anexo={anexo} />
+      {mutavel ? (
+        <form onSubmit={enviar} className="grid gap-3">
+          <label className="grid gap-2">
+            {anexo ? "Novo PDF para substituição" : "PDF da observação"} (até 10
+            MiB)
+            <Input
+              ref={input}
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(e) => {
+                setArquivo(e.target.files?.[0] ?? null);
+                chave.current = null;
+                setErro(null);
+              }}
+              required
+              disabled={Boolean(ocupado)}
+              className={campoManutencao}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={!arquivo || Boolean(ocupado)}>
+              <FilePlus2 aria-hidden="true" />
+              {ocupado === "anexar"
+                ? "Anexando…"
+                : ocupado === "substituir"
+                  ? "Substituindo…"
+                  : anexo
+                    ? "Substituir"
+                    : "Anexar"}
+            </Button>
+            {anexo ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={Boolean(ocupado)}
+                  >
+                    <Trash2 aria-hidden="true" /> Remover
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remover anexo?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      O PDF da observação de {alvo} será removido e não poderá
+                      mais ser aberto.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      onClick={() => void remover()}
+                    >
+                      Confirmar remoção
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : null}
+          </div>
+        </form>
+      ) : anexo ? (
+        <p className="text-xs text-muted-foreground">
+          O anexo permanece disponível para consulta, mas não pode ser alterado
+          após a conclusão deste atendimento.
+        </p>
       ) : null}
-      <label className="grid gap-2">
-        Arquivo PDF (até 10 MiB)
-        <input
-          ref={input}
-          type="file"
-          accept="application/pdf,.pdf"
-          onChange={(e) => {
-            setArquivo(e.target.files?.[0] ?? null);
-            chave.current = null;
-            setErro(null);
-          }}
-          required
-          className={campoManutencao}
-        />
-      </label>
-      <Button
-        type="submit"
-        disabled={
-          !arquivo || ocupado || decisaoIdempotencia?.tipo === "ja_processada"
-        }
-        className="justify-self-start gap-2"
-      >
-        <FilePlus2 aria-hidden="true" />
-        {ocupado ? "Enviando…" : "Anexar PDF"}
-      </Button>
-      {erro && decisaoIdempotencia ? (
-        <AlertaIdempotencia
-          erro={erro}
-          decisao={decisaoIdempotencia}
-          destino={{
-            href: `/manutencoes/${pedidoId}`,
-            rotulo: "Atualizar detalhe da manutenção",
-          }}
-        />
-      ) : erro ? (
-        <>
-          <ErroManutencao erro={erro} />
-          <p role="status">
-            O pedido ou retorno já confirmado permanece no sistema. Consulte o
-            detalhe antes de reenviar.
-          </p>
-        </>
-      ) : null}
-    </form>
+      {erro ? <ErroManutencao erro={erro} /> : null}
+    </div>
   );
 }
 
@@ -234,7 +277,6 @@ function FormularioOrcamento({
   );
   const [valor, setValor] = useState(item.orcamentoAtual?.valorOrcamento ?? "");
   const [fornecedorId, setFornecedorId] = useState(item.fornecedor?.id ?? "");
-  const [busca, setBusca] = useState("");
   const [fornecedores, setFornecedores] = useState<
     { id: string; nome: string }[]
   >([]);
@@ -254,20 +296,6 @@ function FormularioOrcamento({
       ativo = false;
     };
   }, []);
-  async function buscar() {
-    try {
-      setFornecedores(
-        (
-          await operacoes.fornecedores({
-            ...(busca.trim() ? { busca: busca.trim() } : {}),
-            limite: "50",
-          })
-        ).dados,
-      );
-    } catch (e) {
-      setErro(e);
-    }
-  }
   async function salvar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (ocupado) return;
@@ -305,50 +333,35 @@ function FormularioOrcamento({
         <strong>
           {item.patrimonio.numeroPatrimonio} · {item.patrimonio.descricao}
         </strong>
-        <p className="mt-1 text-xs text-[#526580]">
-          Versão atual: {item.versaoOrcamento}
-        </p>
       </div>
-      <div className="grid gap-2 sm:col-span-2">
-        <label htmlFor="busca-fornecedor-orcamento">
-          Buscar fornecedor ativo
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="busca-fornecedor-orcamento"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className={campoManutencao}
-          />
-          <Button type="button" variant="outline" onClick={() => void buscar()}>
-            Buscar
-          </Button>
-        </div>
-      </div>
-      <label className="grid gap-2">
+      <label className="grid gap-2 sm:col-span-2">
         Fornecedor
-        <select
+        <Combobox
           value={fornecedorId}
-          onChange={(e) => setFornecedorId(e.target.value)}
-          className={campoManutencao}
-        >
-          <option value="">Nenhum</option>
-          {item.fornecedor &&
-          !fornecedores.some((f) => f.id === item.fornecedor?.id) ? (
-            <option value={item.fornecedor.id}>
-              {item.fornecedor.nome} (atual)
-            </option>
-          ) : null}
-          {fornecedores.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.nome}
-            </option>
-          ))}
-        </select>
+          onValueChange={(value) =>
+            setFornecedorId(value === "nenhum" ? "" : value)
+          }
+          options={[
+            { value: "nenhum", label: "Nenhum fornecedor" },
+            ...(item.fornecedor &&
+            !fornecedores.some((f) => f.id === item.fornecedor?.id)
+              ? [
+                  {
+                    value: item.fornecedor.id,
+                    label: `${item.fornecedor.nome} (atual)`,
+                  },
+                ]
+              : []),
+            ...fornecedores.map((f) => ({ value: f.id, label: f.nome })),
+          ]}
+          placeholder="Nenhum fornecedor informado"
+          searchPlaceholder="Buscar fornecedor"
+          emptyText="Nenhum fornecedor ativo encontrado."
+        />
       </label>
       <label className="grid gap-2">
         Data do orçamento *
-        <input
+        <Input
           type="date"
           value={data}
           onChange={(e) => setData(e.target.value)}
@@ -358,17 +371,16 @@ function FormularioOrcamento({
       </label>
       <label className="grid gap-2">
         Valor orçado (R$) *
-        <input
-          inputMode="decimal"
+        <MoneyInput
           value={valor}
-          onChange={(e) => setValor(e.target.value)}
+          onValueChange={setValor}
           required
-          className={campoManutencao}
+          placeholder="R$ 0,00"
         />
       </label>
       <label className="grid gap-2 sm:col-span-2">
         Descrição do orçamento *
-        <textarea
+        <Textarea
           rows={3}
           value={descricao}
           onChange={(e) => setDescricao(e.target.value)}
@@ -381,7 +393,7 @@ function FormularioOrcamento({
           <ErroManutencao erro={erro} />
         </div>
       ) : null}
-      <DialogFooter className="sm:col-span-2">
+      <DialogFooter className="pb-6 sm:col-span-2">
         <Button type="button" variant="outline" onClick={onConcluir}>
           Cancelar
         </Button>
@@ -482,7 +494,7 @@ function FormularioRetorno({
       </div>
       <label className="grid gap-2">
         Data do retorno *
-        <input
+        <Input
           type="date"
           min={dataEnvio}
           max={hoje()}
@@ -497,20 +509,19 @@ function FormularioRetorno({
       </label>
       <label className="grid gap-2">
         Valor realizado (R$) *
-        <input
-          inputMode="decimal"
+        <MoneyInput
           value={valor}
-          onChange={(e) => {
-            setValor(e.target.value);
+          onValueChange={(value) => {
+            setValor(value);
             alterar();
           }}
           required
-          className={campoManutencao}
+          placeholder="R$ 0,00"
         />
       </label>
       <label className="grid gap-2 sm:col-span-2">
         Serviço realizado *
-        <textarea
+        <Textarea
           rows={4}
           value={descricao}
           onChange={(e) => {
@@ -523,7 +534,7 @@ function FormularioRetorno({
       </label>
       <label className="grid gap-2">
         Descrição da garantia
-        <input
+        <Input
           value={garantiaDescricao}
           onChange={(e) => {
             setGarantiaDescricao(e.target.value);
@@ -534,7 +545,7 @@ function FormularioRetorno({
       </label>
       <label className="grid gap-2">
         Fim da garantia
-        <input
+        <Input
           type="date"
           min={data}
           value={garantiaFim}
@@ -562,7 +573,7 @@ function FormularioRetorno({
           <ErroManutencao erro={erro} />
         </div>
       ) : null}
-      <DialogFooter className="sm:col-span-2">
+      <DialogFooter className="pb-6 sm:col-span-2">
         <Button type="button" variant="outline" onClick={onConcluir}>
           Cancelar
         </Button>
@@ -578,7 +589,7 @@ function FormularioRetorno({
 }
 
 type Acao = {
-  tipo: "orcamento" | "retorno" | "documento";
+  tipo: "orcamento" | "retorno" | "anexo";
   itemId: string;
 } | null;
 
@@ -586,6 +597,9 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
   const [pedido, setPedido] = useState(inicial);
   const [erro, setErro] = useState<unknown>(null);
   const [acao, setAcao] = useState<Acao>(null);
+  const [detalhesAbertos, setDetalhesAbertos] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [conflitoProcessado, setConflitoProcessado] = useState<{
     erro: unknown;
     decisao: DecisaoIdempotencia;
@@ -629,11 +643,9 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 id="dados-pedido-title" className="font-bold">
-                  Dados do pedido
+                  Pedido #{pedido.numeroPedido}
                 </h2>
-                <p className="mt-1 break-all text-xs text-[#526580]">
-                  ID {pedido.id}
-                </p>
+                <p className="mt-1 text-xs text-[#526580]">Dados do pedido</p>
               </div>
               <span
                 className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${classeStatusManutencao(pedido.status)}`}
@@ -665,15 +677,6 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
                 </dd>
               </div>
             </dl>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-5 gap-2"
-              onClick={() => void atualizar()}
-            >
-              <RefreshCw aria-hidden="true" /> Atualizar dados
-            </Button>
             {erro ? (
               <div className="mt-4">
                 <ErroManutencao erro={erro} />
@@ -682,22 +685,18 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
           </div>
           <aside
             className="rounded-md border border-[#d8e6fb] bg-[#f3f7fe] p-4"
-            aria-label="Documento do pedido"
+            aria-label="Anexo da observação do pedido"
           >
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="font-semibold">Documento do pedido</h3>
+              <h3 className="font-semibold">Anexo da observação</h3>
               <FileText aria-hidden="true" className="size-4 text-[#2863ec]" />
             </div>
-            <ListaDocumentos documentos={pedido.documentos} />
-            {!pedido.documentos.length ? (
-              <div className="mt-4">
-                <EnviarDocumento
-                  pedidoId={pedido.id}
-                  onAtualizar={atualizar}
-                  onJaProcessada={informarJaProcessada}
-                />
-              </div>
-            ) : null}
+            <GerenciarAnexoObservacao
+              pedidoId={pedido.id}
+              anexo={pedido.anexoObservacao}
+              mutavel={pedido.status === "EM_ANDAMENTO"}
+              onAtualizar={atualizar}
+            />
           </aside>
         </div>
       </section>
@@ -711,7 +710,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
             Atendimentos por item
           </h2>
           <p className="mt-1 text-xs text-[#526580]">
-            Orçamento, documentos e retorno permanecem individuais.
+            Orçamento, anexo da observação e retorno permanecem individuais.
           </p>
         </div>
         <div
@@ -733,88 +732,286 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
               </tr>
             </thead>
             <tbody>
-              {pedido.itens.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-[#e4eaf2] align-top"
-                >
-                  <td className="px-3 py-4">
-                    <strong>
-                      {item.patrimonio.numeroPatrimonio} ·{" "}
-                      {item.patrimonio.descricao}
-                    </strong>
-                    <p className="mt-1 max-w-72 text-xs text-[#526580]">
-                      {item.descricaoProblema ?? "Problema não informado"}
-                    </p>
-                  </td>
-                  <td className="px-3 py-4">
-                    {item.fornecedor?.nome ?? "Não informado"}
-                  </td>
-                  <td className="px-3 py-4">
-                    {item.tipo === "CORRETIVA" ? "Corretiva" : "Preventiva"}
-                  </td>
-                  <td className="px-3 py-4">
-                    {formatarDataCivil(item.previsaoRetorno)}
-                  </td>
-                  <td className="px-3 py-4">
-                    <strong>
-                      {formatarMoeda(item.orcamentoAtual?.valorOrcamento)}
-                    </strong>
-                    <p className="mt-1 text-xs text-[#526580]">
-                      {item.revisoesOrcamento.length} versão(ões)
-                    </p>
-                  </td>
-                  <td className="px-3 py-4">
-                    <span
-                      className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${item.dataRetorno ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
-                    >
-                      {item.dataRetorno ? "Retornado" : "Em manutenção"}
-                    </span>
-                    {item.dataRetorno ? (
-                      <p className="mt-1 text-xs text-[#526580]">
-                        {formatarDataCivil(item.dataRetorno)}
-                      </p>
+              {pedido.itens.map((item) => {
+                const detalhesAbertosItem = detalhesAbertos.has(item.id);
+                const detalhesId = `detalhes-atendimento-${item.id}`;
+                return (
+                  <Fragment key={item.id}>
+                    <tr className="border-b border-[#e4eaf2] align-top">
+                      <td className="px-3 py-4">
+                        <strong>
+                          {item.patrimonio.numeroPatrimonio} ·{" "}
+                          {item.patrimonio.descricao}
+                        </strong>
+                        <p className="mt-1 max-w-72 text-xs text-[#526580]">
+                          {item.descricaoProblema ?? "Problema não informado"}
+                        </p>
+                      </td>
+                      <td className="px-3 py-4">
+                        {item.fornecedor?.nome ?? "Não informado"}
+                      </td>
+                      <td className="px-3 py-4">
+                        {item.tipo === "CORRETIVA" ? "Corretiva" : "Preventiva"}
+                      </td>
+                      <td className="px-3 py-4">
+                        {formatarDataCivil(item.previsaoRetorno)}
+                      </td>
+                      <td className="px-3 py-4">
+                        <strong>
+                          {formatarMoeda(item.orcamentoAtual?.valorOrcamento)}
+                        </strong>
+                        <p className="mt-1 text-xs text-[#526580]">
+                          {item.orcamentoAtual
+                            ? "Orçamento informado"
+                            : "Não informado"}
+                        </p>
+                      </td>
+                      <td className="px-3 py-4">
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${item.dataRetorno ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+                        >
+                          {item.dataRetorno ? "Retornado" : "Em manutenção"}
+                        </span>
+                        {item.dataRetorno ? (
+                          <p className="mt-1 text-xs text-[#526580]">
+                            {formatarDataCivil(item.dataRetorno)}
+                          </p>
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="flex flex-wrap justify-end gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-expanded={detalhesAbertosItem}
+                            aria-controls={detalhesId}
+                            onClick={() =>
+                              setDetalhesAbertos((atuais) => {
+                                const proximos = new Set(atuais);
+                                if (proximos.has(item.id))
+                                  proximos.delete(item.id);
+                                else proximos.add(item.id);
+                                return proximos;
+                              })
+                            }
+                          >
+                            {detalhesAbertosItem ? (
+                              <ChevronUp aria-hidden="true" />
+                            ) : (
+                              <ChevronDown aria-hidden="true" />
+                            )}
+                            Ver detalhes
+                          </Button>
+                          {!item.dataRetorno ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setAcao({
+                                    tipo: "orcamento",
+                                    itemId: item.id,
+                                  })
+                                }
+                              >
+                                <Pencil aria-hidden="true" /> Orçamento
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() =>
+                                  setAcao({ tipo: "retorno", itemId: item.id })
+                                }
+                              >
+                                <RotateCcw aria-hidden="true" /> Retorno
+                              </Button>
+                            </>
+                          ) : null}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setAcao({ tipo: "anexo", itemId: item.id })
+                            }
+                          >
+                            <FilePlus2 aria-hidden="true" /> Anexo
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {detalhesAbertosItem ? (
+                      <tr className="border-b border-border bg-muted/30">
+                        <td colSpan={7} className="p-3">
+                          <div
+                            id={detalhesId}
+                            className="grid gap-4 rounded-lg border bg-background p-4 lg:grid-cols-2"
+                          >
+                            <section
+                              aria-labelledby={`${detalhesId}-orcamento`}
+                            >
+                              <h3
+                                id={`${detalhesId}-orcamento`}
+                                className="font-semibold"
+                              >
+                                Orçamento atual
+                                <span className="sr-only">
+                                  {` do patrimônio ${item.patrimonio.numeroPatrimonio}`}
+                                </span>
+                              </h3>
+                              {item.orcamentoAtual ? (
+                                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Fornecedor
+                                    </dt>
+                                    <dd>
+                                      {item.orcamentoAtual.fornecedor?.nome ??
+                                        "Não informado"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Data
+                                    </dt>
+                                    <dd>
+                                      {formatarDataCivil(
+                                        item.orcamentoAtual.dataOrcamento,
+                                      )}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Valor
+                                    </dt>
+                                    <dd>
+                                      {formatarMoeda(
+                                        item.orcamentoAtual.valorOrcamento,
+                                      )}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Registrado por
+                                    </dt>
+                                    <dd>
+                                      {item.orcamentoAtual.registradoPor.nome}
+                                    </dd>
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <dt className="text-xs text-muted-foreground">
+                                      Descrição
+                                    </dt>
+                                    <dd>
+                                      {item.orcamentoAtual.descricaoOrcamento}
+                                    </dd>
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <dt className="text-xs text-muted-foreground">
+                                      Registrado em
+                                    </dt>
+                                    <dd>
+                                      {formatarDataHora(
+                                        item.orcamentoAtual.createdAt,
+                                      )}
+                                    </dd>
+                                  </div>
+                                </dl>
+                              ) : (
+                                <p className="mt-3 text-sm text-muted-foreground">
+                                  Nenhum orçamento informado.
+                                </p>
+                              )}
+                            </section>
+                            <section aria-labelledby={`${detalhesId}-retorno`}>
+                              <h3
+                                id={`${detalhesId}-retorno`}
+                                className="font-semibold"
+                              >
+                                Retorno
+                                <span className="sr-only">
+                                  {` do patrimônio ${item.patrimonio.numeroPatrimonio}`}
+                                </span>
+                              </h3>
+                              {item.dataRetorno ? (
+                                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Data
+                                    </dt>
+                                    <dd>
+                                      {formatarDataCivil(item.dataRetorno)}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Valor realizado
+                                    </dt>
+                                    <dd>
+                                      {formatarMoeda(item.valorRealizado)}
+                                    </dd>
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <dt className="text-xs text-muted-foreground">
+                                      Serviço realizado
+                                    </dt>
+                                    <dd>
+                                      {item.descricaoServicoRealizado ??
+                                        "Não informado"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Garantia
+                                    </dt>
+                                    <dd>
+                                      {item.garantia?.descricao ??
+                                        "Sem garantia informada"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Término da garantia
+                                    </dt>
+                                    <dd>
+                                      {item.garantia?.dataFim
+                                        ? formatarDataCivil(
+                                            item.garantia.dataFim,
+                                          )
+                                        : "Não informado"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Recebido por
+                                    </dt>
+                                    <dd>
+                                      {item.recebidoPor?.nome ??
+                                        "Não informado"}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-xs text-muted-foreground">
+                                      Registrado em
+                                    </dt>
+                                    <dd>{formatarDataHora(item.recebidoEm)}</dd>
+                                  </div>
+                                </dl>
+                              ) : (
+                                <p className="mt-3 text-sm text-muted-foreground">
+                                  O item ainda não possui retorno.
+                                </p>
+                              )}
+                            </section>
+                          </div>
+                        </td>
+                      </tr>
                     ) : null}
-                  </td>
-                  <td className="px-3 py-4">
-                    <div className="flex justify-end gap-1">
-                      {!item.dataRetorno ? (
-                        <>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setAcao({ tipo: "orcamento", itemId: item.id })
-                            }
-                          >
-                            <Pencil aria-hidden="true" /> Orçamento
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() =>
-                              setAcao({ tipo: "retorno", itemId: item.id })
-                            }
-                          >
-                            <RotateCcw aria-hidden="true" /> Retorno
-                          </Button>
-                        </>
-                      ) : null}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setAcao({ tipo: "documento", itemId: item.id })
-                        }
-                      >
-                        <FilePlus2 aria-hidden="true" /> PDF
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -851,7 +1048,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
                 Configurar atendimento do item
               </DialogTitle>
               <DialogDescription>
-                Registre uma nova versão sem apagar o histórico de orçamento.
+                Atualize os dados atuais do orçamento deste atendimento.
               </DialogDescription>
             </DialogHeader>
             <FormularioOrcamento
@@ -891,29 +1088,29 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
         ) : null}
       </Dialog>
       <Dialog
-        open={acao?.tipo === "documento"}
+        open={acao?.tipo === "anexo"}
         onOpenChange={(aberto) => {
           if (!aberto) setAcao(null);
         }}
       >
-        {acao?.tipo === "documento" && itemAcao ? (
-          <DialogContent className="max-w-xl">
+        {acao?.tipo === "anexo" && itemAcao ? (
+          <DialogContent className="max-w-xl pb-6">
             <DialogHeader>
-              <DialogTitle>Documentos do atendimento</DialogTitle>
+              <DialogTitle>Anexo da observação do atendimento</DialogTitle>
               <DialogDescription>
                 {itemAcao.patrimonio.numeroPatrimonio} ·{" "}
                 {itemAcao.patrimonio.descricao}
               </DialogDescription>
             </DialogHeader>
-            <ListaDocumentos documentos={itemAcao.documentos} />
-            <div className="border-t border-[#e4eaf2] pt-4">
-              <EnviarDocumento
-                pedidoId={pedido.id}
-                item={itemAcao}
-                onAtualizar={atualizar}
-                onJaProcessada={informarJaProcessada}
-              />
-            </div>
+            <GerenciarAnexoObservacao
+              pedidoId={pedido.id}
+              item={itemAcao}
+              anexo={itemAcao.anexoObservacao}
+              mutavel={
+                pedido.status === "EM_ANDAMENTO" && !itemAcao.dataRetorno
+              }
+              onAtualizar={atualizar}
+            />
           </DialogContent>
         ) : null}
       </Dialog>
