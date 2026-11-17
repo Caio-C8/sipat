@@ -34,10 +34,10 @@ export default async function DetalheManutencaoPage({
       <PageHeader
         title={
           pedido
-            ? `Pedido ${pedido.dados.numeroRequisicao ?? pedido.dados.id}`
+            ? `Pedido #${pedido.dados.numeroPedido}`
             : "Pedido de manutenção"
         }
-        description="Acompanhe os atendimentos, documentos, orçamentos e retornos."
+        description="Acompanhe os atendimentos, anexos das observações, orçamentos e retornos."
         actions={
           <Link
             href="/manutencoes"

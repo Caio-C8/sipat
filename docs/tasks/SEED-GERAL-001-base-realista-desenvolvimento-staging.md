@@ -327,7 +327,7 @@ podem afirmar vínculo com pessoa ou empresa real.
 - a auditoria interna e uma inspeção externa confirmaram 2 usuários utilizáveis,
   10 setores, 50 patrimônios, 10 processos, 20 notas, 3 comissões, inventário
   `40/7/3`, manutenções `1 concluída/1 em andamento`, estados `47/3`, numeração
-  `40/10`, 8 documentos de manutenção e 28 PDFs físicos;
+  `40/10`, 5 anexos únicos de observações de manutenção e 25 PDFs físicos;
 - a segunda execução foi recusada sem alterar os agregados; transferências,
   baixas, depreciações e reavaliações permaneceram zeradas;
 - o stack, o volume, as imagens locais e os uploads descartáveis usados nessa

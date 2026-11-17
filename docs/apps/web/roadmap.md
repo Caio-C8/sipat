@@ -2,9 +2,9 @@
 
 ## Evolução Web de usabilidade e padronização
 
-**Status:** objetivos 1 a 6 implementados e validados até 16/11/2026. Cada
-etapa restante só é marcada como implementada após as verificações da
-respectiva task.
+**Status:** objetivos 1 a 7 estão implementados e validados até 17/11/2026,
+incluindo a extensão de `WEB-MANUTENCOES-003`. Cada etapa restante só é marcada
+como implementada após as verificações da respectiva task.
 
 O objetivo é chegar rapidamente a uma versão Web correta e apresentável sem
 reescrever os domínios que já funcionam. A execução começa por defeitos e
@@ -20,7 +20,7 @@ salvo a proteção do leitor de inventário ao final.
 | 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | implementada | objetivos 1–3                          |
 | 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final           | implementada | objetivos 2–4                          |
 | 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                      | implementada | objetivos 2–4                          |
-| 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | `Pedido #n`, seleção e dados por item simplificados                     | aprovada     | objetivos 2–4 e migration validada     |
+| 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | substitui/remove anexos únicos e expõe detalhes de orçamento/retorno    | implementada | objetivos 2–4                          |
 | 8     | [`WEB-DASHBOARD-002`](../../tasks/WEB-DASHBOARD-002-visao-operacional.md)         | uma rota agregada com pendências e atividades pessoais                  | aprovada     | objetivos 5–7                          |
 | 9     | [`WEB-CADASTROS-002`](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md)          | cadastros independentes, modais roteáveis e situação junto da edição    | aprovada     | objetivos 2–4                          |
 | 10    | [`WEB-OPERACOES-001`](../../tasks/WEB-OPERACOES-001-padronizar-operacoes.md)      | cinco áreas patrimoniais consistentes sem mudar domínio                 | aprovada     | objetivos 2–5                          |

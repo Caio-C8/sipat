@@ -405,14 +405,17 @@ anexado, comissão e usuário responsável.
 
 **Informações:** Manutenção, número sequencial do pedido, patrimônios enviados,
 datas, fornecedor quando aplicável, orçamento por item, descrição do serviço,
-valor do serviço, garantia, documentos e informações de recebimento.
+valor do serviço, garantia, observações, anexo opcional da observação e
+informações de recebimento.
 
 **Regras:**
 
 - Deve ser possível selecionar os bens enviados para manutenção e manter um item de manutenção por patrimônio.
 - Cada item deve possuir orçamento próprio, que pode ser atualizado enquanto necessário.
 - Ao receber o bem, devem ser registrados o serviço realizado, o valor correspondente e as informações de garantia.
-- Documentos podem ser anexados no envio e/ou no recebimento.
+- O pedido e cada item podem possuir, cada um, no máximo um PDF opcional
+  vinculado à respectiva observação. O anexo não possui fases nem histórico de
+  versões.
 - A manutenção não deve alterar automaticamente o valor patrimonial do bem.
 - O status do patrimônio deve refletir o envio e o retorno da manutenção.
 - Cada pedido deve possuir um número `BIGINT` único, imutável, crescente e
@@ -422,13 +425,14 @@ valor do serviço, garantia, documentos e informações de recebimento.
 **Decisões confirmadas para RF18:** comissão e data de envio pertencem ao pedido;
 fornecedor, tipo (`PREVENTIVA` ou `CORRETIVA`) e previsão de retorno pertencem a
 cada item. A data de envio pode ser passada, mas não futura, e a comissão deve
-estar vigente nela. A comissão original permanece vinculada durante revisões e
-retornos posteriores. Cada item admite revisões de orçamento somente antes do
-retorno, preservando as versões anteriores. O retorno é individual e único, com
+estar vigente nela. A comissão original permanece vinculada durante atualizações
+de orçamento e retornos posteriores. Cada item possui um orçamento atualizável
+somente antes do retorno; a interface não apresenta versões nem sugere um
+histórico consultável. O retorno é individual e único, com
 descrição do serviço, valor e garantia com descrição e data final opcional. O
 pedido só é concluído quando todos os itens retornarem; sua data agregada é a
-do último retorno. O PDF comum do pedido é opcional; PDFs adicionais por item
-são associados ao envio ou ao recebimento e mantidos no histórico. Nova
+do último retorno. Há somente um anexo opcional da observação do pedido e um por
+item, sem classificação por envio/recebimento e sem coleção de documentos. Nova
 vinculação de fornecedor exige cadastro ativo, sem apagar vínculos históricos.
 Durante conferência de setor em andamento, envio e retorno que mudem a
 elegibilidade do bem ficam bloqueados; setor apenas pendente não recebe esse

@@ -6,7 +6,7 @@ import {
   CABECALHO_CSRF,
   ConsultarManutencaoResponseSchema,
   CriarManutencaoResponseSchema,
-  EnviarDocumentoManutencaoResponseSchema,
+  EnviarAnexoObservacaoManutencaoResponseSchema,
   ListarManutencoesResponseSchema,
   RegistrarRetornoManutencaoResponseSchema,
   RespostaErroSchema,
@@ -171,6 +171,15 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       .set("Origin", ORIGEM)
       .send({})
       .expect(403);
+    const inexistente = randomUUID();
+    await request(app.getHttpServer())
+      .patch(`/api/manutencoes/${inexistente}/anexo-observacao`)
+      .expect(401);
+    await request(app.getHttpServer())
+      .delete(`/api/manutencoes/${inexistente}/anexo-observacao`)
+      .set("Cookie", diretorCookie)
+      .set("Origin", ORIGEM)
+      .expect(403);
   });
 
   it("cria, consulta, revisa, recebe e transmite PDFs por rotas reais", async () => {
@@ -195,6 +204,7 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
     const criado = CriarManutencaoResponseSchema.parse(
       (await post(adminCookie, body).expect(201)).body,
     ).dados;
+    expect(criado.numeroPedido).toMatch(/^[1-9]\d*$/);
     const item = criado.itens[0]!;
     expect((await post(adminCookie, body).expect(409)).body.codigo).toBe(
       "OPERACAO_JA_PROCESSADA",
@@ -203,6 +213,11 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       (await get("?busca=" + bem.numeroPatrimonio, diretorCookie).expect(200))
         .body,
     );
+    const porNumero = ListarManutencoesResponseSchema.parse(
+      (await get(`?busca=${criado.numeroPedido}`, diretorCookie).expect(200))
+        .body,
+    );
+    expect(porNumero.dados.map((pedido) => pedido.id)).toContain(criado.id);
     ConsultarManutencaoResponseSchema.parse(
       (await get(`/${criado.id}`, diretorCookie).expect(200)).body,
     );
@@ -220,10 +235,10 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       .expect(200);
     const pdf = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
     const chaveDocumento = randomUUID();
-    const doc = EnviarDocumentoManutencaoResponseSchema.parse(
+    const anexo = EnviarAnexoObservacaoManutencaoResponseSchema.parse(
       (
         await request(app.getHttpServer())
-          .post(`/api/manutencoes/${criado.id}/documentos`)
+          .post(`/api/manutencoes/${criado.id}/anexo-observacao`)
           .set("Cookie", adminCookie)
           .set("Origin", ORIGEM)
           .set(CABECALHO_CSRF, "1")
@@ -231,7 +246,6 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
             "dados",
             JSON.stringify({
               chaveIdempotencia: chaveDocumento,
-              fase: "PEDIDO",
             }),
           )
           .attach("documento", pdf, {
@@ -250,17 +264,15 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
           tipo: true,
           manutencaoId: true,
           itemId: true,
-          documentoId: true,
         },
       }),
     ).toEqual({
       tipo: "DOCUMENTO",
       manutencaoId: criado.id,
       itemId: null,
-      documentoId: doc.id,
     });
     const documentoRepetido = await request(app.getHttpServer())
-      .post(`/api/manutencoes/${criado.id}/documentos`)
+      .post(`/api/manutencoes/${criado.id}/anexo-observacao`)
       .set("Cookie", adminCookie)
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1")
@@ -268,7 +280,6 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
         "dados",
         JSON.stringify({
           chaveIdempotencia: chaveDocumento,
-          fase: "PEDIDO",
         }),
       )
       .attach("documento", pdf, {
@@ -277,11 +288,91 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       })
       .expect(409);
     expect(documentoRepetido.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
-    await get(`/${criado.id}/documentos/${doc.id}`, diretorCookie)
+    expect(anexo.url).toContain("/anexo-observacao");
+    const substituido = ConsultarManutencaoResponseSchema.parse(
+      (
+        await request(app.getHttpServer())
+          .patch(`/api/manutencoes/${criado.id}/anexo-observacao`)
+          .set("Cookie", diretorCookie)
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1")
+          .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+          .attach("documento", Buffer.concat([pdf, Buffer.from("\nnovo")]), {
+            filename: "pedido-substituido.pdf",
+            contentType: "application/pdf",
+          })
+          .expect(200)
+      ).body,
+    ).dados;
+    expect(substituido.anexoObservacao).not.toBeNull();
+    const removido = ConsultarManutencaoResponseSchema.parse(
+      (
+        await request(app.getHttpServer())
+          .delete(`/api/manutencoes/${criado.id}/anexo-observacao`)
+          .set("Cookie", adminCookie)
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1")
+          .expect(200)
+      ).body,
+    ).dados;
+    expect(removido.anexoObservacao).toBeNull();
+    expect(
+      ConsultarManutencaoResponseSchema.parse(
+        (
+          await request(app.getHttpServer())
+            .delete(`/api/manutencoes/${criado.id}/anexo-observacao`)
+            .set("Cookie", diretorCookie)
+            .set("Origin", ORIGEM)
+            .set(CABECALHO_CSRF, "1")
+            .expect(200)
+        ).body,
+      ).dados.anexoObservacao,
+    ).toBeNull();
+    await request(app.getHttpServer())
+      .post(`/api/manutencoes/${criado.id}/anexo-observacao`)
+      .set("Cookie", adminCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+      .attach("documento", pdf, {
+        filename: "pedido-novo.pdf",
+        contentType: "application/pdf",
+      })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post(`/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`)
+      .set("Cookie", diretorCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+      .attach("documento", pdf, {
+        filename: "item.pdf",
+        contentType: "application/pdf",
+      })
+      .expect(201);
+    const itemSubstituido = ConsultarManutencaoResponseSchema.parse(
+      (
+        await request(app.getHttpServer())
+          .patch(
+            `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
+          )
+          .set("Cookie", adminCookie)
+          .set("Origin", ORIGEM)
+          .set(CABECALHO_CSRF, "1")
+          .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+          .attach("documento", Buffer.concat([pdf, Buffer.from("\nitem")]), {
+            filename: "item-substituido.pdf",
+            contentType: "application/pdf",
+          })
+          .expect(200)
+      ).body,
+    ).dados;
+    expect(itemSubstituido.itens[0]!.anexoObservacao).not.toBeNull();
+    await get(`/${criado.id}/anexo-observacao`, diretorCookie)
       .expect(200)
       .expect("Content-Type", /pdf/);
     await request(app.getHttpServer())
-      .get(`/api/manutencoes/${criado.id}/documentos/${doc.id}`)
+      .get(`/api/manutencoes/${criado.id}/anexo-observacao`)
       .expect(401);
     const retorno = {
       chaveIdempotencia: randomUUID(),
@@ -290,16 +381,27 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       valorRealizado: "20",
       garantia: null,
     };
+    const removerPedido = request(app.getHttpServer())
+      .delete(`/api/manutencoes/${criado.id}/anexo-observacao`)
+      .set("Cookie", adminCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1");
+    const concluirPedido = request(app.getHttpServer())
+      .post(`/api/manutencoes/${criado.id}/itens/${item.id}/retorno`)
+      .set("Cookie", diretorCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .send(retorno);
+    const [remocaoConcorrente, respostaRecebimento] = await Promise.all([
+      removerPedido,
+      concluirPedido,
+    ]);
+    expect([200, 409]).toContain(remocaoConcorrente.status);
+    if (remocaoConcorrente.status === 409)
+      expect(remocaoConcorrente.body.codigo).toBe("MANUTENCAO_CONCLUIDA");
+    expect(respostaRecebimento.status).toBe(200);
     const recebido = RegistrarRetornoManutencaoResponseSchema.parse(
-      (
-        await request(app.getHttpServer())
-          .post(`/api/manutencoes/${criado.id}/itens/${item.id}/retorno`)
-          .set("Cookie", diretorCookie)
-          .set("Origin", ORIGEM)
-          .set(CABECALHO_CSRF, "1")
-          .send(retorno)
-          .expect(200)
-      ).body,
+      respostaRecebimento.body,
     ).dados;
     expect(recebido.statusPedido).toBe("CONCLUIDA");
     expect(
@@ -313,8 +415,25 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       .send(retorno)
       .expect(409);
     expect(repetido.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
+    for (const metodo of ["patch", "delete"] as const) {
+      const requisicao = request(app.getHttpServer())[metodo](
+          `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
+        )
+        .set("Cookie", diretorCookie)
+        .set("Origin", ORIGEM)
+        .set(CABECALHO_CSRF, "1");
+      if (metodo === "patch")
+        requisicao
+          .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+          .attach("documento", pdf, {
+            filename: "tardio.pdf",
+            contentType: "application/pdf",
+          });
+      const conflito = await requisicao.expect(409);
+      expect(conflito.body.codigo).toBe("MANUTENCAO_CONCLUIDA");
+    }
     const invalido = await request(app.getHttpServer())
-      .post(`/api/manutencoes/${criado.id}/documentos`)
+      .post(`/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`)
       .set("Cookie", adminCookie)
       .set("Origin", ORIGEM)
       .set(CABECALHO_CSRF, "1")
@@ -322,8 +441,6 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
         "dados",
         JSON.stringify({
           chaveIdempotencia: randomUUID(),
-          fase: "RECEBIMENTO",
-          itemId: item.id,
         }),
       )
       .attach("documento", Buffer.from("texto"), {
@@ -384,6 +501,138 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
     expect(
       (await db.patrimonio.findUniqueOrThrow({ where: { id: bem.id } })).status,
     ).toBe("ATIVO");
+  });
+
+  it("serializa substituição concorrente e impede mutação tardia do item retornado", async () => {
+    const adminId = (
+      await db.usuario.findFirstOrThrow({
+        where: {
+          perfil: "ADMINISTRADOR",
+          email: { endsWith: "-admin@example.test" },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    ).id;
+    const bens = await Promise.all([criarBem(adminId), criarBem(adminId)]);
+    const criado = CriarManutencaoResponseSchema.parse(
+      (
+        await post(adminCookie, {
+          chaveIdempotencia: randomUUID(),
+          dataEnvio: "2026-10-20",
+          comissaoId,
+          itens: bens.map((bem) => ({
+            patrimonioId: bem.id,
+            tipo: "CORRETIVA",
+          })),
+        }).expect(201)
+      ).body,
+    ).dados;
+    const item = criado.itens[0]!;
+    const pdf = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
+    await request(app.getHttpServer())
+      .post(`/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`)
+      .set("Cookie", diretorCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+      .attach("documento", pdf, {
+        filename: "item.pdf",
+        contentType: "application/pdf",
+      })
+      .expect(201);
+    const substituir = request(app.getHttpServer())
+      .patch(`/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`)
+      .set("Cookie", diretorCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+      .attach("documento", pdf, {
+        filename: "item-substituido.pdf",
+        contentType: "application/pdf",
+      });
+    const receber = request(app.getHttpServer())
+      .post(`/api/manutencoes/${criado.id}/itens/${item.id}/retorno`)
+      .set("Cookie", adminCookie)
+      .set("Origin", ORIGEM)
+      .set(CABECALHO_CSRF, "1")
+      .send({
+        chaveIdempotencia: randomUUID(),
+        dataRetorno: "2026-10-22",
+        descricaoServicoRealizado: "Conserto concluído",
+        valorRealizado: "10",
+        garantia: null,
+      });
+    const [substituicao, respostaRetorno] = await Promise.all([
+      substituir,
+      receber,
+    ]);
+    expect([200, 409]).toContain(substituicao.status);
+    if (substituicao.status === 409)
+      expect(substituicao.body.codigo).toBe("ITEM_JA_RECEBIDO");
+    expect(respostaRetorno.status).toBe(200);
+    const retorno = RegistrarRetornoManutencaoResponseSchema.parse(
+      respostaRetorno.body,
+    ).dados;
+    expect(retorno.statusPedido).toBe("EM_ANDAMENTO");
+    const detalheAtualizado = ConsultarManutencaoResponseSchema.parse(
+      (
+        await request(app.getHttpServer())
+          .get(`/api/manutencoes/${criado.id}`)
+          .set("Cookie", diretorCookie)
+          .expect(200)
+      ).body,
+    ).dados;
+    expect(
+      detalheAtualizado.itens.find(({ id }) => id === item.id)?.anexoObservacao,
+    ).not.toBeNull();
+
+    for (const metodo of ["patch", "delete"] as const) {
+      const requisicao = request(app.getHttpServer())[metodo](
+          `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
+        )
+        .set("Cookie", diretorCookie)
+        .set("Origin", ORIGEM)
+        .set(CABECALHO_CSRF, "1");
+      if (metodo === "patch")
+        requisicao
+          .field("dados", JSON.stringify({ chaveIdempotencia: randomUUID() }))
+          .attach("documento", pdf, {
+            filename: "tardio.pdf",
+            contentType: "application/pdf",
+          });
+      const conflito = await requisicao.expect(409);
+      expect(conflito.body.codigo).toBe("ITEM_JA_RECEBIDO");
+    }
+  });
+
+  it("gera números de pedido distintos sob criação concorrente", async () => {
+    const adminId = (
+      await db.usuario.findFirstOrThrow({
+        where: {
+          perfil: "ADMINISTRADOR",
+          email: { endsWith: "-admin@example.test" },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    ).id;
+    const bens = await Promise.all([criarBem(adminId), criarBem(adminId)]);
+    const respostas = await Promise.all(
+      bens.map((bem) =>
+        post(adminCookie, {
+          chaveIdempotencia: randomUUID(),
+          dataEnvio: "2026-10-20",
+          comissaoId,
+          itens: [{ patrimonioId: bem.id, tipo: "CORRETIVA" }],
+        }).expect(201),
+      ),
+    );
+    const numeros = respostas.map((resposta) =>
+      BigInt(
+        CriarManutencaoResponseSchema.parse(resposta.body).dados.numeroPedido,
+      ),
+    );
+    expect(new Set(numeros.map(String)).size).toBe(2);
+    expect(numeros.every((numero) => numero > 0n)).toBe(true);
   });
 });
 

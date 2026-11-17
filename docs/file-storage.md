@@ -185,12 +185,23 @@ novo; como a baixa é imutável, esta entrega não prevê substituição ou remo
 posterior do documento. A reconciliação reúne as chaves de notas fiscais e de
 `baixas_patrimoniais` antes de classificar um arquivo como órfão.
 
-Na manutenção, o upload é independente da criação e do retorno. Se a
-persistência do documento falhar, o arquivo novo é compensado sem desfazer um
-pedido ou retorno já confirmado. A reconciliação inclui as chaves de
-`documentos_manutencao` antes de classificar órfãos. Testes HTTP reais cobrem
-upload válido, arquivo inválido, download autenticado e negação sem sessão;
+Na manutenção, o upload do anexo da observação é independente da criação e do
+retorno. Pedido e item mantêm no máximo uma referência cada nos campos
+`caminho_anexo_observacao`; não existe tabela ou histórico de documentos de
+manutenção. Se a persistência da referência falhar, o arquivo novo é compensado
+sem desfazer um pedido ou retorno já confirmado. A reconciliação inclui os dois
+conjuntos de referências antes de classificar órfãos. Testes HTTP reais cobrem
+upload válido, limite unitário, arquivo inválido, download autenticado e negação sem sessão;
 ver [MANUTENCOES-001](./tasks/MANUTENCOES-001-api-persistencia-manutencoes.md).
+
+A extensão implementada de
+[WEB-MANUTENCOES-003](./tasks/WEB-MANUTENCOES-003-identificacao-itens.md)
+adiciona substituição e remoção do recurso único. Ela segue a ordem desta
+seção: validar e preparar a nova chave, trocar a referência sob lock/transação e
+só então remover o arquivo anterior; na remoção, limpar a referência antes da
+exclusão física. Pedido concluído e item retornado permanecem consultáveis, mas
+imutáveis. Falha de compensação fica para a reconciliação idempotente e nunca
+autoriza apagar chave ainda referenciada.
 
 ## Operação e limites
 

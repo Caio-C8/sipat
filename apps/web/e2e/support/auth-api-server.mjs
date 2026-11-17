@@ -173,14 +173,15 @@ const relacionadoTeste = {
 };
 const manutencaoResumo = {
   id: webDomainFixtures.manutencao.id,
+  numeroPedido: "1",
   numeroRequisicao: "MAN-2026-001",
   dataEnvio: "2026-11-10",
   dataRetorno: null,
   status: "EM_ANDAMENTO",
-  totalItens: 1,
+  totalItens: 2,
   itensPendentes: 1,
-  itensRetornados: 0,
-  temPdfPedido: false,
+  itensRetornados: 1,
+  temAnexoObservacao: true,
 };
 const manutencaoItem = {
   id: webDomainFixtures.manutencao.itemId,
@@ -197,8 +198,20 @@ const manutencaoItem = {
   },
   previsaoRetorno: "2026-11-30",
   descricaoProblema: "Equipamento não inicializa.",
-  versaoOrcamento: 0,
-  orcamentoAtual: null,
+  versaoOrcamento: 1,
+  orcamentoAtual: {
+    id: "11111111-1111-4111-8111-111111111120",
+    versao: 1,
+    dataOrcamento: "2026-11-11",
+    descricaoOrcamento: "Troca da placa principal.",
+    valorOrcamento: "480.0000000",
+    fornecedor: {
+      id: webDomainFixtures.manutencao.fornecedorId,
+      nome: "Oficina credenciada",
+    },
+    registradoPor: { id: identities.active.id, nome: identities.active.nome },
+    createdAt: "2026-11-11T14:30:00.000Z",
+  },
   revisoesOrcamento: [],
   dataRetorno: null,
   descricaoServicoRealizado: null,
@@ -206,7 +219,26 @@ const manutencaoItem = {
   garantia: null,
   recebidoPor: null,
   recebidoEm: null,
-  documentos: [],
+  anexoObservacao: null,
+};
+const manutencaoItemRetornado = {
+  ...manutencaoItem,
+  id: "11111111-1111-4111-8111-111111111121",
+  patrimonio: {
+    id: "11111111-1111-4111-8111-111111111122",
+    numeroPatrimonio: "102",
+    descricao: "Impressora revisada",
+    status: "ATIVO",
+  },
+  descricaoProblema: "Falhas recorrentes de impressão.",
+  versaoOrcamento: 0,
+  orcamentoAtual: null,
+  dataRetorno: "2026-11-15",
+  descricaoServicoRealizado: "Limpeza e substituição do rolete.",
+  valorRealizado: "150.0000000",
+  garantia: { descricao: "Garantia de 90 dias", dataFim: "2027-02-13" },
+  recebidoPor: { id: identities.director.id, nome: identities.director.nome },
+  recebidoEm: "2026-11-15T16:20:00.000Z",
 };
 const manutencaoDetalhe = {
   ...manutencaoResumo,
@@ -214,8 +246,10 @@ const manutencaoDetalhe = {
   comissao: relacionadoTeste,
   criadoPor: { id: identities.director.id, nome: identities.director.nome },
   criadoEm: "2026-11-10T12:00:00.000Z",
-  itens: [manutencaoItem],
-  documentos: [],
+  itens: [manutencaoItem, manutencaoItemRetornado],
+  anexoObservacao: {
+    url: `/api/backend/manutencoes/${webDomainFixtures.manutencao.id}/anexo-observacao`,
+  },
 };
 const emprestimoResumo = {
   id: webDomainFixtures.emprestimo.id,

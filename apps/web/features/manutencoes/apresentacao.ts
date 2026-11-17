@@ -2,7 +2,7 @@ import { isApiError } from "@/lib/api/core/api-error";
 import { formatBrl } from "@/lib/format/decimal";
 
 export const campoManutencao =
-  "min-h-10 min-w-0 w-full rounded-md border border-[#cfd9e7] bg-white px-3 py-2 text-sm text-[#19355d] shadow-[0_1px_1px_rgba(22,48,82,0.02)] transition placeholder:text-[#93a3b8] hover:border-[#aebed2] focus-visible:border-[#2863ec] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2863ec] disabled:bg-[#eef2f7] disabled:text-[#7b8ba1]";
+  "min-h-10 min-w-0 w-full rounded-md border border-[#cfd9e7] bg-white px-3 py-2 text-sm text-[#19355d] shadow-[0_1px_1px_rgba(22,48,82,0.02)] transition placeholder:text-[#93a3b8] hover:border-[#aebed2] focus-visible:border-[#D4A017] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#D4A017] aria-invalid:border-red-500 aria-invalid:focus-visible:outline-red-600 disabled:bg-[#eef2f7] disabled:text-[#7b8ba1]";
 
 export const painelManutencao =
   "min-w-0 rounded-lg border border-[#dce4ef] bg-white p-4 shadow-[0_1px_2px_rgba(22,48,82,0.03)] sm:p-5";

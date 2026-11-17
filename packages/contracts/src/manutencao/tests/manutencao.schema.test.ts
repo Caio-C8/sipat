@@ -3,11 +3,12 @@ import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import {
   AtualizarOrcamentoManutencaoBodySchema,
-  CampoDadosDocumentoManutencaoSchema,
+  AnexoObservacaoManutencaoSchema,
+  CampoDadosAnexoObservacaoManutencaoSchema,
   CriarManutencaoBodySchema,
-  DadosDocumentoManutencaoSchema,
-  DocumentoManutencaoSchema,
+  DadosAnexoObservacaoManutencaoSchema,
   ListarManutencoesQuerySchema,
+  ManutencaoResumoSchema,
   RegistrarRetornoManutencaoBodySchema,
 } from "../../index";
 
@@ -113,42 +114,35 @@ test("orçamento e retorno exigem valores canônicos e versões válidas", () =>
   );
 });
 
-test("documento exige fase e relação coerentes, sem aceitar chaves internas na resposta", () => {
-  const dados = { chaveIdempotencia: randomUUID(), fase: "PEDIDO" };
-  assert.equal(DadosDocumentoManutencaoSchema.safeParse(dados).success, true);
+test("anexo da observação aceita somente a chave pública necessária", () => {
+  const dados = { chaveIdempotencia: randomUUID() };
   assert.equal(
-    DadosDocumentoManutencaoSchema.safeParse({ ...dados, itemId: randomUUID() })
-      .success,
-    false,
-  );
-  assert.equal(
-    DadosDocumentoManutencaoSchema.safeParse({ ...dados, fase: "ENVIO" })
-      .success,
-    false,
-  );
-  assert.equal(
-    CampoDadosDocumentoManutencaoSchema.safeParse(
-      JSON.stringify({ ...dados, fase: "ENVIO", itemId: randomUUID() }),
-    ).success,
+    DadosAnexoObservacaoManutencaoSchema.safeParse(dados).success,
     true,
   );
   assert.equal(
-    CampoDadosDocumentoManutencaoSchema.safeParse("{").success,
+    DadosAnexoObservacaoManutencaoSchema.safeParse({
+      ...dados,
+      itemId: randomUUID(),
+    }).success,
     false,
   );
-  const doc = {
-    id: randomUUID(),
-    fase: "PEDIDO",
-    itemId: null,
-    tamanhoBytes: 100,
-    nome: "Documento.pdf",
-    criadoEm: "2026-10-03T12:00:00.000Z",
-    url: `/api/backend/manutencoes/${randomUUID()}/documentos/${randomUUID()}`,
-  };
-  assert.equal(DocumentoManutencaoSchema.safeParse(doc).success, true);
   assert.equal(
-    DocumentoManutencaoSchema.safeParse({
-      ...doc,
+    CampoDadosAnexoObservacaoManutencaoSchema.safeParse(JSON.stringify(dados))
+      .success,
+    true,
+  );
+  assert.equal(
+    CampoDadosAnexoObservacaoManutencaoSchema.safeParse("{").success,
+    false,
+  );
+  const anexo = {
+    url: `/api/backend/manutencoes/${randomUUID()}/anexo-observacao`,
+  };
+  assert.equal(AnexoObservacaoManutencaoSchema.safeParse(anexo).success, true);
+  assert.equal(
+    AnexoObservacaoManutencaoSchema.safeParse({
+      ...anexo,
       chave: "uploads/interno.pdf",
     }).success,
     false,
@@ -168,4 +162,25 @@ test("filtro paginado verifica período inclusivo ordenado", () => {
     ListarManutencoesQuerySchema.safeParse({ pagina: "0" }).success,
     false,
   );
+});
+
+test("número humano do pedido é uma string decimal positiva", () => {
+  const resumo = {
+    id: randomUUID(),
+    numeroPedido: "42",
+    numeroRequisicao: null,
+    dataEnvio: "2026-10-01",
+    dataRetorno: null,
+    status: "EM_ANDAMENTO",
+    totalItens: 1,
+    itensPendentes: 1,
+    itensRetornados: 0,
+    temAnexoObservacao: false,
+  };
+  assert.equal(ManutencaoResumoSchema.safeParse(resumo).success, true);
+  for (const numeroPedido of [0, "0", "01", "1.0", "pedido-1"])
+    assert.equal(
+      ManutencaoResumoSchema.safeParse({ ...resumo, numeroPedido }).success,
+      false,
+    );
 });

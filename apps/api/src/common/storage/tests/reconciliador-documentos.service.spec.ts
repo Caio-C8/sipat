@@ -19,10 +19,19 @@ describe("ReconciliadorDocumentosService", () => {
             { caminhoAnexoDocumento: "uploads/baixas/baixa.pdf" },
           ]),
       },
-      documentoManutencao: {
+      manutencao: {
         findMany: jest
           .fn()
-          .mockResolvedValue([{ chave: "uploads/manutencoes/documento.pdf" }]),
+          .mockResolvedValue([
+            { caminhoAnexoObservacao: "uploads/manutencoes/pedido.pdf" },
+          ]),
+      },
+      itemManutencao: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { caminhoAnexoObservacao: "uploads/manutencoes/item.pdf" },
+          ]),
       },
     } as unknown as DatabaseClient;
     const armazenamento = {
@@ -40,7 +49,8 @@ describe("ReconciliadorDocumentosService", () => {
         chavesReferenciadas: new Set([
           "uploads/notas-fiscais/nota.pdf",
           "uploads/baixas/baixa.pdf",
-          "uploads/manutencoes/documento.pdf",
+          "uploads/manutencoes/pedido.pdf",
+          "uploads/manutencoes/item.pdf",
         ]),
         temporariosModificadosAntesDe: expect.any(Date),
         orfaosModificadosAntesDe: expect.any(Date),

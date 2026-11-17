@@ -65,16 +65,13 @@ export class ManutencoesRepository {
       orderBy: [{ dataEnvio: "desc" }, { id: "desc" }],
       select: {
         id: true,
+        numeroPedido: true,
         numeroRequisicao: true,
         dataEnvio: true,
         dataRetorno: true,
         status: true,
-        _count: {
-          select: {
-            itens: true,
-            documentos: { where: { itemId: null } },
-          },
-        },
+        caminhoAnexoObservacao: true,
+        _count: { select: { itens: true } },
         itens: { where: { dataRetorno: null }, select: { id: true } },
       },
     });
@@ -146,6 +143,15 @@ export class ManutencoesRepository {
     `;
     return item ?? null;
   }
+  async bloquearPedido(id: string) {
+    const [pedido] = await this.database.$queryRaw<
+      { id: string; status: "EM_ANDAMENTO" | "CONCLUIDA" }[]
+    >`
+      SELECT id, status FROM manutencoes
+      WHERE id = ${id}::uuid FOR UPDATE
+    `;
+    return pedido ?? null;
+  }
   criar(data: Prisma.ManutencaoUncheckedCreateInput) {
     return this.database.manutencao.create({ data, select: { id: true } });
   }
@@ -177,22 +183,6 @@ export class ManutencoesRepository {
       where: { id },
       data: { status, updatedAt: new Date() },
       select: { id: true },
-    });
-  }
-  criarDocumento(data: Prisma.DocumentoManutencaoUncheckedCreateInput) {
-    return this.database.documentoManutencao.create({ data });
-  }
-  consultarDocumento(id: string, manutencaoId: string) {
-    return this.database.documentoManutencao.findFirst({
-      where: { id, manutencaoId },
-    });
-  }
-  contarDocumentosItem(itemId: string) {
-    return this.database.documentoManutencao.count({ where: { itemId } });
-  }
-  contarDocumentosPedido(manutencaoId: string) {
-    return this.database.documentoManutencao.count({
-      where: { manutencaoId, itemId: null },
     });
   }
 }

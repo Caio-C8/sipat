@@ -8,8 +8,10 @@ define a ordem, as dependências e os critérios comuns do produto.
 
 **Status:** em implementação; `WEB-AUTH-003`, `SEC-002`, `WEB-UI-001` e
 `WEB-SHELL-002`, incluindo cabeçalho e rodapé únicos, foram implementados e
-validados até 15/11/2026; `WEB-PATRIMONIOS-002` e `WEB-INVENTARIOS-002` foram
-implementadas e validadas em 16/11/2026.
+validados até 15/11/2026; `WEB-PATRIMONIOS-002`, `WEB-INVENTARIOS-002` e
+`WEB-MANUTENCOES-003` tiveram suas baselines implementadas e validadas em
+16/11/2026. A extensão de anexos e detalhes de `WEB-MANUTENCOES-003` foi
+aprovada em 17/11/2026 e permanece pendente.
 
 A sequência completa, os critérios e as referências por objetivo estão no
 [roadmap Web](./apps/web/roadmap.md#evolução-web-de-usabilidade-e-padronização).
@@ -23,9 +25,10 @@ As entregas transversais seguem esta ordem:
    [WEB-SHELL-002](./tasks/WEB-SHELL-002-navegacao-estados-globais.md),
    implementadas — fundação visual, feedback, navegação, cabeçalho e rodapé;
 4. [WEB-PATRIMONIOS-002](./tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md),
-   e [WEB-INVENTARIOS-002](./tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md),
-   implementadas; [WEB-MANUTENCOES-003](./tasks/WEB-MANUTENCOES-003-identificacao-itens.md)
-   é a próxima vertical de maior valor e fornece contratos para a home;
+   [WEB-INVENTARIOS-002](./tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md) e
+   [WEB-MANUTENCOES-003](./tasks/WEB-MANUTENCOES-003-identificacao-itens.md),
+   com baselines implementadas — a extensão de manutenção adiciona mutação
+   segura de anexos e consulta detalhada de orçamento/retorno;
 5. [WEB-DASHBOARD-002](./tasks/WEB-DASHBOARD-002-visao-operacional.md) — agregar
    a visão operacional em uma única rota;
 6. [WEB-CADASTROS-002](./tasks/WEB-CADASTROS-002-modais-roteaveis.md),

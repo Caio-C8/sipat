@@ -16,22 +16,18 @@ const UuidSchema = z.uuid().transform((id) => id.toLowerCase());
 const TextoBuscaSchema = z.string().trim().min(1).max(200);
 const TextoLongoSchema = z.string().trim().min(1).max(10_000);
 const DataHoraSchema = z.iso.datetime({ precision: 3 });
+const NumeroPedidoManutencaoSchema = z.string().regex(/^[1-9]\d*$/, {
+  error: "O número do pedido deve ser um inteiro decimal positivo.",
+});
 const RelacionadoSchema = z.strictObject({
   id: z.uuid(),
   nome: z.string().min(1),
 });
 
 export const LIMITE_ITENS_MANUTENCAO = 50;
-export const LIMITE_DOCUMENTOS_ITEM_MANUTENCAO = 20;
 export const LIMITE_BYTES_DOCUMENTO_MANUTENCAO = 10 * 1024 * 1024;
 export const TipoManutencaoSchema = z.enum(["PREVENTIVA", "CORRETIVA"]);
 export const StatusManutencaoSchema = z.enum(["EM_ANDAMENTO", "CONCLUIDA"]);
-export const FaseDocumentoManutencaoSchema = z.enum([
-  "PEDIDO",
-  "ENVIO",
-  "RECEBIMENTO",
-  "LEGADO",
-]);
 export const CODIGOS_ERRO_MANUTENCAO = [
   "DATA_ENVIO_FUTURA",
   "DATA_RETORNO_INVALIDA",
@@ -49,6 +45,7 @@ export const CODIGOS_ERRO_MANUTENCAO = [
   "FORNECEDOR_INATIVO",
   "SETOR_EM_INVENTARIO_EM_ANDAMENTO",
   "ITEM_JA_RECEBIDO",
+  "MANUTENCAO_CONCLUIDA",
   "ORCAMENTO_VERSAO_DIVERGENTE",
   ...CODIGOS_CONFLITO_IDEMPOTENCIA,
   "CONFLITO_CONCORRENTE_MANUTENCAO",
@@ -63,9 +60,6 @@ export const ManutencaoParamsSchema = z.strictObject({
 });
 export const ItemManutencaoParamsSchema = ManutencaoParamsSchema.extend({
   itemId: UuidSchema,
-});
-export const DocumentoManutencaoParamsSchema = ManutencaoParamsSchema.extend({
-  documentoId: UuidSchema,
 });
 export const ListarManutencoesQuerySchema = PaginacaoQuerySchema.extend({
   busca: TextoBuscaSchema.optional(),
@@ -147,21 +141,10 @@ export const RegistrarRetornoManutencaoBodySchema = z.strictObject({
   valorRealizado: Decimal19_7Schema,
   garantia: GarantiaManutencaoSchema.nullable(),
 });
-export const DadosDocumentoManutencaoSchema = z
-  .strictObject({
-    chaveIdempotencia: ChaveIdempotenciaSchema,
-    fase: z.enum(["PEDIDO", "ENVIO", "RECEBIMENTO"]),
-    itemId: UuidSchema.optional(),
-  })
-  .superRefine((dados, contexto) => {
-    if ((dados.fase === "PEDIDO") === Boolean(dados.itemId))
-      contexto.addIssue({
-        code: "custom",
-        path: ["itemId"],
-        message: "Informe o item somente para envio ou recebimento.",
-      });
-  });
-export const CampoDadosDocumentoManutencaoSchema = z
+export const DadosAnexoObservacaoManutencaoSchema = z.strictObject({
+  chaveIdempotencia: ChaveIdempotenciaSchema,
+});
+export const CampoDadosAnexoObservacaoManutencaoSchema = z
   .string({ error: "O campo dados deve ser uma string JSON." })
   .transform((valor, contexto) => {
     try {
@@ -174,7 +157,7 @@ export const CampoDadosDocumentoManutencaoSchema = z
       return z.NEVER;
     }
   })
-  .pipe(DadosDocumentoManutencaoSchema);
+  .pipe(DadosAnexoObservacaoManutencaoSchema);
 
 export const RevisaoOrcamentoManutencaoSchema = z.strictObject({
   id: z.uuid(),
@@ -186,13 +169,7 @@ export const RevisaoOrcamentoManutencaoSchema = z.strictObject({
   registradoPor: RelacionadoSchema,
   createdAt: DataHoraSchema,
 });
-export const DocumentoManutencaoSchema = z.strictObject({
-  id: z.uuid(),
-  fase: FaseDocumentoManutencaoSchema,
-  itemId: z.uuid().nullable(),
-  tamanhoBytes: z.number().int().min(0).nullable(),
-  nome: z.string().min(1),
-  criadoEm: DataHoraSchema,
+export const AnexoObservacaoManutencaoSchema = z.strictObject({
   url: z.string().startsWith("/api/backend/manutencoes/"),
 });
 export const ItemManutencaoSchema = z.strictObject({
@@ -216,10 +193,11 @@ export const ItemManutencaoSchema = z.strictObject({
   garantia: GarantiaManutencaoSchema.nullable(),
   recebidoPor: RelacionadoSchema.nullable(),
   recebidoEm: DataHoraSchema.nullable(),
-  documentos: z.array(DocumentoManutencaoSchema),
+  anexoObservacao: AnexoObservacaoManutencaoSchema.nullable(),
 });
 export const ManutencaoResumoSchema = z.strictObject({
   id: z.uuid(),
+  numeroPedido: NumeroPedidoManutencaoSchema,
   numeroRequisicao: z.string().nullable(),
   dataEnvio: DataCivilSchema,
   dataRetorno: DataCivilSchema.nullable(),
@@ -227,7 +205,7 @@ export const ManutencaoResumoSchema = z.strictObject({
   totalItens: z.number().int().min(0),
   itensPendentes: z.number().int().min(0),
   itensRetornados: z.number().int().min(0),
-  temPdfPedido: z.boolean(),
+  temAnexoObservacao: z.boolean(),
 });
 export const ManutencaoDetalheSchema = ManutencaoResumoSchema.extend({
   justificativa: z.string().nullable(),
@@ -235,7 +213,7 @@ export const ManutencaoDetalheSchema = ManutencaoResumoSchema.extend({
   criadoPor: RelacionadoSchema,
   criadoEm: DataHoraSchema,
   itens: z.array(ItemManutencaoSchema),
-  documentos: z.array(DocumentoManutencaoSchema),
+  anexoObservacao: AnexoObservacaoManutencaoSchema.nullable(),
 });
 export const FornecedorOpcaoManutencaoSchema = RelacionadoSchema;
 export const ComissaoOpcaoManutencaoSchema = RelacionadoSchema.extend({
@@ -257,8 +235,12 @@ export const AtualizarOrcamentoManutencaoResponseSchema =
   criarRespostaSucessoSchema(ItemManutencaoSchema);
 export const RegistrarRetornoManutencaoResponseSchema =
   criarRespostaSucessoSchema(RetornoManutencaoSchema);
-export const EnviarDocumentoManutencaoResponseSchema =
-  criarRespostaSucessoSchema(DocumentoManutencaoSchema);
+export const EnviarAnexoObservacaoManutencaoResponseSchema =
+  criarRespostaSucessoSchema(AnexoObservacaoManutencaoSchema);
+export const AlterarAnexoObservacaoManutencaoResponseSchema =
+  ConsultarManutencaoResponseSchema;
+export const RemoverAnexoObservacaoManutencaoResponseSchema =
+  ConsultarManutencaoResponseSchema;
 export const ListarFornecedoresManutencaoResponseSchema =
   criarRespostaSucessoPaginadaSchema(FornecedorOpcaoManutencaoSchema);
 export const ListarComissoesManutencaoResponseSchema =
@@ -276,8 +258,8 @@ export type AtualizarOrcamentoManutencaoBodyData = z.output<
 export type RegistrarRetornoManutencaoBodyData = z.output<
   typeof RegistrarRetornoManutencaoBodySchema
 >;
-export type DadosDocumentoManutencao = z.output<
-  typeof DadosDocumentoManutencaoSchema
+export type DadosAnexoObservacaoManutencao = z.output<
+  typeof DadosAnexoObservacaoManutencaoSchema
 >;
 export type ListarManutencoesQueryData = z.output<
   typeof ListarManutencoesQuerySchema
@@ -294,7 +276,9 @@ export type ListarComissoesManutencaoQueryData = z.output<
 export type ManutencaoResumo = z.output<typeof ManutencaoResumoSchema>;
 export type ManutencaoDetalhe = z.output<typeof ManutencaoDetalheSchema>;
 export type ItemManutencao = z.output<typeof ItemManutencaoSchema>;
-export type DocumentoManutencao = z.output<typeof DocumentoManutencaoSchema>;
+export type AnexoObservacaoManutencao = z.output<
+  typeof AnexoObservacaoManutencaoSchema
+>;
 export type RetornoManutencao = z.output<typeof RetornoManutencaoSchema>;
 export type ListarManutencoesResponse = z.output<
   typeof ListarManutencoesResponseSchema
@@ -311,8 +295,14 @@ export type AtualizarOrcamentoManutencaoResponse = z.output<
 export type RegistrarRetornoManutencaoResponse = z.output<
   typeof RegistrarRetornoManutencaoResponseSchema
 >;
-export type EnviarDocumentoManutencaoResponse = z.output<
-  typeof EnviarDocumentoManutencaoResponseSchema
+export type EnviarAnexoObservacaoManutencaoResponse = z.output<
+  typeof EnviarAnexoObservacaoManutencaoResponseSchema
+>;
+export type AlterarAnexoObservacaoManutencaoResponse = z.output<
+  typeof AlterarAnexoObservacaoManutencaoResponseSchema
+>;
+export type RemoverAnexoObservacaoManutencaoResponse = z.output<
+  typeof RemoverAnexoObservacaoManutencaoResponseSchema
 >;
 export type ListarFornecedoresManutencaoResponse = z.output<
   typeof ListarFornecedoresManutencaoResponseSchema

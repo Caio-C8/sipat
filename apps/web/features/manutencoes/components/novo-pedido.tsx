@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Check,
+  ChevronDown,
   FileText,
   PackagePlus,
-  Pencil,
   Search,
   Trash2,
   Upload,
@@ -17,7 +17,11 @@ import {
   type CriarManutencaoBodyInput,
 } from "@repo/contracts";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
+import { ComboboxField } from "@/components/shared/form-fields";
+import { MoneyInput } from "@/components/shared/numeric-inputs";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +30,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 import {
   decidirAposFalha,
@@ -35,6 +48,7 @@ import {
 import { campoManutencao, painelManutencao } from "../apresentacao";
 import { criarOperacoesManutencoes } from "../api/manutencao-operations";
 import { ErroManutencao } from "./erro-manutencao";
+import { toast } from "sonner";
 
 const operacoes = criarOperacoesManutencoes(browserApiClient);
 type Opcao = { id: string; nome: string };
@@ -51,6 +65,7 @@ type ItemForm = {
   descricaoOrcamento: string;
   valorOrcamento: string;
 };
+type ErrosItem = Partial<Record<keyof ItemForm, string>>;
 
 const hoje = () =>
   new Intl.DateTimeFormat("en-CA", {
@@ -84,9 +99,10 @@ export function NovoPedido() {
   const [bens, setBens] = useState<Bem[]>([]);
   const [buscaBem, setBuscaBem] = useState("");
   const [buscaComissao, setBuscaComissao] = useState("");
-  const [buscaFornecedor, setBuscaFornecedor] = useState("");
+  const [carregandoComissoes, setCarregandoComissoes] = useState(false);
   const [seletorAberto, setSeletorAberto] = useState(false);
   const [configurando, setConfigurando] = useState<number | null>(null);
+  const [errosItens, setErrosItens] = useState<Record<number, ErrosItem>>({});
   const [erro, setErro] = useState<unknown>(null);
   const [aviso, setAviso] = useState("");
   const [pedidoCriadoId, setPedidoCriadoId] = useState<string | null>(null);
@@ -96,12 +112,14 @@ export function NovoPedido() {
   const chave = useRef<string | null>(null);
   const enviando = useRef(false);
   const acionadorSeletor = useRef<HTMLButtonElement>(null);
+  const secoesItens = useRef(new Map<number, HTMLDivElement>());
 
   const alterar = () => {
     chave.current = null;
     setAviso("");
     setErro(null);
     setDecisaoIdempotencia(null);
+    setErrosItens({});
   };
   async function carregarBens(busca = "") {
     try {
@@ -117,31 +135,6 @@ export function NovoPedido() {
           descricao: bem.descricao,
         })),
       );
-      setErro(null);
-    } catch (e) {
-      setErro(e);
-    }
-  }
-  async function carregarComissoes(busca = "", data = dataEnvio) {
-    try {
-      const resposta = await operacoes.comissoes({
-        dataEnvio: data,
-        ...(busca.trim() ? { busca: busca.trim() } : {}),
-        limite: "50",
-      });
-      setComissoes(resposta.dados);
-      setErro(null);
-    } catch (e) {
-      setErro(e);
-    }
-  }
-  async function carregarFornecedores(busca = "") {
-    try {
-      const resposta = await operacoes.fornecedores({
-        ...(busca.trim() ? { busca: busca.trim() } : {}),
-        limite: "50",
-      });
-      setFornecedores(resposta.dados);
       setErro(null);
     } catch (e) {
       setErro(e);
@@ -173,19 +166,39 @@ export function NovoPedido() {
   }, []);
   useEffect(() => {
     if (!dataEnvio) return;
-    let ativo = true;
-    void operacoes
-      .comissoes({ dataEnvio, limite: "50" })
-      .then((resposta) => {
-        if (ativo) setComissoes(resposta.dados);
-      })
-      .catch((e: unknown) => {
-        if (ativo) setErro(e);
-      });
+    const controller = new AbortController();
+    const timer = window.setTimeout(
+      () => {
+        setCarregandoComissoes(true);
+        void operacoes
+          .comissoes(
+            {
+              dataEnvio,
+              ...(buscaComissao.trim() ? { busca: buscaComissao.trim() } : {}),
+              limite: "50",
+            },
+            { signal: controller.signal },
+          )
+          .then((resposta) => {
+            if (!controller.signal.aborted) {
+              setComissoes(resposta.dados);
+              setErro(null);
+            }
+          })
+          .catch((e: unknown) => {
+            if (!controller.signal.aborted) setErro(e);
+          })
+          .finally(() => {
+            if (!controller.signal.aborted) setCarregandoComissoes(false);
+          });
+      },
+      buscaComissao.trim() ? 250 : 0,
+    );
     return () => {
-      ativo = false;
+      window.clearTimeout(timer);
+      controller.abort();
     };
-  }, [dataEnvio]);
+  }, [buscaComissao, dataEnvio]);
 
   function alternarBem(bem: Bem) {
     setItens((atuais) =>
@@ -237,10 +250,40 @@ export function NovoPedido() {
     };
     const validacao = CriarManutencaoBodySchema.safeParse(body);
     if (!validacao.success) {
+      const porItem: Record<number, ErrosItem> = {};
+      for (const issue of validacao.error.issues) {
+        const [grupo, indice, subgrupo, campo] = issue.path;
+        if (grupo !== "itens" || typeof indice !== "number") continue;
+        const destino =
+          subgrupo === "orcamentoInicial" && typeof campo === "string"
+            ? (
+                {
+                  dataOrcamento: "dataOrcamento",
+                  descricaoOrcamento: "descricaoOrcamento",
+                  valorOrcamento: "valorOrcamento",
+                } as const
+              )[campo as "dataOrcamento"]
+            : typeof subgrupo === "string"
+              ? subgrupo
+              : undefined;
+        if (destino)
+          porItem[indice] = {
+            ...porItem[indice],
+            [destino]: issue.message,
+          };
+      }
+      setErrosItens(porItem);
+      const primeiro = Object.keys(porItem)
+        .map(Number)
+        .sort((a, b) => a - b)[0];
+      if (primeiro !== undefined) {
+        setConfigurando(primeiro);
+        requestAnimationFrame(() => secoesItens.current.get(primeiro)?.focus());
+      }
       setErro(
-        validacao.error.issues
-          .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-          .join(" "),
+        primeiro === undefined
+          ? validacao.error.issues.map((issue) => issue.message).join(" ")
+          : "Revise os campos destacados no primeiro item aberto antes de criar o pedido.",
       );
       return;
     }
@@ -256,9 +299,10 @@ export function NovoPedido() {
       chave.current = null;
       if (arquivo) {
         try {
-          await operacoes.enviarDocumento(
+          await operacoes.enviarAnexoObservacao(
             id,
-            { chaveIdempotencia: crypto.randomUUID(), fase: "PEDIDO" },
+            null,
+            { chaveIdempotencia: crypto.randomUUID() },
             arquivo,
           );
         } catch (e) {
@@ -270,6 +314,7 @@ export function NovoPedido() {
           return;
         }
       }
+      toast.success(resposta.mensagem);
       router.push(`/manutencoes/${id}`);
     } catch (e) {
       const decisao = decidirAposFalha(e);
@@ -287,13 +332,16 @@ export function NovoPedido() {
     }
   }
 
-  const itemConfigurado = (item: ItemForm) =>
-    Boolean(
-      item.fornecedorId ||
-      item.previsaoRetorno ||
-      item.descricaoProblema.trim() ||
+  const itemCompleto = (item: ItemForm) => {
+    const camposOrcamento = [
       item.dataOrcamento,
+      item.descricaoOrcamento.trim(),
+      item.valorOrcamento,
+    ];
+    return (
+      camposOrcamento.every(Boolean) || camposOrcamento.every((valor) => !valor)
     );
+  };
 
   return (
     <form onSubmit={enviar} className="grid gap-5" noValidate>
@@ -317,57 +365,39 @@ export function NovoPedido() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <label className="grid gap-2 text-sm">
             Data de envio *
-            <input
+            <Input
               type="date"
               value={dataEnvio}
               max={hoje()}
               onChange={(e) => {
                 setDataEnvio(e.target.value);
                 setComissaoId("");
+                setBuscaComissao("");
                 alterar();
               }}
               required
               className={campoManutencao}
             />
           </label>
-          <label className="grid gap-2 text-sm">
-            Comissão responsável *
-            <select
-              value={comissaoId}
-              onChange={(e) => {
-                setComissaoId(e.target.value);
-                alterar();
-              }}
-              required
-              className={campoManutencao}
-            >
-              <option value="">Selecione</option>
-              {comissoes.map((opcao) => (
-                <option key={opcao.id} value={opcao.id}>
-                  {opcao.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="grid gap-2 text-sm">
-            <label htmlFor="busca-comissao">Buscar comissão</label>
-            <div className="flex gap-2">
-              <input
-                id="busca-comissao"
-                value={buscaComissao}
-                onChange={(e) => setBuscaComissao(e.target.value)}
-                className={campoManutencao}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void carregarComissoes(buscaComissao)}
-              >
-                <Search aria-hidden="true" />
-                <span className="sr-only">Buscar comissão</span>
-              </Button>
-            </div>
-          </div>
+          <ComboboxField
+            id="comissao-responsavel"
+            label="Comissão responsável"
+            required
+            value={comissaoId}
+            onValueChange={(value) => {
+              setComissaoId(value);
+              alterar();
+            }}
+            onSearchChange={setBuscaComissao}
+            options={comissoes.map((opcao) => ({
+              value: opcao.id,
+              label: opcao.nome,
+            }))}
+            loading={carregandoComissoes}
+            placeholder="Selecione uma comissão"
+            searchPlaceholder="Buscar comissão…"
+            emptyText="Nenhuma comissão vigente encontrada."
+          />
         </div>
       </section>
 
@@ -397,88 +427,239 @@ export function NovoPedido() {
           </Button>
         </div>
         {itens.length ? (
-          <div
-            className="overflow-x-auto"
-            role="region"
-            aria-label="Bens selecionados"
-            tabIndex={0}
-          >
-            <table className="w-full min-w-[48rem] text-left text-sm">
-              <thead className="bg-[#f7f9fc] text-[11px] font-semibold tracking-wide text-[#526580] uppercase">
-                <tr>
-                  <th className="px-3 py-3">Patrimônio / bem</th>
-                  <th className="px-3 py-3">Fornecedor</th>
-                  <th className="px-3 py-3">Tipo</th>
-                  <th className="px-3 py-3">Previsão</th>
-                  <th className="px-3 py-3">Configuração</th>
-                  <th className="px-3 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {itens.map((item, indice) => (
-                  <tr
-                    key={item.patrimonioId}
-                    className="border-b border-[#e4eaf2]"
-                  >
-                    <td className="px-3 py-4">
-                      <strong>
-                        {item.numero} · {item.descricao}
-                      </strong>
-                      <p className="mt-1 text-xs text-[#526580]">
-                        {item.descricaoProblema ||
-                          "Problema ainda não descrito"}
-                      </p>
-                    </td>
-                    <td className="px-3 py-4">
-                      {fornecedores.find((f) => f.id === item.fornecedorId)
-                        ?.nome ?? "Não informado"}
-                    </td>
-                    <td className="px-3 py-4">
-                      {item.tipo === "CORRETIVA" ? "Corretiva" : "Preventiva"}
-                    </td>
-                    <td className="px-3 py-4">
-                      {item.previsaoRetorno || "Não informada"}
-                    </td>
-                    <td className="px-3 py-4">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${itemConfigurado(item) ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
-                      >
-                        {itemConfigurado(item) ? "Configurado" : "Pendente"}
+          <div className="grid gap-3" aria-label="Bens selecionados">
+            {itens.map((item, indice) => {
+              const aberto = configurando === indice;
+              const erros = errosItens[indice] ?? {};
+              const erroId = (campo: keyof ItemForm) =>
+                `item-${indice}-${campo}-erro`;
+              return (
+                <article
+                  key={item.patrimonioId}
+                  className="rounded-lg border border-[#dce4ef] bg-white"
+                >
+                  <div className="flex flex-wrap items-center gap-3 p-4">
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#D4A017]"
+                      aria-expanded={aberto}
+                      aria-controls={`item-${indice}-dados`}
+                      onClick={() => setConfigurando(aberto ? null : indice)}
+                    >
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`size-4 shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`}
+                      />
+                      <span className="min-w-0">
+                        <strong className="block truncate">
+                          {item.numero} · {item.descricao}
+                        </strong>
+                        <span className="mt-1 block text-xs text-[#526580]">
+                          {item.tipo === "CORRETIVA"
+                            ? "Corretiva"
+                            : "Preventiva"}
+                          {item.previsaoRetorno
+                            ? ` · retorno previsto em ${item.previsaoRetorno}`
+                            : " · sem previsão de retorno"}
+                        </span>
                       </span>
-                    </td>
-                    <td className="px-3 py-4 text-right">
-                      <div className="inline-flex gap-1">
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="outline"
-                          onClick={() => setConfigurando(indice)}
+                    </button>
+                    <span
+                      className={`rounded-full border px-2 py-1 text-xs font-semibold ${itemCompleto(item) && !Object.keys(erros).length ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}
+                    >
+                      {itemCompleto(item) && !Object.keys(erros).length
+                        ? "Pronto"
+                        : "Revisar item"}
+                    </span>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setItens((atuais) =>
+                          atuais.filter((_, i) => i !== indice),
+                        );
+                        setConfigurando(null);
+                        alterar();
+                      }}
+                    >
+                      <Trash2 aria-hidden="true" />
+                      <span className="sr-only">Remover {item.numero}</span>
+                    </Button>
+                  </div>
+                  {aberto ? (
+                    <div
+                      id={`item-${indice}-dados`}
+                      ref={(elemento) => {
+                        if (elemento) secoesItens.current.set(indice, elemento);
+                        else secoesItens.current.delete(indice);
+                      }}
+                      tabIndex={-1}
+                      className="grid gap-4 border-t border-[#e4eaf2] bg-[#fbfcfe] p-4 outline-none sm:grid-cols-2"
+                    >
+                      <label className="grid gap-2 text-sm">
+                        Fornecedor / prestador
+                        <Combobox
+                          value={item.fornecedorId}
+                          onValueChange={(value) =>
+                            atualizarItem(indice, {
+                              fornecedorId: value === "nenhum" ? "" : value,
+                            })
+                          }
+                          options={[
+                            { value: "nenhum", label: "Não informado" },
+                            ...fornecedores.map((opcao) => ({
+                              value: opcao.id,
+                              label: opcao.nome,
+                            })),
+                          ]}
+                          placeholder="Não informado"
+                          searchPlaceholder="Buscar fornecedor"
+                          emptyText="Nenhum fornecedor ativo encontrado."
+                        />
+                      </label>
+                      <label className="grid gap-2 text-sm">
+                        Tipo de manutenção *
+                        <Select
+                          value={item.tipo}
+                          onValueChange={(value) =>
+                            atualizarItem(indice, {
+                              tipo: value as ItemForm["tipo"],
+                            })
+                          }
                         >
-                          <Pencil aria-hidden="true" />
-                          <span className="sr-only">
-                            Configurar {item.numero}
-                          </span>
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon-sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setItens((atuais) =>
-                              atuais.filter((_, i) => i !== indice),
-                            );
-                            alterar();
-                          }}
-                        >
-                          <Trash2 aria-hidden="true" />
-                          <span className="sr-only">Remover {item.numero}</span>
-                        </Button>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent position="popper">
+                            <SelectItem value="CORRETIVA">Corretiva</SelectItem>
+                            <SelectItem value="PREVENTIVA">
+                              Preventiva
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </label>
+                      <label className="grid gap-2 text-sm">
+                        Previsão de retorno
+                        <Input
+                          type="date"
+                          min={dataEnvio}
+                          value={item.previsaoRetorno}
+                          onChange={(e) =>
+                            atualizarItem(indice, {
+                              previsaoRetorno: e.target.value,
+                            })
+                          }
+                          className={campoManutencao}
+                        />
+                      </label>
+                      <label className="grid gap-2 text-sm sm:col-span-2">
+                        Problema identificado
+                        <Textarea
+                          rows={3}
+                          value={item.descricaoProblema}
+                          onChange={(e) =>
+                            atualizarItem(indice, {
+                              descricaoProblema: e.target.value,
+                            })
+                          }
+                          className={campoManutencao}
+                        />
+                      </label>
+                      <div className="sm:col-span-2">
+                        <p className="font-semibold">
+                          Orçamento inicial opcional
+                        </p>
+                        <p className="mt-1 text-xs text-[#526580]">
+                          Ao começar o orçamento, preencha os três campos.
+                        </p>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <label className="grid gap-2 text-sm">
+                        Valor orçado (R$)
+                        <MoneyInput
+                          value={item.valorOrcamento}
+                          onValueChange={(value) =>
+                            atualizarItem(indice, {
+                              valorOrcamento: value,
+                            })
+                          }
+                          placeholder="R$ 0,00"
+                          aria-invalid={Boolean(erros.valorOrcamento)}
+                          aria-describedby={
+                            erros.valorOrcamento
+                              ? erroId("valorOrcamento")
+                              : undefined
+                          }
+                          className={campoManutencao}
+                        />
+                        {erros.valorOrcamento ? (
+                          <span
+                            id={erroId("valorOrcamento")}
+                            className="text-xs text-red-700"
+                          >
+                            {erros.valorOrcamento}
+                          </span>
+                        ) : null}
+                      </label>
+                      <label className="grid gap-2 text-sm">
+                        Data do orçamento
+                        <Input
+                          type="date"
+                          value={item.dataOrcamento}
+                          onChange={(e) =>
+                            atualizarItem(indice, {
+                              dataOrcamento: e.target.value,
+                            })
+                          }
+                          aria-invalid={Boolean(erros.dataOrcamento)}
+                          aria-describedby={
+                            erros.dataOrcamento
+                              ? erroId("dataOrcamento")
+                              : undefined
+                          }
+                          className={campoManutencao}
+                        />
+                        {erros.dataOrcamento ? (
+                          <span
+                            id={erroId("dataOrcamento")}
+                            className="text-xs text-red-700"
+                          >
+                            {erros.dataOrcamento}
+                          </span>
+                        ) : null}
+                      </label>
+                      <label className="grid gap-2 text-sm sm:col-span-2">
+                        Descrição do orçamento
+                        <Textarea
+                          rows={2}
+                          value={item.descricaoOrcamento}
+                          onChange={(e) =>
+                            atualizarItem(indice, {
+                              descricaoOrcamento: e.target.value,
+                            })
+                          }
+                          aria-invalid={Boolean(erros.descricaoOrcamento)}
+                          aria-describedby={
+                            erros.descricaoOrcamento
+                              ? erroId("descricaoOrcamento")
+                              : undefined
+                          }
+                          className={campoManutencao}
+                        />
+                        {erros.descricaoOrcamento ? (
+                          <span
+                            id={erroId("descricaoOrcamento")}
+                            className="text-xs text-red-700"
+                          >
+                            {erros.descricaoOrcamento}
+                          </span>
+                        ) : null}
+                      </label>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="grid min-h-40 place-items-center rounded-md border border-dashed border-[#cfd9e7] bg-[#fbfcfe] p-6 text-center">
@@ -512,7 +693,7 @@ export function NovoPedido() {
                 </p>
               </div>
             </div>
-            <textarea
+            <Textarea
               value={justificativa}
               onChange={(e) => {
                 setJustificativa(e.target.value);
@@ -527,15 +708,14 @@ export function NovoPedido() {
           <div className="rounded-md border border-[#d8e6fb] bg-[#f3f7fe] p-4">
             <div className="flex items-center gap-2 font-semibold">
               <FileText aria-hidden="true" className="size-4 text-[#2863ec]" />{" "}
-              Documento do pedido
+              Anexo da observação
             </div>
             <p className="mt-2 text-xs text-[#526580]">
-              PDF opcional. O pedido é criado primeiro e o arquivo é enviado em
-              seguida.
+              Um único PDF opcional, vinculado à observação geral do pedido.
             </p>
             <label className="mt-4 grid gap-2 text-sm">
               Selecionar PDF
-              <input
+              <Input
                 type="file"
                 accept="application/pdf,.pdf"
                 className={campoManutencao}
@@ -599,7 +779,7 @@ export function NovoPedido() {
 
       <Dialog open={seletorAberto} onOpenChange={setSeletorAberto}>
         <DialogContent
-          className="max-h-[min(90vh,48rem)] max-w-3xl overflow-y-auto p-0"
+          className="grid max-h-[min(90vh,48rem)] max-w-3xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0"
           onCloseAutoFocus={(evento) => {
             evento.preventDefault();
             acionadorSeletor.current?.focus();
@@ -613,11 +793,11 @@ export function NovoPedido() {
               Selecione os patrimônios que compartilharão o mesmo pedido.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 px-6">
+          <div className="grid min-h-0 gap-4 overflow-y-auto px-6 py-4">
             <label className="grid gap-2 text-sm">
               Placa, código ou descrição
               <div className="flex gap-2">
-                <input
+                <Input
                   value={buscaBem}
                   onChange={(e) => setBuscaBem(e.target.value)}
                   className={campoManutencao}
@@ -640,11 +820,10 @@ export function NovoPedido() {
                     key={bem.id}
                     className="flex cursor-pointer items-start gap-4 p-4 hover:bg-[#fbfcfe]"
                   >
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 accent-[#2863ec]"
+                    <Checkbox
+                      className="mt-1"
                       checked={selecionado}
-                      onChange={() => alternarBem(bem)}
+                      onCheckedChange={() => alternarBem(bem)}
                       disabled={!selecionado && itens.length >= 50}
                     />
                     <span>
@@ -665,7 +844,7 @@ export function NovoPedido() {
               ) : null}
             </div>
           </div>
-          <DialogFooter className="border-t border-[#e4eaf2] p-6 pt-4">
+          <DialogFooter className="sticky bottom-0 z-10 border-t border-border bg-background px-6 pt-4 pb-6 shadow-[0_-8px_16px_-16px_rgba(15,23,42,0.5)]">
             <span className="mr-auto text-sm text-[#526580]">
               {itens.length} selecionado(s)
             </span>
@@ -674,160 +853,6 @@ export function NovoPedido() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={configurando !== null}
-        onOpenChange={(aberto) => {
-          if (!aberto) setConfigurando(null);
-        }}
-      >
-        {configurando !== null && itens[configurando] ? (
-          <DialogContent className="max-h-[min(92vh,54rem)] max-w-3xl overflow-y-auto p-0">
-            <DialogHeader className="border-b border-[#e4eaf2] p-6 pb-4">
-              <DialogTitle className="text-xl text-[#19355d]">
-                Configurar atendimento do item
-              </DialogTitle>
-              <DialogDescription>
-                Defina fornecedor e dados exclusivos deste patrimônio.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-5 px-6">
-              <div className="rounded-md bg-[#f3f7fe] p-4">
-                <strong>
-                  {itens[configurando].numero} · {itens[configurando].descricao}
-                </strong>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2 text-sm sm:col-span-2">
-                  <label htmlFor="busca-fornecedor">
-                    Buscar fornecedor ativo
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="busca-fornecedor"
-                      value={buscaFornecedor}
-                      onChange={(e) => setBuscaFornecedor(e.target.value)}
-                      className={campoManutencao}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void carregarFornecedores(buscaFornecedor)}
-                    >
-                      <Search aria-hidden="true" /> Buscar
-                    </Button>
-                  </div>
-                </div>
-                <label className="grid gap-2 text-sm">
-                  Fornecedor / prestador
-                  <select
-                    value={itens[configurando].fornecedorId}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        fornecedorId: e.target.value,
-                      })
-                    }
-                    className={campoManutencao}
-                  >
-                    <option value="">Não informado</option>
-                    {fornecedores.map((opcao) => (
-                      <option key={opcao.id} value={opcao.id}>
-                        {opcao.nome}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm">
-                  Tipo de manutenção *
-                  <select
-                    value={itens[configurando].tipo}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        tipo: e.target.value as ItemForm["tipo"],
-                      })
-                    }
-                    className={campoManutencao}
-                  >
-                    <option value="CORRETIVA">Corretiva</option>
-                    <option value="PREVENTIVA">Preventiva</option>
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm">
-                  Previsão de retorno
-                  <input
-                    type="date"
-                    min={dataEnvio}
-                    value={itens[configurando].previsaoRetorno}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        previsaoRetorno: e.target.value,
-                      })
-                    }
-                    className={campoManutencao}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm">
-                  Valor orçado (R$)
-                  <input
-                    inputMode="decimal"
-                    value={itens[configurando].valorOrcamento}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        valorOrcamento: e.target.value,
-                      })
-                    }
-                    placeholder="0.00"
-                    className={campoManutencao}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm">
-                  Data do orçamento
-                  <input
-                    type="date"
-                    value={itens[configurando].dataOrcamento}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        dataOrcamento: e.target.value,
-                      })
-                    }
-                    className={campoManutencao}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm sm:col-span-2">
-                  Problema identificado
-                  <textarea
-                    rows={3}
-                    value={itens[configurando].descricaoProblema}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        descricaoProblema: e.target.value,
-                      })
-                    }
-                    className={campoManutencao}
-                  />
-                </label>
-                <label className="grid gap-2 text-sm sm:col-span-2">
-                  Descrição do orçamento
-                  <input
-                    value={itens[configurando].descricaoOrcamento}
-                    onChange={(e) =>
-                      atualizarItem(configurando, {
-                        descricaoOrcamento: e.target.value,
-                      })
-                    }
-                    className={campoManutencao}
-                  />
-                </label>
-              </div>
-            </div>
-            <DialogFooter className="border-t border-[#e4eaf2] p-6 pt-4">
-              <Button type="button" onClick={() => setConfigurando(null)}>
-                Salvar atendimento
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        ) : null}
       </Dialog>
     </form>
   );

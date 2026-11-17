@@ -9,7 +9,6 @@ export type {
   Inventario,
   ItemInventario,
   ItemManutencao,
-  DocumentoManutencao,
   Manutencao,
   MembroComissao,
   Natureza,

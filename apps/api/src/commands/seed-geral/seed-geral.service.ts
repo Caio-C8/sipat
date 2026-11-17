@@ -11,7 +11,7 @@ import {
   CriarSetorSchema,
   CriarUsuarioSchema,
   CriarEspecieSchema,
-  DadosDocumentoManutencaoSchema,
+  DadosAnexoObservacaoManutencaoSchema,
   FinalizarInventarioBodySchema,
   RegistrarRetornoManutencaoBodySchema,
   VerificarItemInventarioBodySchema,
@@ -129,6 +129,12 @@ export class SeedGeralService {
       this.db.patrimonio.count(),
       this.db.inventario.count(),
       this.db.manutencao.count(),
+      this.db.manutencao.count({
+        where: { caminhoAnexoObservacao: { not: null } },
+      }),
+      this.db.itemManutencao.count({
+        where: { caminhoAnexoObservacao: { not: null } },
+      }),
       this.db.transferenciaPatrimonio.count(),
       this.db.baixaPatrimonio.count(),
       this.db.depreciacaoPatrimonio.count(),
@@ -535,16 +541,14 @@ export class SeedGeralService {
       }),
       this.diretor,
     );
-    await this.enviarDocumento(
+    await this.enviarAnexoObservacao(
       concluida.id,
-      "PEDIDO",
       undefined,
       "00000000-0000-4000-8000-000000000010",
     );
     for (const [i, item] of concluida.itens.entries()) {
-      await this.enviarDocumento(
+      await this.enviarAnexoObservacao(
         concluida.id,
-        "ENVIO",
         item.id,
         `00000000-0000-4000-8000-00000000002${i}`,
       );
@@ -562,12 +566,6 @@ export class SeedGeralService {
           },
         }),
         this.diretor,
-      );
-      await this.enviarDocumento(
-        concluida.id,
-        "RECEBIMENTO",
-        item.id,
-        `00000000-0000-4000-8000-00000000004${i}`,
       );
     }
     const aberta = await this.manutencoes.criar(
@@ -607,28 +605,25 @@ export class SeedGeralService {
       }),
       this.diretor,
     );
-    await this.enviarDocumento(
+    await this.enviarAnexoObservacao(
       aberta.id,
-      "PEDIDO",
       undefined,
       "00000000-0000-4000-8000-000000000050",
     );
   }
 
-  private async enviarDocumento(
+  private async enviarAnexoObservacao(
     pedidoId: string,
-    fase: "PEDIDO" | "ENVIO" | "RECEBIMENTO",
     itemId: string | undefined,
     chaveIdempotencia: string,
   ) {
-    const dados = DadosDocumentoManutencaoSchema.parse({
+    const dados = DadosAnexoObservacaoManutencaoSchema.parse({
       chaveIdempotencia,
-      fase,
-      ...(itemId ? { itemId } : {}),
     });
-    const arquivo = await this.criarPdf(`Documento de manutenção ${fase}`);
-    await this.manutencoes.enviarDocumento(
+    const arquivo = await this.criarPdf("Anexo da observação da manutenção");
+    await this.manutencoes.enviarAnexoObservacao(
       pedidoId,
+      itemId ?? null,
       { dados: JSON.stringify(dados) },
       arquivo,
       this.diretor,
@@ -680,6 +675,8 @@ export class SeedGeralService {
       ausentes,
       divergentes,
       manutencoes,
+      anexosObservacaoPedidos,
+      anexosObservacaoItens,
       transferencias,
       baixas,
       depreciacoes,
@@ -718,6 +715,12 @@ export class SeedGeralService {
       this.db.itemInventario.count({ where: { situacao: "NAO_LOCALIZADO" } }),
       this.db.itemInventario.count({ where: { situacao: "DIVERGENCIA" } }),
       this.db.manutencao.count(),
+      this.db.manutencao.count({
+        where: { caminhoAnexoObservacao: { not: null } },
+      }),
+      this.db.itemManutencao.count({
+        where: { caminhoAnexoObservacao: { not: null } },
+      }),
       this.db.transferenciaPatrimonio.count(),
       this.db.baixaPatrimonio.count(),
       this.db.depreciacaoPatrimonio.count(),
@@ -740,7 +743,7 @@ export class SeedGeralService {
     ]);
     const esperado = [
       2, 10, 10, 5, 10, 5, 3, 9, 10, 20, 50, 40, 40, 10, 40, 10, 47, 3, 1, 50,
-      40, 7, 3, 2, 0, 0, 0, 0, 30, 24, 6, 16, 24, 16, 30,
+      40, 7, 3, 2, 2, 3, 0, 0, 0, 0, 30, 24, 6, 16, 24, 16, 30,
     ];
     const obtido = [
       usuarios,
@@ -767,6 +770,8 @@ export class SeedGeralService {
       ausentes,
       divergentes,
       manutencoes,
+      anexosObservacaoPedidos,
+      anexosObservacaoItens,
       transferencias,
       baixas,
       depreciacoes,
@@ -833,6 +838,16 @@ export class SeedGeralService {
     const notasComArquivo = await this.db.notaFiscal.findMany({
       select: { caminhoAnexoNotaFiscal: true },
     });
+    const anexosObservacao = [
+      ...(await this.db.manutencao.findMany({
+        where: { caminhoAnexoObservacao: { not: null } },
+        select: { caminhoAnexoObservacao: true },
+      })),
+      ...(await this.db.itemManutencao.findMany({
+        where: { caminhoAnexoObservacao: { not: null } },
+        select: { caminhoAnexoObservacao: true },
+      })),
+    ];
     if (
       distribuicoesInvalidas ||
       notasComArquivo.some((nota) => nota.caminhoAnexoNotaFiscal === null)
@@ -847,6 +862,14 @@ export class SeedGeralService {
       aberto.conteudo.destroy();
       if (aberto.tamanho < 5)
         throw new Error("PDF de nota fiscal vazio na auditoria final.");
+    }
+    for (const anexo of anexosObservacao) {
+      const aberto = await this.armazenamento.abrir(
+        anexo.caminhoAnexoObservacao!,
+      );
+      aberto.conteudo.destroy();
+      if (aberto.tamanho < 5)
+        throw new Error("Anexo da observação vazio na auditoria final.");
     }
   }
 }

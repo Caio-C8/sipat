@@ -255,21 +255,12 @@ describeComPostgres("IDEMPOTENCIA-001 no PostgreSQL", () => {
     await titular;
   });
 
-  it("protege documento de manutenção por FK, CHECK e unicidade", async () => {
+  it("protege a idempotência do anexo único por usuário e chave", async () => {
     const base = await criarBase();
     const manutencao = await db.manutencao.create({
       data: {
         dataEnvio: new Date("2026-11-01T00:00:00Z"),
         comissaoId: base.comissaoId,
-        createdById: base.usuarioId,
-      },
-    });
-    const documento = await db.documentoManutencao.create({
-      data: {
-        manutencaoId: manutencao.id,
-        fase: "PEDIDO",
-        chave: `testes/${randomUUID()}.pdf`,
-        nome: "Documento.pdf",
         createdById: base.usuarioId,
       },
     });
@@ -280,32 +271,12 @@ describeComPostgres("IDEMPOTENCIA-001 no PostgreSQL", () => {
       tipo: "DOCUMENTO",
       hashPayload: "c".repeat(64),
       manutencaoId: manutencao.id,
-      documentoId: documento.id,
     };
 
     await db.idempotenciaManutencao.create({ data: dados });
     await expect(
       db.idempotenciaManutencao.create({ data: dados }),
     ).rejects.toMatchObject({ code: "P2002" });
-    await expect(
-      db.idempotenciaManutencao.create({
-        data: {
-          ...dados,
-          chave: randomUUID(),
-          documentoId: randomUUID(),
-        },
-      }),
-    ).rejects.toMatchObject({ code: "P2003" });
-    await expect(
-      db.idempotenciaManutencao.create({
-        data: { ...dados, chave: randomUUID(), documentoId: null },
-      }),
-    ).rejects.toMatchObject({ code: "P2039" });
-    await expect(
-      db.idempotenciaManutencao.create({
-        data: { ...dados, chave: randomUUID(), tipo: "CRIACAO" },
-      }),
-    ).rejects.toMatchObject({ code: "P2039" });
   });
 
   it("a API distingue repetição confirmada, chave reutilizada e operação concorrente", async () => {

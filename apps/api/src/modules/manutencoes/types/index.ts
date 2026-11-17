@@ -4,9 +4,6 @@ export const manutencaoDetalheArgs = {
   include: {
     comissao: { select: { id: true, nome: true } },
     createdBy: { select: { id: true, nome: true } },
-    documentos: {
-      orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }],
-    },
     itens: {
       orderBy: { createdAt: "asc" as const },
       include: {
@@ -26,9 +23,6 @@ export const manutencaoDetalheArgs = {
             fornecedor: { select: { id: true, razaoSocial: true } },
             createdBy: { select: { id: true, nome: true } },
           },
-        },
-        documentos: {
-          orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }],
         },
       },
     },

@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  FileText,
-  Plus,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Eye, FileText, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { ListarManutencoesQuerySchema } from "@repo/contracts";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/page-header";
+import { PaginationSummary } from "@/components/shared/pagination-summary";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { ErroManutencao } from "@/features/manutencoes/components/erro-manutencao";
 import { serverManutencaoOperations } from "@/features/manutencoes/api/server-manutencao-operations";
 import {
-  campoManutencao,
   classeStatusManutencao,
   formatarDataCivil,
   painelManutencao,
@@ -52,7 +53,6 @@ export default async function ManutencoesPage({
       erro = e;
     }
   }
-  const pagina = validacao.success ? validacao.data.pagina : 1;
   const hrefPagina = (p: number) =>
     `/manutencoes?${new URLSearchParams({ ...valores, pagina: String(p) }).toString()}`;
 
@@ -84,45 +84,42 @@ export default async function ManutencoesPage({
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <label className="grid gap-2 text-xs font-medium text-[#526580] sm:col-span-2">
-              Número do pedido, ID ou descrição
-              <input
+              Número do pedido ou patrimônio
+              <Input
                 name="busca"
                 type="search"
                 defaultValue={valores.busca ?? ""}
                 maxLength={200}
                 placeholder="Digite para pesquisar"
-                className={campoManutencao}
               />
             </label>
             <label className="grid gap-2 text-xs font-medium text-[#526580]">
               Situação do pedido
-              <select
-                name="status"
-                defaultValue={valores.status ?? ""}
-                className={campoManutencao}
-              >
-                <option value="">Todas as situações</option>
-                <option value="EM_ANDAMENTO">Em andamento</option>
-                <option value="CONCLUIDA">Concluída</option>
-              </select>
+              <Select name="status" defaultValue={valores.status ?? ""}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Todas as situações" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
+                  <SelectItem value="CONCLUIDA">Concluída</SelectItem>
+                </SelectContent>
+              </Select>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <label className="grid gap-2 text-xs font-medium text-[#526580]">
                 Envio desde
-                <input
+                <Input
                   name="dataEnvioInicio"
                   type="date"
                   defaultValue={valores.dataEnvioInicio ?? ""}
-                  className={campoManutencao}
                 />
               </label>
               <label className="grid gap-2 text-xs font-medium text-[#526580]">
                 Envio até
-                <input
+                <Input
                   name="dataEnvioFim"
                   type="date"
                   defaultValue={valores.dataEnvioFim ?? ""}
-                  className={campoManutencao}
                 />
               </label>
             </div>
@@ -142,13 +139,12 @@ export default async function ManutencoesPage({
       </section>
 
       {!validacao.success ? (
-        <div
-          role="alert"
-          className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
-        >
-          Confira os filtros informados.{" "}
-          {validacao.error.issues.map((issue) => issue.message).join(" ")}
-        </div>
+        <Alert variant="destructive" tabIndex={-1}>
+          <AlertDescription>
+            Confira os filtros informados.{" "}
+            {validacao.error.issues.map((issue) => issue.message).join(" ")}
+          </AlertDescription>
+        </Alert>
       ) : erro ? (
         <ErroManutencao erro={erro} />
       ) : resposta ? (
@@ -206,9 +202,7 @@ export default async function ManutencoesPage({
                       className="border-b border-[#e4eaf2] hover:bg-[#fbfcfe]"
                     >
                       <td className="max-w-64 px-3 py-4 align-top">
-                        <strong className="break-all">
-                          {pedido.numeroRequisicao ?? pedido.id}
-                        </strong>
+                        <strong>Pedido #{pedido.numeroPedido}</strong>
                         <p className="mt-1 text-xs text-[#526580]">
                           {pedido.totalItens} bem(ns) no pedido
                         </p>
@@ -227,7 +221,9 @@ export default async function ManutencoesPage({
                             aria-hidden="true"
                             className="size-4 text-[#2863ec]"
                           />
-                          {pedido.temPdfPedido ? "PDF anexado" : "Sem PDF"}
+                          {pedido.temAnexoObservacao
+                            ? "Anexo da observação"
+                            : "Sem anexo"}
                         </span>
                       </td>
                       <td className="px-3 py-4 align-top">
@@ -264,36 +260,9 @@ export default async function ManutencoesPage({
               </p>
             </div>
           )}
-          <nav
-            aria-label="Páginas de pedidos"
-            className="mt-5 flex items-center justify-end gap-2 text-sm"
-          >
-            {pagina > 1 ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={hrefPagina(pagina - 1)}>
-                  <ChevronLeft aria-hidden="true" /> Anterior
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                <ChevronLeft aria-hidden="true" /> Anterior
-              </Button>
-            )}
-            <span className="px-2 text-xs text-[#526580]">
-              {pagina} de {resposta.meta.ultimaPagina}
-            </span>
-            {pagina < resposta.meta.ultimaPagina ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={hrefPagina(pagina + 1)}>
-                  Próxima <ChevronRight aria-hidden="true" />
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled>
-                Próxima <ChevronRight aria-hidden="true" />
-              </Button>
-            )}
-          </nav>
+          <div className="mt-5 flex justify-end">
+            <PaginationSummary meta={resposta.meta} href={hrefPagina} />
+          </div>
         </section>
       ) : null}
     </main>
