@@ -416,7 +416,8 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
       .expect(409);
     expect(repetido.body.codigo).toBe("OPERACAO_JA_PROCESSADA");
     for (const metodo of ["patch", "delete"] as const) {
-      const requisicao = request(app.getHttpServer())[metodo](
+      const requisicao = request(app.getHttpServer())
+        [metodo](
           `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
         )
         .set("Cookie", diretorCookie)
@@ -587,7 +588,8 @@ suite("manutenções HTTP + PostgreSQL descartável", () => {
     ).not.toBeNull();
 
     for (const metodo of ["patch", "delete"] as const) {
-      const requisicao = request(app.getHttpServer())[metodo](
+      const requisicao = request(app.getHttpServer())
+        [metodo](
           `/api/manutencoes/${criado.id}/itens/${item.id}/anexo-observacao`,
         )
         .set("Cookie", diretorCookie)
