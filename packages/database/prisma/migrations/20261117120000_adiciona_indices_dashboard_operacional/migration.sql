@@ -1,0 +1,17 @@
+CREATE INDEX "patrimonios_status_setor_atual_id_idx" ON "patrimonios"("status", "setor_atual_id");
+CREATE INDEX "patrimonios_autor_atividade_idx" ON "patrimonios"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "substituicoes_numero_autor_atividade_idx" ON "substituicoes_numero_patrimonial"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "transferencias_autor_atividade_idx" ON "transferencias_patrimoniais"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "emprestimos_autor_atividade_idx" ON "emprestimos_patrimoniais"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "devolucoes_autor_atividade_idx" ON "devolucoes_patrimoniais"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "manutencoes_autor_atividade_idx" ON "manutencoes"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "itens_manutencao_retorno_autor_idx" ON "itens_manutencao"("recebido_por_id", "recebido_em" DESC, "id" DESC);
+CREATE INDEX "itens_inventario_dashboard_pendencias_idx" ON "itens_inventario"("status_correcao", "data_verificacao", "inventario_id");
+CREATE INDEX "itens_inventario_verificacao_autor_idx" ON "itens_inventario"("verificado_por_id", "data_verificacao" DESC, "id" DESC);
+CREATE INDEX "itens_inventario_correcao_autor_idx" ON "itens_inventario"("corrigido_por_id", "data_correcao" DESC, "id" DESC);
+CREATE INDEX "localizacoes_dashboard_pendencias_idx" ON "localizacoes_posteriores_inventario"("status_correcao", "data_localizacao", "inventario_id");
+CREATE INDEX "localizacoes_verificacao_autor_idx" ON "localizacoes_posteriores_inventario"("localizado_por_id", "data_localizacao" DESC, "id" DESC);
+CREATE INDEX "localizacoes_correcao_autor_idx" ON "localizacoes_posteriores_inventario"("corrigido_por_id", "data_correcao" DESC, "id" DESC);
+CREATE INDEX "baixas_autor_atividade_idx" ON "baixas_patrimoniais"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "depreciacoes_autor_atividade_idx" ON "depreciacoes_patrimoniais"("created_by_id", "created_at" DESC, "id" DESC);
+CREATE INDEX "reavaliacoes_autor_atividade_idx" ON "reavaliacoes_patrimoniais"("created_by_id", "created_at" DESC, "id" DESC);
