@@ -1126,9 +1126,7 @@ const server = createServer(async (request, response) => {
   }
   if (
     request.method === "GET" &&
-    ["/api/patrimonios", "/api/patrimonios/dashboard"].includes(
-      requestUrl.pathname,
-    )
+    ["/api/patrimonios", "/api/dashboard"].includes(requestUrl.pathname)
   ) {
     const session = sessionFromCookie(request.headers.cookie);
 
@@ -1158,48 +1156,65 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (requestUrl.pathname === "/api/patrimonios/dashboard") {
+    if (requestUrl.pathname === "/api/dashboard") {
       const vazio = scenario === "zero";
       const dados = vazio
         ? {
-            total: 0,
-            porStatus: {
-              ATIVO: 0,
-              BAIXADO: 0,
-              EMPRESTADO: 0,
-              EM_MANUTENCAO: 0,
+            totais: {
+              total: 0,
+              porStatus: {
+                ATIVO: 0,
+                BAIXADO: 0,
+                EMPRESTADO: 0,
+                EM_MANUTENCAO: 0,
+              },
             },
-            correcoesPendentes: 0,
+            pendencias: { inventarios: [], manutencoes: [], depreciacao: null },
             setores: [],
             atividades: [],
           }
         : {
-            total: 32,
-            porStatus: patrimonioTotals,
-            ...{
-              correcoesPendentes: 4,
-              setores: [
+            totais: { total: 32, porStatus: patrimonioTotals },
+            pendencias: {
+              inventarios: [
                 {
                   id: "7041c62b-5f83-432c-a178-889977d839b1",
-                  nome: "Administrativo",
-                  total: 32,
+                  nome: "Inventário anual",
+                  quantidadeCorrecoes: 4,
+                  pendenciaMaisAntigaEm: "2026-08-01T15:00:00.000Z",
+                  destino:
+                    "/inventarios/7041c62b-5f83-432c-a178-889977d839b1?visao=pendentes",
                 },
               ],
-              atividades: [
-                {
-                  patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
-                  numero: "00000001",
-                  titulo: "Retorno de manutenção",
-                  registradoEm: "2026-09-21T15:00:00.000Z",
-                },
-              ],
+              manutencoes: [],
+              depreciacao: null,
             },
+            setores: [
+              {
+                id: "7041c62b-5f83-432c-a178-889977d839b1",
+                nome: "Administrativo",
+                total: 30,
+                destino:
+                  "/patrimonios?setorId=7041c62b-5f83-432c-a178-889977d839b1",
+              },
+            ],
+            atividades: [
+              {
+                patrimonioId: "7041c62b-5f83-432c-a178-889977d839b1",
+                numeroPatrimonio: "00000001",
+                tipo: "MANUTENCAO_RETORNO",
+                titulo: "Retorno de manutenção",
+                registradoEm: "2026-09-21T15:00:00.000Z",
+                destino:
+                  "/patrimonios/7041c62b-5f83-432c-a178-889977d839b1?aba=historico",
+              },
+            ],
           };
       const enviar = () =>
         json(response, 200, {
           status: 200,
           sucesso: true,
-          mensagem: "Resumo patrimonial consultado.",
+          mensagem: "Dashboard operacional consultado.",
           dados,
         });
       if (scenario === "slow") setTimeout(enviar, 1000);

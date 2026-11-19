@@ -612,9 +612,11 @@ test.describe("Autenticação Web", () => {
       },
     ]);
     await page.goto("/dashboard");
-    await expect(page.getByText("Nenhum patrimônio cadastrado.")).toBeVisible();
     await expect(
-      page.getByText("Não foi possível carregar os dados patrimoniais."),
+      page.getByText("Nenhuma pendência vencida exige atenção."),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Não foi possível carregar a visão geral"),
     ).toHaveCount(0);
 
     await page.context().addCookies([
@@ -644,7 +646,7 @@ test.describe("Autenticação Web", () => {
     await page.goto("/dashboard");
     await expect(
       page.getByRole("alert").filter({
-        hasText: "Não foi possível carregar os dados patrimoniais.",
+        hasText: "Não foi possível carregar a visão geral",
       }),
     ).toBeVisible();
     await expect(

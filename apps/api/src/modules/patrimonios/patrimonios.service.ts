@@ -29,10 +29,6 @@ import type {
 export class PatrimoniosService {
   constructor(private readonly patrimonios: PatrimoniosRepository) {}
 
-  obterDashboard() {
-    return this.patrimonios.obterDashboard();
-  }
-
   async consultarPreviaNumeracao() {
     const previa = await this.patrimonios.consultarPreviaNumeracao();
     return { ...previa, reservaValor: false as const };

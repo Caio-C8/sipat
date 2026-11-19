@@ -24,18 +24,14 @@ import {
   SubstituirNumeroPatrimonialResponseSchema,
   VALOR_CABECALHO_CSRF,
   type BaixarPatrimonioDadosInput,
-  DashboardPatrimonialResponseSchema,
   type ListarPatrimoniosQueryInput,
   type ListarProcessosCompraQueryInput,
   type ListarSetoresQueryInput,
   type ListarPatrimoniosResponse,
-  type ResumoPatrimonialDashboard,
   type ListarEspeciesQueryInput,
   type CriarPatrimonioBodyInput,
 } from "@repo/contracts";
 import type { ApiClient } from "@/lib/api/core/types";
-
-export type { ResumoPatrimonialDashboard } from "@repo/contracts";
 
 type OpcoesListagem = Readonly<{
   cookie?: string;
@@ -58,19 +54,6 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
       signal,
       responseSchema: ListarPatrimoniosResponseSchema,
     });
-  }
-
-  async function obterResumoDashboard(
-    cookie: string,
-  ): Promise<ResumoPatrimonialDashboard> {
-    const resposta = await apiClient.request({
-      path: "/patrimonios/dashboard",
-      method: "GET",
-      headers: { Cookie: cookie },
-      cache: "no-store",
-      responseSchema: DashboardPatrimonialResponseSchema,
-    });
-    return resposta.dados;
   }
 
   async function consultar(
@@ -242,6 +225,5 @@ export function criarOperacoesPatrimonios(apiClient: ApiClient) {
     baixar,
     substituirNumero,
     confirmarDisponibilidadeUso,
-    obterResumoDashboard,
   };
 }
