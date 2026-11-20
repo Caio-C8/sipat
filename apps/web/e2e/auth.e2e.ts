@@ -366,8 +366,14 @@ test.describe("Autenticação Web", () => {
       page.getByRole("link", { name: "Pesquisar bem", exact: true }),
     ).toHaveAttribute("href", "/patrimonios");
     await expect(
-      page.getByText(/correções de inventário pendentes/),
+      page.getByText("Inventário: Inventário anual"),
     ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Ver pendências" }),
+    ).toHaveAttribute(
+      "href",
+      "/inventarios/7041c62b-5f83-432c-a178-889977d839b1?visao=pendentes",
+    );
     await expect(
       page.getByRole("link", { name: /Administrativo/ }),
     ).toBeVisible();
