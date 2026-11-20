@@ -2,11 +2,11 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   CABECALHO_CSRF,
+  DashboardOperacionalResponseSchema,
   ConsultarPatrimonioResponseSchema,
   ConfirmarDisponibilidadeUsoResponseSchema,
   ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   CriarPatrimonioResponseSchema,
-  DashboardPatrimonialResponseSchema,
   ListarPatrimoniosResponseSchema,
   RespostaErroSchema,
   SubstituirNumeroPatrimonialResponseSchema,
@@ -317,22 +317,24 @@ describe("patrimônios", () => {
       .set(CABECALHO_CSRF, "1");
   }
 
-  it("protege o dashboard e entrega o mesmo contrato aos dois perfis", async () => {
-    const rota = "/api/patrimonios/dashboard";
+  it("protege o dashboard agregado e entrega somente a resposta operacional", async () => {
+    const rota = "/api/dashboard";
     await request(app.getHttpServer()).get(rota).expect(401);
     const dados = {
-      total: 1,
-      porStatus: { ATIVO: 1, BAIXADO: 0, EMPRESTADO: 0, EM_MANUTENCAO: 0 },
-      correcoesPendentes: 1,
-      setores: [{ id: SETOR_ID, nome: "Administrativo", total: 1 }],
-      atividades: [
+      totais: {
+        total: 1,
+        porStatus: { ATIVO: 1, BAIXADO: 0, EMPRESTADO: 0, EM_MANUTENCAO: 0 },
+      },
+      pendencias: { inventarios: [], manutencoes: [], depreciacao: null },
+      setores: [
         {
-          patrimonioId: PATRIMONIO_ID,
-          numero: "1",
-          titulo: "Patrimônio cadastrado",
-          registradoEm: "2026-09-23T15:00:00.000Z",
+          id: SETOR_ID,
+          nome: "Administrativo",
+          total: 1,
+          destino: `/patrimonios?setorId=${SETOR_ID}`,
         },
       ],
+      atividades: [],
     };
     for (const token of [tokenAdministrador, tokenDiretor]) {
       database.$queryRaw.mockResolvedValueOnce([{ dados }]);
@@ -340,9 +342,13 @@ describe("patrimônios", () => {
         .expect(200)
         .expect("Cache-Control", "private, no-store");
       expect(
-        DashboardPatrimonialResponseSchema.parse(response.body).dados,
+        DashboardOperacionalResponseSchema.parse(response.body).dados,
       ).toEqual(dados);
     }
+    await getAutenticado(
+      tokenAdministrador,
+      "/api/patrimonios/dashboard",
+    ).expect(400);
   });
 
   it("protege consultas e permite os dois perfis autenticados", async () => {

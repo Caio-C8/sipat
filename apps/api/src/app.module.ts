@@ -32,6 +32,7 @@ import { DepreciacoesModule } from "./modules/depreciacoes/depreciacoes.module";
 import { ManutencoesModule } from "./modules/manutencoes/manutencoes.module";
 import { ReavaliacoesModule } from "./modules/reavaliacoes/reavaliacoes.module";
 import { EmprestimosModule } from "./modules/emprestimos/emprestimos.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { EmprestimosModule } from "./modules/emprestimos/emprestimos.module";
     BaixasModule,
     ComissoesModule,
     DepreciacoesModule,
+    DashboardModule,
     EspeciesModule,
     EmprestimosModule,
     FornecedoresModule,

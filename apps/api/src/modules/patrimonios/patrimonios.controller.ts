@@ -24,7 +24,6 @@ import type { RequisicaoAutenticada } from "../auth/auth.types";
 import { PerfisPermitidos } from "../auth/decorators/perfis-permitidos.decorator";
 import {
   ConsultarPatrimonioResponseDto,
-  DashboardPatrimonialResponseDto,
   CriarPatrimonioBodyDto,
   CriarPatrimonioResponseDto,
   ListarPatrimoniosQueryDto,
@@ -62,19 +61,6 @@ export class PatrimoniosController {
         ultimaPagina: resultado.ultimaPagina,
         limite: resultado.limite,
       },
-    };
-  }
-
-  @Get("dashboard")
-  @Header("Cache-Control", "private, no-store")
-  @PerfisPermitidos("ADMINISTRADOR", "DIRETOR_PATRIMONIO")
-  @ZodSerializerDto(DashboardPatrimonialResponseDto)
-  async dashboard() {
-    return {
-      status: HttpStatus.OK,
-      sucesso: true,
-      mensagem: "Resumo patrimonial consultado.",
-      dados: await this.patrimoniosService.obterDashboard(),
     };
   }
 

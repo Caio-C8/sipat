@@ -365,9 +365,13 @@ test.describe("Autenticação Web", () => {
     await expect(
       page.getByRole("link", { name: "Pesquisar bem", exact: true }),
     ).toHaveAttribute("href", "/patrimonios");
+    await expect(page.getByText("Inventário: Inventário anual")).toBeVisible();
     await expect(
-      page.getByText(/correções de inventário pendentes/),
-    ).toBeVisible();
+      page.getByRole("link", { name: "Ver pendências" }),
+    ).toHaveAttribute(
+      "href",
+      "/inventarios/7041c62b-5f83-432c-a178-889977d839b1?visao=pendentes",
+    );
     await expect(
       page.getByRole("link", { name: /Administrativo/ }),
     ).toBeVisible();
@@ -612,9 +616,11 @@ test.describe("Autenticação Web", () => {
       },
     ]);
     await page.goto("/dashboard");
-    await expect(page.getByText("Nenhum patrimônio cadastrado.")).toBeVisible();
     await expect(
-      page.getByText("Não foi possível carregar os dados patrimoniais."),
+      page.getByText("Nenhuma pendência vencida exige atenção."),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Não foi possível carregar a visão geral"),
     ).toHaveCount(0);
 
     await page.context().addCookies([
@@ -644,7 +650,7 @@ test.describe("Autenticação Web", () => {
     await page.goto("/dashboard");
     await expect(
       page.getByRole("alert").filter({
-        hasText: "Não foi possível carregar os dados patrimoniais.",
+        hasText: "Não foi possível carregar a visão geral",
       }),
     ).toBeVisible();
     await expect(

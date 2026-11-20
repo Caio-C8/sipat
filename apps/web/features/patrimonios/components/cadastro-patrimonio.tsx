@@ -729,11 +729,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
               </div>
             </Secao>
 
-            <Secao
-              titulo="Aquisição e tombamento"
-              Icone={FileText}
-              detalhe="Valores em reais (R$)"
-            >
+            <Secao titulo="Aquisição e tombamento" Icone={FileText}>
               <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <SelectField
                   id="tipoIncorporacao"

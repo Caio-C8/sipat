@@ -1,5 +1,3 @@
-import type { ResumoPatrimonialDashboard } from "@repo/contracts";
-import { consultaDashboard } from "./dashboard.query";
 import { Inject, Injectable } from "@nestjs/common";
 import { type DatabaseClient, Prisma } from "@repo/database";
 import { DATABASE_CLIENT } from "../../common/database/database.constants";
@@ -29,14 +27,6 @@ export class PatrimoniosRepository {
     @Inject(DATABASE_CLIENT)
     private readonly database: ClientePatrimonios,
   ) {}
-
-  async obterDashboard() {
-    const [resumo] =
-      await this.database.$queryRaw<{ dados: ResumoPatrimonialDashboard }[]>(
-        consultaDashboard,
-      );
-    return resumo!.dados;
-  }
 
   executarTransacao<T>(
     operacao: (repository: PatrimoniosRepository) => Promise<T>,

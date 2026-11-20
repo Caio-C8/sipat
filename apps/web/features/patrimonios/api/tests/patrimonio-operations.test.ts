@@ -9,7 +9,6 @@ import {
   CriarPatrimonioResponseSchema,
   ListarPatrimoniosResponseSchema,
   ListarOpcoesComissoesBaixaResponseSchema,
-  DashboardPatrimonialResponseSchema,
   SubstituirNumeroPatrimonialResponseSchema,
   ConsultarPreviaNumeracaoPatrimonialResponseSchema,
   VALOR_CABECALHO_CSRF,
@@ -145,30 +144,6 @@ describe("operações de patrimônios", () => {
       body: CriarPatrimonioBodySchema.parse(body),
       headers: { [CABECALHO_CSRF]: VALOR_CABECALHO_CSRF },
       responseSchema: CriarPatrimonioResponseSchema,
-    });
-  });
-
-  it("consulta o resumo agregado uma vez com a sessão e sem cache", async () => {
-    const dados = {
-      total: 0,
-      porStatus: { ATIVO: 0, BAIXADO: 0, EMPRESTADO: 0, EM_MANUTENCAO: 0 },
-      correcoesPendentes: 0,
-      setores: [],
-      atividades: [],
-    };
-    const request = vi.fn().mockResolvedValue({ dados });
-    const operacoes = criarOperacoesPatrimonios({
-      request,
-    } as unknown as ApiClient);
-    await expect(
-      operacoes.obterResumoDashboard("sipat_session=teste"),
-    ).resolves.toEqual(dados);
-    expect(request).toHaveBeenCalledExactlyOnceWith({
-      path: "/patrimonios/dashboard",
-      method: "GET",
-      headers: { Cookie: "sipat_session=teste" },
-      cache: "no-store",
-      responseSchema: DashboardPatrimonialResponseSchema,
     });
   });
 
