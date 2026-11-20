@@ -365,9 +365,7 @@ test.describe("Autenticação Web", () => {
     await expect(
       page.getByRole("link", { name: "Pesquisar bem", exact: true }),
     ).toHaveAttribute("href", "/patrimonios");
-    await expect(
-      page.getByText("Inventário: Inventário anual"),
-    ).toBeVisible();
+    await expect(page.getByText("Inventário: Inventário anual")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Ver pendências" }),
     ).toHaveAttribute(
