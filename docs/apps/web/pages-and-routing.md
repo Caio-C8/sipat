@@ -19,11 +19,13 @@ A aplicação Web do SIPAT expõe:
   Diretor; abertura global e correções de divergências somente pelo Diretor;
 - `/cadastros`: processos de compra e notas fiscais integrados para consulta
   e edição; o Administrador também pode incluir notas novas;
-- `/cadastros/especies`, `/cadastros/naturezas`, `/cadastros/comissoes` e
-  `/cadastros/responsaveis`: gestão administrativa integrada;
-- `/cadastros/setores`, `/cadastros/setores/novo` e
-  `/cadastros/setores/[setorId]`: consulta, criação, edição, situação e bens
-  vinculados reais, sob a proteção administrativa existente;
+- `/cadastros/especies`, `/cadastros/naturezas` e `/cadastros/comissoes`:
+  gestão administrativa integrada no fluxo anterior;
+- `/cadastros/fornecedores`, `/cadastros/responsaveis` e `/cadastros/setores`
+  possuem listas e detalhes para os dois perfis; as rotas `/novo` e
+  `/[id]/editar` são exclusivas do Administrador, abrem modal em navegação
+  iniciada pela lista e página completa em acesso direto ou refresh;
+- `/cadastros/setores/[setorId]` preserva também a consulta dos bens vinculados;
 - `/usuarios`, `/usuarios/novo`, `/usuarios/[usuarioId]` e
   `/usuarios/[usuarioId]/editar`: gestão administrativa integrada de usuários;
 - `/movimentacoes` e `/movimentacoes/[movimentacaoId]`: consulta para ambos os perfis;
@@ -130,3 +132,17 @@ patrimoniais complexas permanecem em páginas/drawers próprios. O detalhe
 operacional do inventário continua página completa. Consulte
 [WEB-CADASTROS-002](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md) e
 [WEB-INVENTARIOS-002](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md).
+
+O slot paralelo raiz `@modal` concentra as rotas interceptadas e possui rota
+catch-all que desmonta o conteúdo em navegações subsequentes. A composição
+compartilhada `RouteModal` mantém título, descrição, foco, Escape e fechamento
+sob responsabilidade da navegação; cada feature continua responsável por
+permissão, carregamento, formulário, confirmação de descarte e destino após
+sucesso. O inventário é o consumidor de referência dessa fundação.
+
+A Etapa 1 de `WEB-CADASTROS-002` removeu a navegação interna que repetia a
+sidebar e centralizou os destinos canônicos de lista, criação e edição dos oito
+cadastros em `administrativeRoutes`. A Etapa 2 aplicou a estrutura a
+fornecedores, setores e responsáveis. Processos de compra, comissões,
+naturezas, espécies e usuários continuam pendentes das etapas funcionais
+correspondentes; até lá, suas URLs e fluxos permanecem inalterados.

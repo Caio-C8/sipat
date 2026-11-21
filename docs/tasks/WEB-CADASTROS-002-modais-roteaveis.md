@@ -132,3 +132,42 @@ matriz aprovada.
 ## Pendências ou decisões bloqueantes
 
 - Nenhuma.
+
+## Execução incremental
+
+### Etapa 1 — fundação
+
+Implementada e validada manualmente em 20/11/2026:
+
+- removida a navegação interna de cadastros que duplicava os destinos da
+  sidebar;
+- centralizados os caminhos canônicos de lista, criação e edição dos oito
+  cadastros, reutilizando-os no catálogo da sidebar;
+- criada a composição compartilhada `RouteModal` sobre a primitive `Dialog`,
+  preservando fechamento por navegação, foco, teclado e reflow;
+- migrado o modal roteável de inventários como consumidor de referência, sem
+  alterar suas rotas, permissões ou regras;
+- adicionada cobertura de componente para composição acessível e fechamento;
+- mantidas as rotas e os fluxos cadastrais atuais nesta etapa.
+
+### Etapa 2 — fornecedores, setores e responsáveis
+
+Implementada em 20/11/2026, com validação local pendente:
+
+- listas independentes com busca, situação, tabela, paginação e estados vazios;
+- detalhes canônicos disponíveis ao Administrador e ao Diretor;
+- criação e edição em URLs canônicas, com página completa em acesso direto e
+  modal interceptado quando iniciadas pela listagem;
+- controles de criação, edição e situação ausentes para o Diretor e protegidos
+  na composição Server; a autorização da API permanece inalterada;
+- ativação/inativação mantida junto da edição, com confirmação explícita e
+  preservação dos vínculos históricos;
+- ações secundárias diferenciadas entre `Limpar`, `Restaurar alterações` e
+  `Cancelar`, conforme o contexto;
+- testes unitários, de navegação e E2E relacionados atualizados sem execução.
+
+Comissões, naturezas e espécies permanecem na Etapa 3. Processos de compra e
+usuários permanecem na Etapa 4. Permissões integradas, regressão completa,
+documentação final e os critérios de aceite globais permanecem na Etapa 5. Os
+checklists acima não foram marcados porque a task completa ainda não foi
+validada.

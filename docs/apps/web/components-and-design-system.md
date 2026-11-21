@@ -99,7 +99,9 @@ genéricas `AlertDialog`, `Alert`, `Badge`, `Button`, `Card`, `Checkbox`,
 `Toaster`.
 
 As composições em `components/shared` cobrem campos, resumo focável de erros,
-filtros simples, paginação e inputs numéricos. Regras, contratos e operações
+filtros simples, paginação, inputs numéricos e o shell visual de modais
+roteáveis. `RouteModal` compõe a primitive `Dialog` e delega à feature a
+navegação, o conteúdo e as regras de fechamento. Regras, contratos e operações
 continuam nas respectivas features.
 
 O tema claro centraliza a identidade visual nos tokens: primário `#1E3A5F`,
