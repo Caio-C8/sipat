@@ -5,8 +5,8 @@ export interface EstadoMigrationSeed {
 }
 
 const ULTIMA_MIGRATION =
-  "20261116173000_simplifica_anexos_observacao_manutencao";
-const TOTAL_MIGRATIONS = 31;
+  "20261117120000_adiciona_indices_dashboard_operacional";
+const TOTAL_MIGRATIONS = 32;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],
