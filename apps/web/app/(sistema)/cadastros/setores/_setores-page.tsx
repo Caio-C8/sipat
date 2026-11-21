@@ -2,11 +2,12 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import * as z from "zod";
-import {
-  ListaSetores,
-  DetalheSetor,
-  NovoSetor,
-} from "@/features/cadastros/components/setores-telas";
+import { AccessDenied } from "@/components/shared/access-denied";
+import { DetalheSetor } from "@/features/cadastros/components/setores-telas";
+import { ListaSetoresPrincipal } from "@/features/cadastros/components/cadastros-principais-telas";
+import { CadastroFormPage } from "@/features/cadastros/components/cadastro-form-page";
+import { SetorRouteModal } from "@/features/cadastros/components/cadastros-principais-formularios";
+import { FormularioSetor } from "@/features/cadastros/components/formularios-basicos";
 import { serverCadastros } from "@/features/cadastros/api/server";
 import { serverPatrimonioOperations } from "@/features/patrimonios/api/server-patrimonio-operations";
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
@@ -20,6 +21,7 @@ import {
 } from "@/features/cadastros/components/cadastro-ui";
 import type { SearchCadastros } from "../_cadastros-page";
 import { PageHeader } from "@/components/shared/page-header";
+import { administrativeRoutes } from "@/lib/navigation/administrative-routes";
 const QuerySchema = z.object({
   busca: z.string().trim().max(100).optional(),
   ativo: z.enum(["", "true", "false"]).optional(),
@@ -78,27 +80,68 @@ export async function SetoresPage({
     );
   }
   return (
-    <ListaSetores
-      resposta={resposta}
+    <ListaSetoresPrincipal
+      registros={resposta.dados}
+      meta={resposta.meta}
       busca={q.busca}
       ativo={q.ativo}
       admin={identidade.perfil === "ADMINISTRADOR"}
     />
   );
 }
-export async function NovoSetorPage() {
+export async function NovoSetorPage({ modal = false }: { modal?: boolean }) {
   const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "ADMINISTRADOR")
     return (
-      <main className={pagina}>
-        <PageHeader
-          title="Acesso não permitido"
-          description="Somente o Administrador pode cadastrar setores."
-        />
-        <p role="alert">Somente o Administrador pode cadastrar setores.</p>
-      </main>
+      <AccessDenied description="Somente o Administrador pode cadastrar setores." />
     );
-  return <NovoSetor />;
+  if (modal) return <SetorRouteModal />;
+  return (
+    <CadastroFormPage
+      title="Cadastrar setor"
+      description="Informe o nome, a localização e o responsável pelo setor."
+      listHref={administrativeRoutes.setores.list}
+    >
+      <FormularioSetor contexto="pagina-criacao" />
+    </CadastroFormPage>
+  );
+}
+
+export async function EditarSetorPage({
+  params,
+  modal = false,
+}: {
+  params: Promise<{ setorId: string }>;
+  modal?: boolean;
+}) {
+  const identidade = await exigirIdentidadeAtual();
+  if (identidade.perfil !== "ADMINISTRADOR")
+    return (
+      <AccessDenied description="Somente o Administrador pode editar setores." />
+    );
+  const { setorId } = await params;
+  if (!z.uuid().safeParse(setorId).success) notFound();
+  let setor;
+  try {
+    setor = (
+      await serverCadastros.setores.consultar(setorId, {
+        cookie: (await headers()).get("cookie") ?? "",
+      })
+    ).dados;
+  } catch (error) {
+    if (isApiError(error) && error.status === 404) notFound();
+    throw error;
+  }
+  if (modal) return <SetorRouteModal registro={setor} />;
+  return (
+    <CadastroFormPage
+      title="Editar setor"
+      description="Atualize os dados e a situação do setor."
+      listHref={administrativeRoutes.setores.list}
+    >
+      <FormularioSetor registro={setor} contexto="pagina-edicao" />
+    </CadastroFormPage>
+  );
 }
 export async function SetorPage({
   params,
@@ -154,11 +197,7 @@ export async function SetorPage({
     );
   }
   return (
-    <DetalheSetor
-      setor={setor}
-      admin={identidade.perfil === "ADMINISTRADOR"}
-      salvo={parsed.data.salvo === "1"}
-    >
+    <DetalheSetor setor={setor} admin={identidade.perfil === "ADMINISTRADOR"}>
       <section className={cartao}>
         <h2 className="mb-3 font-bold">Bens vinculados ao setor</h2>
         {bens.dados.length === 0 ? (

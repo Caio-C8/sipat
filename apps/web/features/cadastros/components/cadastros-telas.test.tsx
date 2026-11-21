@@ -11,6 +11,7 @@ import { CadastrosTelas } from "./cadastros-telas";
 import {
   FormularioNatureza,
   FormularioResponsavel,
+  FormularioSetor,
 } from "./formularios-basicos";
 import { FormularioCadastro } from "./formulario-cadastro";
 import { FormularioFornecedor } from "./formulario-fornecedor";
@@ -35,7 +36,6 @@ describe("cadastros integrados", () => {
         meta={{ total: 25, pagina: 1, ultimaPagina: 2 }}
         busca="Natureza"
         id={id}
-        mostrarFornecedores
       >
         <p>Formulário</p>
       </CadastrosTelas>,
@@ -47,6 +47,9 @@ describe("cadastros integrados", () => {
       screen.getByRole("link", { name: "Próxima" }).getAttribute("href"),
     ).toContain("pagina=2");
     expect(screen.queryByText(/de exemplo/)).toBeNull();
+    expect(
+      screen.queryByRole("navigation", { name: "Seções dos cadastros" }),
+    ).toBeNull();
   });
   it("remove entradas de mutação na consulta compartilhada", () => {
     render(
@@ -54,7 +57,6 @@ describe("cadastros integrados", () => {
         secao="naturezas"
         registros={[{ id, titulo: "Natureza real", detalhe: "Patrimonial" }]}
         meta={{ total: 1, pagina: 1, ultimaPagina: 1 }}
-        mostrarFornecedores
         somenteLeitura
       >
         <p>Dados consultados</p>
@@ -126,7 +128,8 @@ describe("cadastros integrados", () => {
       target: { value: "" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Salvar natureza" }));
-    await screen.findByRole("alert");
+    const alerta = await screen.findByRole("alert");
+    await waitFor(() => expect(alerta).toBe(document.activeElement));
     expect(browserApiClient.request).toHaveBeenCalledWith(
       expect.objectContaining({
         method: "PATCH",
@@ -219,6 +222,40 @@ describe("cadastros integrados", () => {
     expect(screen.getAllByText("Ativo", { exact: true })).toHaveLength(2);
     expect(screen.getByText("Sem alteração registrada")).not.toBeNull();
   });
+  it("associa erro contratual ao campo e move o foco", async () => {
+    render(<FormularioFornecedor contexto="pagina-criacao" />);
+    fireEvent.change(screen.getByLabelText("Razão social *"), {
+      target: { value: "Fornecedor inválido" },
+    });
+    fireEvent.change(screen.getByLabelText("CNPJ"), {
+      target: { value: "CNPJ inválido" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar fornecedor" }));
+
+    const cnpj = screen.getByLabelText("CNPJ");
+    await waitFor(() => expect(cnpj).toBe(document.activeElement));
+    expect(cnpj.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getAllByText("Informe um CNPJ válido.")).toHaveLength(2);
+    expect(browserApiClient.request).not.toHaveBeenCalled();
+  });
+  it("usa combobox pesquisável e foca o vínculo obrigatório do setor", async () => {
+    vi.mocked(browserApiClient.request).mockResolvedValue({
+      dados: [],
+      meta: { total: 0, pagina: 1, limite: 20, ultimaPagina: 1 },
+    });
+    render(<FormularioSetor contexto="pagina-criacao" />);
+    fireEvent.change(screen.getByLabelText("Nome do setor *"), {
+      target: { value: "Gabinete" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar setor" }));
+
+    const responsavel = screen.getByRole("combobox", { name: "Responsável" });
+    await waitFor(() => expect(responsavel).toBe(document.activeElement));
+    expect(responsavel.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getAllByText("Informe um responsável válido.")).toHaveLength(
+      2,
+    );
+  });
   it("preserva a mesma chave e o formulário em timeout e falha conclusiva posterior", async () => {
     const salvar = vi
       .fn()
@@ -302,5 +339,33 @@ describe("cadastros integrados", () => {
     expect(salvar).toHaveBeenCalledTimes(1);
     resolver({ id });
     await waitFor(() => expect(router.replace).toHaveBeenCalled());
+  });
+  it("diferencia a ação secundária entre página e modal", () => {
+    const onCancelar = vi.fn();
+    const { rerender } = render(
+      <FormularioCadastro
+        titulo="Novo cadastro"
+        destino="/cadastros"
+        contexto="pagina-criacao"
+        salvar={vi.fn()}
+      >
+        <input name="nome" defaultValue="Valor" />
+      </FormularioCadastro>,
+    );
+    expect(screen.getByRole("button", { name: "Limpar" })).toBeTruthy();
+
+    rerender(
+      <FormularioCadastro
+        titulo="Editar cadastro"
+        destino="/cadastros"
+        contexto="modal"
+        onCancelar={onCancelar}
+        salvar={vi.fn()}
+      >
+        <input name="nome" />
+      </FormularioCadastro>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(onCancelar).toHaveBeenCalledOnce();
   });
 });

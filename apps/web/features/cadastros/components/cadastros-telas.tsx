@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AbasCadastros, type SecaoAbas } from "./abas-cadastros";
 import { pagina, cartao, principal, Paginacao } from "./cadastro-ui";
 import {
   SimpleQueryFilters,
   type SimpleQueryFilter,
 } from "@/components/shared/simple-query-filters";
 import { PageHeader } from "@/components/shared/page-header";
-export type SecaoCadastro = Exclude<SecaoAbas, "setores">;
+export type SecaoCadastro =
+  | "processos"
+  | "especies"
+  | "naturezas"
+  | "comissoes"
+  | "responsaveis"
+  | "fornecedores";
 export const paginasCadastros = {
   processos: {
     titulo: "Cadastros",
@@ -60,7 +65,6 @@ export function CadastrosTelas({
   situacao,
   id,
   salvo,
-  mostrarFornecedores,
   somenteLeitura = false,
   children,
 }: {
@@ -71,7 +75,6 @@ export function CadastrosTelas({
   situacao?: "todos" | "ativos" | "inativos";
   id?: string;
   salvo?: boolean;
-  mostrarFornecedores: boolean;
   somenteLeitura?: boolean;
   children: ReactNode;
 }) {
@@ -125,7 +128,6 @@ export function CadastrosTelas({
           </>
         }
       />
-      <AbasCadastros secao={secao} mostrarFornecedores={mostrarFornecedores} />
       {salvo && (
         <p
           role="status"

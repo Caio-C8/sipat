@@ -85,6 +85,14 @@ describe("catálogo de navegação do sistema", () => {
       "setores",
     );
     expect(
+      encontrarNavegacaoPorCaminho(
+        "/cadastros/fornecedores/95e540bb-38c3-4a3f/editar",
+      )?.id,
+    ).toBe("fornecedores");
+    expect(
+      encontrarNavegacaoPorCaminho("/cadastros/responsaveis/novo")?.id,
+    ).toBe("responsaveis");
+    expect(
       encontrarNavegacaoPorCaminho("/movimentacoes-inexistente"),
     ).toBeUndefined();
   });
@@ -108,6 +116,14 @@ describe("catálogo de navegação do sistema", () => {
           ?.breadcrumb,
       ),
     ).not.toContain("95e540bb");
+    expect(
+      encontrarTelaPorCaminho(
+        "/cadastros/fornecedores/95e540bb-38c3-4a3f/editar",
+      )?.breadcrumb,
+    ).toEqual([
+      { label: "Fornecedores", href: "/cadastros/fornecedores" },
+      { label: "Editar fornecedor" },
+    ]);
   });
 
   it("mantém metadados de rota, perfis e tela no catálogo central", () => {

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { CadastrosPage, type SearchCadastros } from "../_cadastros-page";
+import type { SearchCadastros } from "../_cadastros-page";
+import { FornecedoresPage } from "../_cadastros-principais-page";
 
 export const metadata: Metadata = {
   title: "Fornecedores",
   description: "Consulta e gestão de fornecedores do SIPAT.",
 };
 
-export default function FornecedoresPage({
+export default function Page({
   searchParams,
 }: {
   searchParams: SearchCadastros;
 }) {
-  return <CadastrosPage secao="fornecedores" searchParams={searchParams} />;
+  return <FornecedoresPage searchParams={searchParams} />;
 }

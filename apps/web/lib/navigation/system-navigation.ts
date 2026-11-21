@@ -19,6 +19,7 @@ import {
   UsersRound,
   Wrench,
 } from "lucide-react";
+import { administrativeRoutes } from "./administrative-routes";
 import type { PerfilUsuario } from "@repo/contracts";
 
 export const nomesPerfis = {
@@ -157,7 +158,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: FileText,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros",
+    href: administrativeRoutes.processosCompra.list,
   },
   {
     id: "fornecedores",
@@ -165,7 +166,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Truck,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros/fornecedores",
+    href: administrativeRoutes.fornecedores.list,
   },
   {
     id: "setores",
@@ -173,7 +174,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Building2,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros/setores",
+    href: administrativeRoutes.setores.list,
   },
   {
     id: "responsaveis",
@@ -181,7 +182,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: UsersRound,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros/responsaveis",
+    href: administrativeRoutes.responsaveis.list,
   },
   {
     id: "comissoes",
@@ -189,7 +190,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Scale,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros/comissoes",
+    href: administrativeRoutes.comissoes.list,
   },
   {
     id: "naturezas",
@@ -197,7 +198,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: Shapes,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros/naturezas",
+    href: administrativeRoutes.naturezas.list,
   },
   {
     id: "especies",
@@ -205,7 +206,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: PackageSearch,
     grupo: "administracao",
     perfis: TODOS_PERFIS,
-    href: "/cadastros/especies",
+    href: administrativeRoutes.especies.list,
   },
   {
     id: "usuarios",
@@ -213,7 +214,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: UserRoundCog,
     grupo: "administracao",
     perfis: APENAS_ADMINISTRADOR,
-    href: "/usuarios",
+    href: administrativeRoutes.usuarios.list,
   },
 ] as const;
 
@@ -426,6 +427,39 @@ export const catalogoTelasSistema: readonly TelaSistema[] = [
     "fornecedores",
     [{ label: "Fornecedores" }],
   ),
+  tela(
+    "fornecedor-novo",
+    "Cadastrar fornecedor",
+    "/cadastros/fornecedores/novo",
+    APENAS_ADMINISTRADOR,
+    "fornecedores",
+    [
+      { label: "Fornecedores", href: "/cadastros/fornecedores" },
+      { label: "Cadastrar fornecedor" },
+    ],
+  ),
+  tela(
+    "fornecedor-editar",
+    "Editar fornecedor",
+    "/cadastros/fornecedores/:fornecedorId/editar",
+    APENAS_ADMINISTRADOR,
+    "fornecedores",
+    [
+      { label: "Fornecedores", href: "/cadastros/fornecedores" },
+      { label: "Editar fornecedor" },
+    ],
+  ),
+  tela(
+    "fornecedor-detalhe",
+    "Detalhes do fornecedor",
+    "/cadastros/fornecedores/:fornecedorId",
+    TODOS_PERFIS,
+    "fornecedores",
+    [
+      { label: "Fornecedores", href: "/cadastros/fornecedores" },
+      { label: "Detalhes" },
+    ],
+  ),
   tela("setores", "Setores", "/cadastros/setores", TODOS_PERFIS, "setores", [
     { label: "Setores" },
   ]),
@@ -449,12 +483,56 @@ export const catalogoTelasSistema: readonly TelaSistema[] = [
     [{ label: "Setores", href: "/cadastros/setores" }, { label: "Detalhes" }],
   ),
   tela(
+    "setor-editar",
+    "Editar setor",
+    "/cadastros/setores/:setorId/editar",
+    APENAS_ADMINISTRADOR,
+    "setores",
+    [
+      { label: "Setores", href: "/cadastros/setores" },
+      { label: "Editar setor" },
+    ],
+  ),
+  tela(
     "responsaveis",
     "Responsáveis",
     "/cadastros/responsaveis",
     TODOS_PERFIS,
     "responsaveis",
     [{ label: "Responsáveis" }],
+  ),
+  tela(
+    "responsavel-novo",
+    "Cadastrar responsável",
+    "/cadastros/responsaveis/novo",
+    APENAS_ADMINISTRADOR,
+    "responsaveis",
+    [
+      { label: "Responsáveis", href: "/cadastros/responsaveis" },
+      { label: "Cadastrar responsável" },
+    ],
+  ),
+  tela(
+    "responsavel-editar",
+    "Editar responsável",
+    "/cadastros/responsaveis/:responsavelId/editar",
+    APENAS_ADMINISTRADOR,
+    "responsaveis",
+    [
+      { label: "Responsáveis", href: "/cadastros/responsaveis" },
+      { label: "Editar responsável" },
+    ],
+  ),
+  tela(
+    "responsavel-detalhe",
+    "Detalhes do responsável",
+    "/cadastros/responsaveis/:responsavelId",
+    TODOS_PERFIS,
+    "responsaveis",
+    [
+      { label: "Responsáveis", href: "/cadastros/responsaveis" },
+      { label: "Detalhes" },
+    ],
   ),
   tela(
     "comissoes",

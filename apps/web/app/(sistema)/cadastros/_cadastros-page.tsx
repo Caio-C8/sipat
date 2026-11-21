@@ -62,7 +62,6 @@ async function carregar<
   resumo: (item: T) => { titulo: string; detalhe: string };
   formulario: (dado?: D) => ReactNode;
   detalhe?: (dado: D) => ReactNode;
-  mostrarFornecedores: boolean;
   somenteLeitura: boolean;
 }) {
   const { params, secao, cookie } = config;
@@ -88,7 +87,6 @@ async function carregar<
       situacao={params.situacao}
       id={params.id}
       salvo={params.salvo === "1"}
-      mostrarFornecedores={config.mostrarFornecedores}
       somenteLeitura={config.somenteLeitura}
     >
       <div key={registro ? JSON.stringify(registro) : "novo"}>
@@ -138,7 +136,6 @@ export async function CadastrosPage({
     secao,
     params: parsed.data,
     cookie,
-    mostrarFornecedores: true,
     somenteLeitura:
       secao !== "processos" && identidade.perfil === "DIRETOR_PATRIMONIO",
   };

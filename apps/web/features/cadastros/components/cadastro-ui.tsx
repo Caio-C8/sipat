@@ -4,6 +4,9 @@ import { ZodError } from "zod";
 import { isApiError } from "@/lib/api/core/api-error";
 import { mensagemConflitoIdempotencia } from "@/lib/api/core/idempotencia";
 import { PaginationSummary } from "@/components/shared/pagination-summary";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useCadastroFieldError } from "./cadastro-field-errors";
 
 export const pagina =
   "mx-auto grid w-full min-w-0 max-w-[1900px] gap-4 px-4 py-5 text-[#17253d] min-[651px]:px-6 min-[1500px]:px-8";
@@ -21,26 +24,50 @@ export function Campo({
   rotulo,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & { rotulo: string }) {
+  const generatedId = useId();
+  const id = props.id ?? generatedId;
+  const error = useCadastroFieldError(props.name ?? "");
   return (
-    <label className="block min-w-0 text-sm text-[#29456d]">
-      {rotulo}
-      {props.required ? " *" : ""}
-      <input {...props} className={campo} />
-    </label>
+    <div className="grid min-w-0 gap-1 text-sm text-[#29456d]">
+      <label htmlFor={id}>
+        {rotulo}
+        {props.required ? " *" : ""}
+      </label>
+      <Input
+        {...props}
+        id={id}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error ? `${id}-error` : props["aria-describedby"]}
+        className="min-h-10"
+      />
+      {error ? (
+        <p id={`${id}-error`} className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
 export function Descricao({ valor }: { valor?: string | null }) {
   const id = useId();
+  const error = useCadastroFieldError("descricao");
   return (
     <div className="text-sm">
       <label htmlFor={id}>Descrição</label>
-      <textarea
+      <Textarea
         id={id}
         name="descricao"
         defaultValue={valor ?? ""}
         maxLength={2000}
-        className={campo + " min-h-28"}
+        className="mt-1 min-h-28"
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
+      {error ? (
+        <p id={`${id}-error`} className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

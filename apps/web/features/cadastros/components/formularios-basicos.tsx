@@ -1,5 +1,8 @@
 "use client";
-import { FormularioCadastro } from "./formulario-cadastro";
+import {
+  FormularioCadastro,
+  type ContextoFormularioCadastro,
+} from "./formulario-cadastro";
 import type {
   EspecieDetalhe,
   ResponsavelDetalhe,
@@ -7,6 +10,20 @@ import type {
 } from "@repo/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   useCriarEspecie,
   useAlterarEspecie,
@@ -17,14 +34,7 @@ import {
   useAlterarSetor,
   useAlterarSituacaoSetor,
 } from "../api/hooks";
-import {
-  Campo,
-  Descricao,
-  texto,
-  opcional,
-  botao,
-  mensagemErro,
-} from "./cadastro-ui";
+import { Campo, Descricao, texto, opcional, mensagemErro } from "./cadastro-ui";
 import { SeletorNatureza, SeletorResponsavel } from "./seletor-cadastro";
 export { FormularioNatureza } from "./natureza-form";
 
@@ -86,75 +96,91 @@ export function SituacaoCadastro({
   const [confirmar, setConfirmar] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   return (
-    <div className="grid gap-3 rounded-md border border-[#dfe7f1] p-4 text-sm">
+    <div className="grid gap-3 rounded-md border border-border p-4 text-sm">
       <p aria-live="polite">
         Situação atual: <strong>{ativo ? "Ativo" : "Inativo"}</strong>
       </p>
-      {erro && (
-        <p role="alert" className="text-red-800">
-          {erro}
-        </p>
-      )}
-      {confirmar ? (
-        <>
-          <p>
-            Confirmar {ativo ? "inativação" : "ativação"}? Os vínculos
-            existentes serão preservados.
-          </p>
-          <div className="flex gap-3">
-            <button
-              className={botao}
-              type="button"
+      {erro ? (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
+      ) : null}
+      <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
+        <AlertDialogTrigger asChild>
+          <Button type="button" variant={ativo ? "destructive" : "outline"}>
+            {ativo ? "Inativar" : "Ativar"} cadastro
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {ativo ? "Inativar" : "Ativar"} cadastro?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              A situação será alterada, mas os vínculos e o histórico existentes
+              serão preservados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant={ativo ? "destructive" : "default"}
               disabled={pending}
-              onClick={async () => {
+              onClick={async (event) => {
+                event.preventDefault();
                 setErro(null);
                 try {
                   const resultado = await alterar();
                   if (resultado === null) return;
                   setConfirmar(false);
+                  toast.success("Situação atualizada com sucesso.");
                   router.refresh();
                 } catch (e) {
                   setErro(mensagemErro(e));
+                  setConfirmar(false);
                 }
               }}
             >
               {pending ? "Atualizando…" : "Confirmar situação"}
-            </button>
-            <button
-              className={botao}
-              type="button"
-              disabled={pending}
-              onClick={() => setConfirmar(false)}
-            >
-              Cancelar
-            </button>
-          </div>
-        </>
-      ) : (
-        <button
-          className={botao}
-          type="button"
-          onClick={() => setConfirmar(true)}
-        >
-          {ativo ? "Inativar" : "Ativar"} cadastro
-        </button>
-      )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 export function FormularioResponsavel({
   registro,
+  contexto = "legado",
+  onCancelar,
+  onSucesso,
 }: {
   registro?: ResponsavelDetalhe;
+  contexto?: ContextoFormularioCadastro;
+  onCancelar?: () => void;
+  onSucesso?: (id: string) => void;
 }) {
+  const [versao, setVersao] = useState(0);
   const criar = useCriarResponsavel();
   const alterar = useAlterarResponsavel();
   const situacao = useAlterarSituacaoResponsavel();
   return (
     <div className="grid gap-4">
       <FormularioCadastro
+        key={versao}
         titulo={registro ? "Editar responsável" : "Novo responsável"}
         destino="/cadastros/responsaveis"
+        destinoSucesso={(id) =>
+          registro
+            ? `/cadastros/responsaveis/${encodeURIComponent(id)}?salvo=1`
+            : "/cadastros/responsaveis?salvo=1"
+        }
+        mensagemSucesso="Responsável salvo com sucesso."
+        contexto={contexto}
+        onCancelar={onCancelar}
+        onRestaurar={() => setVersao((atual) => atual + 1)}
+        onSucesso={onSucesso}
+        navegarAposSucesso={contexto !== "modal"}
         rotulo="Salvar responsável"
         salvar={async (dados) => {
           const body = {
@@ -200,7 +226,18 @@ export function FormularioResponsavel({
     </div>
   );
 }
-export function FormularioSetor({ registro }: { registro?: SetorDetalhe }) {
+export function FormularioSetor({
+  registro,
+  contexto = "legado",
+  onCancelar,
+  onSucesso,
+}: {
+  registro?: SetorDetalhe;
+  contexto?: ContextoFormularioCadastro;
+  onCancelar?: () => void;
+  onSucesso?: (id: string) => void;
+}) {
+  const [versao, setVersao] = useState(0);
   const criar = useCriarSetor();
   const alterar = useAlterarSetor();
   const situacao = useAlterarSituacaoSetor();
@@ -210,9 +247,21 @@ export function FormularioSetor({ registro }: { registro?: SetorDetalhe }) {
   return (
     <div className="grid gap-4">
       <FormularioCadastro
+        key={versao}
         titulo={registro ? "Editar setor" : "Novo setor"}
         destino={destino}
         rotaDetalhe={!registro}
+        destinoSucesso={(id) =>
+          registro
+            ? `/cadastros/setores/${encodeURIComponent(id)}?salvo=1`
+            : "/cadastros/setores?salvo=1"
+        }
+        mensagemSucesso="Setor salvo com sucesso."
+        contexto={contexto}
+        onCancelar={onCancelar}
+        onRestaurar={() => setVersao((atual) => atual + 1)}
+        onSucesso={onSucesso}
+        navegarAposSucesso={contexto !== "modal"}
         idempotente={!registro}
         rotulo="Salvar setor"
         salvar={async (dados, chave) => {

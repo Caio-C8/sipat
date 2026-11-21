@@ -3,4 +3,8 @@ export const metadata: Metadata = {
   title: "Cadastrar setor",
   description: "Consulta e gestão de setores do SIPAT.",
 };
-export { NovoSetorPage as default } from "../_setores-page";
+import { NovoSetorPage } from "../_setores-page";
+
+export default function Page() {
+  return <NovoSetorPage />;
+}

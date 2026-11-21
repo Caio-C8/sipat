@@ -1,14 +1,20 @@
 "use client";
 
 import type { FornecedorDetalhe } from "@repo/contracts";
-import { FormularioCadastro } from "./formulario-cadastro";
+import { useId, useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  FormularioCadastro,
+  type ContextoFormularioCadastro,
+} from "./formulario-cadastro";
 import { SituacaoCadastro } from "./formularios-basicos";
-import { Campo, campo, cartao, opcional, texto } from "./cadastro-ui";
+import { Campo, cartao, opcional, texto } from "./cadastro-ui";
 import {
   useAlterarFornecedor,
   useAlterarSituacaoFornecedor,
   useCriarFornecedor,
 } from "../api/hooks";
+import { useCadastroFieldError } from "./cadastro-field-errors";
 
 const formatarCnpj = (valor: string | null | undefined) => {
   if (!valor || valor.length !== 14) return valor ?? "";
@@ -24,11 +30,43 @@ const formatarData = (valor: string | null) =>
       }).format(new Date(valor))
     : "Sem alteração registrada";
 
+function EnderecoFornecedorField({ value }: { value?: string | null }) {
+  const id = useId();
+  const error = useCadastroFieldError("endereco");
+  return (
+    <div className="grid min-w-0 gap-1 text-sm text-[#29456d]">
+      <label htmlFor={id}>Endereço</label>
+      <Textarea
+        id={id}
+        name="endereco"
+        maxLength={500}
+        defaultValue={value ?? ""}
+        autoComplete="street-address"
+        className="mt-1 min-h-24"
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+      />
+      {error ? (
+        <p id={`${id}-error`} className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function FormularioFornecedor({
   registro,
+  contexto = "legado",
+  onCancelar,
+  onSucesso,
 }: {
   registro?: FornecedorDetalhe;
+  contexto?: ContextoFormularioCadastro;
+  onCancelar?: () => void;
+  onSucesso?: (id: string) => void;
 }) {
+  const [versao, setVersao] = useState(0);
   const criar = useCriarFornecedor();
   const alterar = useAlterarFornecedor();
   const situacao = useAlterarSituacaoFornecedor();
@@ -36,8 +74,20 @@ export function FormularioFornecedor({
   return (
     <div className="grid gap-4">
       <FormularioCadastro
+        key={versao}
         titulo={registro ? "Editar fornecedor" : "Novo fornecedor"}
         destino="/cadastros/fornecedores"
+        destinoSucesso={(id) =>
+          registro
+            ? `/cadastros/fornecedores/${encodeURIComponent(id)}?salvo=1`
+            : "/cadastros/fornecedores?salvo=1"
+        }
+        contexto={contexto}
+        onCancelar={onCancelar}
+        onRestaurar={() => setVersao((atual) => atual + 1)}
+        onSucesso={onSucesso}
+        navegarAposSucesso={contexto !== "modal"}
+        mensagemSucesso="Fornecedor salvo com sucesso."
         idempotente={!registro}
         rotulo="Salvar fornecedor"
         salvar={async (dados, chave) => {
@@ -122,16 +172,7 @@ export function FormularioFornecedor({
           defaultValue={registro?.telefone ?? ""}
           autoComplete="tel"
         />
-        <label className="block min-w-0 text-sm text-[#29456d]">
-          Endereço
-          <textarea
-            name="endereco"
-            maxLength={500}
-            defaultValue={registro?.endereco ?? ""}
-            autoComplete="street-address"
-            className={campo + " min-h-24"}
-          />
-        </label>
+        <EnderecoFornecedorField value={registro?.endereco} />
       </FormularioCadastro>
 
       {registro && (

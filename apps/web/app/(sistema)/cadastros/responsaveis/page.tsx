@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { CadastrosPage, type SearchCadastros } from "../_cadastros-page";
+import type { SearchCadastros } from "../_cadastros-page";
+import { ResponsaveisPage } from "../_cadastros-principais-page";
 export const metadata: Metadata = {
   title: "Responsáveis",
   description: "Consulta e gestão de responsáveis do SIPAT.",
 };
-export default function ResponsaveisPage({
+export default function Page({
   searchParams,
 }: {
   searchParams: SearchCadastros;
 }) {
-  return <CadastrosPage secao="responsaveis" searchParams={searchParams} />;
+  return <ResponsaveisPage searchParams={searchParams} />;
 }

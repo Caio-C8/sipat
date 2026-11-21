@@ -1,12 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { ComboboxField } from "@/components/shared/form-fields";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   useListarNaturezas,
   useListarResponsaveisAtivos,
   useListarFornecedoresAtivos,
   type OpcaoCadastro,
 } from "../api/hooks";
-import { botao, campo, mensagemErro } from "./cadastro-ui";
+import { mensagemErro } from "./cadastro-ui";
+import { useCadastroFieldError } from "./cadastro-field-errors";
+
 type Props = {
   name: string;
   rotulo: string;
@@ -20,12 +25,13 @@ function SeletorPaginado({
   required = true,
   consulta,
 }: { consulta: ReturnType<typeof useListarNaturezas> } & Props) {
+  const id = useId();
   const [busca, setBusca] = useState("");
-  const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(1);
   const [escolhida, setEscolhida] = useState<OpcaoCadastro | undefined>(
     inicial,
   );
+  const fieldError = useCadastroFieldError(name);
   const { carregar, dados, loading, erro } = consulta;
   useEffect(() => {
     void carregar({
@@ -35,117 +41,91 @@ function SeletorPaginado({
     });
   }, [busca, pagina, carregar]);
   const opcoes = dados?.dados ?? [];
+  const options = [
+    ...(escolhida && !opcoes.some((opcao) => opcao.id === escolhida.id)
+      ? [escolhida]
+      : []),
+    ...opcoes,
+  ].map((opcao) => ({ value: opcao.id, label: opcao.rotulo }));
   return (
-    <fieldset className="grid min-w-0 gap-2 rounded-md border border-[#dfe7f1] p-3">
-      <legend className="px-1 text-sm">
-        {rotulo}
-        {required ? " *" : ""}
-      </legend>
-      <div className="flex flex-wrap gap-2">
-        <input
-          aria-label={"Buscar " + rotulo.toLowerCase()}
-          className={campo + " min-w-0 flex-1"}
-          value={termo}
-          onChange={(e) => setTermo(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              setPagina(1);
-              setBusca(termo.trim());
-            }
-          }}
-          maxLength={100}
-          placeholder="Buscar por nome…"
-        />
-        <button
-          type="button"
-          className={botao}
-          onClick={() => {
-            setPagina(1);
-            setBusca(termo.trim());
-          }}
-        >
-          Buscar opções
-        </button>
-      </div>
-      <label className="text-sm">
-        {rotulo}
-        <select
-          name={name}
-          required={required}
-          className={campo}
-          value={escolhida?.id ?? ""}
-          onChange={(e) =>
-            setEscolhida(opcoes.find((x) => x.id === e.target.value))
-          }
-        >
-          <option value="">Selecione</option>
-          {escolhida && !opcoes.some((x) => x.id === escolhida.id) && (
-            <option value={escolhida.id}>{escolhida.rotulo}</option>
-          )}
-          {opcoes.map((x) => (
-            <option key={x.id} value={x.id}>
-              {x.rotulo}
-            </option>
-          ))}
-        </select>
-      </label>
-      {loading && (
-        <p role="status" className="text-sm">
-          Carregando opções…
-        </p>
-      )}
+    <div className="grid min-w-0 gap-3 rounded-md border border-border p-3">
+      <ComboboxField
+        id={id}
+        name={name}
+        label={rotulo}
+        required={required}
+        options={options}
+        value={escolhida?.id}
+        onValueChange={(value) =>
+          setEscolhida(
+            [...(dados?.dados ?? []), ...(inicial ? [inicial] : [])].find(
+              (opcao) => opcao.id === value,
+            ),
+          )
+        }
+        onSearchChange={(value) => {
+          setPagina(1);
+          setBusca(value.trim());
+        }}
+        searchPlaceholder={`Buscar ${rotulo.toLocaleLowerCase("pt-BR")}…`}
+        loading={loading}
+        error={fieldError}
+      />
       {erro != null && (
-        <div role="alert" className="text-sm text-red-800">
-          {mensagemErro(erro)}{" "}
-          <button
-            type="button"
-            className="underline"
-            onClick={() =>
-              void carregar({
-                busca: busca || undefined,
-                pagina: String(pagina),
-                limite: "20",
-              })
-            }
-          >
-            Tentar novamente
-          </button>
-        </div>
-      )}
-      {!loading && !erro && dados?.dados.length === 0 && (
-        <p className="text-sm">Nenhuma opção encontrada.</p>
+        <Alert variant="destructive">
+          <AlertDescription>
+            {mensagemErro(erro)}{" "}
+            <Button
+              type="button"
+              variant="link"
+              onClick={() =>
+                void carregar({
+                  busca: busca || undefined,
+                  pagina: String(pagina),
+                  limite: "20",
+                })
+              }
+            >
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <button
+        <Button
           type="button"
-          className={botao}
+          variant="outline"
+          size="sm"
           disabled={pagina === 1 || loading}
           onClick={() => setPagina((p) => p - 1)}
         >
           Opções anteriores
-        </button>
+        </Button>
         <span>Página {pagina}</span>
-        <button
+        <Button
           type="button"
-          className={botao}
+          variant="outline"
+          size="sm"
           disabled={!dados || pagina >= dados.meta.ultimaPagina || loading}
           onClick={() => setPagina((p) => p + 1)}
         >
           Mais opções
-        </button>
+        </Button>
       </div>
-    </fieldset>
+    </div>
   );
 }
+
 export function SeletorNatureza(props: Props) {
   const consulta = useListarNaturezas();
   return <SeletorPaginado {...props} consulta={consulta} />;
 }
+
 export function SeletorResponsavel(props: Props) {
   const consulta = useListarResponsaveisAtivos();
   return <SeletorPaginado {...props} consulta={consulta} />;
 }
+
 export function SeletorFornecedor(props: Props) {
   const consulta = useListarFornecedoresAtivos();
   return <SeletorPaginado {...props} consulta={consulta} />;
