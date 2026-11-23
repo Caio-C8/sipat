@@ -203,14 +203,14 @@ export function BaixaFormulario({
             />
             <div className="min-w-0">
               <h2 id="bem-baixa" className="font-bold">
-                Patrimônio selecionado
+                Patrimônio selecionado para baixa
               </h2>
               <p className="mt-1 break-words text-sm text-muted-foreground">
                 {patrimonio.numeroPatrimonio} · {patrimonio.descricao}
               </p>
             </div>
             <Badge className="ml-auto" variant="outline">
-              1 de 1
+              Selecionado
             </Badge>
           </div>
         </section>

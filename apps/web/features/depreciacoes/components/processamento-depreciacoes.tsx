@@ -10,6 +10,17 @@ import type {
   ListarDepreciacoesPendentesResponse,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { SelectField, TextField } from "@/components/shared/form-fields";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PageHeader } from "@/components/shared/page-header";
 import {
   Dialog,
@@ -31,8 +42,6 @@ type ItemPendente = ListarDepreciacoesPendentesResponse["dados"][number];
 type AlvoConfirmacao =
   { tipo: "LOTE" } | { tipo: "INDIVIDUAL"; item: ItemPendente };
 
-const campo =
-  "min-h-10 min-w-0 w-full rounded-md border border-[#dce5f0] bg-white px-3 py-2 text-sm text-[#17253d] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#2863ec] disabled:bg-[#eef2f7]";
 const statusPatrimonio: Record<ItemPendente["status"], string> = {
   ATIVO: "Ativo",
   EMPRESTADO: "Emprestado",
@@ -209,11 +218,16 @@ export function ProcessamentoDepreciacoes({
     <>
       <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-5 text-[#17253d] sm:px-7 sm:py-6">
         <PageHeader
-          title="Depreciação"
+          title="Processar depreciações"
           description={
             podeProcessar
               ? `Consulte os bens elegíveis e processe a competência de ${tituloCompetencia}, individualmente ou em lote.`
               : `Consulte os bens elegíveis e as pendências da competência de ${tituloCompetencia}.`
+          }
+          actions={
+            <Button asChild variant="outline">
+              <Link href="/depreciacoes">Voltar às depreciações</Link>
+            </Button>
           }
         />
 
@@ -221,31 +235,26 @@ export function ProcessamentoDepreciacoes({
           className="grid gap-4 rounded-lg border border-[#dfe7f1] bg-white p-5 sm:grid-cols-[minmax(200px,260px)_1fr] sm:items-center"
           aria-label="Competência e método"
         >
-          <label className="grid gap-2 text-xs font-medium text-[#526b8c]">
-            Competência
-            <select
-              className={campo}
+          <div>
+            <SelectField
+              id="competencia-depreciacao"
+              label="Competência"
               value={competencia}
               disabled={pendente || navegando}
-              onChange={(evento) =>
+              onValueChange={(value) =>
                 iniciarNavegacao(() =>
-                  router.push(
-                    `/depreciacao?competencia=${evento.target.value}`,
-                  ),
+                  router.push(`/depreciacao?competencia=${value}`),
                 )
               }
-            >
-              {competencias.map((item) => (
-                <option key={item.competencia} value={item.competencia}>
-                  {rotuloCompetencia(item.competencia)} —{" "}
-                  {item.quantidadePendente} pendente(s)
-                </option>
-              ))}
-            </select>
+              options={competencias.map((item) => ({
+                value: item.competencia,
+                label: `${rotuloCompetencia(item.competencia)} — ${item.quantidadePendente} pendente(s)`,
+              }))}
+            />
             {navegando ? (
               <span role="status">Carregando competência…</span>
             ) : null}
-          </label>
+          </div>
           <div>
             <h2 className="font-bold text-[#203b61]">
               Método linear · cálculo automático
@@ -310,30 +319,23 @@ export function ProcessamentoDepreciacoes({
         {podeProcessar ? (
           <section className="grid gap-4 rounded-lg border border-[#dfe7f1] bg-white p-5 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] md:items-end">
             <div>
-              <label
-                htmlFor="comissao-depreciacao"
-                className="text-xs font-medium text-[#526b8c]"
-              >
-                Comissão vigente para o processamento *
-              </label>
-              <select
+              <SelectField
                 id="comissao-depreciacao"
-                className={`${campo} mt-1`}
+                label="Comissão vigente para o processamento"
+                required
                 value={comissaoId}
-                onChange={(event) => setComissaoId(event.target.value)}
+                onValueChange={setComissaoId}
                 disabled={pendente || comissoes.length === 0}
-              >
-                <option value="">
-                  {comissoes.length
+                placeholder={
+                  comissoes.length
                     ? "Selecione uma comissão"
-                    : "Nenhuma comissão vigente"}
-                </option>
-                {comissoes.map((comissao) => (
-                  <option key={comissao.id} value={comissao.id}>
-                    {comissao.nome}
-                  </option>
-                ))}
-              </select>
+                    : "Nenhuma comissão vigente"
+                }
+                options={comissoes.map((comissao) => ({
+                  value: comissao.id,
+                  label: comissao.nome,
+                }))}
+              />
               {erroComissoes ? (
                 <p role="alert" className="mt-2 text-sm text-red-800">
                   {erroComissoes}
@@ -401,17 +403,19 @@ export function ProcessamentoDepreciacoes({
                 {resposta.meta.total} bem(ns) nesta competência
               </p>
             </div>
-            <label className="relative w-full sm:max-w-sm">
-              <span className="sr-only">Pesquisar nesta página</span>
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#526b8c]" />
-              <input
-                className={`${campo} pl-9`}
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+              <TextField
+                id="busca-depreciacoes-pagina"
+                label="Pesquisar nesta página"
+                fieldClassName="[&_label]:sr-only"
+                className="pl-9"
                 type="search"
                 value={busca}
                 onChange={(event) => setBusca(event.target.value)}
                 placeholder="Pesquisar nesta página"
               />
-            </label>
+            </div>
           </div>
           {elegiveis.length === 0 ? (
             <p
@@ -423,89 +427,88 @@ export function ProcessamentoDepreciacoes({
                 : "Não há bens pendentes para esta competência."}
             </p>
           ) : (
-            <div
-              className="overflow-x-auto"
-              role="region"
-              aria-label="Bens elegíveis para depreciação"
-              tabIndex={0}
+            <Table
+              className="min-w-[980px]"
+              containerProps={{
+                role: "region",
+                "aria-label": "Bens elegíveis para depreciação",
+                tabIndex: 0,
+              }}
             >
-              <table className="w-full min-w-[980px] text-left text-sm">
-                <thead className="bg-[#f7f9fc] text-xs uppercase text-[#526b8c]">
-                  <tr>
-                    <th scope="col" className="p-3">
-                      Patrimônio / bem
-                    </th>
-                    <th scope="col" className="p-3">
-                      Situação
-                    </th>
-                    <th scope="col" className="p-3">
-                      Valor líquido
-                    </th>
-                    <th scope="col" className="p-3">
-                      Quota prevista
-                    </th>
-                    <th scope="col" className="p-3">
-                      Valor residual
-                    </th>
-                    {podeProcessar ? (
-                      <th scope="col" className="p-3">
-                        <span className="sr-only">Ação</span>
-                      </th>
-                    ) : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {elegiveis.map((item) => (
-                    <tr
-                      key={item.patrimonioId}
-                      className="border-b border-[#e4ebf4] hover:bg-[#f9fbfd]"
-                    >
-                      <td className="p-3">
-                        <strong className="text-[#203b61]">
-                          {item.descricao}
-                        </strong>
-                        <small className="mt-1 block text-[#526b8c]">
-                          {item.numeroPatrimonio}
+              <TableHeader className="bg-muted text-xs uppercase text-muted-foreground">
+                <TableRow>
+                  <TableHead scope="col" className="p-3">
+                    Patrimônio / bem
+                  </TableHead>
+                  <TableHead scope="col" className="p-3">
+                    Situação
+                  </TableHead>
+                  <TableHead scope="col" className="p-3">
+                    Valor líquido
+                  </TableHead>
+                  <TableHead scope="col" className="p-3">
+                    Quota prevista
+                  </TableHead>
+                  <TableHead scope="col" className="p-3">
+                    Valor residual
+                  </TableHead>
+                  {podeProcessar ? (
+                    <TableHead scope="col" className="p-3">
+                      <span className="sr-only">Ação</span>
+                    </TableHead>
+                  ) : null}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {elegiveis.map((item) => (
+                  <TableRow key={item.patrimonioId}>
+                    <TableCell className="p-3 whitespace-normal">
+                      <strong className="text-foreground">
+                        {item.descricao}
+                      </strong>
+                      <small className="mt-1 block text-muted-foreground">
+                        {item.numeroPatrimonio}
+                      </small>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      {statusPatrimonio[item.status]}
+                    </TableCell>
+                    <TableCell className="p-3 font-medium">
+                      {moeda(item.valorLiquidoAtual)}
+                    </TableCell>
+                    <TableCell className="p-3 font-bold text-interactive">
+                      {moeda(item.quotaPrevista)}
+                      <small className="mt-1 block font-normal text-muted-foreground">
+                        {item.vidaUtilRestanteMeses} meses restantes
+                      </small>
+                    </TableCell>
+                    <TableCell className="p-3 font-medium">
+                      {moeda(item.valorResidual)}
+                      {item.atingiraValorResidual ? (
+                        <small className="mt-1 block font-semibold text-[#9a4a08]">
+                          Atingirá este mês
                         </small>
-                      </td>
-                      <td className="p-3">{statusPatrimonio[item.status]}</td>
-                      <td className="p-3 font-medium">
-                        {moeda(item.valorLiquidoAtual)}
-                      </td>
-                      <td className="p-3 font-bold text-[#2863ec]">
-                        {moeda(item.quotaPrevista)}
-                        <small className="mt-1 block font-normal text-[#526b8c]">
-                          {item.vidaUtilRestanteMeses} meses restantes
-                        </small>
-                      </td>
-                      <td className="p-3 font-medium">
-                        {moeda(item.valorResidual)}
-                        {item.atingiraValorResidual ? (
-                          <small className="mt-1 block font-semibold text-[#9a4a08]">
-                            Atingirá este mês
-                          </small>
-                        ) : null}
-                      </td>
-                      {podeProcessar ? (
-                        <td className="p-3 text-right">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={pendente || !comissaoId}
-                            onClick={() =>
-                              abrirConfirmacao({ tipo: "INDIVIDUAL", item })
-                            }
-                            className="min-h-10 gap-2 px-4"
-                          >
-                            <TrendingDown className="size-4" /> Processar bem
-                          </Button>
-                        </td>
                       ) : null}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </TableCell>
+                    {podeProcessar ? (
+                      <TableCell className="p-3 text-right">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={pendente || !comissaoId}
+                          onClick={() =>
+                            abrirConfirmacao({ tipo: "INDIVIDUAL", item })
+                          }
+                          className="min-h-10 gap-2 px-4"
+                        >
+                          <TrendingDown className="size-4" /> Processar bem
+                        </Button>
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#e4ebf4] pt-4">
             {podeProcessar ? (
@@ -571,19 +574,21 @@ export function ProcessamentoDepreciacoes({
             </div>
           </div>
           {podeProcessar && quantidadeResidual > 0 ? (
-            <label className="mt-4 flex max-w-3xl items-start gap-3 rounded-md border border-[#f4d78e] bg-[#fffbec] p-3 text-sm text-[#70430c]">
-              <input
-                className="mt-1 size-4 accent-[#b45b0a]"
-                type="checkbox"
+            <div className="mt-4 flex max-w-3xl items-start gap-3 rounded-md border border-border bg-muted p-3 text-sm text-foreground">
+              <Checkbox
+                id="confirmar-residual-depreciacao"
+                className="mt-1"
                 checked={confirmarResidual}
-                onChange={(event) => setConfirmarResidual(event.target.checked)}
+                onCheckedChange={(checked) =>
+                  setConfirmarResidual(checked === true)
+                }
                 disabled={pendente}
               />
-              <span>
+              <Label htmlFor="confirmar-residual-depreciacao">
                 Confirmo que os {quantidadeResidual} bem(ns) que já chegaram ao
                 valor residual devem ser ignorados neste lote.
-              </span>
-            </label>
+              </Label>
+            </div>
           ) : null}
         </section>
       </main>

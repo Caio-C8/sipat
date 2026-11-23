@@ -60,8 +60,9 @@ Na consulta de opções, `busca` também reconhece um UUID exato para resolver o
 rótulo de uma seleção preservada em URL.
 
 Prévia/opções: padrão 20, máximo 50; offset máximo 50.000. Históricos: até
-366 dias, exceto ficha e inventário; depreciações e pendências de depreciação
-até 12 competências.
+366 dias, exceto ficha e inventário. Depreciações listam todos os lançamentos
+por padrão e aceitam uma competência exata opcional; pendências aceitam a mesma
+seleção mensal opcional.
 PDF: 1.000 linhas/eventos, 200 páginas, 10 MiB; dataset normalizado 8 MiB.
 Uma emissão por usuário e duas por instância, sem fila; orçamento 20 s com
 timeout de banco menor. Excesso rejeita emissão inteira (422), sem truncamento.

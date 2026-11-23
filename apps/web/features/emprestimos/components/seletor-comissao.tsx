@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import { useComissoesEmprestimo } from "../api/hooks";
 import type { ListarOpcoesComissoesEmprestimoResponse } from "@repo/contracts";
-import { campoEmprestimo, mensagemEmprestimo } from "../apresentacao";
+import { mensagemEmprestimo } from "../apresentacao";
+import { ComboboxField } from "@/components/shared/form-fields";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function SeletorComissaoEmprestimo({
   dataReferencia,
@@ -24,71 +26,53 @@ export function SeletorComissaoEmprestimo({
   const comissoes = useComissoesEmprestimo();
   const carregar = comissoes.carregar;
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState("");
-  const [pagina, setPagina] = useState(1);
   useEffect(() => {
-    if (dataReferencia)
+    if (!dataReferencia) return;
+    const temporizador = window.setTimeout(() => {
       void carregar({
         dataReferencia,
-        pagina: String(pagina),
-        limite: "20",
-        ...(filtro ? { busca: filtro } : {}),
+        pagina: "1",
+        limite: "50",
+        ...(busca.trim() ? { busca: busca.trim() } : {}),
       });
-  }, [dataReferencia, pagina, filtro, carregar]);
+    }, 250);
+    return () => window.clearTimeout(temporizador);
+  }, [dataReferencia, busca, carregar]);
   const dados = comissoes.dados;
   const comissaoAtual =
     dados?.dados.find((item) => item.id === value) ??
     (selecionada?.id === value ? selecionada : null);
   return (
     <div className="grid gap-2">
-      <label className="text-sm">
-        Buscar comissão
-        <input
-          className={campoEmprestimo}
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Nome da comissão"
-        />
-      </label>
-      <button
-        type="button"
-        className="w-fit text-sm underline"
-        onClick={() => {
-          setPagina(1);
-          setFiltro(busca.trim());
-          onChange("");
-          onSelecionar?.(null);
+      <ComboboxField
+        id="comissao-emprestimo"
+        label={rotulo}
+        required
+        value={value}
+        onSearchChange={setBusca}
+        onValueChange={(nextValue) => {
+          onChange(nextValue);
+          onSelecionar?.(
+            dados?.dados.find((item) => item.id === nextValue) ?? null,
+          );
         }}
-      >
-        Buscar comissão
-      </button>
-      <label className="text-sm">
-        {rotulo}
-        <select
-          className={campoEmprestimo}
-          required
-          value={value}
-          onChange={(e) => {
-            onChange(e.target.value);
-            onSelecionar?.(
-              dados?.dados.find((item) => item.id === e.target.value) ?? null,
-            );
-          }}
-        >
-          <option value="">Selecione</option>
-          {selecionada &&
-            !dados?.dados.some((item) => item.id === selecionada.id) && (
-              <option value={selecionada.id}>{selecionada.nome}</option>
-            )}
-          {dados?.dados.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nome}
-            </option>
-          ))}
-        </select>
-      </label>
+        loading={comissoes.loading}
+        placeholder="Selecione"
+        searchPlaceholder="Buscar nas opções…"
+        emptyText="Nenhuma comissão encontrada."
+        options={[
+          ...(selecionada &&
+          !dados?.dados.some((item) => item.id === selecionada.id)
+            ? [{ value: selecionada.id, label: selecionada.nome }]
+            : []),
+          ...(dados?.dados.map((item) => ({
+            value: item.id,
+            label: item.nome,
+          })) ?? []),
+        ]}
+      />
       {comissaoAtual && (
-        <p className="text-xs text-[#526580]">
+        <p className="text-xs text-muted-foreground">
           Vigência:{" "}
           {comissaoAtual.dataVigenciaInicio.split("-").reverse().join("/")} a{" "}
           {comissaoAtual.dataVigenciaFim.split("-").reverse().join("/")}
@@ -96,43 +80,14 @@ export function SeletorComissaoEmprestimo({
       )}
       {comissoes.loading && <p role="status">Carregando comissões...</p>}
       {comissoes.erro !== null && (
-        <p role="alert" className="text-red-800">
-          {mensagemEmprestimo(comissoes.erro)}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>
+            {mensagemEmprestimo(comissoes.erro)}
+          </AlertDescription>
+        </Alert>
       )}
       {dados?.dados.length === 0 && (
         <p>Nenhuma comissão vigente encontrada para esta data e busca.</p>
-      )}
-      {dados && dados.meta.ultimaPagina > 1 && (
-        <div className="flex gap-4 text-sm">
-          <span>
-            Página {dados.meta.pagina} de {dados.meta.ultimaPagina}
-          </span>
-          <button
-            type="button"
-            className="underline disabled:opacity-50"
-            disabled={pagina <= 1}
-            onClick={() => {
-              setPagina((n) => n - 1);
-              onChange("");
-              onSelecionar?.(null);
-            }}
-          >
-            Anterior
-          </button>
-          <button
-            type="button"
-            className="underline disabled:opacity-50"
-            disabled={pagina >= dados.meta.ultimaPagina}
-            onClick={() => {
-              setPagina((n) => n + 1);
-              onChange("");
-              onSelecionar?.(null);
-            }}
-          >
-            Próxima
-          </button>
-        </div>
       )}
     </div>
   );

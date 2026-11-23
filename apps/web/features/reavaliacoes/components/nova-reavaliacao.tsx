@@ -15,6 +15,8 @@ import {
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { IntegerInput, MoneyInput } from "@/components/shared/numeric-inputs";
@@ -24,6 +26,15 @@ import {
   TextField,
 } from "@/components/shared/form-fields";
 import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import {
   Dialog,
@@ -46,6 +57,7 @@ import {
   usePatrimoniosReavaliacao,
   usePreviaReavaliacao,
 } from "../api/hooks";
+import { useSetoresPatrimonio } from "@/features/patrimonios/api/hooks";
 import {
   formatarDataCivil,
   formatarDecimal,
@@ -141,6 +153,7 @@ export function NovaReavaliacao({
 }) {
   const router = useRouter();
   const bens = usePatrimoniosReavaliacao();
+  const setores = useSetoresPatrimonio();
   const detalhe = usePatrimonioReavaliacao();
   const comissoes = useComissoesReavaliacao();
   const previaOperacao = usePreviaReavaliacao();
@@ -148,6 +161,7 @@ export function NovaReavaliacao({
   const [busca, setBusca] = useState("");
   const [buscaAplicada, setBuscaAplicada] = useState("");
   const [pagina, setPagina] = useState(1);
+  const [setorFiltro, setSetorFiltro] = useState("");
   const [buscaComissao, setBuscaComissao] = useState("");
   const [etapa, setEtapa] = useState<Etapa>(modoDetalhe ? 2 : 1);
   const [dataReferencia, setDataReferencia] = useState(hojeSaoPaulo);
@@ -189,6 +203,7 @@ export function NovaReavaliacao({
     modoDetalhe && patrimonioInicial ? `.${patrimonioInicial.id}` : ""
   }`;
   const carregarBens = bens.carregar;
+  const carregarSetores = setores.carregar;
   const carregarComissoes = comissoes.carregar;
 
   useEffect(() => {
@@ -197,8 +212,12 @@ export function NovaReavaliacao({
       pagina: String(pagina),
       limite: "20",
       ...(buscaAplicada ? { busca: buscaAplicada } : {}),
+      ...(setorFiltro ? { setorId: setorFiltro } : {}),
     });
-  }, [carregarBens, buscaAplicada, pagina, modoDetalhe]);
+  }, [carregarBens, buscaAplicada, pagina, modoDetalhe, setorFiltro]);
+  useEffect(() => {
+    if (!modoDetalhe) void carregarSetores();
+  }, [carregarSetores, modoDetalhe]);
   useEffect(() => {
     void carregarComissoes({
       contexto: "REGISTRO",
@@ -623,11 +642,24 @@ export function NovaReavaliacao({
               className={painelReavaliacao}
               aria-labelledby="selecionar-bens-title"
             >
-              <h2 id="selecionar-bens-title" className="font-bold">
-                1. Selecionar bens
-              </h2>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 id="selecionar-bens-title" className="font-bold">
+                    Bens disponíveis para reavaliação
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Patrimônios baixados não podem ser selecionados.
+                  </p>
+                </div>
+                <p
+                  aria-live="polite"
+                  className="text-sm font-semibold text-interactive"
+                >
+                  {selecionados.length} de 20 selecionados
+                </p>
+              </div>
               <form
-                className="mt-4 flex flex-wrap items-end gap-3 rounded-md bg-muted p-3"
+                className="mt-4 grid items-end gap-3 rounded-lg bg-muted p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_minmax(14rem,0.8fr)_auto]"
                 onSubmit={(e) => {
                   e.preventDefault();
                   setPagina(1);
@@ -637,21 +669,41 @@ export function NovaReavaliacao({
                       pagina: "1",
                       limite: "20",
                       ...(buscaAplicada ? { busca: buscaAplicada } : {}),
+                      ...(setorFiltro ? { setorId: setorFiltro } : {}),
                     });
                 }}
               >
-                <label className="grid min-w-56 flex-1 gap-2 text-sm">
-                  Descrição ou características
-                  <Input
-                    className="mt-2 h-10"
-                    type="search"
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    maxLength={200}
-                  />
-                </label>
+                <TextField
+                  id="buscaPatrimonioReavaliacao"
+                  label="Buscar patrimônios"
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  maxLength={200}
+                  placeholder="Número patrimonial ou descrição"
+                />
+                <ComboboxField
+                  id="setorAtualReavaliacao"
+                  label="Setor atual"
+                  value={setorFiltro}
+                  onValueChange={(value) => {
+                    setSetorFiltro(value);
+                    setPagina(1);
+                  }}
+                  options={[
+                    { value: "", label: "Todos os setores" },
+                    ...(setores.dados ?? []).map((setor) => ({
+                      value: setor.id,
+                      label: setor.nome,
+                    })),
+                  ]}
+                  loading={setores.loading}
+                  placeholder="Todos os setores"
+                  searchPlaceholder="Buscar setor…"
+                />
                 <Button type="submit" className="h-10 gap-2 px-5">
                   <Search aria-hidden="true" className="size-4" /> Pesquisar
+                  bens
                 </Button>
               </form>
               {bens.loading ? (
@@ -662,45 +714,91 @@ export function NovaReavaliacao({
                 <p role="alert" className="mt-4 text-red-800">
                   Não foi possível consultar os patrimônios.
                 </p>
+              ) : bens.dados?.dados.length ? (
+                <Table
+                  containerClassName="mt-4"
+                  containerProps={{
+                    role: "region",
+                    "aria-label": "Patrimônios disponíveis para reavaliação",
+                    tabIndex: 0,
+                  }}
+                >
+                  <TableCaption className="sr-only">
+                    Patrimônios disponíveis para reavaliação
+                  </TableCaption>
+                  <TableHeader className="bg-muted text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    <TableRow>
+                      {[
+                        "Selecionar",
+                        "Patrimônio / bem",
+                        "Setor atual",
+                        "Responsável do setor",
+                        "Situação",
+                      ].map((texto) => (
+                        <TableHead
+                          className="px-3 py-3"
+                          key={texto}
+                          scope="col"
+                        >
+                          {texto}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bens.dados.dados.map((bem) => {
+                      const checked = selecionados.some(
+                        (item) => item.bem.id === bem.id,
+                      );
+                      const bloqueado = bem.status === "BAIXADO";
+                      return (
+                        <TableRow key={bem.id}>
+                          <TableCell className="px-3 py-4">
+                            <Checkbox
+                              aria-label={`Selecionar patrimônio ${bem.numeroPatrimonio}`}
+                              checked={checked}
+                              disabled={
+                                bloqueado ||
+                                (detalhe.pending && !checked) ||
+                                (!checked && selecionados.length >= 20)
+                              }
+                              onCheckedChange={() => void alternar(bem.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="max-w-sm px-3 py-4 whitespace-normal wrap-anywhere">
+                            <span className="text-xs text-muted-foreground">
+                              {bem.numeroPatrimonio}
+                            </span>
+                            <p className="font-semibold">{bem.descricao}</p>
+                          </TableCell>
+                          <TableCell className="px-3 py-4 align-top">
+                            {bem.setorAtual.nome}
+                          </TableCell>
+                          <TableCell className="px-3 py-4 align-top text-muted-foreground">
+                            {bem.setorAtual.responsavel.nome}
+                          </TableCell>
+                          <TableCell className="px-3 py-4">
+                            <Badge
+                              variant={bloqueado ? "destructive" : "outline"}
+                            >
+                              {bem.status === "ATIVO"
+                                ? "Ativo"
+                                : bem.status === "EM_MANUTENCAO"
+                                  ? "Em manutenção"
+                                  : bem.status === "EMPRESTADO"
+                                    ? "Emprestado"
+                                    : "Baixado — indisponível"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               ) : (
-                <ul className="mt-4 grid gap-2">
-                  {bens.dados?.dados.map((bem) => (
-                    <li
-                      key={bem.id}
-                      className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-1 py-3 last:border-b-0"
-                    >
-                      <div>
-                        <strong>{bem.numeroPatrimonio}</strong> ·{" "}
-                        {bem.descricao}
-                        <p className="text-xs text-muted-foreground">
-                          {bem.status.replaceAll("_", " ")}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={
-                          bem.status === "BAIXADO" ||
-                          (detalhe.pending &&
-                            !selecionados.some(
-                              (item) => item.bem.id === bem.id,
-                            )) ||
-                          (selecionados.length >= 20 &&
-                            !selecionados.some(
-                              (item) => item.bem.id === bem.id,
-                            ))
-                        }
-                        onClick={() => void alternar(bem.id)}
-                      >
-                        {selecionados.some((item) => item.bem.id === bem.id)
-                          ? "Remover"
-                          : bem.status === "BAIXADO"
-                            ? "Baixado"
-                            : "Selecionar"}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+                <p className="py-10 text-center text-sm">
+                  Nenhum patrimônio encontrado.
+                </p>
               )}
               {bens.dados ? (
                 <nav

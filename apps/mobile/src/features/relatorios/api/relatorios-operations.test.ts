@@ -108,10 +108,7 @@ const previewQueries: Record<TipoTabular, Record<string, string>> = {
     fim: "2026-01-31",
     base: "ENVIO",
   },
-  depreciacoes: {
-    competenciaInicio: "2026-01",
-    competenciaFim: "2026-01",
-  },
+  depreciacoes: { competencia: "2026-01" },
   "pendencias-depreciacao": {},
   reavaliacoes: {
     inicio: "2026-01-01",

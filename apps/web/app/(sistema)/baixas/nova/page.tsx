@@ -16,6 +16,7 @@ export default async function NovaBaixaPage({
 }) {
   const identidade = await exigirIdentidadeAtual();
   if (identidade.perfil !== "DIRETOR_PATRIMONIO") redirect("/baixas");
+  const cookie = (await headers()).get("cookie") ?? "";
   const recebidos = await searchParams;
   const valores = Object.fromEntries(
     Object.entries(recebidos).filter(
@@ -41,7 +42,7 @@ export default async function NovaBaixaPage({
     );
   const resposta = await serverPatrimonioOperations.listar(
     { ...valores, status: "ATIVO", limite: valores.limite ?? "20" },
-    { cookie: (await headers()).get("cookie") ?? "" },
+    { cookie },
   );
-  return <NovaBaixa resposta={resposta} valores={valores} />;
+  return <NovaBaixa resposta={resposta} />;
 }

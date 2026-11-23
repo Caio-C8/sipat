@@ -5,11 +5,9 @@ import Link from "next/link";
 import { Filter, Search } from "lucide-react";
 import { TIPOS_BAIXA_PATRIMONIO } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
-import { SeletorRelatorio } from "@/features/relatorios/components/seletor";
+import { SelectField, TextField } from "@/components/shared/form-fields";
+import { SeletorFiltroRelatorio } from "@/features/relatorios/components/seletor-filtro-relatorio";
 import { rotulosTipoBaixa } from "../apresentacao";
-
-const campo =
-  "mt-1 min-h-10 w-full rounded-md border border-[#dce5f0] bg-white px-3 py-2 text-sm";
 
 export function FiltrosBaixas({
   valores,
@@ -18,65 +16,66 @@ export function FiltrosBaixas({
 }) {
   const [patrimonioId, setPatrimonioId] = useState(valores.patrimonioId ?? "");
   const [comissaoId, setComissaoId] = useState(valores.comissaoId ?? "");
+  const [tipo, setTipo] = useState(valores.tipo || "__todos__");
+  const [limite, setLimite] = useState(valores.limite || "20");
   return (
     <form
       action="/baixas"
-      className="rounded-lg border border-[#dfe7f1] bg-white p-4 sm:p-5"
+      className="rounded-lg border border-border bg-card p-4 sm:p-5"
     >
       <div className="mb-4 flex items-center gap-2">
-        <Filter aria-hidden="true" className="size-5 text-[#2863ec]" />
+        <Filter aria-hidden="true" className="size-5 text-interactive" />
         <h2 className="font-bold">Filtros de consulta</h2>
       </div>
       <div className="grid gap-4 lg:grid-cols-4">
-        <label className="text-sm font-medium">
-          Data inicial
-          <input
-            className={campo}
-            type="date"
-            name="inicio"
-            defaultValue={valores.inicio}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          Data final
-          <input
-            className={campo}
-            type="date"
-            name="fim"
-            defaultValue={valores.fim}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          Tipo
-          <select
-            className={campo}
-            name="tipo"
-            defaultValue={valores.tipo ?? ""}
-          >
-            <option value="">Todos</option>
-            {TIPOS_BAIXA_PATRIMONIO.map((tipo) => (
-              <option key={tipo} value={tipo}>
-                {rotulosTipoBaixa[tipo]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-medium">
-          Registros por página
-          <select
-            className={campo}
-            name="limite"
-            defaultValue={valores.limite ?? "20"}
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-          </select>
-        </label>
+        <TextField
+          id="filtro-baixas-inicio"
+          label="Data inicial"
+          type="date"
+          name="inicio"
+          defaultValue={valores.inicio}
+        />
+        <TextField
+          id="filtro-baixas-fim"
+          label="Data final"
+          type="date"
+          name="fim"
+          defaultValue={valores.fim}
+        />
+        <SelectField
+          id="filtro-baixas-tipo"
+          label="Tipo"
+          value={tipo}
+          onValueChange={setTipo}
+          options={[
+            { value: "__todos__", label: "Todos" },
+            ...TIPOS_BAIXA_PATRIMONIO.map((item) => ({
+              value: item,
+              label: rotulosTipoBaixa[item] ?? item,
+            })),
+          ]}
+        />
+        <input
+          type="hidden"
+          name="tipo"
+          value={tipo === "__todos__" ? "" : tipo}
+        />
+        <SelectField
+          id="filtro-baixas-limite"
+          name="limite"
+          label="Registros por página"
+          value={limite}
+          onValueChange={setLimite}
+          options={[
+            { value: "10", label: "10" },
+            { value: "20", label: "20" },
+            { value: "50", label: "50" },
+          ]}
+        />
         <div className="lg:col-span-2">
-          <SeletorRelatorio
+          <SeletorFiltroRelatorio
             nome="patrimonioId"
-            label="patrimônio"
+            label="Patrimônio"
             catalogo="patrimonios"
             tipo="baixas"
             valor={patrimonioId}
@@ -84,9 +83,9 @@ export function FiltrosBaixas({
           />
         </div>
         <div className="lg:col-span-2">
-          <SeletorRelatorio
+          <SeletorFiltroRelatorio
             nome="comissaoId"
-            label="comissão"
+            label="Comissão"
             catalogo="comissoes"
             tipo="baixas"
             valor={comissaoId}

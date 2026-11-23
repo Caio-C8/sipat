@@ -69,6 +69,17 @@ autoridade para dados, autorização, validação, erros e persistência.
   vivo pelo navegador; o implementador deve abri-los novamente durante a
   execução e na comparação final.
 
+### Decisão posterior — 23/11/2026
+
+- `/baixas/nova` não possui etapa ou fila de seleção: como a operação é
+  unitária, o patrimônio ativo é escolhido em um combobox pesquisável e
+  destacado no próprio formulário.
+- Contrato, endpoint, transação e armazenamento continuam unitários. Uma baixa
+  em lote permanece fora do escopo e exige decisão própria sobre documento
+  compartilhado, idempotência e rollback.
+- Após a confirmação da API, a Web exibe toast de sucesso e redireciona para
+  `/baixas`, onde o registro persistido pode ser consultado.
+
 ## Escopo e ordem de execução
 
 ### Objetivo 1 — lista compartilhada e identificação correta
@@ -94,9 +105,8 @@ autoridade para dados, autorização, validação, erros e persistência.
 1. Criar `/baixas/nova` e reproduzir os frames `Nova Baixa` e as duas variantes
    de `Seleção de itens para baixa`, preservando a hierarquia visual de dados da
    baixa, seleção, resumo, justificativa e ações.
-2. Adaptar o protótipo para selecionar exatamente um patrimônio `ATIVO`. Usar
-   linguagem no singular, contador máximo de um e radio/seleção única acessível;
-   não simular uma lista mutável que depois envie várias requisições.
+2. Permitir selecionar um patrimônio `ATIVO` em combobox pesquisável no próprio
+   formulário, sem etapa anterior, fila ou mutation coletiva.
 3. Reutilizar as consultas patrimoniais e a operação multipart existentes.
    Data, tipo, motivo, observação, comissão e PDF opcional seguem
    `BaixarPatrimonioDadosSchema`; não reduzir `tipo` a um `motivo` ilustrativo
@@ -218,8 +228,8 @@ escopo.
       paginação e estados completos.
 - [ ] Somente o Diretor vê e acessa `/baixas/nova`; o gate ocorre antes de
       qualquer request de criação.
-- [ ] O fluxo visual de seleção aceita exatamente um patrimônio e envia uma
-      única mutation multipart real.
+- [ ] O fluxo visual escolhe um patrimônio ativo por combobox no formulário e
+      conduz uma única mutation multipart explícita.
 - [ ] `/baixas/[patrimonioId]` funciona para os dois perfis e não inventa lote,
       código agrupador, valor histórico ou estado de estorno.
 - [ ] O anexo aparece e é solicitado somente para o Diretor.
@@ -245,7 +255,7 @@ em execução.
    `packages/contracts/src/relatorio-patrimonial/queries.ts`,
    `packages/contracts/src/relatorio-patrimonial/responses.ts`, as novas rotas
    sob `apps/web/app/(sistema)/baixas/` e o node `248:2`.
-2. **Registro e seleção unitária:**
+2. **Seleção múltipla e registros unitários sequenciais:**
    `apps/web/features/patrimonios/components/patrimonio-acoes.tsx`,
    `apps/web/features/patrimonios/api/patrimonio-operations.ts`,
    `apps/web/features/patrimonios/api/hooks.ts`,

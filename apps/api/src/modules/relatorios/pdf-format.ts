@@ -3,8 +3,6 @@ export function rotuloRelatorio(campo: string): string {
   const especiais: Record<string, string> = {
     id: "UUID do registro",
     competencia: "Competência",
-    competenciaInicio: "Competência inicial",
-    competenciaFim: "Competência final",
     inicio: "Início",
     fim: "Fim",
     bensDistintos: "Bens distintos",

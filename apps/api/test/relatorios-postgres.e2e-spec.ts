@@ -63,8 +63,6 @@ const url = process.env.RELATORIOS_INTEGRATION_DATABASE_URL;
         ? { busca: f.tag }
         : tipo === "depreciacoes"
           ? {
-              competenciaInicio: "2026-01",
-              competenciaFim: "2026-02",
               patrimonioId: f.bem.id,
             }
           : tipo === "pendencias-depreciacao"
@@ -133,6 +131,17 @@ const url = process.env.RELATORIOS_INTEGRATION_DATABASE_URL;
       if (d.tipo !== "depreciacoes") throw new Error();
       expect(d.resumo.quotas).toBe("20.2469134");
       expect(d.resumo.porCompetencia).toHaveLength(2);
+      const dFiltrado = await service.tabular("depreciacoes", {
+        patrimonioId: f.bem.id,
+        competencia: "2026-01",
+        pagina: 1,
+        limite: 20,
+      });
+      if (dFiltrado.tipo !== "depreciacoes") throw new Error();
+      expect(dFiltrado.resumo.porCompetencia).toHaveLength(1);
+      expect(
+        dFiltrado.dados.every((item) => item.competencia === "2026-01"),
+      ).toBe(true);
     });
     it("intervalo inclusivo São Paulo, correção distinta e referência ausente", async () => {
       const r = await service.tabular("movimentacoes", {

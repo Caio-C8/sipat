@@ -247,22 +247,15 @@ export const relatorioFormConfig = {
     defaults: {},
   },
   depreciacoes: {
-    subtitle: "Informe um intervalo de até 12 competências.",
+    subtitle:
+      "Consulte todos os registros ou informe uma competência específica.",
     fields: [
       patrimonio(),
       comissao,
       {
-        name: "competenciaInicio",
-        label: "Competência inicial",
+        name: "competencia",
+        label: "Competência",
         kind: "month",
-        required: true,
-        placeholder: "AAAA-MM",
-      },
-      {
-        name: "competenciaFim",
-        label: "Competência final",
-        kind: "month",
-        required: true,
         placeholder: "AAAA-MM",
       },
     ],

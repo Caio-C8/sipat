@@ -533,7 +533,7 @@ test.describe("Autenticação Web", () => {
       ["Naturezas", "/naturezas"],
       ["Espécies", "/especies"],
       ["Fornecedores", "/fornecedores"],
-      ["Depreciações", "/depreciacao"],
+      ["Depreciações", "/depreciacoes"],
     ] as const) {
       await expect(
         navigation.getByRole("link", { name: nome, exact: true }),

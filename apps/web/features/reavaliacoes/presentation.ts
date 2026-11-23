@@ -1,8 +1,6 @@
 import { isApiError } from "@/lib/api/core/api-error";
 import { formatBrl } from "@/lib/format/decimal";
 
-export const campoReavaliacao =
-  "min-h-10 min-w-0 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground transition placeholder:text-muted-foreground focus-visible:border-ring disabled:bg-muted";
 export const painelReavaliacao =
   "min-w-0 rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5";
 

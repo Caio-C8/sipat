@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { selecionarOpcaoComponente } from "./support/form-controls";
 
 async function autenticar(
   context: BrowserContext,
@@ -9,6 +10,13 @@ async function autenticar(
     {
       name: "sipat_session",
       value: sessao,
+      url: "http://localhost:3100",
+      httpOnly: true,
+      sameSite: "Strict",
+    },
+    {
+      name: "sipat_reavaliacoes_scenario",
+      value: "1",
       url: "http://localhost:3100",
       httpOnly: true,
       sameSite: "Strict",
@@ -29,6 +37,22 @@ test.describe("reavaliações por perfil", () => {
     await expect(
       page.getByRole("link", { name: "Nova reavaliação" }),
     ).toHaveCount(0);
+    await selecionarOpcaoComponente(
+      page,
+      "Comissão",
+      "Comissão patrimonial vigente",
+    );
+    await page.getByRole("button", { name: "Pesquisar" }).click();
+    await expect(page).toHaveURL(/comissaoId=/);
+    await page.getByRole("link", { name: "Detalhes" }).first().click();
+    await expect(page).toHaveURL(/\/reavaliacoes\/[0-9a-f-]+/);
+    await expect(
+      page.getByRole("heading", { name: "Detalhes da reavaliação" }),
+    ).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Voltar às reavaliações" }),
+    ).toBeVisible();
     await page.goto("/reavaliacoes/nova");
     await expect(
       page.getByRole("heading", { name: "Acesso não permitido" }),
@@ -60,5 +84,13 @@ test.describe("reavaliações por perfil", () => {
       page.getByRole("heading", { name: "Nova reavaliação" }),
     ).toBeVisible();
     await expect(page.getByLabel("Etapas da reavaliação")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Bens disponíveis para reavaliação" }),
+    ).toBeVisible();
+    const primeiroBem = page
+      .getByRole("checkbox", { name: /Selecionar patrimônio/ })
+      .first();
+    await primeiroBem.click();
+    await expect(page.getByText("1 de 20 selecionados")).toBeVisible();
   });
 });

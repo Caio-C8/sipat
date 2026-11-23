@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ComboboxField, TextField } from "@/components/shared/form-fields";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useComissoesReavaliacao } from "../api/hooks";
-import { campoReavaliacao } from "../presentation";
 
 export function FiltrosReavaliacoes({
   valores,
@@ -14,72 +15,70 @@ export function FiltrosReavaliacoes({
 }) {
   const comissoes = useComissoesReavaliacao();
   const [comissaoId, setComissaoId] = useState(valores.comissaoId ?? "");
+  const [buscaComissao, setBuscaComissao] = useState("");
   const carregar = comissoes.carregar;
   useEffect(() => {
-    void carregar({ contexto: "FILTRO" });
-  }, [carregar]);
+    const temporizador = window.setTimeout(() => {
+      void carregar({
+        contexto: "FILTRO",
+        pagina: "1",
+        limite: "50",
+        ...(buscaComissao.trim() ? { busca: buscaComissao.trim() } : {}),
+      });
+    }, 250);
+    return () => window.clearTimeout(temporizador);
+  }, [buscaComissao, carregar]);
   return (
     <form
       action="/reavaliacoes"
       className="grid gap-4"
       aria-label="Filtrar reavaliações"
     >
-      <div className="flex items-center gap-2 text-sm font-semibold text-[#203b61]">
-        <SlidersHorizontal
-          aria-hidden="true"
-          className="size-4 text-[#2863ec]"
-        />
-        Filtros
-      </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <label className="grid gap-2 text-xs font-medium text-[#526580] xl:col-span-1">
-          Pesquisar por número ou descrição
-          <input
-            className={campoReavaliacao}
-            type="search"
-            name="busca"
-            maxLength={200}
-            defaultValue={valores.busca}
-          />
-        </label>
-        <label className="grid gap-2 text-xs font-medium text-[#526580]">
-          Comissão
-          <select
-            className={campoReavaliacao}
-            name="comissaoId"
-            value={comissaoId}
-            onChange={(e) => setComissaoId(e.target.value)}
-          >
-            <option value="">Todas</option>
-            {comissaoId &&
-            !comissoes.dados?.dados.some((item) => item.id === comissaoId) ? (
-              <option value={comissaoId}>Comissão selecionada</option>
-            ) : null}
-            {comissoes.dados?.dados.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-2 text-xs font-medium text-[#526580]">
-          Data inicial
-          <input
-            className={campoReavaliacao}
-            type="date"
-            name="dataInicio"
-            defaultValue={valores.dataInicio}
-          />
-        </label>
-        <label className="grid gap-2 text-xs font-medium text-[#526580]">
-          Data final
-          <input
-            className={campoReavaliacao}
-            type="date"
-            name="dataFim"
-            defaultValue={valores.dataFim}
-          />
-        </label>
+        <TextField
+          id="filtro-reavaliacoes-busca"
+          label="Pesquisar por número ou descrição"
+          type="search"
+          name="busca"
+          maxLength={200}
+          defaultValue={valores.busca}
+        />
+        <ComboboxField
+          id="filtro-reavaliacoes-comissao"
+          name="comissaoId"
+          label="Comissão"
+          value={comissaoId}
+          onValueChange={setComissaoId}
+          onSearchChange={setBuscaComissao}
+          options={[
+            { value: "", label: "Todas as comissões" },
+            ...(comissaoId &&
+            !comissoes.dados?.dados.some((item) => item.id === comissaoId)
+              ? [{ value: comissaoId, label: "Comissão selecionada" }]
+              : []),
+            ...(comissoes.dados?.dados.map((item) => ({
+              value: item.id,
+              label: item.nome,
+            })) ?? []),
+          ]}
+          loading={comissoes.loading}
+          placeholder="Todas as comissões"
+          searchPlaceholder="Buscar comissão…"
+        />
+        <TextField
+          id="filtro-reavaliacoes-data-inicial"
+          label="Data inicial"
+          type="date"
+          name="dataInicio"
+          defaultValue={valores.dataInicio}
+        />
+        <TextField
+          id="filtro-reavaliacoes-data-final"
+          label="Data final"
+          type="date"
+          name="dataFim"
+          defaultValue={valores.dataFim}
+        />
       </div>
       <input
         type="hidden"
@@ -87,18 +86,18 @@ export function FiltrosReavaliacoes({
         value={valores.patrimonioId ?? ""}
       />
       {comissoes.erro ? (
-        <p role="alert" className="text-sm text-red-700">
-          Não foi possível carregar as comissões.
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>
+            Não foi possível carregar as comissões. Tente novamente antes de
+            filtrar por comissão.
+          </AlertDescription>
+        </Alert>
       ) : null}
-      <div className="flex flex-wrap justify-end gap-3">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button asChild variant="outline">
-          <Link href="/reavaliacoes">Limpar</Link>
+          <Link href="/reavaliacoes">Limpar filtros</Link>
         </Button>
-        <Button
-          type="submit"
-          className="gap-2 bg-[#173d6b] px-5 hover:bg-[#0f315c]"
-        >
+        <Button type="submit" className="gap-2 px-5">
           <Search aria-hidden="true" className="size-4" /> Pesquisar
         </Button>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import {
   CompetenciaMensalSchema,
   ListarDepreciacoesPendentesQuerySchema,
@@ -14,9 +15,10 @@ import { serverReavaliacaoOperations } from "@/features/reavaliacoes/api/server-
 import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { isApiError } from "@/lib/api/core/api-error";
 import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Depreciação",
+  title: "Processar depreciações",
   description:
     "Consulte e processe competências de depreciação patrimonial pendentes.",
 };
@@ -30,6 +32,14 @@ function erroLeitura(erro: unknown, fallback: string) {
     return erro.message;
   }
   return fallback;
+}
+
+function AcaoVoltarDepreciacoes() {
+  return (
+    <Button asChild variant="outline">
+      <Link href="/depreciacoes">Voltar às depreciações</Link>
+    </Button>
+  );
 }
 
 export default async function DepreciacaoPage({
@@ -64,8 +74,9 @@ export default async function DepreciacaoPage({
     return (
       <main className="grid gap-5 p-6 text-[#17253d]">
         <PageHeader
-          title="Depreciação"
+          title="Processar depreciações"
           description="Consulte e processe as competências patrimoniais pendentes."
+          actions={<AcaoVoltarDepreciacoes />}
         />
         <p
           role="alert"
@@ -84,8 +95,9 @@ export default async function DepreciacaoPage({
     return (
       <main className="mx-auto grid w-full max-w-[1900px] gap-5 p-6 text-[#17253d]">
         <PageHeader
-          title="Depreciação"
+          title="Processar depreciações"
           description="Consulte e processe as competências patrimoniais pendentes."
+          actions={<AcaoVoltarDepreciacoes />}
         />
         <section
           role="status"
@@ -119,8 +131,9 @@ export default async function DepreciacaoPage({
     return (
       <main className="grid gap-5 p-6 text-[#17253d]">
         <PageHeader
-          title="Depreciação"
+          title="Processar depreciações"
           description="Consulte e processe as competências patrimoniais pendentes."
+          actions={<AcaoVoltarDepreciacoes />}
         />
         <p
           role="alert"
@@ -148,8 +161,9 @@ export default async function DepreciacaoPage({
     return (
       <main className="grid gap-5 p-6 text-[#17253d]">
         <PageHeader
-          title="Depreciação"
+          title="Processar depreciações"
           description="Consulte e processe as competências patrimoniais pendentes."
+          actions={<AcaoVoltarDepreciacoes />}
         />
         <p
           role="alert"
@@ -177,8 +191,9 @@ export default async function DepreciacaoPage({
     return (
       <main className="grid gap-5 p-6 text-[#17253d]">
         <PageHeader
-          title="Depreciação"
+          title="Processar depreciações"
           description="Consulte e processe as competências patrimoniais pendentes."
+          actions={<AcaoVoltarDepreciacoes />}
         />
         <p
           role="alert"

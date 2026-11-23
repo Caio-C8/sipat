@@ -8,6 +8,18 @@ import {
   type ListarOpcoesComissoesEmprestimoResponse,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { TextareaField, TextField } from "@/components/shared/form-fields";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
@@ -22,10 +34,8 @@ import {
 import { useCriarEmprestimo, usePatrimoniosEmprestimo } from "../api/hooks";
 import {
   botaoPrimarioEmprestimo,
-  campoEmprestimo,
   dataExibicao,
   hojeSaoPaulo,
-  identificacaoEmprestimo,
   mensagemEmprestimo,
   painelEmprestimo,
 } from "../apresentacao";
@@ -223,7 +233,7 @@ export function NovoEmprestimo({
         }
         description={
           etapa === "selecionar"
-            ? "A consulta apresenta bens ativos elegíveis. O servidor confirma a elegibilidade ao registrar."
+            ? "A consulta apresenta bens ativos elegíveis. A disponibilidade será conferida novamente ao registrar."
             : etapa === "revisao"
               ? "Confira os dados antes de registrar. A revisão não reserva os bens."
               : "Informe o destinatário, o período e os bens do empréstimo."
@@ -248,15 +258,14 @@ export function NovoEmprestimo({
             }}
           >
             <div className="flex flex-wrap items-end gap-3">
-              <label className="min-w-48 flex-1 text-sm">
-                Patrimônio ou descrição
-                <input
-                  className={campoEmprestimo}
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Número ou descrição"
-                />
-              </label>
+              <TextField
+                id="busca-patrimonio-emprestimo"
+                label="Patrimônio ou descrição"
+                fieldClassName="min-w-48 flex-1"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Número ou descrição"
+              />
               <Button type="submit" className={botaoPrimarioEmprestimo}>
                 Pesquisar
               </Button>
@@ -288,69 +297,68 @@ export function NovoEmprestimo({
             {bens.dados &&
               !bens.loading &&
               (bens.dados.dados.length ? (
-                <div
-                  className="mt-4 overflow-x-auto"
-                  role="region"
-                  aria-label="Bens elegíveis"
-                  tabIndex={0}
+                <Table
+                  className="min-w-[620px]"
+                  containerClassName="mt-4"
+                  containerProps={{
+                    role: "region",
+                    "aria-label": "Bens elegíveis",
+                    tabIndex: 0,
+                  }}
                 >
-                  <table className="w-full min-w-[620px] text-left text-sm">
-                    <thead className="bg-[#f7f9fc] text-xs uppercase text-[#526580]">
-                      <tr>
-                        <th className="p-3" scope="col">
-                          Selecionar
-                        </th>
-                        <th className="p-3" scope="col">
-                          Patrimônio / descrição
-                        </th>
-                        <th className="p-3" scope="col">
-                          Setor
-                        </th>
-                        <th className="p-3" scope="col">
-                          Situação
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bens.dados.dados.map((bem) => {
-                        const escolhido = selecionados.some(
-                          (item) => item.id === bem.id,
-                        );
-                        return (
-                          <tr
-                            key={bem.id}
-                            className="border-b border-[#e4eaf2] last:border-0"
-                          >
-                            <td className="p-3">
-                              <input
-                                type="checkbox"
-                                aria-label={`Selecionar ${bem.numeroPatrimonio}`}
-                                checked={escolhido}
-                                disabled={
-                                  criacao.pending ||
-                                  (selecionados.length >=
-                                    LIMITE_ITENS_EMPRESTIMO &&
-                                    !escolhido)
-                                }
-                                onChange={() => alternar(bem)}
-                              />
-                            </td>
-                            <td className="p-3">
-                              <strong>{bem.numeroPatrimonio}</strong>
-                              <p className="text-[#526580]">{bem.descricao}</p>
-                            </td>
-                            <td className="p-3">{bem.setor.nome}</td>
-                            <td className="p-3">
-                              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-                                Ativo · elegível
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                  <TableHeader className="bg-muted text-xs uppercase text-muted-foreground">
+                    <TableRow>
+                      <TableHead className="p-3" scope="col">
+                        Selecionar
+                      </TableHead>
+                      <TableHead className="p-3" scope="col">
+                        Patrimônio / descrição
+                      </TableHead>
+                      <TableHead className="p-3" scope="col">
+                        Setor
+                      </TableHead>
+                      <TableHead className="p-3" scope="col">
+                        Situação
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bens.dados.dados.map((bem) => {
+                      const escolhido = selecionados.some(
+                        (item) => item.id === bem.id,
+                      );
+                      return (
+                        <TableRow key={bem.id}>
+                          <TableCell className="p-3">
+                            <Checkbox
+                              aria-label={`Selecionar ${bem.numeroPatrimonio}`}
+                              checked={escolhido}
+                              disabled={
+                                criacao.pending ||
+                                (selecionados.length >=
+                                  LIMITE_ITENS_EMPRESTIMO &&
+                                  !escolhido)
+                              }
+                              onCheckedChange={() => alternar(bem)}
+                            />
+                          </TableCell>
+                          <TableCell className="p-3 whitespace-normal">
+                            <strong>{bem.numeroPatrimonio}</strong>
+                            <p className="text-muted-foreground">
+                              {bem.descricao}
+                            </p>
+                          </TableCell>
+                          <TableCell className="p-3">
+                            {bem.setor.nome}
+                          </TableCell>
+                          <TableCell className="p-3">
+                            <Badge variant="secondary">Ativo · elegível</Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               ) : (
                 <p className="mt-4">Nenhum bem elegível encontrado.</p>
               ))}
@@ -363,22 +371,24 @@ export function NovoEmprestimo({
                   Página {bens.dados.meta.pagina} de{" "}
                   {bens.dados.meta.ultimaPagina}
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="underline disabled:opacity-50"
+                  variant="outline"
+                  size="sm"
                   disabled={pagina <= 1}
                   onClick={() => setPagina((n) => n - 1)}
                 >
                   Anterior
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="underline disabled:opacity-50"
+                  variant="outline"
+                  size="sm"
                   disabled={pagina >= bens.dados.meta.ultimaPagina}
                   onClick={() => setPagina((n) => n + 1)}
                 >
                   Próxima
-                </button>
+                </Button>
               </nav>
             )}
           </section>
@@ -406,64 +416,54 @@ export function NovoEmprestimo({
             <section className={painelEmprestimo}>
               <h2 className="mb-4 font-bold">Destino e período</h2>
               <div className="grid gap-4">
-                <label className="text-sm">
-                  Destinatário
-                  <input
-                    className={campoEmprestimo}
-                    required
-                    maxLength={200}
-                    value={destinatario}
-                    onChange={(e) => setDestinatario(e.target.value)}
-                    placeholder="Pessoa ou instituição"
-                  />
-                </label>
+                <TextField
+                  id="destinatario-emprestimo"
+                  label="Destinatário"
+                  required
+                  maxLength={200}
+                  value={destinatario}
+                  onChange={(e) => setDestinatario(e.target.value)}
+                  placeholder="Pessoa ou instituição"
+                />
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-sm">
-                    Data do empréstimo
-                    <input
-                      className={campoEmprestimo}
-                      type="date"
-                      required
-                      max={hojeSaoPaulo()}
-                      value={dataEmprestimo}
-                      onChange={(e) => {
-                        setDataEmprestimo(e.target.value);
-                        setComissaoId("");
-                        setComissao(null);
-                      }}
-                    />
-                  </label>
-                  <label className="text-sm">
-                    Previsão de devolução
-                    <input
-                      className={campoEmprestimo}
-                      type="date"
-                      required
-                      min={dataEmprestimo}
-                      value={dataPrevistaDevolucao}
-                      onChange={(e) => setDataPrevistaDevolucao(e.target.value)}
-                    />
-                  </label>
-                </div>
-                <label className="text-sm">
-                  Finalidade
-                  <input
-                    className={campoEmprestimo}
+                  <TextField
+                    id="data-emprestimo"
+                    label="Data do empréstimo"
+                    type="date"
                     required
-                    maxLength={2000}
-                    value={finalidade}
-                    onChange={(e) => setFinalidade(e.target.value)}
+                    max={hojeSaoPaulo()}
+                    value={dataEmprestimo}
+                    onChange={(e) => {
+                      setDataEmprestimo(e.target.value);
+                      setComissaoId("");
+                      setComissao(null);
+                    }}
                   />
-                </label>
-                <label className="text-sm">
-                  Observação (opcional)
-                  <textarea
-                    className={campoEmprestimo}
-                    maxLength={2000}
-                    value={observacao}
-                    onChange={(e) => setObservacao(e.target.value)}
+                  <TextField
+                    id="data-prevista-devolucao"
+                    label="Previsão de devolução"
+                    type="date"
+                    required
+                    min={dataEmprestimo}
+                    value={dataPrevistaDevolucao}
+                    onChange={(e) => setDataPrevistaDevolucao(e.target.value)}
                   />
-                </label>
+                </div>
+                <TextField
+                  id="finalidade-emprestimo"
+                  label="Finalidade"
+                  required
+                  maxLength={2000}
+                  value={finalidade}
+                  onChange={(e) => setFinalidade(e.target.value)}
+                />
+                <TextareaField
+                  id="observacao-emprestimo"
+                  label="Observação (opcional)"
+                  maxLength={2000}
+                  value={observacao}
+                  onChange={(e) => setObservacao(e.target.value)}
+                />
               </div>
             </section>
             <section className={painelEmprestimo}>
@@ -476,14 +476,42 @@ export function NovoEmprestimo({
                 onSelecionar={setComissao}
                 selecionada={comissao}
               />
+              <fieldset className="mt-5 grid gap-2 border-t border-border pt-5 text-sm">
+                <legend className="font-semibold">Forma de registro</legend>
+                <RadioGroup
+                  value={modo}
+                  onValueChange={(value) =>
+                    setModo(value as "EM_GRUPO" | "SEPARADAMENTE")
+                  }
+                >
+                  <label className="flex items-start gap-2">
+                    <RadioGroupItem value="EM_GRUPO" />
+                    <span>
+                      Em grupo
+                      <small className="block text-muted-foreground">
+                        Todos os bens no mesmo empréstimo.
+                      </small>
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-2">
+                    <RadioGroupItem value="SEPARADAMENTE" />
+                    <span>
+                      Separadamente
+                      <small className="block text-muted-foreground">
+                        Um registro para cada bem.
+                      </small>
+                    </span>
+                  </label>
+                </RadioGroup>
+              </fieldset>
               <dl className="mt-6 text-sm">
                 <dt className="text-[#526580]">Registrado por</dt>
                 <dd className="mt-1 font-semibold">{usuario.nome}</dd>
                 <dd className="mt-1 text-[#526580]">Diretor de Patrimônio</dd>
               </dl>
               <p className="mt-5 text-xs text-[#526580]">
-                A autoria definitiva é registrada pelo servidor com a sessão
-                autenticada.
+                A autoria será vinculada à pessoa autenticada no momento da
+                confirmação.
               </p>
             </section>
           </div>
@@ -501,39 +529,42 @@ export function NovoEmprestimo({
               </Button>
             </div>
             {selecionados.length ? (
-              <div
-                className="mt-4 overflow-x-auto"
-                role="region"
-                aria-label="Bens selecionados"
-                tabIndex={0}
+              <Table
+                className="min-w-[570px]"
+                containerClassName="mt-4"
+                containerProps={{
+                  role: "region",
+                  "aria-label": "Bens selecionados",
+                  tabIndex: 0,
+                }}
               >
-                <table className="w-full min-w-[570px] text-left text-sm">
-                  <thead className="bg-[#f7f9fc] text-xs uppercase text-[#526580]">
-                    <tr>
-                      <th className="p-3" scope="col">
-                        Patrimônio
-                      </th>
-                      <th className="p-3" scope="col">
-                        Descrição
-                      </th>
-                      <th className="p-3" scope="col">
-                        Setor
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selecionados.map((bem) => (
-                      <tr key={bem.id} className="border-b border-[#e4eaf2]">
-                        <td className="p-3 font-semibold">
-                          {bem.numeroPatrimonio}
-                        </td>
-                        <td className="p-3">{bem.descricao}</td>
-                        <td className="p-3">{bem.setor.nome}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                <TableHeader className="bg-muted text-xs uppercase text-muted-foreground">
+                  <TableRow>
+                    <TableHead className="p-3" scope="col">
+                      Patrimônio
+                    </TableHead>
+                    <TableHead className="p-3" scope="col">
+                      Descrição
+                    </TableHead>
+                    <TableHead className="p-3" scope="col">
+                      Setor
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {selecionados.map((bem) => (
+                    <TableRow key={bem.id}>
+                      <TableCell className="p-3 font-semibold">
+                        {bem.numeroPatrimonio}
+                      </TableCell>
+                      <TableCell className="p-3 whitespace-normal">
+                        {bem.descricao}
+                      </TableCell>
+                      <TableCell className="p-3">{bem.setor.nome}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <p className="mt-4 text-sm text-[#526580]">
                 Nenhum bem selecionado. Use “Alterar seleção” para escolher bens
@@ -541,38 +572,7 @@ export function NovoEmprestimo({
               </p>
             )}
           </section>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <fieldset className="grid gap-2 text-sm">
-              <legend className="font-semibold">Forma de registro</legend>
-              <label className="flex items-start gap-2">
-                <input
-                  type="radio"
-                  name="modoAgrupamento"
-                  checked={modo === "EM_GRUPO"}
-                  onChange={() => setModo("EM_GRUPO")}
-                />
-                <span>
-                  Em grupo{" "}
-                  <small className="block text-[#526580]">
-                    Todos os bens no mesmo empréstimo.
-                  </small>
-                </span>
-              </label>
-              <label className="flex items-start gap-2">
-                <input
-                  type="radio"
-                  name="modoAgrupamento"
-                  checked={modo === "SEPARADAMENTE"}
-                  onChange={() => setModo("SEPARADAMENTE")}
-                />
-                <span>
-                  Separadamente{" "}
-                  <small className="block text-[#526580]">
-                    Um registro para cada bem.
-                  </small>
-                </span>
-              </label>
-            </fieldset>
+          <div className="flex justify-end">
             <Button
               type="submit"
               className={botaoPrimarioEmprestimo}
@@ -636,8 +636,7 @@ export function NovoEmprestimo({
             </ul>
           </section>
           <p className="text-sm text-[#526580]">
-            Os bens e a comissão serão validados novamente pelo servidor na
-            confirmação.
+            Os bens e a comissão serão conferidos novamente na confirmação.
           </p>
           <div className="flex flex-wrap justify-end gap-3">
             <Button
@@ -677,12 +676,9 @@ export function NovoEmprestimo({
                   className="font-semibold text-blue-700 underline"
                   href={`/emprestimos/${item.id}`}
                 >
-                  {identificacaoEmprestimo(item.id)} ·{" "}
-                  {item.destinatario ?? "Não informado"} · {item.total} bem(ns)
+                  Empréstimo para: {item.destinatario ?? "Não informado"} ·{" "}
+                  {item.total} bem(ns)
                 </Link>
-                <span className="sr-only">
-                  Identificador completo: {item.id}
-                </span>
               </li>
             ))}
           </ul>

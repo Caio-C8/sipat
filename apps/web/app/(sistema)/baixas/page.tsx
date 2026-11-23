@@ -19,6 +19,7 @@ export default async function BaixasPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const identidade = await exigirIdentidadeAtual();
+  const cookie = (await headers()).get("cookie") ?? "";
   const recebidos = await searchParams;
   const valores = prepararFiltrosBaixas(recebidos);
   const query = queryRelatorio("baixas").safeParse(valores);
@@ -38,7 +39,7 @@ export default async function BaixasPage({
   let falha: unknown;
   try {
     resposta = await serverRelatorios.listar.baixas(valores, {
-      cookie: (await headers()).get("cookie") ?? "",
+      cookie,
     });
   } catch (erro) {
     falha = erro;

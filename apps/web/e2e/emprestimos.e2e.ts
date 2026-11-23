@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { test, expect } from "./support/test";
 import fixtures from "./support/web-domain-fixtures.json";
+import { selecionarOpcaoComponente } from "./support/form-controls";
 
 async function autenticar(page: Page, baseURL?: string) {
   if (!baseURL) throw new Error("baseURL necessária");
@@ -36,15 +37,46 @@ test.describe("Empréstimos", () => {
     baseURL,
   }) => {
     await autenticar(page, baseURL);
+    const errosCondicionais: string[] = [];
+    page.on("console", (mensagem) => {
+      if (
+        mensagem.type() === "error" &&
+        mensagem.text().includes("conditional-use-of-use")
+      ) {
+        errosCondicionais.push(mensagem.text());
+      }
+    });
     await page.goto("/emprestimos");
     await expect(page).toHaveTitle("Empréstimos | SIPAT");
+    await expect(
+      page.getByRole("navigation", { name: "Situação dos empréstimos" }),
+    ).toHaveCount(0);
+    await selecionarOpcaoComponente(page, "Situação", "Finalizados");
+    await page.getByRole("button", { name: "Consultar" }).click();
+    await expect(page).toHaveURL(/situacao=CONCLUIDO/);
+    await expect(
+      page.getByRole("heading", { name: "Empréstimos finalizados" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Nenhum empréstimo encontrado para esta consulta."),
+    ).toBeVisible();
+    await selecionarOpcaoComponente(page, "Situação", "Em andamento");
+    await page.getByRole("button", { name: "Consultar" }).click();
+    await expect(page).toHaveURL(/situacao=EM_ANDAMENTO/);
     await expect(page.getByText("Instituição parceira")).toBeVisible();
     await page.getByRole("link", { name: "Abrir" }).click();
     await expect(page).toHaveURL(
       new RegExp(`/emprestimos/${fixtures.emprestimo.id}`),
     );
+    await expect(
+      page.getByRole("heading", {
+        name: "Empréstimo para: Instituição parceira",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("ID completo:")).toHaveCount(0);
     await expect(page.getByText("Projetor multimídia")).toBeVisible();
     await expect(page.getByText("1 de 1 pendente(s)")).toBeVisible();
+    expect(errosCondicionais).toEqual([]);
     expect(
       (await new AxeBuilder({ page }).include("main").analyze()).violations,
     ).toEqual([]);
@@ -69,22 +101,23 @@ test.describe("Empréstimos", () => {
       setor: { id: "22222222-2222-4222-8222-222222222225", nome: "Plenário" },
       status: "ATIVO",
     };
-    apiMock.expectGet(
-      "/emprestimos/opcoes/comissoes",
-      () => ({ body: paginada([comissao]) }),
-      2,
-    );
+    apiMock.expectGet("/emprestimos/opcoes/comissoes", () => ({
+      body: paginada([comissao]),
+    }));
     await page.goto("/emprestimos/nova");
+    await expect(page.getByLabel("Buscar comissão")).toHaveCount(0);
     await page.getByLabel("Destinatário").fill("Instituição parceira");
     await page.getByLabel("Finalidade").fill("Atividade institucional");
-    await page
-      .getByRole("combobox", { name: "Comissão vigente na data do empréstimo" })
-      .selectOption(comissao.id);
+    await selecionarOpcaoComponente(
+      page,
+      "Comissão vigente na data do empréstimo",
+      comissao.nome,
+    );
     apiMock.expectGet("/emprestimos/opcoes/patrimonios", () => ({
       body: paginada([bem]),
     }));
     await page.getByRole("button", { name: "Alterar seleção" }).click();
-    await page.getByRole("checkbox", { name: "Selecionar 201" }).check();
+    await page.getByRole("checkbox", { name: "Selecionar 201" }).click();
     await page.getByRole("button", { name: "Confirmar seleção (1)" }).click();
     await page.getByRole("button", { name: "Revisar empréstimo" }).click();
     await expect(
@@ -140,6 +173,9 @@ test.describe("Empréstimos", () => {
     await expect(
       page.getByRole("heading", { name: "Empréstimo registrado" }),
     ).toBeVisible();
+    await expect(
+      page.getByText(/\b(?:API|servidor|stack|banco)\b/i),
+    ).toHaveCount(0);
     await expect(page.getByRole("status")).toContainText(
       "Empréstimo registrado com sucesso",
     );
