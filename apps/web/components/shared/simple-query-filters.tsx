@@ -1,5 +1,10 @@
+"use client";
+
+import { Search } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { SelectField, TextField } from "@/components/shared/form-fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 type TextFilter = {
   type: "text";
@@ -23,43 +28,79 @@ type SimpleQueryFilter = TextFilter | SelectFilter;
 function SimpleQueryFilters({
   action,
   filters,
-  submitLabel = "Consultar",
+  title = "Pesquisar cadastros",
+  submitLabel = "Pesquisar",
 }: {
   action: string;
   filters: readonly SimpleQueryFilter[];
+  title?: string;
   submitLabel?: string;
 }) {
+  const [selectValues, setSelectValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      filters
+        .filter((filter): filter is SelectFilter => filter.type === "select")
+        .map((filter) => [filter.name, filter.defaultValue || "__todos__"]),
+    ),
+  );
+
   return (
-    <form action={action} className="grid gap-3">
-      {filters.map((filter) => (
-        <label key={filter.name} className="grid gap-1 text-sm font-medium">
-          {filter.label}
-          {filter.type === "text" ? (
-            <Input
+    <form action={action} className="grid gap-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold">
+        <Search aria-hidden="true" className="size-4 text-interactive" />
+        {title}
+      </h2>
+      <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {filters.map((filter) =>
+          filter.type === "text" ? (
+            <TextField
+              key={`${filter.name}:${filter.defaultValue ?? ""}`}
+              id={`filtro-${filter.name}`}
               name={filter.name}
+              label={filter.label}
               defaultValue={filter.defaultValue}
               placeholder={filter.placeholder}
               maxLength={filter.maxLength}
-              className="h-10 font-normal"
             />
           ) : (
-            <select
-              name={filter.name}
-              defaultValue={filter.defaultValue}
-              className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-normal outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              {filter.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          )}
-        </label>
-      ))}
-      <Button type="submit" variant="outline" className="h-10">
-        {submitLabel}
-      </Button>
+            <div key={filter.name} className="min-w-0">
+              <input
+                type="hidden"
+                name={filter.name}
+                value={
+                  selectValues[filter.name] === "__todos__"
+                    ? ""
+                    : selectValues[filter.name]
+                }
+              />
+              <SelectField
+                id={`filtro-${filter.name}`}
+                label={filter.label}
+                value={selectValues[filter.name]}
+                onValueChange={(value) =>
+                  setSelectValues((current) => ({
+                    ...current,
+                    [filter.name]: value,
+                  }))
+                }
+                options={filter.options.map((option) => ({
+                  ...option,
+                  value: option.value || "__todos__",
+                }))}
+              />
+            </div>
+          ),
+        )}
+      </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button asChild type="button" variant="outline">
+          <Link href={action}>Limpar filtros</Link>
+        </Button>
+        <Button type="submit">
+          <Search data-icon="inline-start" />
+          {submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

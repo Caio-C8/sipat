@@ -12,21 +12,21 @@ autorização, estabelece um kit pequeno, aplica-o às verticais de maior valor 
 só então habilita a busca agregada. O Mobile fica fora da frente principal,
 salvo a proteção do leitor de inventário ao final.
 
-| Ordem | Objetivo                                                                          | Resultado observável                                                    | Status       | Dependências                           |
-| ----- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------ | -------------------------------------- |
-| 1     | [`WEB-AUTH-003`](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md)     | `/` e páginas protegidas sem vazio; recuperação correta em staging      | implementada | auth atual e configuração do ambiente  |
-| 2     | [`SEC-002`](../../tasks/SEC-002-matriz-leitura-compartilhada.md)                  | matriz de leitura/mutação provada na API para os dois perfis            | implementada | requisitos e Guards atuais             |
-| 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns          | implementada | primitives atuais                      |
-| 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | implementada | objetivos 1–3                          |
-| 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final           | implementada | objetivos 2–4                          |
-| 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                      | implementada | objetivos 2–4                          |
-| 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | substitui/remove anexos únicos e expõe detalhes de orçamento/retorno    | implementada | objetivos 2–4                          |
-| 8     | [`WEB-DASHBOARD-002`](../../tasks/WEB-DASHBOARD-002-visao-operacional.md)         | uma rota agregada com pendências e atividades pessoais                  | aprovada     | objetivos 5–7                          |
-| 9     | [`WEB-CADASTROS-002`](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md)          | cadastros independentes, modais roteáveis e situação junto da edição    | aprovada     | objetivos 2–4                          |
-| 10    | [`WEB-OPERACOES-001`](../../tasks/WEB-OPERACOES-001-padronizar-operacoes.md)      | cinco áreas patrimoniais consistentes sem mudar domínio                 | aprovada     | objetivos 2–5                          |
-| 11    | [`WEB-RELATORIOS-002`](../../tasks/WEB-RELATORIOS-002-padronizacao-visual.md)     | relatórios funcionais no kit final e valores com sete casas             | aprovada     | objetivos 2–4                          |
-| 12    | [`WEB-BUSCA-001`](../../tasks/WEB-BUSCA-001-busca-global.md)                      | busca única por quinze domínios e resultados autorizados                | aprovada     | objetivos 2, 4–11                      |
-| 13    | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) | leitor pausa após uma etiqueta e retoma por ação explícita              | aprovada     | fluxo Mobile atual; fora da frente Web |
+| Ordem | Objetivo                                                                          | Resultado observável                                                    | Status                           | Dependências                           |
+| ----- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------- | -------------------------------------- |
+| 1     | [`WEB-AUTH-003`](../../tasks/WEB-AUTH-003-estabilizar-entrada-recuperacao.md)     | `/` e páginas protegidas sem vazio; recuperação correta em staging      | implementada                     | auth atual e configuração do ambiente  |
+| 2     | [`SEC-002`](../../tasks/SEC-002-matriz-leitura-compartilhada.md)                  | matriz de leitura/mutação provada na API para os dois perfis            | implementada                     | requisitos e Guards atuais             |
+| 3     | [`WEB-UI-001`](../../tasks/WEB-UI-001-fundacao-visual-formularios.md)             | campos, feedback, valores, filtros, tabelas e paginação comuns          | implementada                     | primitives atuais                      |
+| 4     | [`WEB-SHELL-002`](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md)         | sidebar ordenada, breadcrumb, footer, estados e remoção de notificações | implementada                     | objetivos 1–3                          |
+| 5     | [`WEB-PATRIMONIOS-002`](../../tasks/WEB-PATRIMONIOS-002-evolucao-experiencia.md)  | principal vertical de consulta/cadastro/ficha no padrão final           | implementada                     | objetivos 2–4                          |
+| 6     | [`WEB-INVENTARIOS-002`](../../tasks/WEB-INVENTARIOS-002-edicao-finalizacao.md)    | filtros, modal de criação/edição e finalização Web                      | implementada                     | objetivos 2–4                          |
+| 7     | [`WEB-MANUTENCOES-003`](../../tasks/WEB-MANUTENCOES-003-identificacao-itens.md)   | substitui/remove anexos únicos e expõe detalhes de orçamento/retorno    | implementada                     | objetivos 2–4                          |
+| 8     | [`WEB-DASHBOARD-002`](../../tasks/WEB-DASHBOARD-002-visao-operacional.md)         | uma rota agregada com pendências e atividades pessoais                  | aprovada                         | objetivos 5–7                          |
+| 9     | [`WEB-CADASTROS-002`](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md)          | cadastros independentes, modais roteáveis e situação junto da edição    | implementada; validação pendente | objetivos 2–4                          |
+| 10    | [`WEB-OPERACOES-001`](../../tasks/WEB-OPERACOES-001-padronizar-operacoes.md)      | cinco áreas patrimoniais consistentes sem mudar domínio                 | aprovada                         | objetivos 2–5                          |
+| 11    | [`WEB-RELATORIOS-002`](../../tasks/WEB-RELATORIOS-002-padronizacao-visual.md)     | relatórios funcionais no kit final e valores com sete casas             | aprovada                         | objetivos 2–4                          |
+| 12    | [`WEB-BUSCA-001`](../../tasks/WEB-BUSCA-001-busca-global.md)                      | busca única por quinze domínios e resultados autorizados                | aprovada                         | objetivos 2, 4–11                      |
+| 13    | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) | leitor pausa após uma etiqueta e retoma por ação explícita              | aprovada                         | fluxo Mobile atual; fora da frente Web |
 
 ### Regras de execução
 
@@ -53,8 +53,9 @@ desta entrega. A referência visual é a página `Telas PC` do
 [Figma](https://www.figma.com/design/YGy7F6OGLf6FhXrVomleGk/Untitled).
 
 Por decisão do usuário, a API e suas permissões permanecem inalteradas:
-somente o Administrador inclui notas novas na Web, pois o catálogo de
-fornecedores é administrativo. O Diretor pode cadastrar processos sem notas
+Administrador e Diretor incluem e alteram notas novas na Web usando a consulta
+compartilhada de fornecedores, sem ampliar as mutações administrativas desse
+catálogo. O Diretor pode cadastrar processos com ou sem notas
 novas e consultar as notas vinculadas. Não são usados seletores de outros
 domínios para contornar essa restrição.
 
@@ -181,10 +182,12 @@ porque Node.js, pnpm e as dependências não estão disponíveis neste ambiente.
 **Status:** implementada em 12 de novembro de 2026; validação visual no Figma
 e percurso opt-in contra PostgreSQL descartável pendentes.
 
-Entregar `/cadastros/fornecedores` exclusivamente ao Administrador, integrando
-listagem, consulta, criação, alteração, ativação e inativação às cinco rotas e
-aos contratos já existentes. Banco, API e contratos permanecem inalterados,
-salvo divergência comprovada em relação a RF08/UC08 e decisão posterior.
+Entregar a gestão de fornecedores, hoje disponível em `/fornecedores`, com
+listagem, consulta, criação, alteração, ativação e inativação integradas às
+cinco rotas e aos contratos já existentes. A entrega original foi exclusiva do
+Administrador; `SEC-002` ampliou posteriormente a leitura ao Diretor sem expor
+mutações administrativas. Banco, API e contratos permanecem inalterados, salvo
+divergência comprovada em relação a RF08/UC08 e decisão posterior.
 
 A implementação deve abrir a página `Telas PC` com `@Figma` e reproduzir com
 fidelidade o padrão visual dos cadastros administrativos. A inspeção de 12 de

@@ -10,14 +10,17 @@ fronteiras entre UI, contratos e integração HTTP.
 
 ## Estado atual
 
-- `/cadastros`, `/cadastros/especies`, `/cadastros/naturezas`,
-  `/cadastros/comissoes`, `/cadastros/responsaveis`,
-  `/cadastros/fornecedores` e as três rotas de setores consomem a API
-  existente: consultas paginadas, criação, edição, situação de
-  responsáveis/setores/fornecedores, integrantes e documentos fiscais.
-  A inclusão de notas novas fica disponível somente ao Administrador, por
-  decisão registrada em
-  [WEB-CADASTROS-001](./roadmap.md#web-cadastros-001--integrar-cadastros-à-api-existente).
+- `/processos-compra`, `/fornecedores`, `/setores`, `/responsaveis`,
+  `/comissoes`, `/naturezas` e `/especies` possuem listas e detalhes
+  independentes. Criação e edição usam URLs canônicas e são interceptadas em
+  modal quando iniciadas pela lista; acesso direto ou refresh preserva a página
+  completa. Os seis catálogos administrativos são consultáveis pelos dois
+  perfis e mutáveis somente pelo Administrador. Processos de compra permanecem
+  disponíveis aos dois perfis. Todos consomem a API existente: consultas
+  paginadas, criação, edição, situação, integrantes e documentos fiscais.
+  A criação e a edição de processos, notas fiscais e anexos ficam disponíveis
+  ao Administrador e ao Diretor de Patrimônio, em alinhamento com os Guards da
+  API e com a evolução registrada em `WEB-CADASTROS-002`.
   O cadastro de patrimônio não faz parte dessa integração.
 
 - `/` decide no servidor entre `/login`, `/redefinir-senha` e `/dashboard`
@@ -123,10 +126,11 @@ para depois, exceto pelo controle crítico do leitor de inventário.
 
 `/usuarios`, `/usuarios/novo`, `/usuarios/[usuarioId]` e
 `/usuarios/[usuarioId]/editar` integram listagem paginada, filtros, consulta,
-criação, edição e situação à API administrativa. O acesso é restrito ao
-Administrador e a API continua sendo a autoridade final. O contrato de criação
-recebe nome, e-mail, senha inicial e perfil; vínculo com funcionário/setor não
-existe nesse contrato.
+criação, edição e situação à API administrativa. Criação e edição também usam
+modal interceptado a partir da lista. O acesso é restrito ao Administrador e a
+API continua sendo a autoridade final. O contrato de criação recebe nome,
+e-mail, senha inicial e perfil; vínculo com funcionário/setor não existe nesse
+contrato.
 
 ## Princípios
 

@@ -37,8 +37,8 @@ No estado atual:
   manutenções, cadastros — inclusive a gestão administrativa de fornecedores
   ativos e inativos — e depreciações;
   movimentações usa hooks específicos por operação, estado local e URL, sem cache remoto;
-- os contratos e endpoints administrativos de usuários estão implementados no
-  backend, mas ainda não possuem consumidor Web;
+- os contratos e endpoints administrativos de usuários possuem consumidor Web
+  para lista, detalhe, criação, edição e situação;
 - login, logout, `/auth/me` e conclusão do primeiro acesso possuem consumidor
   Web; mutações enviam o sinal de CSRF e o cookie permanece `HttpOnly` sob
   controle da API;
@@ -52,8 +52,7 @@ No estado atual:
 - a recuperação de senha continua integrada em `WEB-AUTH-002` pelo token de
   uso único enviado por e-mail.
 
-A integração básica pode ser verificada por `GET /api/backend/health`. As
-operações e os hooks Web de usuários ainda não existem.
+A integração básica pode ser verificada por `GET /api/backend/health`.
 
 O dashboard usa o cliente Server para cinco consultas paralelas e finitas a
 `GET /patrimonios`: uma geral e quatro filtradas por status, todas com

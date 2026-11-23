@@ -1,10 +1,18 @@
 "use client";
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import { ZodError } from "zod";
+import { Button } from "@/components/ui/button";
+import { isApiError } from "@/lib/api/core/api-error";
 import { decidirAposFalha } from "@/lib/api/core/idempotencia";
-import { cartao, botao, principal, mensagemErro } from "./cadastro-ui";
+import { cartao, mensagemErro } from "./cadastro-ui";
+import { CadastroFieldErrorsProvider } from "./cadastro-field-errors";
+
+export type ContextoFormularioCadastro =
+  "legado" | "pagina-criacao" | "pagina-edicao" | "modal";
+
 export function FormularioCadastro({
   titulo,
   children,
@@ -14,6 +22,12 @@ export function FormularioCadastro({
   rotaDetalhe = false,
   rotulo = "Salvar",
   onSucesso,
+  contexto = "legado",
+  onCancelar,
+  onRestaurar,
+  destinoSucesso,
+  mensagemSucesso,
+  navegarAposSucesso = true,
 }: {
   titulo: string;
   children: ReactNode;
@@ -22,7 +36,13 @@ export function FormularioCadastro({
   destino: string;
   rotaDetalhe?: boolean;
   rotulo?: string;
-  onSucesso?: () => void;
+  onSucesso?: (id: string) => void;
+  contexto?: ContextoFormularioCadastro;
+  onCancelar?: () => void;
+  onRestaurar?: () => void;
+  destinoSucesso?: (id: string) => string;
+  mensagemSucesso?: string;
+  navegarAposSucesso?: boolean;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -33,11 +53,34 @@ export function FormularioCadastro({
     incerta: boolean;
   } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
+  const erroRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [concluida, setConcluida] = useState(false);
   const [incerta, setIncerta] = useState(false);
+  useEffect(() => {
+    if (!erro) return;
+    const primeiroCampo = Object.keys(errosCampos)[0];
+    if (primeiroCampo) {
+      const controleVisual = Array.from(
+        formRef.current?.querySelectorAll<HTMLElement>("[data-field-name]") ??
+          [],
+      ).find((element) => element.dataset.fieldName === primeiroCampo);
+      const controle =
+        controleVisual ?? formRef.current?.elements.namedItem(primeiroCampo);
+      if (controle instanceof HTMLElement) {
+        controle.focus();
+        controle.scrollIntoView?.({ block: "nearest" });
+        return;
+      }
+    }
+    erroRef.current?.focus();
+    erroRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [erro, errosCampos]);
   return (
     <form
-      className={cartao + " grid gap-5"}
+      ref={formRef}
+      className={contexto === "modal" ? "grid gap-5" : cartao + " grid gap-5"}
       aria-label={titulo}
       aria-busy={pending}
       onSubmit={async (e) => {
@@ -46,6 +89,7 @@ export function FormularioCadastro({
         emCurso.current = true;
         setPending(true);
         setErro(null);
+        setErrosCampos({});
         const atual = tentativa.current ?? {
           chave: crypto.randomUUID(),
           dados: new FormData(e.currentTarget),
@@ -58,17 +102,42 @@ export function FormularioCadastro({
           tentativa.current = null;
           setIncerta(false);
           setConcluida(true);
-          onSucesso?.();
-          const proximaRota = rotaDetalhe
-            ? destino + "/" + encodeURIComponent(resposta.id) + "?salvo=1"
-            : destino.includes("?")
-              ? destino
-              : destino + "?id=" + encodeURIComponent(resposta.id) + "&salvo=1";
+          if (mensagemSucesso) toast.success(mensagemSucesso);
+          onSucesso?.(resposta.id);
+          if (!navegarAposSucesso) return;
+          const proximaRota = destinoSucesso
+            ? destinoSucesso(resposta.id)
+            : rotaDetalhe
+              ? destino + "/" + encodeURIComponent(resposta.id) + "?salvo=1"
+              : destino.includes("?")
+                ? destino
+                : destino +
+                  "?id=" +
+                  encodeURIComponent(resposta.id) +
+                  "&salvo=1";
           if (proximaRota === window.location.pathname + window.location.search)
             router.refresh();
           else router.replace(proximaRota);
         } catch (error) {
           setErro(mensagemErro(error));
+          if (error instanceof ZodError) {
+            setErrosCampos(
+              Object.fromEntries(
+                error.issues
+                  .filter((issue) => typeof issue.path[0] === "string")
+                  .map((issue) => [String(issue.path[0]), issue.message]),
+              ),
+            );
+          } else if (isApiError(error)) {
+            setErrosCampos(
+              Object.fromEntries(
+                error.erros.map((fieldError) => [
+                  fieldError.campo,
+                  fieldError.mensagem,
+                ]),
+              ),
+            );
+          }
           if (
             idempotente &&
             !(error instanceof ZodError) &&
@@ -96,9 +165,12 @@ export function FormularioCadastro({
         }
       }}
     >
-      <h2 className="text-base font-bold">{titulo}</h2>
+      {contexto === "modal" ? null : (
+        <h2 className="text-base font-bold">{titulo}</h2>
+      )}
       {erro && (
         <div
+          ref={erroRef}
           tabIndex={-1}
           role="alert"
           className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900"
@@ -118,23 +190,43 @@ export function FormularioCadastro({
       {concluida && !erro && (
         <p role="status">Operação concluída. Consulte a lista atualizada.</p>
       )}
-      <fieldset
-        disabled={pending || incerta || concluida}
-        className="grid min-w-0 gap-5 disabled:opacity-75"
-      >
-        {children}
-      </fieldset>
-      <div className="flex flex-wrap justify-end gap-3 border-t border-[#dfe7f1] pt-4">
-        <Link className={botao} href={destino.split("?")[0]!}>
-          Voltar à consulta
-        </Link>
-        <button
-          type="submit"
-          className={principal}
-          disabled={pending || concluida}
+      <CadastroFieldErrorsProvider errors={errosCampos}>
+        <fieldset
+          disabled={pending || incerta || concluida}
+          className="grid min-w-0 gap-5 disabled:opacity-75"
         >
+          {children}
+        </fieldset>
+      </CadastroFieldErrorsProvider>
+      <div className="flex flex-wrap justify-end gap-3 border-t border-[#dfe7f1] pt-4">
+        {contexto === "legado" ? (
+          <Button asChild type="button" variant="outline" size="lg">
+            <Link href={destino.split("?")[0]!}>Voltar à consulta</Link>
+          </Button>
+        ) : contexto === "modal" ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={pending}
+            onClick={onCancelar}
+          >
+            Cancelar
+          </Button>
+        ) : (
+          <Button
+            type="reset"
+            variant="outline"
+            size="lg"
+            disabled={pending}
+            onClick={onRestaurar}
+          >
+            {contexto === "pagina-criacao" ? "Limpar" : "Restaurar alterações"}
+          </Button>
+        )}
+        <Button type="submit" size="lg" disabled={pending || concluida}>
           {pending ? "Salvando…" : incerta ? "Confirmar novamente" : rotulo}
-        </button>
+        </Button>
       </div>
     </form>
   );

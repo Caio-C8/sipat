@@ -11,17 +11,15 @@ async function sessao(page: import("@playwright/test").Page, value = "active") {
     },
   ]);
 }
-test("administrador navega pelos cadastros integrados e distingue listas vazias", async ({
+test("administrador navega pelos cadastros independentes e abre criação em modal", async ({
   page,
 }) => {
   await sessao(page);
-  for (const [rota, titulo] of [
-    ["/cadastros", "Cadastros"],
-    ["/cadastros/especies", "Cadastrar espécie"],
-    ["/cadastros/naturezas", "Cadastrar natureza"],
-    ["/cadastros/comissoes", "Cadastrar comissão"],
-    ["/cadastros/responsaveis", "Cadastrar responsável"],
-    ["/cadastros/fornecedores", "Cadastrar fornecedor"],
+  for (const [rota, titulo, criar] of [
+    ["/processos-compra", "Processos de compra", "Cadastrar processo"],
+    ["/especies", "Espécies", "Cadastrar espécie"],
+    ["/naturezas", "Naturezas", "Cadastrar natureza"],
+    ["/comissoes", "Comissões", "Cadastrar comissão"],
   ] as const) {
     await page.goto(rota);
     await expect(
@@ -31,12 +29,46 @@ test("administrador navega pelos cadastros integrados e distingue listas vazias"
     await expect(
       page.getByText(/Prévia visual|sem gravação|de exemplo/),
     ).toHaveCount(0);
+    await page.getByRole("link", { name: criar }).click();
     await expect(
-      page.getByRole("button", {
-        name: /^Salvar (processo|espécie|natureza|comissão|responsável|fornecedor)$/,
-      }),
-    ).toBeEnabled();
+      page.getByRole("dialog", { name: new RegExp(criar, "i") }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Fechar" }).click();
   }
+  for (const [rota, titulo, criar] of [
+    ["/responsaveis", "Responsáveis", "Cadastrar responsável"],
+    ["/fornecedores", "Fornecedores", "Cadastrar fornecedor"],
+  ] as const) {
+    await page.goto(rota);
+    await expect(
+      page.getByRole("heading", { name: titulo, exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: criar })).toBeVisible();
+  }
+});
+test("usuários usa modal pela lista e página completa em acesso direto", async ({
+  page,
+}) => {
+  await sessao(page);
+  await page.goto("/usuarios");
+  await expect(
+    page.getByRole("heading", { name: "Pesquisar usuários" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Pesquisar", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Cadastrar usuário" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Cadastrar usuário" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Fechar" }).click();
+
+  await page.goto("/usuarios/novo");
+  await expect(
+    page.getByRole("heading", { name: "Cadastrar usuário", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Limpar" })).toBeVisible();
 });
 test("fundação de formulário mantém foco, acessibilidade e layout responsivo", async ({
   page,
@@ -46,7 +78,7 @@ test("fundação de formulário mantém foco, acessibilidade e layout responsivo
 
   for (const width of [390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/cadastros/naturezas");
+    await page.goto("/naturezas/novo");
     await expect(
       page.getByRole("form", { name: "Nova natureza" }),
     ).toBeVisible();
@@ -80,30 +112,36 @@ test("administrador consulta setores reais e abre formulário habilitado", async
   page,
 }) => {
   await sessao(page);
-  await page.goto("/cadastros/setores");
-  await page.getByRole("textbox", { name: "Nome do setor" }).fill("Gabinete");
-  await page.getByRole("button", { name: "Consultar", exact: true }).click();
+  await page.goto("/setores");
+  await page.getByRole("textbox", { name: "Buscar" }).fill("Gabinete");
+  await page.getByRole("button", { name: "Pesquisar", exact: true }).click();
   await expect(page).toHaveURL(/busca=Gabinete/);
   await expect(page.getByText("Nenhum setor encontrado.")).toBeVisible();
   await page.getByRole("link", { name: "Cadastrar setor" }).click();
   await expect(
-    page.getByRole("heading", { name: "Cadastrar setor", exact: true }),
+    page.getByRole("dialog", { name: "Cadastrar setor", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Salvar setor" }),
   ).toBeEnabled();
+  await page.getByRole("button", { name: "Fechar" }).click();
+  await page.goto("/setores/novo");
+  await expect(
+    page.getByRole("heading", { name: "Cadastrar setor", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Limpar" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 test("administrador filtra fornecedores por situação na URL", async ({
   page,
 }) => {
   await sessao(page);
-  await page.goto("/cadastros/fornecedores");
-  await page
-    .getByRole("combobox", { name: "Situação" })
-    .selectOption("inativos");
-  await page.getByRole("button", { name: "Consultar", exact: true }).click();
+  await page.goto("/fornecedores");
+  await page.getByRole("combobox", { name: "Situação" }).click();
+  await page.getByRole("option", { name: "Inativos" }).click();
+  await page.getByRole("button", { name: "Pesquisar", exact: true }).click();
   await expect(page).toHaveURL(/situacao=inativos/);
-  await expect(page.getByText("Nenhum registro encontrado.")).toBeVisible();
+  await expect(page.getByText("Nenhum fornecedor encontrado.")).toBeVisible();
 });
 test("administrador cria, altera, inativa e corrige conflito de fornecedor", async ({
   page,
@@ -116,13 +154,18 @@ test("administrador cria, altera, inativa e corrige conflito de fornecedor", asy
       url: test.info().project.use.baseURL ?? "http://localhost:3100",
     },
   ]);
-  await page.goto("/cadastros/fornecedores");
+  await page.goto("/fornecedores");
+  await page.getByRole("link", { name: "Cadastrar fornecedor" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Cadastrar fornecedor" }),
+  ).toBeVisible();
   await page.getByLabel("Razão social *").fill("Fornecedor E2E");
   await page.getByLabel("CNPJ").fill("11.444.777/0001-61");
   await page.getByRole("button", { name: "Salvar fornecedor" }).click();
-  await expect(page).toHaveURL(/id=7041c62b-5f83-432c-a178-889977d839b1/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("link", { name: "Editar" }).click();
   await expect(
-    page.getByRole("heading", { name: "Editar fornecedor" }),
+    page.getByRole("dialog", { name: "Editar fornecedor" }),
   ).toBeVisible();
   await page.getByLabel("Nome fantasia").fill("Fornecedor atualizado");
   const alteracao = page.waitForResponse(
@@ -135,15 +178,20 @@ test("administrador cria, altera, inativa e corrige conflito de fornecedor", asy
   await page.getByRole("button", { name: "Salvar fornecedor" }).click();
   expect((await alteracao).status()).toBe(200);
   await expect(
-    page.getByRole("button", { name: "Salvar fornecedor" }),
-  ).toBeEnabled();
+    page.getByRole("dialog", { name: "Editar fornecedor" }),
+  ).toHaveCount(0);
+  await page.getByRole("link", { name: "Editar", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Editar fornecedor" }),
+  ).toBeVisible();
   await expect(page.getByLabel("Nome fantasia")).toHaveValue(
     "Fornecedor atualizado",
   );
   await page.getByRole("button", { name: "Inativar cadastro" }).click();
   await page.getByRole("button", { name: "Confirmar situação" }).click();
   await expect(page.getByText("Situação atual:")).toContainText("Inativo");
-  await page.goto("/cadastros/fornecedores");
+  await page.getByRole("button", { name: "Fechar" }).click();
+  await page.getByRole("link", { name: "Cadastrar fornecedor" }).click();
   await page.getByLabel("Razão social *").fill("Fornecedor duplicado");
   await page.getByLabel("CNPJ").fill("11.444.777/0001-61");
   await page.getByRole("button", { name: "Salvar fornecedor" }).click();
@@ -154,47 +202,75 @@ test("administrador cria, altera, inativa e corrige conflito de fornecedor", asy
     "Fornecedor duplicado",
   );
 });
-test("diretor cria processo sem notas novas e consulta cadastros sem ações administrativas", async ({
+test("diretor gerencia processos e consulta cadastros sem ações administrativas", async ({
   page,
 }) => {
   await sessao(page, "director");
-  await page.goto("/cadastros");
+  await page.goto("/processos-compra");
   await expect(
-    page.getByRole("heading", { name: "Cadastros", exact: true }),
+    page.getByRole("heading", { name: "Processos de compra", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Você pode cadastrar o processo sem notas.", {
-      exact: false,
-    }),
-  ).toBeVisible();
+  await page.getByRole("link", { name: "Cadastrar processo" }).click();
   await expect(
     page.getByRole("button", { name: "Adicionar nota fiscal" }),
-  ).toHaveCount(0);
-  await expect(
-    page.getByRole("link", { name: "Fornecedores", exact: true }).first(),
   ).toBeVisible();
-  for (const rota of [
-    "/cadastros/especies",
-    "/cadastros/naturezas",
-    "/cadastros/comissoes",
-    "/cadastros/responsaveis",
-    "/cadastros/fornecedores",
-  ]) {
+  await page.getByRole("button", { name: "Adicionar nota fiscal" }).click();
+  await expect(page.getByLabel("Fornecedor")).toBeVisible();
+  await page.getByRole("button", { name: "Fechar" }).click();
+  for (const rota of ["/especies", "/naturezas", "/comissoes"]) {
     await page.goto(rota);
-    await expect(page.getByText("Consulta somente leitura")).toBeVisible();
-    await expect(page.getByRole("button", { name: /^Salvar/ })).toHaveCount(0);
+    const conteudo = page.getByRole("main");
+    await expect(
+      conteudo.getByRole("link", { name: /^Cadastrar/ }),
+    ).toHaveCount(0);
+    await expect(
+      conteudo.getByRole("link", { name: "Editar", exact: true }),
+    ).toHaveCount(0);
   }
-  await page.goto("/cadastros/setores");
+  for (const rota of ["/responsaveis", "/fornecedores"]) {
+    await page.goto(rota);
+
+    const conteudo = page.getByRole("main");
+
+    await expect(
+      conteudo.getByRole("link", {
+        name: /^Cadastrar (responsável|fornecedor)$/,
+      }),
+    ).toHaveCount(0);
+
+    await expect(
+      conteudo.getByRole("link", { name: "Editar", exact: true }),
+    ).toHaveCount(0);
+  }
+  await page.goto("/setores");
   await expect(
     page.getByRole("heading", { name: "Setores", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Cadastrar setor" })).toHaveCount(
     0,
   );
-  await page.goto("/cadastros/setores/novo");
+  await page.goto("/setores/novo");
   await expect(
     page.getByRole("heading", { name: "Acesso não permitido" }),
   ).toBeVisible();
+  for (const rota of [
+    "/fornecedores/novo",
+    "/fornecedores/7041c62b-5f83-432c-a178-889977d839b1/editar",
+    "/responsaveis/novo",
+    "/responsaveis/7041c62b-5f83-432c-a178-889977d839b1/editar",
+    "/setores/7041c62b-5f83-432c-a178-889977d839b1/editar",
+    "/naturezas/novo",
+    "/naturezas/7041c62b-5f83-432c-a178-889977d839b1/editar",
+    "/especies/novo",
+    "/especies/7041c62b-5f83-432c-a178-889977d839b1/editar",
+    "/comissoes/novo",
+    "/comissoes/7041c62b-5f83-432c-a178-889977d839b1/editar",
+  ]) {
+    await page.goto(rota);
+    await expect(
+      page.getByRole("heading", { name: "Acesso não permitido" }),
+    ).toBeVisible();
+  }
 });
 test("falha da API aparece como erro e não como lista vazia", async ({
   page,
@@ -207,7 +283,7 @@ test("falha da API aparece como erro e não como lista vazia", async ({
       url: "http://localhost:3100",
     },
   ]);
-  await page.goto("/cadastros/naturezas");
+  await page.goto("/naturezas");
   await expect(page.getByRole("main").getByRole("alert")).toContainText(
     "Consulta temporariamente indisponível.",
   );
