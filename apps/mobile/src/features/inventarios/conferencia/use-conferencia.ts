@@ -1,6 +1,6 @@
 import type { VerificarItemInventarioResultado } from "@repo/contracts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, isApiError } from "../../../lib/api/api-error";
 import {
   currentSessionIdentity,
@@ -37,11 +37,19 @@ export function useConferencia(
   const operations = useInventariosOperations();
   const queryClient = useQueryClient();
   const lock = useRef(false);
+  const mounted = useRef(true);
   const [inputError, setInputError] = useState<string | null>(null);
   const [lastResult, setLastResult] =
     useState<VerificarItemInventarioResultado | null>(null);
   const [divergenceOpen, setDivergenceOpen] = useState(false);
-  const dismissLastResult = useCallback(() => setLastResult(null), []);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      lock.current = true;
+    };
+  }, []);
   const verification = useMutation<
     VerificarItemInventarioResultado,
     ApiError,
@@ -102,6 +110,7 @@ export function useConferencia(
           numeroPatrimonial: parsed.data,
           identityId: currentSessionIdentity(manager),
         });
+        if (!mounted.current) return true;
         setLastResult(result);
         setDivergenceOpen(
           result.item.situacao === "DIVERGENCIA" ||
@@ -117,13 +126,20 @@ export function useConferencia(
     [manager, verification],
   );
 
+  const prepareNextReading = useCallback(() => {
+    setInputError(null);
+    setLastResult(null);
+    setDivergenceOpen(false);
+    verification.reset();
+  }, [verification]);
+
   return {
     detail,
-    dismissLastResult,
     divergenceOpen,
     inputError,
     lastResult,
     mutationError: verification.error,
+    prepareNextReading,
     setDivergenceOpen,
     submit,
     submitting: verification.isPending,

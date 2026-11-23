@@ -3,6 +3,7 @@ import { ApiError } from "../../../lib/api/api-error";
 import {
   composeNumeroPatrimonial,
   conferenciaErrorMessage,
+  isBarcodeInsideScanGuide,
   itemJaVerificadoData,
   normalizeNumeroPatrimonial,
   numeroPatrimonialDigits,
@@ -16,6 +17,7 @@ describe("estado da conferência", () => {
   it.each([
     [" 123 ", "123"],
     [" sp-45 ", "SP-45"],
+    ["07", "7"],
     ["000001", "1"],
     ["sp-000001", "SP-1"],
   ])("normaliza %s para o valor canônico %s", (input, output) => {
@@ -47,18 +49,56 @@ describe("estado da conferência", () => {
 
   it("monta a câmera apenas quando foco, permissão e estado permitem", () => {
     const ready = {
+      appActive: true,
       available: true,
       focused: true,
       granted: true,
       modalOpen: false,
+      paused: false,
       submitting: false,
     };
     expect(shouldMountCamera(ready)).toBe(true);
+    expect(shouldMountCamera({ ...ready, appActive: false })).toBe(false);
     expect(shouldMountCamera({ ...ready, focused: false })).toBe(false);
     expect(shouldMountCamera({ ...ready, modalOpen: true })).toBe(false);
+    expect(shouldMountCamera({ ...ready, paused: true })).toBe(false);
     expect(shouldMountCamera({ ...ready, submitting: true })).toBe(false);
     expect(shouldMountCamera({ ...ready, granted: false })).toBe(false);
     expect(shouldMountCamera({ ...ready, available: false })).toBe(false);
+  });
+
+  it("aceita somente o centro do código dentro do guia visível", () => {
+    const result = (x: number, y: number) => ({
+      bounds: {
+        origin: { x: x - 20, y: y - 10 },
+        size: { height: 20, width: 40 },
+      },
+      cornerPoints: [],
+      data: "123",
+      type: "code128",
+    });
+    const frame = { height: 200, width: 400 };
+
+    expect(isBarcodeInsideScanGuide(result(200, 100), frame)).toBe(true);
+    expect(isBarcodeInsideScanGuide(result(20, 100), frame)).toBe(false);
+    expect(isBarcodeInsideScanGuide(result(200, 20), frame)).toBe(false);
+  });
+
+  it("mantém compatibilidade quando a plataforma omite a geometria", () => {
+    expect(
+      isBarcodeInsideScanGuide(
+        {
+          bounds: {
+            origin: { x: 0, y: 0 },
+            size: { height: 0, width: 0 },
+          },
+          cornerPoints: [],
+          data: "123",
+          type: "code39",
+        },
+        { height: 200, width: 400 },
+      ),
+    ).toBe(true);
   });
 
   it("valida e apresenta o setor da primeira verificação", () => {

@@ -319,11 +319,13 @@ corrige divergências quando solicitado e conclui o `SetorInventario`.
 | 1     | `MOBILE-INVENTARIOS-001` — selecionar e iniciar setor | aprovado  | `INVENTARIOS-001/002`, shell e autenticação    |
 | 2     | `MOBILE-INVENTARIOS-002` — conferir itens             | aprovado  | tarefa anterior, `expo-camera` e etiqueta real |
 | 3     | `MOBILE-INVENTARIOS-003` — corrigir e concluir setor  | concluído | tarefa anterior e contratos de inventário      |
+| 4     | `MOBILE-INVENTARIOS-004` — controlar o leitor         | concluída | tarefa anterior e leitor existente             |
 
 Especificações:
 [MOBILE-INVENTARIOS-001](./tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md),
 [MOBILE-INVENTARIOS-002](./tasks/MOBILE-INVENTARIOS-002-conferir-itens.md) e
-[MOBILE-INVENTARIOS-003](./tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md).
+[MOBILE-INVENTARIOS-003](./tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md)
+e [MOBILE-INVENTARIOS-004](./tasks/MOBILE-INVENTARIOS-004-controle-leitor.md).
 
 As tarefas reutilizam as operações de leitura e mutação necessárias do módulo
 de inventários e não criam API mobile, entidade de ocorrência ou fila offline.

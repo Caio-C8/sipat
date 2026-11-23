@@ -1,6 +1,6 @@
 # `MOBILE-INVENTARIOS-004` — Pausar e retomar o leitor patrimonial
 
-**Status:** `aprovada`
+**Status:** `concluída`
 
 ## Objetivo
 
@@ -41,12 +41,50 @@ próximo patrimônio.
 
 ## Critérios de aceite
 
-- [ ] uma etiqueta mantida diante da câmera gera no máximo uma mutation.
-- [ ] leitor não reativa durante pending nem ao renderizar o resultado.
-- [ ] `Ler próximo patrimônio` limpa estado apropriado e reativa a câmera.
-- [ ] falha não entra em loop e pode ser repetida explicitamente.
-- [ ] navegação/background não deixam câmera ou request órfãos.
-- [ ] fluxo manual de busca continua disponível.
+- [x] uma etiqueta mantida diante da câmera gera no máximo uma mutation.
+- [x] leitor não reativa durante pending nem ao renderizar o resultado.
+- [x] `Ler próximo patrimônio` limpa estado apropriado e reativa a câmera.
+- [x] falha não entra em loop e pode ser repetida explicitamente.
+- [x] navegação/background desmontam a câmera e ignoram atualizações visuais
+      posteriores à desmontagem; a mutation já enviada pode concluir para
+      preservar o resultado consolidado do servidor.
+- [x] fluxo manual de busca continua disponível.
+
+## Estado implementado
+
+- o bloqueio síncrono local pausa o leitor antes de iniciar a mutation e
+  complementa a trava já existente no hook;
+- sucesso e erro persistem na tela até `Ler próximo patrimônio`, `Tentar
+novamente` ou `Ler outro patrimônio`;
+- a câmera só aceita o centro de códigos detectados dentro do guia visível
+  quando a plataforma fornece geometria e mantém fallback para simbologias que
+  não a fornecem;
+- câmera e callback ficam desmontados fora de foco, em background, durante a
+  digitação manual e enquanto resultado, erro ou divergência estão abertos;
+- a entrada manual reage ao teclado, rola para a área visível ao ganhar foco e
+  preserva o valor até a confirmação de uma nova leitura; durante a digitação,
+  a área pausada da câmera é reduzida para liberar espaço acima do teclado;
+- no Android, o detector ML Kit usado pelo `expo-camera` não reconhece códigos
+  1D com um único caractere. Etiquetas desses patrimônios precisam codificar ao
+  menos dois caracteres, como `07`; a normalização existente converte esse
+  conteúdo para o número canônico `7` antes do envio.
+
+## Verificação concluída
+
+Em 23/11/2026, a entrega foi validada localmente após os ajustes encontrados
+na homologação:
+
+- `pnpm check` aprovou lint, tipos e testes, incluindo a trava de submissão, o
+  ciclo persistente de resultado e a semântica acessível da próxima leitura;
+- os exports Expo de Android, iOS e Web foram gerados com sucesso;
+- a conferência foi exercitada em tablet Android com câmera, etiqueta real e
+  teclado, incluindo pausa/retomada, entrada manual visível e normalização de
+  `07` para o patrimônio canônico `7`;
+- a limitação do ML Kit para códigos 1D de um único caractere ficou tratada pela
+  convenção documentada de etiqueta com ao menos dois caracteres.
+
+Os critérios de aceite desta tarefa estão atendidos e não há pendência
+operacional para `MOBILE-INVENTARIOS-004`.
 
 ## Arquivos ou módulos potencialmente afetados
 

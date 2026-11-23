@@ -183,7 +183,7 @@ exclusivamente as operações gerais entregues por `INVENTARIOS-001` e
 | 1     | [`MOBILE-INVENTARIOS-001`](../../tasks/MOBILE-INVENTARIOS-001-selecionar-iniciar-setor.md) — selecionar e iniciar setor | aprovada     | contratos, API e shell mobile                   |
 | 2     | [`MOBILE-INVENTARIOS-002`](../../tasks/MOBILE-INVENTARIOS-002-conferir-itens.md) — conferir por etiqueta ou número      | aprovada     | tarefa anterior e validação da etiqueta real    |
 | 3     | [`MOBILE-INVENTARIOS-003`](../../tasks/MOBILE-INVENTARIOS-003-corrigir-concluir-setor.md) — corrigir e concluir setor   | implementada | tarefa anterior e ciclo operacional já entregue |
-| 4     | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) — pausar e retomar o leitor           | aprovada     | leitor e conferência já implementados           |
+| 4     | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) — pausar e retomar o leitor           | concluída    | leitor e conferência já implementados           |
 
 O fluxo do aplicativo começa pela seleção de um inventário `PENDENTE` ou
 `EM_ANDAMENTO`, segue pela seleção de um setor e termina quando esse
@@ -201,6 +201,13 @@ finalização global ou endpoint de ocorrência.
 `expo-camera` entra somente em `MOBILE-INVENTARIOS-002`, com permissão de câmera
 e sem áudio. Scanner e entrada manual enviam o mesmo `numeroPatrimonial`; não
 há fila offline nem sucesso local sem confirmação da API.
+
+`MOBILE-INVENTARIOS-004` mantém o leitor pausado desde a primeira leitura
+patrimonial válida até uma ação explícita, conserva resultado ou erro legível,
+filtra pela área do guia quando a câmera fornece coordenadas e desmonta a câmera
+fora de foco ou em background. A entrada manual permanece no mesmo fluxo e é
+mantida visível acima do teclado. A implementação e a homologação local foram
+concluídas em 23/11/2026.
 
 ## Relatórios patrimoniais no mobile
 

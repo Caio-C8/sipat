@@ -47,8 +47,12 @@ código interno da API.
   entrada manual numérica com seleção explícita de bem sem número oficial e
   prefixo `SP-` fixo, normaliza o formato visual para o valor canônico, valida o
   número patrimonial no boundary, serializa mutations, refaz o progresso
-  confirmado e distingue sucesso, divergência, idempotência e erros públicos; a
-  simbologia final ainda depende do teste com a etiqueta real;
+  confirmado e distingue sucesso, divergência, idempotência e erros públicos;
+  o leitor pausa antes do envio e só retoma por ação explícita, aceita a área do
+  guia quando há geometria, desmonta em background e mantém a entrada manual
+  visível com o teclado; etiquetas 1D de um único caractere usam zero à esquerda
+  por limitação do detector Android (`7` deve ser codificado como `07`), sem
+  alterar o valor canônico enviado à API;
 - divergências pendentes podem ser corrigidas imediatamente ou pelo resumo
   paginado do setor, com retorno físico ou transferência cadastral definidos
   pelo contrato e sem retry automático; o mesmo item permanece visível no setor

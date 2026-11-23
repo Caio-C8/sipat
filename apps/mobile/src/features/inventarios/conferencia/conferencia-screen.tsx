@@ -6,13 +6,17 @@ import {
   useCameraPermissions,
 } from "expo-camera";
 import { useIsFocused, useRouter, type Href } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   ScrollView,
+  type ScrollViewInstance,
   StyleSheet,
   Text,
   TextInput,
@@ -28,17 +32,25 @@ import {
 import { useSession } from "../../auth/session/session-context";
 import { Notice, ProgressLine } from "../inventario-components";
 import { inventarioErrorMessage } from "../use-inventarios";
-import {
-  READING_TOAST_DURATION_MS,
-  ReadingToast,
-} from "./conferencia-feedback";
+import { ReadingResult } from "./conferencia-feedback";
 import {
   composeNumeroPatrimonial,
   conferenciaErrorMessage,
+  isBarcodeInsideScanGuide,
   numeroPatrimonialDigits,
+  parseNumeroPatrimonial,
+  releaseSubmission,
   shouldMountCamera,
+  tryAcquireSubmission,
 } from "./conferencia-state";
 import { useConferencia } from "./use-conferencia";
+
+type ReaderState = Readonly<{
+  phase: "ready" | "submitting" | "result" | "error";
+  value: string | null;
+}>;
+
+const MANUAL_ENTRY_CAMERA_HEIGHT = 120;
 
 export function ConferenciaScreen({
   inventarioId,
@@ -65,24 +77,49 @@ export function ConferenciaScreen({
   );
   const [cameraMountError, setCameraMountError] = useState(false);
   const [manualValue, setManualValue] = useState("");
+  const [manualFocused, setManualFocused] = useState(false);
   const [withoutOfficialNumber, setWithoutOfficialNumber] = useState(false);
+  const [appActive, setAppActive] = useState(
+    () =>
+      AppState.currentState !== "background" &&
+      AppState.currentState !== "inactive",
+  );
+  const [reader, setReader] = useState<ReaderState>({
+    phase: "ready",
+    value: null,
+  });
+  const readerLocked = useRef(false);
+  const requestInFlight = useRef(false);
+  const manualFocusedRef = useRef(false);
+  const screenMounted = useRef(true);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   const isDirector =
     session.status === "authenticated" &&
     session.identity.perfil === "DIRETOR_PATRIMONIO";
 
   useEffect(() => {
-    if (!conference.lastResult || conference.divergenceOpen) return;
-    const timeout = setTimeout(
-      conference.dismissLastResult,
-      READING_TOAST_DURATION_MS,
+    const subscription = AppState.addEventListener("change", (state) =>
+      setAppActive(state === "active"),
     );
-    return () => clearTimeout(timeout);
-  }, [
-    conference.dismissLastResult,
-    conference.divergenceOpen,
-    conference.lastResult,
-  ]);
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    const subscription = Keyboard.addListener("keyboardDidShow", () => {
+      if (manualFocusedRef.current)
+        scrollRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    screenMounted.current = true;
+    return () => {
+      screenMounted.current = false;
+      readerLocked.current = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -153,170 +190,290 @@ export function ConferenciaScreen({
 
   const modalOpen = conference.divergenceOpen;
   const mountCamera = shouldMountCamera({
+    appActive,
     available: cameraAvailable === true && !cameraMountError,
     focused,
     granted: permission?.granted === true,
     modalOpen,
+    paused: reader.phase !== "ready" || manualFocused,
     submitting: conference.submitting,
   });
 
   const submit = async (value: string) => {
-    const success = await conference.submit(value);
-    if (success) setManualValue("");
+    if (readerLocked.current) return;
+    const parsed = parseNumeroPatrimonial(value);
+    if (!parsed.success) {
+      await conference.submit(value);
+      return;
+    }
+
+    Keyboard.dismiss();
+    manualFocusedRef.current = false;
+    setManualFocused(false);
+    if (!tryAcquireSubmission(readerLocked)) return;
+    if (!tryAcquireSubmission(requestInFlight)) {
+      releaseSubmission(readerLocked);
+      return;
+    }
+    setReader({ phase: "submitting", value: parsed.data });
+    try {
+      const success = await conference.submit(value);
+      if (!screenMounted.current) return;
+      setReader({ phase: success ? "result" : "error", value: parsed.data });
+    } finally {
+      releaseSubmission(requestInFlight);
+    }
   };
   const submitManual = () =>
     submit(composeNumeroPatrimonial(manualValue, withoutOfficialNumber));
-  const scan = (result: BarcodeScanningResult) => void submit(result.data);
+  const scan = (result: BarcodeScanningResult) => {
+    if (readerLocked.current) return;
+    const parsed = parseNumeroPatrimonial(result.data);
+    if (!parsed.success) return;
+    void submit(parsed.data);
+  };
+  const retryReading = async () => {
+    if (
+      reader.phase !== "error" ||
+      !reader.value ||
+      !tryAcquireSubmission(requestInFlight)
+    )
+      return;
+    setReader({ phase: "submitting", value: reader.value });
+    try {
+      const success = await conference.submit(reader.value);
+      if (!screenMounted.current) return;
+      setReader({
+        phase: success ? "result" : "error",
+        value: reader.value,
+      });
+    } finally {
+      releaseSubmission(requestInFlight);
+    }
+  };
+  const prepareNextReading = () => {
+    if (requestInFlight.current) return;
+    conference.prepareNextReading();
+    setManualValue("");
+    releaseSubmission(readerLocked);
+    setReader({ phase: "ready", value: null });
+  };
+
+  let cameraPauseMessage: string | undefined;
+  if (!appActive)
+    cameraPauseMessage =
+      "Câmera pausada enquanto o aplicativo está em segundo plano.";
+  else if (!focused) cameraPauseMessage = "Câmera pausada fora desta tela.";
+  else if (modalOpen)
+    cameraPauseMessage = "Câmera pausada enquanto a divergência está aberta.";
+  else if (manualFocused)
+    cameraPauseMessage = "Câmera pausada durante a digitação manual.";
+  else if (reader.phase === "submitting")
+    cameraPauseMessage = "Câmera pausada durante o processamento.";
+  else if (reader.phase === "result")
+    cameraPauseMessage = "Câmera pausada até você confirmar a próxima leitura.";
+  else if (reader.phase === "error")
+    cameraPauseMessage = "Câmera pausada após a falha da leitura.";
 
   return (
     <View style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        style={styles.scroll}
-      >
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.back()}
-          style={styles.backButton}
+      <KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoiding}>
+        <ScrollView
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+          contentContainerStyle={styles.content}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+          keyboardShouldPersistTaps="handled"
+          ref={scrollRef}
+          style={styles.scroll}
         >
-          <Lucide
-            accessible={false}
-            color={mobileInventarios.text}
-            name="arrow-left"
-            size={18}
-          />
-          <Text style={styles.backText}>Resumo do setor</Text>
-        </Pressable>
-
-        <Text style={styles.eyebrow}>CONFERÊNCIA EM ANDAMENTO</Text>
-        <Text accessibilityRole="header" style={styles.title}>
-          {setor.setor.nome}
-        </Text>
-        <Text style={styles.subtitle}>{inventario.nome}</Text>
-
-        <View style={styles.progressCard}>
-          <ProgressLine
-            current={setor.progresso.itensVerificados}
-            label="Ativos esperados do setor"
-            total={setor.progresso.totalItens}
-          />
-          <Text style={styles.progressMeta}>
-            {setor.progresso.divergencias} divergência(s) ·{" "}
-            {setor.progresso.naoLocalizados} não localizado(s)
-          </Text>
-        </View>
-
-        {conference.mutationError ? (
-          <Notice kind="error" title="Leitura não registrada">
-            {conferenciaErrorMessage(conference.mutationError)}
-          </Notice>
-        ) : null}
-
-        <CameraPanel
-          available={cameraAvailable}
-          canAskAgain={permission?.canAskAgain ?? true}
-          granted={permission?.granted === true}
-          height={cameraHeight}
-          mountCamera={mountCamera}
-          mountError={cameraMountError}
-          onMountError={() => setCameraMountError(true)}
-          onRequestPermission={() => void requestPermission()}
-          onScan={scan}
-          paused={conference.submitting || modalOpen || !focused}
-          permissionLoaded={permission !== null}
-        />
-
-        <Text style={styles.manualLabel}>Ou digite o código manualmente</Text>
-        <Pressable
-          accessibilityLabel="Bem sem número oficial, usar prefixo SP"
-          accessibilityRole="checkbox"
-          accessibilityState={{
-            checked: withoutOfficialNumber,
-            disabled: conference.submitting,
-          }}
-          disabled={conference.submitting}
-          onPress={() => setWithoutOfficialNumber((current) => !current)}
-          style={styles.checkRow}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              withoutOfficialNumber && styles.checkboxChecked,
-            ]}
-          >
-            {withoutOfficialNumber ? (
-              <Lucide
-                accessible={false}
-                color="#ffffff"
-                name="check"
-                size={14}
-              />
-            ) : null}
-          </View>
-          <Text style={styles.checkText}>Bem sem número oficial (SP)</Text>
-        </Pressable>
-        <View style={styles.inputRow}>
-          <View style={styles.inputShell}>
-            {withoutOfficialNumber ? (
-              <Text accessibilityLabel="Prefixo SP" style={styles.inputPrefix}>
-                SP-
-              </Text>
-            ) : null}
-            <TextInput
-              accessibilityLabel={
-                withoutOfficialNumber
-                  ? "Parte numérica do patrimônio sem número oficial"
-                  : "Número patrimonial oficial"
-              }
-              autoCorrect={false}
-              editable={!conference.submitting}
-              inputMode="numeric"
-              keyboardType="number-pad"
-              onChangeText={(value) =>
-                setManualValue(numeroPatrimonialDigits(value))
-              }
-              onSubmitEditing={() => void submitManual()}
-              placeholder="000001"
-              placeholderTextColor={mobileInventarios.textSubtle}
-              returnKeyType="done"
-              style={styles.input}
-              value={manualValue}
-            />
-          </View>
           <Pressable
-            accessibilityLabel="Verificar número patrimonial"
             accessibilityRole="button"
-            accessibilityState={{ disabled: conference.submitting }}
-            disabled={conference.submitting}
-            onPress={() => void submitManual()}
-            style={styles.inputAction}
+            onPress={() => router.back()}
+            style={styles.backButton}
           >
-            {conference.submitting ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Lucide
-                accessible={false}
-                color="#ffffff"
-                name="arrow-right"
-                size={20}
-              />
-            )}
+            <Lucide
+              accessible={false}
+              color={mobileInventarios.text}
+              name="arrow-left"
+              size={18}
+            />
+            <Text style={styles.backText}>Resumo do setor</Text>
           </Pressable>
-        </View>
-        {conference.inputError ? (
-          <Text accessibilityLiveRegion="polite" style={styles.inputError}>
-            {conference.inputError}
-          </Text>
-        ) : null}
-      </ScrollView>
 
-      {conference.lastResult && !conference.divergenceOpen ? (
-        <ReadingToast
-          onClose={conference.dismissLastResult}
-          result={conference.lastResult}
-        />
-      ) : null}
+          <Text style={styles.eyebrow}>CONFERÊNCIA EM ANDAMENTO</Text>
+          <Text accessibilityRole="header" style={styles.title}>
+            {setor.setor.nome}
+          </Text>
+          <Text style={styles.subtitle}>{inventario.nome}</Text>
+
+          <View style={styles.progressCard}>
+            <ProgressLine
+              current={setor.progresso.itensVerificados}
+              label="Ativos esperados do setor"
+              total={setor.progresso.totalItens}
+            />
+            <Text style={styles.progressMeta}>
+              {setor.progresso.divergencias} divergência(s) ·{" "}
+              {setor.progresso.naoLocalizados} não localizado(s)
+            </Text>
+          </View>
+
+          {conference.mutationError ? (
+            <Notice kind="error" title="Leitura não registrada">
+              {conferenciaErrorMessage(conference.mutationError)}
+            </Notice>
+          ) : null}
+
+          <CameraPanel
+            available={cameraAvailable}
+            canAskAgain={permission?.canAskAgain ?? true}
+            compact={manualFocused}
+            granted={permission?.granted === true}
+            height={manualFocused ? MANUAL_ENTRY_CAMERA_HEIGHT : cameraHeight}
+            mountCamera={mountCamera}
+            mountError={cameraMountError}
+            onMountError={() => setCameraMountError(true)}
+            onRequestPermission={() => void requestPermission()}
+            onScan={scan}
+            pauseMessage={cameraPauseMessage}
+            permissionLoaded={permission !== null}
+          />
+          <Text style={styles.scannerHint}>
+            Patrimônio de 1 dígito: use etiqueta com zero à esquerda (ex.: 07).
+          </Text>
+
+          {reader.phase === "error" ? (
+            <View style={styles.readerActions}>
+              <Pressable
+                accessibilityHint="Repete explicitamente a última tentativa sem reativar a leitura contínua"
+                accessibilityRole="button"
+                disabled={conference.submitting}
+                onPress={() => void retryReading()}
+                style={styles.primaryButton}
+              >
+                <Text style={styles.primaryButtonText}>Tentar novamente</Text>
+              </Pressable>
+              <Pressable
+                accessibilityHint="Descarta a tentativa atual e reativa a câmera"
+                accessibilityRole="button"
+                disabled={conference.submitting}
+                onPress={prepareNextReading}
+                style={styles.secondaryButton}
+              >
+                <Text style={styles.secondaryButtonText}>
+                  Ler outro patrimônio
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {conference.lastResult && reader.phase === "result" ? (
+            <ReadingResult
+              onReadNext={prepareNextReading}
+              result={conference.lastResult}
+            />
+          ) : null}
+
+          <Text style={styles.manualLabel}>Ou digite o código manualmente</Text>
+          <Pressable
+            accessibilityLabel="Bem sem número oficial, usar prefixo SP"
+            accessibilityRole="checkbox"
+            accessibilityState={{
+              checked: withoutOfficialNumber,
+              disabled: conference.submitting || reader.phase !== "ready",
+            }}
+            disabled={conference.submitting || reader.phase !== "ready"}
+            onPress={() => setWithoutOfficialNumber((current) => !current)}
+            style={styles.checkRow}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                withoutOfficialNumber && styles.checkboxChecked,
+              ]}
+            >
+              {withoutOfficialNumber ? (
+                <Lucide
+                  accessible={false}
+                  color="#ffffff"
+                  name="check"
+                  size={14}
+                />
+              ) : null}
+            </View>
+            <Text style={styles.checkText}>Bem sem número oficial (SP)</Text>
+          </Pressable>
+          <View style={styles.inputRow}>
+            <View style={styles.inputShell}>
+              {withoutOfficialNumber ? (
+                <Text
+                  accessibilityLabel="Prefixo SP"
+                  style={styles.inputPrefix}
+                >
+                  SP-
+                </Text>
+              ) : null}
+              <TextInput
+                accessibilityLabel={
+                  withoutOfficialNumber
+                    ? "Parte numérica do patrimônio sem número oficial"
+                    : "Número patrimonial oficial"
+                }
+                autoCorrect={false}
+                editable={!conference.submitting && reader.phase === "ready"}
+                inputMode="numeric"
+                keyboardType="number-pad"
+                onChangeText={(value) =>
+                  setManualValue(numeroPatrimonialDigits(value))
+                }
+                onBlur={() => {
+                  manualFocusedRef.current = false;
+                  setManualFocused(false);
+                }}
+                onSubmitEditing={() => void submitManual()}
+                onFocus={() => {
+                  manualFocusedRef.current = true;
+                  setManualFocused(true);
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }}
+                placeholder="000001"
+                placeholderTextColor={mobileInventarios.textSubtle}
+                returnKeyType="done"
+                style={styles.input}
+                value={manualValue}
+              />
+            </View>
+            <Pressable
+              accessibilityLabel="Verificar número patrimonial"
+              accessibilityRole="button"
+              accessibilityState={{
+                disabled: conference.submitting || reader.phase !== "ready",
+              }}
+              disabled={conference.submitting || reader.phase !== "ready"}
+              onPress={() => void submitManual()}
+              style={styles.inputAction}
+            >
+              {conference.submitting ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Lucide
+                  accessible={false}
+                  color="#ffffff"
+                  name="arrow-right"
+                  size={20}
+                />
+              )}
+            </Pressable>
+          </View>
+          {conference.inputError ? (
+            <Text accessibilityLiveRegion="polite" style={styles.inputError}>
+              {conference.inputError}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <DivergenceModal
         onCorrect={() => {
@@ -341,6 +498,7 @@ export function ConferenciaScreen({
 function CameraPanel({
   available,
   canAskAgain,
+  compact,
   granted,
   height,
   mountCamera,
@@ -348,11 +506,12 @@ function CameraPanel({
   onMountError,
   onRequestPermission,
   onScan,
-  paused,
+  pauseMessage,
   permissionLoaded,
 }: Readonly<{
   available: boolean | null;
   canAskAgain: boolean;
+  compact: boolean;
   granted: boolean;
   height: number;
   mountCamera: boolean;
@@ -360,9 +519,10 @@ function CameraPanel({
   onMountError: () => void;
   onRequestPermission: () => void;
   onScan: (result: BarcodeScanningResult) => void;
-  paused: boolean;
+  pauseMessage?: string;
   permissionLoaded: boolean;
 }>) {
+  const [frame, setFrame] = useState({ height: 0, width: 0 });
   let message = "Preparando câmera…";
   if (available === false) message = "Câmera indisponível neste dispositivo.";
   else if (mountError) message = "Não foi possível iniciar a câmera.";
@@ -372,17 +532,29 @@ function CameraPanel({
       "Permissão de câmera bloqueada. Ative-a nos ajustes do dispositivo.";
   else if (!granted)
     message = "Permita a câmera para ler etiquetas patrimoniais.";
-  else if (paused) message = "Câmera pausada durante o processamento.";
+  else if (pauseMessage) message = pauseMessage;
 
   return (
-    <View style={[styles.cameraFrame, { height }]}>
+    <View
+      onLayout={({ nativeEvent }) =>
+        setFrame({
+          height: nativeEvent.layout.height,
+          width: nativeEvent.layout.width,
+        })
+      }
+      style={[styles.cameraFrame, { height }]}
+    >
       {mountCamera ? (
         <CameraView
           active
+          autofocus="off"
           facing="back"
-          onBarcodeScanned={onScan}
+          onBarcodeScanned={(result) => {
+            if (isBarcodeInsideScanGuide(result, frame)) onScan(result);
+          }}
           onMountError={onMountError}
           style={StyleSheet.absoluteFill}
+          zoom={0.08}
         />
       ) : (
         <View style={styles.cameraFallback}>
@@ -390,7 +562,7 @@ function CameraPanel({
             accessible={false}
             color="#ffffff"
             name="scan-barcode"
-            size={34}
+            size={compact ? 24 : 34}
           />
           <Text style={styles.cameraMessage}>{message}</Text>
           {permissionLoaded &&
@@ -409,10 +581,12 @@ function CameraPanel({
       )}
       {mountCamera ? (
         <View pointerEvents="none" style={styles.scanGuide}>
-          <Text style={styles.scanGuideText}>
-            Posicione o código dentro da área
-          </Text>
-          <View style={styles.scanLine} />
+          <View style={styles.scanWindow}>
+            <Text style={styles.scanGuideText}>
+              Centralize o código nesta área
+            </Text>
+            <View style={styles.scanLine} />
+          </View>
         </View>
       ) : null}
     </View>
@@ -509,6 +683,7 @@ const styles = StyleSheet.create({
     backgroundColor: mobileInventarios.canvas,
     flex: 1,
   },
+  keyboardAvoiding: { flex: 1 },
   scroll: { flex: 1 },
   content: {
     alignSelf: "center",
@@ -609,10 +784,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     left: 0,
-    padding: spacing.lg,
     position: "absolute",
     right: 0,
     top: 0,
+  },
+  scanWindow: {
+    alignItems: "center",
+    borderColor: "rgba(255,255,255,0.9)",
+    borderRadius: radii.sm,
+    borderWidth: 2,
+    height: "52%",
+    justifyContent: "center",
+    width: "80%",
   },
   scanGuideText: {
     color: "#ffffff",
@@ -623,9 +806,16 @@ const styles = StyleSheet.create({
   scanLine: {
     backgroundColor: "#ffffff",
     height: 2,
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     opacity: 0.85,
-    width: "68%",
+    width: "82%",
+  },
+  readerActions: { gap: spacing.md },
+  scannerHint: {
+    color: mobileInventarios.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: spacing.sm,
   },
   manualLabel: {
     color: mobileInventarios.text,
