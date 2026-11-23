@@ -1,6 +1,6 @@
 # `WEB-CADASTROS-002` — Padronizar cadastros e modais roteáveis
 
-**Status:** `aprovada`
+**Status:** `implementada; validação local pendente`
 
 ## Objetivo
 
@@ -115,7 +115,8 @@ matriz aprovada.
 
 ## Arquivos ou módulos potencialmente afetados
 
-- `apps/web/app/(sistema)/cadastros/` e `apps/web/app/(sistema)/usuarios/`;
+- rotas raiz de processos de compra, fornecedores, setores, responsáveis,
+  comissões, naturezas, espécies e usuários em `apps/web/app/(sistema)/`;
 - `apps/web/features/{processos-compra,fornecedores,setores,responsaveis,comissoes,naturezas,especies,usuarios}/`;
 - rotas paralelas/interceptadas do App Router;
 - componentes compartilhados de formulário/lista;
@@ -166,8 +167,59 @@ Implementada em 20/11/2026, com validação local pendente:
   `Cancelar`, conforme o contexto;
 - testes unitários, de navegação e E2E relacionados atualizados sem execução.
 
-Comissões, naturezas e espécies permanecem na Etapa 3. Processos de compra e
-usuários permanecem na Etapa 4. Permissões integradas, regressão completa,
-documentação final e os critérios de aceite globais permanecem na Etapa 5. Os
-checklists acima não foram marcados porque a task completa ainda não foi
-validada.
+### Etapa 3 — comissões, naturezas e espécies
+
+Implementada em 22/11/2026, sem execução das suítes por restrição desta entrega:
+
+- cada catálogo recebeu lista, detalhe, criação e edição em rota própria;
+- criação e edição abertas a partir da lista usam modal interceptado; acesso
+  direto e refresh mantêm página completa equivalente;
+- Diretor mantém leitura e não recebe controles de mutação; as páginas Server
+  de criação/edição também bloqueiam o perfil;
+- comissões preservam vigência, integrantes e as operações existentes;
+- testes de navegação e E2E foram atualizados, sem execução.
+
+### Etapa 4 — processos de compra e usuários
+
+Implementada em 22/11/2026, sem execução das suítes por restrição desta entrega:
+
+- processos de compra passaram para `/processos-compra`, com lista, detalhe,
+  criação e edição canônicos disponíveis aos dois perfis;
+- processos, notas fiscais e anexos agora expõem todas as ações ao Diretor,
+  conforme a autorização já aplicada pela API aos dois perfis;
+- usuários mantiveram as rotas raiz, ganharam modais interceptados para criação
+  e edição e passaram a expor a situação também junto da edição;
+- usuários continuam exclusivos do Administrador na composição Server e na
+  autoridade final da API.
+
+### Etapa 5 — integração final
+
+Implementada documentalmente e no código em 22/11/2026, com validação local
+pendente:
+
+- removido o segmento público `/cadastros`; os caminhos canônicos agora são
+  `/processos-compra`, `/fornecedores`, `/setores`, `/responsaveis`,
+  `/comissoes`, `/naturezas`, `/especies` e `/usuarios`;
+- navegação, breadcrumbs, links, redirecionamentos e testes foram migrados para
+  os caminhos raiz;
+- a matriz de leitura e mutação foi aplicada às páginas Server sem alterar os
+  Guards ou contratos da API;
+- README, páginas/roteamento, roadmap e esta task foram alinhados ao estado
+  implementado;
+- os critérios de aceite permanecem desmarcados até a execução das verificações
+  esperadas, expressamente delegada ao usuário nesta entrega.
+
+### Ajustes finais de interface e organização
+
+Implementados em 22/11/2026, sem execução das suítes por restrição desta
+entrega:
+
+- os cards de filtros dos cadastros usam a mesma composição de Patrimônios,
+  com título, grid responsivo, `Input`, `Select`, limpar filtros e pesquisa;
+- o `select` HTML paralelo foi removido em favor da primitive compartilhada;
+- formulários e modais de processos, fornecedores, comissões e naturezas foram
+  movidos para suas próprias features; os demais modais também ficam no domínio
+  correspondente, preservando somente as composições reutilizáveis em
+  `components/shared` e a infraestrutura transversal em `features/cadastros`;
+- a cobertura foi atualizada para o filtro compartilhado e para todas as ações
+  de processos disponíveis ao Diretor.

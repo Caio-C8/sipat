@@ -17,17 +17,15 @@ A aplicação Web do SIPAT expõe:
   ou em lote, exclusiva do Diretor de Patrimônio;
 - `/inventarios` e `/inventarios/[inventarioId]`: consulta para Administrador e
   Diretor; abertura global e correções de divergências somente pelo Diretor;
-- `/cadastros`: processos de compra e notas fiscais integrados para consulta
-  e edição; o Administrador também pode incluir notas novas;
-- `/cadastros/especies`, `/cadastros/naturezas` e `/cadastros/comissoes`:
-  gestão administrativa integrada no fluxo anterior;
-- `/cadastros/fornecedores`, `/cadastros/responsaveis` e `/cadastros/setores`
-  possuem listas e detalhes para os dois perfis; as rotas `/novo` e
+- `/processos-compra`: processos e notas fiscais disponíveis aos dois perfis;
+- `/especies`, `/naturezas`, `/comissoes`, `/fornecedores`, `/responsaveis` e
+  `/setores` possuem listas e detalhes para os dois perfis; as rotas `/novo` e
   `/[id]/editar` são exclusivas do Administrador, abrem modal em navegação
   iniciada pela lista e página completa em acesso direto ou refresh;
-- `/cadastros/setores/[setorId]` preserva também a consulta dos bens vinculados;
+- `/setores/[setorId]` preserva também a consulta dos bens vinculados;
 - `/usuarios`, `/usuarios/novo`, `/usuarios/[usuarioId]` e
-  `/usuarios/[usuarioId]/editar`: gestão administrativa integrada de usuários;
+  `/usuarios/[usuarioId]/editar`: gestão exclusiva do Administrador, com
+  criação/edição interceptada em modal a partir da lista;
 - `/movimentacoes` e `/movimentacoes/[movimentacaoId]`: consulta para ambos os perfis;
 - `/movimentacoes/nova`: registro em três etapas somente pelo diretor;
 - `/api/health`: health check da camada Web;
@@ -39,9 +37,9 @@ compartilha o shell das páginas autenticadas; formulários, menus e logout fica
 em pequenas fronteiras Client. O dashboard faz uma leitura agregada no servidor;
 movimentações acrescenta consulta/detalhe Server e formulário Client integrado.
 
-Nos cadastros em lista e formulário, `id` seleciona o registro e `busca` e
-`pagina` representam a consulta na URL. Setores usam rota individual e
-`paginaBens` para paginar os patrimônios vinculados. As leituras Server
+Nos cadastros, cada registro possui rota de detalhe própria; `busca` e `pagina`
+representam a consulta da lista na URL. Setores usam `paginaBens` para paginar
+os patrimônios vinculados. As leituras Server
 encaminham o cookie por requisição e desabilitam cache; os formulários usam
 operações e hooks específicos com CSRF. Campos ilustrativos sem contrato,
 como códigos NAT/ESP/COM e cargo/e-mail de responsável, não são enviados nem
