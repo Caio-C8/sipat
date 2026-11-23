@@ -40,7 +40,9 @@ test("administrador navega pelos cadastros independentes e abre criação em mod
     ["/fornecedores", "Fornecedores", "Cadastrar fornecedor"],
   ] as const) {
     await page.goto(rota);
-    await expect(page.getByRole("heading", { name: titulo })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: titulo, exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: criar })).toBeVisible();
   }
 });
@@ -217,9 +219,12 @@ test("diretor gerencia processos e consulta cadastros sem ações administrativa
   await page.getByRole("button", { name: "Fechar" }).click();
   for (const rota of ["/especies", "/naturezas", "/comissoes"]) {
     await page.goto(rota);
-    await expect(page.getByRole("link", { name: /^Cadastrar/ })).toHaveCount(0);
+    const conteudo = page.getByRole("main");
     await expect(
-      page.getByRole("link", { name: "Editar", exact: true }),
+      conteudo.getByRole("link", { name: /^Cadastrar/ }),
+    ).toHaveCount(0);
+    await expect(
+      conteudo.getByRole("link", { name: "Editar", exact: true }),
     ).toHaveCount(0);
   }
   for (const rota of ["/responsaveis", "/fornecedores"]) {

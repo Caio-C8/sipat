@@ -142,15 +142,26 @@ export async function CadastrosPage({
     limite: "20",
   };
   const cookie = await requestCookie();
-  try {
-    const response =
-      secao === "processos"
-        ? await serverCadastros.processos.listar(query, { cookie })
-        : secao === "naturezas"
-          ? await serverCadastros.naturezas.listar(query, { cookie })
-          : secao === "especies"
-            ? await serverCadastros.especies.listar(query, { cookie })
-            : await serverCadastros.comissoes.listar(query, { cookie });
+  const result = await (async () => {
+    try {
+      const response =
+        secao === "processos"
+          ? await serverCadastros.processos.listar(query, { cookie })
+          : secao === "naturezas"
+            ? await serverCadastros.naturezas.listar(query, { cookie })
+            : secao === "especies"
+              ? await serverCadastros.especies.listar(query, { cookie })
+              : await serverCadastros.comissoes.listar(query, { cookie });
+      return { type: "success" as const, response };
+    } catch (error) {
+      return { type: "error" as const, error };
+    }
+  })();
+  if (result.type === "error")
+    return <LoadError section={secao} error={result.error} />;
+
+  const response = result.response;
+  const renderPage = () => {
     const rows = response.dados.map((item) => {
       if (secao === "processos") {
         const process = item as Awaited<
@@ -293,9 +304,8 @@ export async function CadastrosPage({
         </Card>
       </main>
     );
-  } catch (error) {
-    return <LoadError section={secao} error={error} />;
-  }
+  };
+  return renderPage();
 }
 
 async function loadRecord(section: SecaoCatalogo, id: string) {

@@ -812,6 +812,36 @@ const server = createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && requestUrl.pathname === "/api/usuarios") {
+    const session = sessionFromCookie(request.headers.cookie);
+    if (session !== "active") {
+      json(response, session ? 403 : 401, {
+        status: session ? 403 : 401,
+        sucesso: false,
+        codigo: session ? "PERFIL_NAO_AUTORIZADO" : "NAO_AUTENTICADO",
+        mensagem: session
+          ? "Perfil não autorizado."
+          : "Autenticação necessária.",
+        erros: [],
+        requisicaoId: "usuarios-e2e",
+      });
+      return;
+    }
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Usuários consultados.",
+      dados: [],
+      meta: {
+        total: 0,
+        pagina: Number(requestUrl.searchParams.get("pagina") ?? 1),
+        limite: Number(requestUrl.searchParams.get("limite") ?? 20),
+        ultimaPagina: 1,
+      },
+    });
+    return;
+  }
+
   if (
     request.method === "GET" &&
     /^\/api\/(?:processos-compra|naturezas|especies|comissoes|responsaveis|setores|fornecedores)$/.test(

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ListaUsuarios } from "./usuario-list";
 
@@ -29,9 +29,9 @@ describe("ListaUsuarios", () => {
     expect(
       screen.getByRole("heading", { name: "Pesquisar usuários" }),
     ).toBeTruthy();
-    expect(screen.getByRole("table")).toBeTruthy();
-    expect(screen.getByText("Diretor de patrimônio")).toBeTruthy();
-    expect(screen.getByText("Ativo")).toBeTruthy();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Diretor de patrimônio")).toBeTruthy();
+    expect(within(table).getByText("Ativo")).toBeTruthy();
     expect(
       screen
         .getByRole("link", { name: "Cadastrar usuário" })
