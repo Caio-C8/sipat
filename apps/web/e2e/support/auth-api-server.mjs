@@ -599,6 +599,32 @@ const server = createServer(async (request, response) => {
       json(response, 200, catalogoRelatorios);
       return;
     }
+    if (requestUrl.pathname.startsWith("/api/relatorios/opcoes/")) {
+      const catalogo = requestUrl.pathname.split("/").at(-1);
+      const rotulos = {
+        patrimonios: "REL-301 · Notebook para relatório",
+        setores: "Tecnologia da Informação",
+        responsaveis: "Responsável patrimonial",
+        naturezas: "Equipamento de informática",
+        especies: "Notebook",
+        comissoes: "Comissão patrimonial",
+        fornecedores: "Fornecedor de teste",
+        inventarios: "Inventário de teste",
+      };
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Opções consultadas.",
+        dados: [
+          {
+            id: webDomainFixtures.relatorio.patrimonioId,
+            rotulo: rotulos[catalogo] ?? "Opção de relatório",
+          },
+        ],
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+      });
+      return;
+    }
     if (requestUrl.pathname === "/api/relatorios/patrimonios") {
       json(response, 200, {
         status: 200,

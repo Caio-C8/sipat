@@ -1,20 +1,40 @@
 "use client";
-import { useCallback, useState, type ReactNode } from "react";
+
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import {
   TipoEventoRelatorioSchema,
+  type CatalogoOpcaoRelatorio,
   type CatalogoRelatoriosResponse,
   type TipoRelatorio,
-  type CatalogoOpcaoRelatorio,
 } from "@repo/contracts";
+import { FileSearch, Search } from "lucide-react";
+import { SelectField, TextField } from "@/components/shared/form-fields";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { campo, painel, rotulo, rotuloOpcao, valor } from "../apresentacao";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { rotulo, rotuloOpcao, valor } from "../apresentacao";
 import { SeletorRelatorio } from "./seletor";
+
 type Seletor = {
   nome: string;
   label: string;
   catalogo: CatalogoOpcaoRelatorio;
   obrigatorio?: boolean;
 };
+
 const patrimonio: Seletor = {
   nome: "patrimonioId",
   label: "Patrimônio",
@@ -41,7 +61,11 @@ const seletores: Record<TipoRelatorio, Seletor[]> = {
   movimentacoes: [
     patrimonio,
     { nome: "setorOrigemId", label: "Setor de origem", catalogo: "setores" },
-    { nome: "setorDestinoId", label: "Setor de destino", catalogo: "setores" },
+    {
+      nome: "setorDestinoId",
+      label: "Setor de destino",
+      catalogo: "setores",
+    },
     comissao,
   ],
   manutencoes: [
@@ -63,7 +87,11 @@ const seletores: Record<TipoRelatorio, Seletor[]> = {
       obrigatorio: true,
     },
     patrimonio,
-    { nome: "setorEsperadoId", label: "Setor esperado", catalogo: "setores" },
+    {
+      nome: "setorEsperadoId",
+      label: "Setor esperado",
+      catalogo: "setores",
+    },
     {
       nome: "setorEncontradoId",
       label: "Setor encontrado",
@@ -73,6 +101,7 @@ const seletores: Record<TipoRelatorio, Seletor[]> = {
   emprestimos: [patrimonio],
   baixas: [patrimonio, comissao],
 };
+
 const escolhas: Record<TipoRelatorio, Record<string, string[]>> = {
   patrimonios: {
     status: ["ATIVO", "BAIXADO", "EMPRESTADO", "EM_MANUTENCAO"],
@@ -115,6 +144,17 @@ const escolhas: Record<TipoRelatorio, Record<string, string[]>> = {
     ],
   },
 };
+
+function textoOrientacao(tipo: TipoRelatorio) {
+  if (tipo === "patrimonios")
+    return "Cadastro e valores atuais, incluindo bens baixados. Tombamento não reconstrói posição em data passada.";
+  if (tipo === "inventarios")
+    return "Escolha o inventário. Conferência incompleta não significa ausência de inconsistências.";
+  if (tipo === "pendencias-depreciacao")
+    return "Exibe somente obrigações ainda não processadas. A competência é opcional.";
+  return "Quando não há cópia histórica, os nomes exibidos vêm do cadastro atual.";
+}
+
 export function FormularioRelatorios({
   catalogo,
   tipoInicial,
@@ -135,10 +175,22 @@ export function FormularioRelatorios({
   const [dirty, setDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [nomes, setNomes] = useState<Record<string, string>>({});
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const [erroGeral, setErroGeral] = useState("");
+  const feedbackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!erroGeral) return;
+    feedbackRef.current?.scrollIntoView({ block: "center" });
+    feedbackRef.current?.focus();
+  }, [erroGeral]);
+
   const registrarNome = useCallback(
-    (nome: string, rotulo: string) =>
+    (nome: string, rotuloSelecionado: string) =>
       setNomes((atual) =>
-        atual[nome] === rotulo ? atual : { ...atual, [nome]: rotulo },
+        atual[nome] === rotuloSelecionado
+          ? atual
+          : { ...atual, [nome]: rotuloSelecionado },
       ),
     [],
   );
@@ -154,8 +206,15 @@ export function FormularioRelatorios({
             : nome === "ordenacao"
               ? "NUMERO"
               : "";
-  const mudar = (nome: string, v: string) => {
-    setQ({ ...q, [nome]: v });
+  const mudar = (nome: string, proximoValor: string) => {
+    setQ((atual) => ({ ...atual, [nome]: proximoValor }));
+    setErros((atual) => {
+      if (!atual[nome]) return atual;
+      const proximo = { ...atual };
+      delete proximo[nome];
+      return proximo;
+    });
+    setErroGeral("");
     setDirty(true);
   };
   const opcionalPeriodo =
@@ -166,181 +225,228 @@ export function FormularioRelatorios({
     ? ["competencia"]
     : ["inicio", "fim"];
   const extraTexto =
-    tipo === "patrimonios"
-      ? ["busca"]
-      : tipo === "manutencoes"
-        ? ["pedidoId"]
-        : tipo === "emprestimos"
-          ? ["grupoId", "destinatario"]
-          : [];
-  const atual = catalogo.dados.tipos.find((t) => t.tipo === tipo)!;
+    tipo === "manutencoes"
+      ? ["pedidoId"]
+      : tipo === "emprestimos"
+        ? ["grupoId", "destinatario"]
+        : [];
+  const atual = catalogo.dados.tipos.find((item) => item.tipo === tipo)!;
+
+  function enviar(event: FormEvent<HTMLFormElement>) {
+    const obrigatoriosAusentes = seletores[tipo].filter(
+      (seletor) => seletor.obrigatorio && !q[seletor.nome],
+    );
+    if (obrigatoriosAusentes.length > 0) {
+      event.preventDefault();
+      setErros(
+        Object.fromEntries(
+          obrigatoriosAusentes.map((seletor) => [
+            seletor.nome,
+            `Selecione ${seletor.label.toLocaleLowerCase("pt-BR")}.`,
+          ]),
+        ),
+      );
+      setErroGeral("Revise os campos indicados antes de gerar a prévia.");
+      window.setTimeout(() => {
+        document.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+      });
+      return;
+    }
+    setSubmitting(true);
+  }
+
   return (
     <>
-      <form
-        action="/relatorios"
-        method="get"
-        className={`${painel} grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]`}
-        aria-label="Filtros do relatório"
-        onSubmit={() => setSubmitting(true)}
-      >
-        <input type="hidden" name="consultar" value="1" />
-        <input type="hidden" name="relatorio" value={tipo} />
-        <div className="min-w-0">
-          <h2 className="font-semibold">Filtros do relatório</h2>
-          {atual.motivo && <p className="mt-2 text-sm">{atual.motivo}</p>}
-          <p className="my-4 text-sm text-slate-600">
-            {tipo === "patrimonios"
-              ? "Cadastro e valores atuais, incluindo bens baixados. Tombamento não reconstrói posição em data passada."
-              : tipo === "inventarios"
-                ? "Escolha o inventário. Conferência incompleta não significa ausência de inconsistências."
-                : tipo === "pendencias-depreciacao"
-                  ? "Exibe somente obrigações ainda não processadas. A competência é opcional e usa o formato canônico AAAA-MM."
-                  : "Nomes sem snapshot são cadastrais atuais; lacunas históricas permanecem identificadas."}
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {tipo !== "inventarios" &&
-              camposTemporais.map((nome) => (
-                <label key={nome} className="text-sm">
-                  {rotulo(nome)}
-                  {competenciaOpcional
-                    ? " (opcional)"
-                    : opcionalPeriodo
-                      ? " (opcional, informe ambos)"
-                      : " (obrigatório)"}
-                  <input
-                    className={campo}
-                    name={nome}
-                    type={nome.startsWith("competencia") ? "month" : "date"}
-                    required={!opcionalPeriodo && !competenciaOpcional}
-                    value={
-                      q[nome] ??
-                      (opcionalPeriodo || competenciaOpcional
-                        ? ""
-                        : padrao(nome))
-                    }
-                    onChange={(e) => mudar(nome, e.target.value)}
-                  />
-                </label>
-              ))}
-            {Object.entries(escolhas[tipo]).map(([nome, opcoes]) => (
-              <label className="text-sm" key={nome}>
-                {rotulo(nome)}
-                <select
-                  className={campo}
-                  name={nome}
-                  value={q[nome] ?? padrao(nome)}
-                  required={nome === "base" || nome === "ordenacao"}
-                  onChange={(e) => mudar(nome, e.target.value)}
-                >
-                  {nome !== "base" && nome !== "ordenacao" && (
-                    <option value="">Todos</option>
-                  )}
-                  {opcoes.map((v) => (
-                    <option key={v} value={v}>
-                      {v === "true"
-                        ? "Sim"
-                        : v === "false"
-                          ? "Não"
-                          : rotuloOpcao(v)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ))}
-            {extraTexto.map((nome) => (
-              <label className="text-sm" key={nome}>
-                {rotulo(nome)} (opcional)
-                <input
-                  className={campo}
-                  name={nome}
-                  value={q[nome] ?? ""}
-                  maxLength={nome.endsWith("Id") ? 36 : 200}
-                  onChange={(e) => mudar(nome, e.target.value)}
-                />
-              </label>
-            ))}
-          </div>
-          <details
-            className="my-4 rounded-md border border-slate-200 p-3"
-            open={
-              tipo === "patrimonios" ||
-              tipo === "ficha-bem" ||
-              tipo === "inventarios"
-            }
-          >
-            <summary className="cursor-pointer font-semibold">
-              Seleção por cadastro{" "}
-              {tipo === "ficha-bem" || tipo === "inventarios"
-                ? "(obrigatória)"
-                : "e filtros opcionais"}
-            </summary>
-            <div className="mt-3 grid gap-3 lg:grid-cols-2">
-              {seletores[tipo].map((s) => (
-                <SeletorRelatorio
-                  key={`${tipo}-${s.nome}`}
-                  {...s}
-                  tipo={tipo}
-                  valor={q[s.nome] ?? ""}
-                  onChange={(v) => mudar(s.nome, v)}
-                  onLabel={registrarNome}
-                />
-              ))}
-            </div>
-          </details>
-        </div>
-        <aside className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
-          <h2 className="font-semibold">Resumo da seleção</h2>
-          <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-            <div>
-              <dt className="text-slate-500">Relatório</dt>
-              <dd>{atual.titulo}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Emitido por</dt>
-              <dd>{usuario}</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Documento</dt>
-              <dd>PDF · conjunto filtrado</dd>
-            </div>
-            <div>
-              <dt className="text-slate-500">Filtros selecionados</dt>
-              <dd className="break-words">
-                {Object.entries(q)
-                  .filter(
-                    ([chave, valor]) =>
-                      !["relatorio", "consultar", "pagina", "limite"].includes(
-                        chave,
-                      ) && valor,
-                  )
-                  .map(
-                    ([chave, dado]) =>
-                      `${rotulo(chave)}: ${nomes[chave] ?? valor(dado)}`,
-                  )
-                  .join(" · ") || "Sem filtros opcionais"}
-              </dd>
-            </div>
-          </dl>
-        </aside>
-        <div className="rounded-lg border border-slate-200 p-4 text-sm lg:col-span-2">
-          <h2 className="font-semibold">Informações incluídas</h2>
-          <p className="mt-2">
-            Identificação do relatório, filtros aplicados, data de emissão,
-            registros, totais disponíveis e avisos.
-          </p>
-        </div>
-        <Button
-          type="submit"
-          className="bg-[#19355d] lg:col-span-2 lg:justify-self-end"
-          disabled={submitting || !atual.disponivel}
+      {erroGeral ? (
+        <Alert
+          ref={feedbackRef}
+          tabIndex={-1}
+          variant="destructive"
+          className="scroll-mt-4"
         >
-          {submitting ? "Gerando prévia…" : "Gerar prévia"}
-        </Button>
-      </form>
+          <AlertTitle>Não foi possível gerar a prévia</AlertTitle>
+          <AlertDescription>{erroGeral}</AlertDescription>
+        </Alert>
+      ) : null}
+      <Card asChild className="min-w-0 gap-4">
+        <form
+          action="/relatorios"
+          method="get"
+          aria-label="Filtros do relatório"
+          onSubmit={enviar}
+        >
+          <input type="hidden" name="consultar" value="1" />
+          <input type="hidden" name="relatorio" value={tipo} />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search aria-hidden="true" className="size-4 text-interactive" />
+              Filtros do relatório
+            </CardTitle>
+            <CardDescription>{textoOrientacao(tipo)}</CardDescription>
+            {atual.motivo ? (
+              <Alert>
+                <AlertDescription>{atual.motivo}</AlertDescription>
+              </Alert>
+            ) : null}
+          </CardHeader>
+          <CardContent className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+            <div className="grid min-w-0 gap-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {tipo !== "inventarios" &&
+                  camposTemporais.map((nome) => {
+                    const required = !opcionalPeriodo && !competenciaOpcional;
+                    return (
+                      <TextField
+                        key={nome}
+                        id={`filtro-${nome}`}
+                        name={nome}
+                        type={nome.startsWith("competencia") ? "month" : "date"}
+                        label={rotulo(nome)}
+                        description={
+                          competenciaOpcional
+                            ? "Opcional"
+                            : opcionalPeriodo
+                              ? "Opcional; informe as duas datas para filtrar o período."
+                              : undefined
+                        }
+                        required={required}
+                        value={
+                          q[nome] ??
+                          (opcionalPeriodo || competenciaOpcional
+                            ? ""
+                            : padrao(nome))
+                        }
+                        onChange={(event) => mudar(nome, event.target.value)}
+                      />
+                    );
+                  })}
+                {Object.entries(escolhas[tipo]).map(([nome, opcoes]) => {
+                  const required = nome === "base" || nome === "ordenacao";
+                  const selecionado = q[nome] ?? padrao(nome);
+                  const valorSelect = selecionado || "__todos__";
+                  return (
+                    <div key={nome} className="min-w-0">
+                      <input type="hidden" name={nome} value={selecionado} />
+                      <SelectField
+                        id={`filtro-${nome}`}
+                        label={rotulo(nome)}
+                        required={required}
+                        value={valorSelect}
+                        onValueChange={(proximo) =>
+                          mudar(nome, proximo === "__todos__" ? "" : proximo)
+                        }
+                        options={[
+                          ...(required
+                            ? []
+                            : [{ value: "__todos__", label: "Todos" }]),
+                          ...opcoes.map((opcao) => ({
+                            value: opcao,
+                            label:
+                              opcao === "true"
+                                ? "Sim"
+                                : opcao === "false"
+                                  ? "Não"
+                                  : rotuloOpcao(opcao),
+                          })),
+                        ]}
+                      />
+                    </div>
+                  );
+                })}
+                {extraTexto.map((nome) => (
+                  <TextField
+                    key={nome}
+                    id={`filtro-${nome}`}
+                    name={nome}
+                    label={rotulo(nome)}
+                    description="Opcional"
+                    value={q[nome] ?? ""}
+                    maxLength={nome.endsWith("Id") ? 36 : 200}
+                    onChange={(event) => mudar(nome, event.target.value)}
+                  />
+                ))}
+                {seletores[tipo].map((seletor) => (
+                  <SeletorRelatorio
+                    key={`${tipo}-${seletor.nome}`}
+                    {...seletor}
+                    tipo={tipo}
+                    valor={q[seletor.nome] ?? ""}
+                    onChange={(proximo) => mudar(seletor.nome, proximo)}
+                    onLabel={registrarNome}
+                    error={erros[seletor.nome]}
+                  />
+                ))}
+              </div>
+            </div>
+            <Card className="h-fit gap-3 bg-muted/40 p-4 shadow-none">
+              <CardHeader className="p-0">
+                <CardTitle className="text-base">Resumo da seleção</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <dl className="grid gap-3 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Relatório</dt>
+                    <dd className="font-medium">{atual.titulo}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Emitido por</dt>
+                    <dd>{usuario}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Documento</dt>
+                    <dd>PDF · conjunto filtrado completo</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">
+                      Filtros selecionados
+                    </dt>
+                    <dd className="break-words">
+                      {Object.entries(q)
+                        .filter(
+                          ([chave, dado]) =>
+                            ![
+                              "relatorio",
+                              "consultar",
+                              "pagina",
+                              "limite",
+                              "busca",
+                            ].includes(chave) && dado,
+                        )
+                        .map(
+                          ([chave, dado]) =>
+                            `${rotulo(chave)}: ${nomes[chave] ?? valor(dado)}`,
+                        )
+                        .join(" · ") || "Sem filtros opcionais"}
+                    </dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
+            <div className="rounded-lg border bg-muted/30 p-4 text-sm lg:col-span-2">
+              <h2 className="font-semibold">Informações incluídas</h2>
+              <p className="mt-1 text-muted-foreground">
+                Identificação do relatório, filtros aplicados, data de emissão,
+                registros, totais disponíveis e avisos.
+              </p>
+            </div>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto lg:col-span-2 lg:justify-self-end"
+              disabled={submitting || !atual.disponivel}
+            >
+              <FileSearch aria-hidden="true" />
+              {submitting ? "Gerando prévia…" : "Gerar prévia"}
+            </Button>
+          </CardContent>
+        </form>
+      </Card>
       {dirty ? (
-        <p role="status" className={painel}>
-          Filtros alterados. Consulte uma nova prévia antes de exportar.
-        </p>
+        <Alert>
+          <AlertTitle>Filtros alterados</AlertTitle>
+          <AlertDescription>
+            Gere uma nova prévia antes de abrir ou baixar o PDF.
+          </AlertDescription>
+        </Alert>
       ) : (
         children
       )}

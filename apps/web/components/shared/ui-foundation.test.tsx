@@ -61,6 +61,30 @@ describe("fundação compartilhada de UI", () => {
     expect(screen.getByText("Nenhuma opção encontrada.")).toBeTruthy();
   });
 
+  it("expõe obrigatoriedade e mantém o valor em um campo oculto", () => {
+    const { container } = render(
+      <ComboboxField
+        id="patrimonio"
+        name="patrimonioId"
+        label="Patrimônio"
+        required
+        value="patrimonio-1"
+        options={[{ value: "patrimonio-1", label: "Patrimônio 1" }]}
+        onValueChange={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen
+        .getByRole("combobox", { name: "Patrimônio" })
+        .getAttribute("aria-required"),
+    ).toBe("true");
+    expect(
+      container.querySelector<HTMLInputElement>('input[name="patrimonioId"]')
+        ?.value,
+    ).toBe("patrimonio-1");
+  });
+
   it("foca o resumo geral quando ele aparece", () => {
     const { rerender } = render(<FormErrorSummary messages={[]} focus />);
     rerender(

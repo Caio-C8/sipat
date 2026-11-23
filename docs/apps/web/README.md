@@ -203,6 +203,9 @@ registre-a também em [Integrações](../../integrations/README.md).
 
 ## Relatórios patrimoniais
 
-`/relatorios` integra catálogo, filtros por tipo, seletores paginados, prévia,
-ficha, totais e PDF pela API real. Alterar filtros invalida a prévia.
-[Contrato de execução e evidências](../../tasks/WEB-RELATORIOS-001-interface.md).
+`/relatorios` integra catálogo, filtros por tipo, seletores pesquisáveis, prévia,
+ficha, totais e PDF pela API real. Catálogos remotos usam `Combobox`
+pesquisável, opções fixas usam `Select`, e a prévia combina `Card`, `Alert`,
+`Table` e paginação compartilhada. Alterar filtros invalida a prévia.
+[Fonte funcional](../../tasks/WEB-RELATORIOS-001-interface.md) e
+[padronização visual](../../tasks/WEB-RELATORIOS-002-padronizacao-visual.md).
