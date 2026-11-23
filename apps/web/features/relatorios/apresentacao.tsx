@@ -214,13 +214,7 @@ function ehRegistro(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === "object" && valor !== null && !Array.isArray(valor);
 }
 
-function ValorRegistro({
-  campo,
-  dado,
-}: {
-  campo: string;
-  dado: unknown;
-}) {
+function ValorRegistro({ campo, dado }: { campo: string; dado: unknown }) {
   if (Array.isArray(dado)) {
     if (dado.length === 0)
       return <span className="text-muted-foreground">Nenhum registro</span>;
@@ -254,9 +248,7 @@ export function DadosRegistro({
   dados: Record<string, unknown>;
   compacto?: boolean;
 }) {
-  const itens = Object.entries(dados).filter(
-    ([campo]) => !campoTecnico(campo),
-  );
+  const itens = Object.entries(dados).filter(([campo]) => !campoTecnico(campo));
   return (
     <dl
       className={

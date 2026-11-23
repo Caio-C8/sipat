@@ -54,9 +54,7 @@ describe("apresentação pública do relatório", () => {
     expect(campoTecnico("id")).toBe(true);
     expect(campoTecnico("patrimonioId")).toBe(true);
     expect(campoTecnico("numeroPatrimonio")).toBe(false);
-    expect(rotulo("tipoNumeroPatrimonial")).toBe(
-      "Tipo de número patrimonial",
-    );
+    expect(rotulo("tipoNumeroPatrimonial")).toBe("Tipo de número patrimonial");
     expect(rotuloOpcao("DIA")).toBe("Somente data");
     expect(rotuloOpcao("INSTANTE")).toBe("Data e hora");
   });
@@ -64,18 +62,10 @@ describe("apresentação pública do relatório", () => {
   it("formata datas civis e instantes ISO para exibição", () => {
     expect(valor("2026-11")).toBe("11/2026");
     expect(valor("2026-11-23")).toBe("23/11/2026");
-    expect(valor("2026-11-23T15:19:48.154000Z")).toBe(
-      "23/11/2026, 12:19:48",
-    );
-    expect(valor("2026-11-23T15:19:48-03:00")).toBe(
-      "23/11/2026, 15:19:48",
-    );
-    expect(valor("2026-11-23 15:19:48.154000+00")).toBe(
-      "23/11/2026, 12:19:48",
-    );
-    expect(valor("2026-11-23 15:19:48.154000")).toBe(
-      "23/11/2026, 12:19:48",
-    );
+    expect(valor("2026-11-23T15:19:48.154000Z")).toBe("23/11/2026, 12:19:48");
+    expect(valor("2026-11-23T15:19:48-03:00")).toBe("23/11/2026, 15:19:48");
+    expect(valor("2026-11-23 15:19:48.154000+00")).toBe("23/11/2026, 12:19:48");
+    expect(valor("2026-11-23 15:19:48.154000")).toBe("23/11/2026, 12:19:48");
     expect(valor("2026-11-23 sem horário")).toBe("2026-11-23 sem horário");
   });
 
