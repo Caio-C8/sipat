@@ -17,8 +17,8 @@ export function mensagemRelatorio(e: unknown): string {
 }
 export function rotulo(campo: string): string {
   const nomes: Record<string, string> = {
-    id: "UUID do registro",
-    patrimonioId: "UUID do bem",
+    id: "Identificador",
+    patrimonioId: "Patrimônio",
     numeroPatrimonio: "Número patrimonial atual",
     descricao: "Descrição atual",
     inicio: "Início",
@@ -61,6 +61,9 @@ export function rotulo(campo: string): string {
     destinatario: "Destinatário",
     situacao: "Situação",
     tipo: "Tipo",
+    tipoNumeroPatrimonial: "Tipo de número patrimonial",
+    dataTombamento: "Data de tombamento",
+    status: "Situação",
     quantidade: "Quantidade de registros",
     quotas: "Quotas do período (R$)",
     brutoAtual: "Total bruto atual (R$)",
@@ -79,22 +82,47 @@ export function rotulo(campo: string): string {
     ordenacao: "Ordenação",
     tipoNumero: "Tipo de número",
     registroEm: "Registrado em",
-    precisao: "Precisão da ocorrência",
+    precisao: "Detalhamento da data",
     ocorrencia: "Ocorrência",
-    atributos: "Atributos persistidos",
-    numeroSnapshot: "Número em snapshot",
-    descricaoSnapshot: "Descrição em snapshot",
-    parametroAnteriorId:
-      "Parâmetro anterior (não informado em legados ou primeiro parâmetro)",
+    atributos: "Detalhes do evento",
+    numeroSnapshot: "Número registrado no evento",
+    descricaoSnapshot: "Descrição registrada no evento",
+    comissaoSnapshot: "Comissão registrada no evento",
+    autorSnapshot: "Responsável pelo evento",
+    parametroAnteriorId: "Parâmetro anterior",
   };
   return (
     nomes[campo] ??
     campo
-      .replace(/Id$/, " (UUID)")
+      .replace(/Id$/, "")
       .replace(/([a-z])([A-Z])/g, "$1 $2")
       .replace(/^./, (x) => x.toUpperCase())
   );
 }
+
+const formatadorDataHoraRelatorio = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo",
+  dateStyle: "short",
+  timeStyle: "medium",
+});
+
+function formatarInstanteRelatorio(valor: string): string | null {
+  const partes =
+    /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(\.\d+)?(Z|[+-]\d{2}(?::?\d{2})?)?$/.exec(
+      valor,
+    );
+  if (!partes) return null;
+  let fuso = partes[4] ?? "Z";
+  if (/^[+-]\d{2}$/.test(fuso)) fuso += ":00";
+  else if (/^[+-]\d{4}$/.test(fuso))
+    fuso = `${fuso.slice(0, 3)}:${fuso.slice(3)}`;
+  const fracao = partes[3]?.slice(0, 4) ?? "";
+  const data = new Date(`${partes[1]}T${partes[2]}${fracao}${fuso}`);
+  return Number.isNaN(data.getTime())
+    ? null
+    : formatadorDataHoraRelatorio.format(data);
+}
+
 export function valor(v: unknown): string {
   if (v === null || v === undefined) return "Não informado no registro";
   if (Array.isArray(v)) return v.map(valor).join("; ");
@@ -106,9 +134,17 @@ export function valor(v: unknown): string {
     const [a, b] = v.split(".");
     return `${a!.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${b}`;
   }
+  if (typeof v === "string" && /^\d{4}-\d{2}$/.test(v)) {
+    const [ano, mes] = v.split("-");
+    return `${mes}/${ano}`;
+  }
   if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
     const [ano, mes, dia] = v.split("-");
     return `${dia}/${mes}/${ano}`;
+  }
+  if (typeof v === "string") {
+    const instante = formatarInstanteRelatorio(v);
+    if (instante) return instante;
   }
   if (typeof v === "string" && /^[A-Z][A-Z_]+$/.test(v)) return rotuloOpcao(v);
   return String(v);
@@ -152,6 +188,8 @@ export function rotuloOpcao(v: string): string {
     OUTRO: "Outro",
     CORRECAO_INVENTARIO: "Correção de inventário",
     COMUM: "Comum",
+    DIA: "Somente data",
+    INSTANTE: "Data e hora",
   };
   return (
     nomes[v] ??
@@ -161,24 +199,95 @@ export function rotuloOpcao(v: string): string {
       .replace(/^./, (c) => c.toUpperCase())
   );
 }
-export const painel =
-  "rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6";
-export const campo =
-  "mt-1 min-h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus-visible:outline-2 focus-visible:outline-blue-700";
-export function DadosRegistro({ dados }: { dados: Record<string, unknown> }) {
+export function campoTecnico(campo: string): boolean {
+  return campo === "id" || campo.endsWith("Id");
+}
+
+export function chaveRegistroRelatorio(
+  registro: Record<string, unknown>,
+  indice: number,
+): string {
+  return `${String(registro.id ?? "registro")}-${indice}`;
+}
+
+function ehRegistro(valor: unknown): valor is Record<string, unknown> {
+  return typeof valor === "object" && valor !== null && !Array.isArray(valor);
+}
+
+function ValorRegistro({
+  campo,
+  dado,
+}: {
+  campo: string;
+  dado: unknown;
+}) {
+  if (Array.isArray(dado)) {
+    if (dado.length === 0)
+      return <span className="text-muted-foreground">Nenhum registro</span>;
+    return (
+      <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {dado.map((item, indice) => (
+          <li key={indice} className="rounded-lg border bg-card p-3">
+            {ehRegistro(item) ? (
+              <DadosRegistro dados={item} compacto />
+            ) : (
+              valor(item)
+            )}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  if (ehRegistro(dado)) return <DadosRegistro dados={dado} compacto />;
+  if (
+    dado === null &&
+    ["brutoAtual", "acumuladoAtual", "liquidoAtual"].includes(campo)
+  )
+    return "Total indisponível";
+  return valor(dado);
+}
+
+export function DadosRegistro({
+  dados,
+  compacto = false,
+}: {
+  dados: Record<string, unknown>;
+  compacto?: boolean;
+}) {
+  const itens = Object.entries(dados).filter(
+    ([campo]) => !campoTecnico(campo),
+  );
   return (
-    <dl className="grid gap-2 text-sm sm:grid-cols-2">
-      {Object.entries(dados).map(([k, v]) => (
-        <div key={k} className="min-w-0 break-words">
-          <dt className="font-semibold">{rotulo(k)}</dt>
-          <dd className="whitespace-pre-wrap">
-            {v === null &&
-            ["brutoAtual", "acumuladoAtual", "liquidoAtual"].includes(k)
-              ? "Total indisponível"
-              : valor(v)}
-          </dd>
-        </div>
-      ))}
+    <dl
+      className={
+        compacto
+          ? "grid gap-2 text-sm"
+          : "grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3"
+      }
+    >
+      {itens.map(([campo, dado]) => {
+        const composto = Array.isArray(dado) || ehRegistro(dado);
+        return (
+          <div
+            key={campo}
+            className={
+              compacto
+                ? "min-w-0 break-words"
+                : `min-w-0 rounded-lg bg-muted/40 p-3 break-words ${composto ? "sm:col-span-2 xl:col-span-3" : ""}`
+            }
+          >
+            <dt className="text-xs font-medium text-muted-foreground">
+              {rotulo(campo)}
+            </dt>
+            <dd className="mt-1 whitespace-pre-wrap font-medium text-foreground">
+              <ValorRegistro campo={campo} dado={dado} />
+            </dd>
+          </div>
+        );
+      })}
+      {itens.length === 0 ? (
+        <div className="text-muted-foreground">Sem informações adicionais.</div>
+      ) : null}
     </dl>
   );
 }

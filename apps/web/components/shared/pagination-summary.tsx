@@ -9,15 +9,21 @@ import {
 type PaginationSummaryProps = {
   meta: { pagina: number; ultimaPagina: number; total: number };
   href: (page: number) => string;
+  showPageCount?: boolean;
 };
 
-function PaginationSummary({ meta, href }: PaginationSummaryProps) {
+function PaginationSummary({
+  meta,
+  href,
+  showPageCount = true,
+}: PaginationSummaryProps) {
   const lastPage = Math.max(1, meta.ultimaPagina);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
       <p aria-live="polite">
-        {meta.total} registros · Página {meta.pagina} de {lastPage}
+        {meta.total} registros
+        {showPageCount ? ` · Página ${meta.pagina} de ${lastPage}` : null}
       </p>
       <Pagination className="mx-0 w-auto">
         <PaginationContent>

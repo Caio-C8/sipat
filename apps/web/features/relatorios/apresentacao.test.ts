@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api/core/api-error";
-import { mensagemRelatorio } from "./apresentacao";
+import {
+  campoTecnico,
+  chaveRegistroRelatorio,
+  mensagemRelatorio,
+  rotulo,
+  rotuloOpcao,
+  valor,
+} from "./apresentacao";
 
 function erro({
   status,
@@ -38,6 +45,44 @@ describe("mensagemRelatorio", () => {
     );
     expect(mensagemRelatorio(new Error("falha inesperada"))).toBe(
       "Não foi possível carregar os registros. Tente novamente; se o problema continuar, atualize a página.",
+    );
+  });
+});
+
+describe("apresentação pública do relatório", () => {
+  it("oculta identificadores técnicos e usa rótulos orientados ao usuário", () => {
+    expect(campoTecnico("id")).toBe(true);
+    expect(campoTecnico("patrimonioId")).toBe(true);
+    expect(campoTecnico("numeroPatrimonio")).toBe(false);
+    expect(rotulo("tipoNumeroPatrimonial")).toBe(
+      "Tipo de número patrimonial",
+    );
+    expect(rotuloOpcao("DIA")).toBe("Somente data");
+    expect(rotuloOpcao("INSTANTE")).toBe("Data e hora");
+  });
+
+  it("formata datas civis e instantes ISO para exibição", () => {
+    expect(valor("2026-11")).toBe("11/2026");
+    expect(valor("2026-11-23")).toBe("23/11/2026");
+    expect(valor("2026-11-23T15:19:48.154000Z")).toBe(
+      "23/11/2026, 12:19:48",
+    );
+    expect(valor("2026-11-23T15:19:48-03:00")).toBe(
+      "23/11/2026, 15:19:48",
+    );
+    expect(valor("2026-11-23 15:19:48.154000+00")).toBe(
+      "23/11/2026, 12:19:48",
+    );
+    expect(valor("2026-11-23 15:19:48.154000")).toBe(
+      "23/11/2026, 12:19:48",
+    );
+    expect(valor("2026-11-23 sem horário")).toBe("2026-11-23 sem horário");
+  });
+
+  it("gera chaves distintas quando eventos compartilham o identificador", () => {
+    const registro = { id: "evento-repetido" };
+    expect(chaveRegistroRelatorio(registro, 0)).not.toBe(
+      chaveRegistroRelatorio(registro, 1),
     );
   });
 });

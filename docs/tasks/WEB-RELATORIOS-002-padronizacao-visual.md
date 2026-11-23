@@ -1,6 +1,6 @@
 # `WEB-RELATORIOS-002` — Padronizar visualmente os relatórios
 
-**Status:** `aprovada`
+**Status:** `implementada; validação pendente em 23/11/2026`
 
 ## Objetivo
 
@@ -125,3 +125,29 @@ dez tipos, filtros, prévias e PDFs reais para os dois perfis.
 ## Pendências ou decisões bloqueantes
 
 - Nenhuma.
+
+## Implementação em 23/11/2026
+
+- catálogo, configuração, feedback, prévia, tabela e paginação passaram a usar
+  as primitives e composições do kit compartilhado;
+- filtros fixos usam `Select` e entidades remotas usam o mesmo `Combobox`
+  pesquisável da consulta de patrimônios, preservando parâmetros na URL e
+  recuperação do nome selecionado;
+- os seletores remotos ficam no mesmo grid dos demais filtros; a pesquisa do
+  `Combobox` substitui o campo textual genérico e a paginação visual de opções;
+- a prévia omite identificadores internos, critérios técnicos de ordenação e
+  os blocos auxiliares sobre a consulta, organizando totais e estruturas
+  compostas em blocos legíveis;
+- datas civis e instantes ISO exibidos nas tabelas e nos detalhes são
+  formatados em português, usando o horário local da aplicação;
+- linhas da ficha usam uma chave de renderização única mesmo quando eventos do
+  mesmo bem compartilham o identificador retornado pela API;
+- a contagem de página redundante foi retirada da prévia, mantendo somente os
+  controles necessários para avançar e voltar entre resultados;
+- a seleção obrigatória informa erro junto ao campo e em alerta focável; erros
+  gerais e de PDF permanecem visíveis em `Alert`;
+- a Web e o PDF já formatavam decimais contratuais com sete casas, portanto não
+  houve mudança no backend nem nos contratos;
+- testes de fundação e E2E foram atualizados, mas não executados nesta entrega
+  por restrição explícita da execução. A validação automatizada, a inspeção nos
+  viewports e a integração real permanecem pendentes.

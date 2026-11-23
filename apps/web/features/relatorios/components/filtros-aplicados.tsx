@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { CatalogoOpcaoRelatorio, TipoRelatorio } from "@repo/contracts";
 import { rotulo, valor } from "../apresentacao";
 import { useOpcoesRelatorio } from "../api/hooks";
+import { Badge } from "@/components/ui/badge";
 
 const catalogos: Record<string, CatalogoOpcaoRelatorio> = {
   patrimonioId: "patrimonios",
@@ -67,15 +68,17 @@ export function FiltrosAplicados({
     ([nome]) => nome !== "pagina" && nome !== "limite",
   );
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-      <strong>Filtros aplicados</strong>
-      <p className="mt-1 flex flex-wrap gap-x-2 gap-y-1 break-words">
+    <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+      <strong className="text-foreground">Filtros aplicados</strong>
+      <div className="mt-2 flex flex-wrap gap-2 break-words">
         {lista.length === 0
           ? "Todos os registros"
           : lista.map(([nome, dado]) => (
-              <Filtro key={nome} tipo={tipo} nome={nome} dado={dado} />
+              <Badge key={nome} variant="outline" className="h-auto py-1">
+                <Filtro tipo={tipo} nome={nome} dado={dado} />
+              </Badge>
             ))}
-      </p>
+      </div>
     </div>
   );
 }

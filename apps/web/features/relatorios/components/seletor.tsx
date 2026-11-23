@@ -1,13 +1,15 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   CatalogoOpcaoRelatorio,
-  TipoRelatorio,
   OpcoesRelatorioResponse,
+  TipoRelatorio,
 } from "@repo/contracts";
-import { Button } from "@/components/ui/button";
+import { ComboboxField } from "@/components/shared/form-fields";
 import { useOpcoesRelatorio } from "../api/hooks";
-import { campo, mensagemRelatorio } from "../apresentacao";
+import { mensagemRelatorio } from "../apresentacao";
+
 export function SeletorRelatorio({
   nome,
   label,
@@ -17,6 +19,7 @@ export function SeletorRelatorio({
   onChange,
   onLabel,
   obrigatorio = false,
+  error,
 }: {
   nome: string;
   label: string;
@@ -26,6 +29,7 @@ export function SeletorRelatorio({
   onChange: (v: string) => void;
   onLabel?: (nome: string, rotulo: string) => void;
   obrigatorio?: boolean;
+  error?: string;
 }) {
   const carregar = useOpcoesRelatorio(catalogo, tipo);
   const [busca, setBusca] = useState("");
@@ -33,141 +37,100 @@ export function SeletorRelatorio({
     null,
   );
   const [pending, setPending] = useState(false);
-  const [erro, setErro] = useState("");
+  const [erroConsulta, setErroConsulta] = useState("");
   const [rotuloSelecionado, setRotuloSelecionado] = useState("");
-  const atual = useRef(0);
+  const requisicaoAtual = useRef(0);
+
   useEffect(() => {
     if (!valor) return;
     let ativo = true;
-    void carregar(valor, 1)
+    const controller = new AbortController();
+    void carregar(valor, 1, controller.signal)
       .then((resultado) => {
-        if (ativo) {
-          const rotulo =
-            resultado.dados.find((item) => item.id === valor)?.rotulo ??
-            "Opção não encontrada";
-          setRotuloSelecionado(rotulo);
-          onLabel?.(nome, rotulo);
-        }
+        if (!ativo) return;
+        const rotulo =
+          resultado.dados.find((item) => item.id === valor)?.rotulo ??
+          "Opção não encontrada";
+        setRotuloSelecionado(rotulo);
+        onLabel?.(nome, rotulo);
       })
       .catch(() => {
-        if (ativo)
-          setRotuloSelecionado("Não foi possível carregar o nome da opção");
+        if (ativo) setRotuloSelecionado("Nome indisponível");
       });
     return () => {
       ativo = false;
+      controller.abort();
     };
   }, [carregar, nome, onLabel, valor]);
-  async function consultar(pagina = 1) {
-    const id = ++atual.current;
-    setPending(true);
-    setErro("");
-    try {
-      const r = await carregar(busca, pagina);
-      if (id === atual.current) setResposta(r);
-    } catch (e) {
-      if (id === atual.current) setErro(mensagemRelatorio(e));
-    } finally {
-      if (id === atual.current) setPending(false);
-    }
-  }
+
+  useEffect(() => {
+    const id = ++requisicaoAtual.current;
+    const controller = new AbortController();
+    const temporizador = window.setTimeout(() => {
+      setPending(true);
+      setErroConsulta("");
+      void carregar(busca.trim(), 1, controller.signal)
+        .then((resultado) => {
+          if (id === requisicaoAtual.current) setResposta(resultado);
+        })
+        .catch((erro: unknown) => {
+          if (id === requisicaoAtual.current && !controller.signal.aborted)
+            setErroConsulta(mensagemRelatorio(erro));
+        })
+        .finally(() => {
+          if (id === requisicaoAtual.current) setPending(false);
+        });
+    }, 250);
+    return () => {
+      window.clearTimeout(temporizador);
+      controller.abort();
+    };
+  }, [busca, carregar]);
+
+  const opcoes = useMemo(() => {
+    const atuais =
+      resposta?.dados.map((item) => ({ value: item.id, label: item.rotulo })) ??
+      [];
+    const selecionada =
+      valor && !atuais.some((item) => item.value === valor)
+        ? [
+            {
+              value: valor,
+              label: rotuloSelecionado || "Carregando opção selecionada…",
+            },
+          ]
+        : [];
+    return [
+      ...(obrigatorio ? [] : [{ value: "", label: "Todos" }]),
+      ...selecionada,
+      ...atuais,
+    ];
+  }, [obrigatorio, resposta, rotuloSelecionado, valor]);
+
   return (
-    <fieldset className="min-w-0 rounded-md border border-slate-200 p-3">
-      <legend className="px-1 text-sm font-semibold">
-        {label}
-        {obrigatorio ? " (obrigatório)" : " (opcional)"}
-      </legend>
-      <div className="flex gap-2">
-        <input
-          aria-label={`Buscar ${label}`}
-          className={campo}
-          value={busca}
-          maxLength={200}
-          onChange={(e) => {
-            setBusca(e.target.value);
-            ++atual.current;
-            setResposta(null);
-            setPending(false);
-          }}
-          placeholder="Nome ou número"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-1"
-          disabled={pending}
-          onClick={() => void consultar()}
-        >
-          {pending ? "Buscando…" : "Buscar"}
-        </Button>
-      </div>
-      <label className="mt-2 block text-sm">
-        Selecionar {label}
-        <select
-          className={campo}
-          name={nome}
-          value={valor}
-          required={obrigatorio}
-          onChange={(e) => {
-            onChange(e.target.value);
-            const rotulo = resposta?.dados.find(
-              (item) => item.id === e.target.value,
-            )?.rotulo;
-            if (rotulo) onLabel?.(nome, rotulo);
-          }}
-        >
-          <option value="">
-            {obrigatorio ? "Selecione um registro" : "Todos"}
-          </option>
-          {valor && !resposta?.dados.some((d) => d.id === valor) && (
-            <option value={valor}>
-              {rotuloSelecionado || "Carregando opção selecionada…"}
-            </option>
-          )}
-          {resposta?.dados.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.rotulo}
-            </option>
-          ))}
-        </select>
-      </label>
-      {resposta && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          <span>
-            {resposta.meta.total} opções; página {resposta.meta.pagina} de{" "}
-            {resposta.meta.ultimaPagina}
-          </span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={pending || resposta.meta.pagina <= 1}
-            onClick={() => void consultar(resposta.meta.pagina - 1)}
-          >
-            Opções anteriores
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={
-              pending || resposta.meta.pagina >= resposta.meta.ultimaPagina
-            }
-            onClick={() => void consultar(resposta.meta.pagina + 1)}
-          >
-            Mais opções
-          </Button>
-        </div>
-      )}
-      {resposta?.dados.length === 0 && (
-        <p role="status" className="mt-2 text-sm">
-          Nenhum registro encontrado.
-        </p>
-      )}
-      {erro && (
-        <p role="alert" className="mt-2 text-sm text-red-700">
-          {erro}
-        </p>
-      )}
-    </fieldset>
+    <div className="grid min-w-0 gap-2">
+      <ComboboxField
+        id={`filtro-${nome}`}
+        name={nome}
+        label={label}
+        description={obrigatorio ? undefined : "Filtro opcional"}
+        required={obrigatorio}
+        error={error || erroConsulta || undefined}
+        value={valor}
+        onValueChange={(proximo) => {
+          onChange(proximo);
+          const rotulo = opcoes.find((item) => item.value === proximo)?.label;
+          if (rotulo) onLabel?.(nome, rotulo);
+        }}
+        onSearchChange={(proximaBusca) => {
+          setBusca(proximaBusca);
+        }}
+        options={opcoes}
+        loading={pending}
+        placeholder={obrigatorio ? `Selecione ${label.toLowerCase()}` : "Todos"}
+        searchPlaceholder={`Buscar ${label.toLocaleLowerCase("pt-BR")}…`}
+        emptyText="Nenhum registro encontrado."
+      />
+    </div>
   );
 }

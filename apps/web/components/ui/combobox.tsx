@@ -33,6 +33,7 @@ type ComboboxProps = {
   id?: string;
   describedBy?: string;
   name?: string;
+  required?: boolean;
 };
 
 function Combobox({
@@ -50,6 +51,7 @@ function Combobox({
   id,
   describedBy,
   name,
+  required = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -82,6 +84,7 @@ function Combobox({
           role="combobox"
           aria-expanded={open}
           aria-invalid={invalid || undefined}
+          aria-required={required || undefined}
           aria-describedby={describedBy}
           data-field-name={name}
           disabled={disabled}

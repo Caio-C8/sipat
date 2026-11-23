@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { FileText, SlidersHorizontal } from "lucide-react";
 import {
   TipoRelatorioSchema,
   queryRelatorio,
@@ -12,15 +13,20 @@ import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 import { serverRelatorios } from "@/features/relatorios/api/server";
 import { FormularioRelatorios } from "@/features/relatorios/components/formulario";
 import { DownloadRelatorio } from "@/features/relatorios/components/download";
-import {
-  DadosRegistro,
-  mensagemRelatorio,
-  painel,
-} from "@/features/relatorios/apresentacao";
+import { DadosRegistro, mensagemRelatorio } from "@/features/relatorios/apresentacao";
 import { TabelaPrevia } from "@/features/relatorios/components/tabela-previa";
 import { FiltrosAplicados } from "@/features/relatorios/components/filtros-aplicados";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PaginationSummary } from "@/components/shared/pagination-summary";
 export const metadata: Metadata = { title: "Relatórios" };
 const descricoes: Record<string, string> = {
   patrimonios: "Bens, localização, responsável e valores atuais.",
@@ -56,14 +62,15 @@ export default async function RelatoriosPage({
     catalogo = await serverRelatorios.catalogo(opcoes);
   } catch (e) {
     return (
-      <main className="grid gap-5 p-6">
+      <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-4 sm:px-7 sm:py-6">
         <PageHeader
           title="Relatórios"
           description="Consulte dados do patrimônio e emita relatórios."
         />
-        <p role="alert" className="mt-4">
-          {mensagemRelatorio(e)}
-        </p>
+        <Alert variant="destructive">
+          <AlertTitle>Não foi possível carregar os relatórios</AlertTitle>
+          <AlertDescription>{mensagemRelatorio(e)}</AlertDescription>
+        </Alert>
       </main>
     );
   }
@@ -71,6 +78,7 @@ export default async function RelatoriosPage({
   delete q.relatorio;
   delete q.consultar;
   if (legado) delete q.tipo;
+  if (tipo === "patrimonios") delete q.busca;
   const formValues = { ...q };
   if (tipo === "ficha-bem") delete q.patrimonioId;
   let resposta: RelatorioTabularResponse | EventosFichaResponse | null = null;
@@ -81,9 +89,8 @@ export default async function RelatoriosPage({
     if (!tipoValidado.success)
       erro = "Selecione um tipo de relatório disponível.";
     else if (!parsed.success)
-      erro = parsed.error.issues
-        .map((i) => `${i.path.join(".")}: ${i.message}`)
-        .join("; ");
+      erro =
+        "Revise os filtros informados. Confira os campos obrigatórios, as datas e as opções selecionadas.";
     else
       try {
         if (tipo === "ficha-bem") {
@@ -109,13 +116,17 @@ export default async function RelatoriosPage({
     day: "2-digit",
   }).format(new Date());
   const escolhido = catalogo.dados.tipos.find((item) => item.tipo === tipo);
+  const filtrosExibidos =
+    tipo === "ficha-bem" && valores.patrimonioId
+      ? { ...q, patrimonioId: valores.patrimonioId }
+      : q;
   if (
     !tipoValidado.success ||
     !escolhido ||
     (valores.tipo && !legado && !valores.relatorio)
   )
     return (
-      <main className="grid gap-5 p-6">
+      <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-4 sm:px-7 sm:py-6">
         <PageHeader
           title="Relatório inválido"
           description="Escolha um relatório disponível no catálogo."
@@ -125,70 +136,73 @@ export default async function RelatoriosPage({
             </Button>
           }
         />
-        <p role="alert" className="mt-3">
-          Escolha um relatório do catálogo.
-        </p>
+        <Alert variant="destructive">
+          <AlertTitle>Relatório não encontrado</AlertTitle>
+          <AlertDescription>Escolha um relatório do catálogo.</AlertDescription>
+        </Alert>
       </main>
     );
   if (!valores.relatorio && !legado && !valores.consultar)
     return (
-      <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
+      <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-4 sm:px-7 sm:py-6">
         <PageHeader
           title="Relatórios"
           description="Consulte dados do patrimônio, acompanhe as operações e emita relatórios com os filtros desejados."
         />
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-950">
-          <strong>
+        <Alert>
+          <SlidersHorizontal aria-hidden="true" />
+          <AlertTitle>
             Escolha o relatório, defina os filtros e confira a prévia.
-          </strong>
-          <p className="mt-1">
+          </AlertTitle>
+          <AlertDescription>
             O documento final identifica os filtros, a emissão e o responsável.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
         <section
           aria-label="Catálogo de relatórios"
           className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
         >
           {catalogo.dados.tipos.map((item) => (
-            <article
-              key={item.tipo}
-              className={`${painel} flex min-w-0 flex-col gap-3`}
-            >
-              <span
-                aria-hidden="true"
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700"
-              >
-                ▤
-              </span>
-              <h2 className="font-bold">{item.titulo}</h2>
-              <p className="flex-1 text-sm text-slate-600">
-                {descricoes[item.tipo]}
-              </p>
-              {item.disponivel ? (
-                <Link
-                  className="rounded-md border px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-blue-700"
-                  href={`/relatorios?relatorio=${item.tipo}`}
-                >
-                  Configurar relatório →
-                </Link>
-              ) : (
-                <>
-                  <p className="text-sm text-amber-900">{item.motivo}</p>
+            <Card asChild key={item.tipo} className="min-w-0">
+              <article>
+                <CardHeader>
                   <span
-                    aria-disabled="true"
-                    className="rounded-md border px-3 py-2 text-sm text-slate-500"
+                    aria-hidden="true"
+                    className="flex size-9 items-center justify-center rounded-lg bg-accent text-interactive"
                   >
-                    Indisponível
+                    <FileText className="size-5" />
                   </span>
-                </>
-              )}
-            </article>
+                  <CardTitle>
+                    <h2>{item.titulo}</h2>
+                  </CardTitle>
+                  <CardDescription>{descricoes[item.tipo]}</CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto grid gap-3">
+                  {item.disponivel ? (
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href={`/relatorios?relatorio=${item.tipo}`}>
+                        Configurar relatório
+                      </Link>
+                    </Button>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        {item.motivo}
+                      </p>
+                      <Button disabled variant="outline" className="w-full">
+                        Indisponível
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </article>
+            </Card>
           ))}
         </section>
       </main>
     );
   return (
-    <main className="grid min-w-0 gap-5 p-4 text-[#19355d] sm:p-7">
+    <main className="mx-auto grid w-full min-w-0 max-w-[1900px] gap-5 px-4 py-4 sm:px-7 sm:py-6">
       <PageHeader
         title={resposta ? `Prévia · ${escolhido.titulo}` : escolhido.titulo}
         description={
@@ -220,122 +234,92 @@ export default async function RelatoriosPage({
           usuario={identidade.nome}
         >
           {erro && (
-            <div
-              role="alert"
-              className={`${painel} border-red-200 text-red-800`}
-            >
-              <h2 className="font-semibold">Não foi possível gerar a prévia</h2>
-              <p className="mt-2 text-sm">{erro}</p>
-            </div>
+            <Alert variant="destructive">
+              <AlertTitle>Não foi possível gerar a prévia</AlertTitle>
+              <AlertDescription>{erro}</AlertDescription>
+            </Alert>
           )}
         </FormularioRelatorios>
       )}
       {resposta && (
-        <section
-          className={`${painel} grid min-w-0 gap-4`}
-          aria-labelledby="titulo-previa"
-        >
-          <h2 id="titulo-previa" tabIndex={-1} className="sr-only">
-            Registros da prévia
-          </h2>
-          <FiltrosAplicados tipo={tipo} filtros={q} />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-lg border p-4">
-              <span className="text-xs text-slate-600">
-                Total de registros encontrados
-              </span>
-              <strong className="block text-xl">{resposta.meta.total}</strong>
-            </div>
-            <div className="rounded-lg border p-4">
-              <span className="text-xs text-slate-600">
-                Exibidos nesta página
-              </span>
-              <strong className="block text-xl">{resposta.dados.length}</strong>
-            </div>
-            <div className="rounded-lg border p-4">
-              <span className="text-xs text-slate-600">Página</span>
-              <strong className="block text-xl">
-                {resposta.meta.pagina} de {resposta.meta.ultimaPagina}
-              </strong>
-            </div>
-          </div>
-          <details className="text-xs text-slate-600">
-            <summary className="cursor-pointer">
-              Rastreabilidade da consulta
-            </summary>
-            <p className="mt-2 break-words">
-              Consulta {resposta.consulta.id} —{" "}
-              {new Intl.DateTimeFormat("pt-BR", {
-                timeZone: "America/Sao_Paulo",
-                dateStyle: "short",
-                timeStyle: "medium",
-              }).format(new Date(resposta.consulta.instante))}{" "}
-              (São Paulo).
-            </p>
-            <p>Ordenação: {resposta.consulta.ordenacao}</p>
-          </details>
-          <p className="text-sm">{resposta.consulta.criterioTemporal}</p>
-          {resposta.consulta.avisos.map((a, i) => (
-            <p
-              key={i}
-              className="rounded bg-amber-50 p-2 text-sm text-amber-950"
-            >
-              {a}
-            </p>
-          ))}
-          <h3 className="font-semibold">Totais do conjunto filtrado</h3>
-          <DadosRegistro dados={resposta.resumo} />
-          {ficha && (
-            <details className="rounded-md border p-3" open>
-              <summary className="cursor-pointer font-semibold">
-                Cadastro atual do bem
-              </summary>
-              <div className="mt-3">
-                <DadosRegistro dados={ficha.dados.cadastro} />
+        <Card asChild className="min-w-0 gap-4">
+          <section aria-labelledby="titulo-previa">
+            <h2 id="titulo-previa" tabIndex={-1} className="sr-only">
+              Registros da prévia
+            </h2>
+            <CardHeader>
+              <CardTitle>Resultados da prévia</CardTitle>
+              <CardDescription>
+                Confira o conjunto filtrado antes de emitir o documento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid min-w-0 gap-4">
+              <FiltrosAplicados tipo={tipo} filtros={filtrosExibidos} />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Card className="gap-1 p-4 shadow-none">
+                  <span className="text-xs text-muted-foreground">
+                    Total de registros encontrados
+                  </span>
+                  <strong className="block text-xl">
+                    {resposta.meta.total}
+                  </strong>
+                </Card>
+                <Card className="gap-1 p-4 shadow-none">
+                  <span className="text-xs text-muted-foreground">
+                    Exibidos nesta página
+                  </span>
+                  <strong className="block text-xl">
+                    {resposta.dados.length}
+                  </strong>
+                </Card>
               </div>
-            </details>
-          )}
-          {resposta.dados.length === 0 ? (
-            <p role="status">Nenhum registro corresponde aos filtros.</p>
-          ) : (
-            <TabelaPrevia
-              tipo={tipo}
-              dados={resposta.dados as Record<string, unknown>[]}
-            />
-          )}
-          <nav
-            aria-label="Paginação do relatório"
-            className="flex flex-wrap gap-4 text-sm"
-          >
-            {resposta.meta.pagina > 1 && (
-              <Link
-                className="underline"
-                prefetch={false}
-                href={hrefPagina(resposta.meta.pagina - 1)}
-              >
-                Página anterior
-              </Link>
-            )}
-            {resposta.meta.pagina < resposta.meta.ultimaPagina && (
-              <Link
-                className="underline"
-                prefetch={false}
-                href={hrefPagina(resposta.meta.pagina + 1)}
-              >
-                Próxima página
-              </Link>
-            )}
-          </nav>
-          <p className="text-sm">
-            O PDF consultará novamente os dados; alterações posteriores à prévia
-            poderão aparecer.
-          </p>
-          <DownloadRelatorio
-            tipo={tipo}
-            query={pdfQuery}
-            patrimonioId={valores.patrimonioId}
-          />
-        </section>
+              <section aria-labelledby="totais-previa" className="grid gap-3">
+                <h3 id="totais-previa" className="font-semibold">
+                  Totais do conjunto filtrado
+                </h3>
+                <DadosRegistro dados={resposta.resumo} />
+              </section>
+              {ficha && (
+                <section
+                  aria-labelledby="cadastro-atual-bem"
+                  className="grid gap-3"
+                >
+                  <h3 id="cadastro-atual-bem" className="font-semibold">
+                    Cadastro atual do bem
+                  </h3>
+                  <DadosRegistro dados={ficha.dados.cadastro} />
+                </section>
+              )}
+              {resposta.dados.length === 0 ? (
+                <p
+                  role="status"
+                  className="rounded-lg bg-muted p-8 text-center text-sm text-muted-foreground"
+                >
+                  Nenhum registro corresponde aos filtros.
+                </p>
+              ) : (
+                <TabelaPrevia
+                  tipo={tipo}
+                  dados={resposta.dados as Record<string, unknown>[]}
+                />
+              )}
+              <PaginationSummary
+                meta={resposta.meta}
+                href={hrefPagina}
+                showPageCount={false}
+              />
+              <p className="text-sm text-muted-foreground">
+                O PDF consultará novamente os dados; alterações posteriores à
+                prévia poderão aparecer.
+              </p>
+              <DownloadRelatorio
+                tipo={tipo}
+                query={pdfQuery}
+                patrimonioId={valores.patrimonioId}
+              />
+            </CardContent>
+          </section>
+        </Card>
       )}
     </main>
   );

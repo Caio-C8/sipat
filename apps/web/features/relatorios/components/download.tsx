@@ -2,6 +2,8 @@
 import type { TipoRelatorio } from "@repo/contracts";
 import type { ApiQuery } from "@/lib/api/core/types";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Download, ExternalLink } from "lucide-react";
 import * as hooks from "../api/hooks";
 import { mensagemRelatorio } from "../apresentacao";
 type Props = { query: ApiQuery; patrimonioId?: string };
@@ -22,6 +24,7 @@ function Botao({
         disabled={estado.pending}
         onClick={() => void estado.abrir(query, nome)}
       >
+        <ExternalLink aria-hidden="true" />
         Abrir documento
       </Button>
       <Button
@@ -30,12 +33,13 @@ function Botao({
         disabled={estado.pending}
         onClick={() => void estado.baixar(query, nome)}
       >
+        <Download aria-hidden="true" />
         {estado.pending ? "Gerando PDF…" : "Baixar PDF completo"}
       </Button>
       {estado.erro != null && (
-        <p role="alert" className="text-sm text-red-700">
-          {mensagemRelatorio(estado.erro)}
-        </p>
+        <Alert variant="destructive" className="sm:basis-full">
+          <AlertDescription>{mensagemRelatorio(estado.erro)}</AlertDescription>
+        </Alert>
       )}
     </div>
   );

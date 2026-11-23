@@ -1,5 +1,18 @@
 import type { TipoRelatorio } from "@repo/contracts";
-import { DadosRegistro, rotulo, valor } from "../apresentacao";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  chaveRegistroRelatorio,
+  DadosRegistro,
+  rotulo,
+  valor,
+} from "../apresentacao";
 
 const colunas: Record<TipoRelatorio, string[]> = {
   patrimonios: [
@@ -19,7 +32,7 @@ const colunas: Record<TipoRelatorio, string[]> = {
   ],
   manutencoes: [
     "numeroPatrimonio",
-    "pedidoId",
+    "descricao",
     "fornecedor",
     "situacao",
     "dataEnvio",
@@ -72,62 +85,60 @@ export function TabelaPrevia({
 }) {
   const campos = colunas[tipo];
   return (
-    <div
-      className="min-w-0 overflow-x-auto rounded-lg border border-slate-200"
-      tabIndex={0}
-      role="region"
-      aria-label="Registros do relatório"
+    <Table
+      className="min-w-170"
+      containerClassName="rounded-lg border"
+      containerProps={{
+        tabIndex: 0,
+        role: "region",
+        "aria-label": "Registros do relatório",
+      }}
     >
-      <table className="w-full min-w-[680px] text-left text-sm">
-        <caption className="p-3 text-left font-semibold">
-          Registros selecionados
-        </caption>
-        <thead className="bg-slate-50 text-slate-700">
-          <tr>
-            {campos.map((campo) => (
-              <th key={campo} scope="col" className="p-3">
-                {rotulo(campo)}
-              </th>
-            ))}
-            <th scope="col" className="p-3">
-              Detalhes
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {dados.map((registro, indice) => (
-            <tr
-              key={String(registro.id ?? indice)}
-              className="border-t border-slate-100 align-top even:bg-slate-50/60"
-            >
-              {campos.map((campo) => (
-                <td key={campo} className="max-w-64 break-words p-3">
-                  {valor(registro[campo])}
-                </td>
-              ))}
-              <td className="p-3">
-                <details>
-                  <summary className="cursor-pointer whitespace-nowrap font-medium">
-                    Mais informações
-                  </summary>
-                  <div className="mt-3 min-w-64">
-                    <DadosRegistro
-                      dados={Object.fromEntries(
-                        Object.entries(registro).filter(
-                          ([chave]) =>
-                            !campos.includes(chave) &&
-                            !chave.endsWith("Id") &&
-                            chave !== "id",
-                        ),
-                      )}
-                    />
-                  </div>
-                </details>
-              </td>
-            </tr>
+      <caption className="sr-only">Registros selecionados</caption>
+      <TableHeader className="bg-muted text-xs uppercase text-muted-foreground">
+        <TableRow>
+          {campos.map((campo) => (
+            <TableHead key={campo}>{rotulo(campo)}</TableHead>
           ))}
-        </tbody>
-      </table>
-    </div>
+          <TableHead>Detalhes</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {dados.map((registro, indice) => (
+          <TableRow
+            key={chaveRegistroRelatorio(registro, indice)}
+            className="align-top"
+          >
+            {campos.map((campo) => (
+              <TableCell
+                key={campo}
+                className="max-w-64 whitespace-normal wrap-break-word"
+              >
+                {valor(registro[campo])}
+              </TableCell>
+            ))}
+            <TableCell>
+              <details>
+                <summary className="cursor-pointer whitespace-nowrap font-medium text-interactive">
+                  Mais informações
+                </summary>
+                <div className="mt-3 min-w-64 whitespace-normal">
+                  <DadosRegistro
+                    dados={Object.fromEntries(
+                      Object.entries(registro).filter(
+                        ([chave]) =>
+                          !campos.includes(chave) &&
+                          !chave.endsWith("Id") &&
+                          chave !== "id",
+                      ),
+                    )}
+                  />
+                </div>
+              </details>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

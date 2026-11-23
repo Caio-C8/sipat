@@ -155,6 +155,7 @@ function SelectField({
           id={id}
           className="h-10 w-full"
           aria-invalid={Boolean(error) || undefined}
+          aria-required={required || undefined}
           aria-describedby={describedBy(id, description, error)}
         >
           <SelectValue placeholder={placeholder} />
@@ -211,6 +212,7 @@ function ComboboxField({
         id={id}
         invalid={Boolean(error)}
         describedBy={describedBy(id, description, error)}
+        required={required}
         {...props}
       />
       {description ? (
