@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  ListaFornecedores,
-  ListaResponsaveis,
-} from "./cadastros-principais-telas";
+import { ListaFornecedores } from "@/features/fornecedores/components/fornecedor-list";
+import { ListaResponsaveis } from "@/features/responsaveis/components/responsavel-list";
 
 afterEach(cleanup);
 
@@ -33,13 +31,13 @@ describe("listas dos cadastros principais", () => {
       screen
         .getByRole("link", { name: "Cadastrar fornecedor" })
         .getAttribute("href"),
-    ).toBe("/cadastros/fornecedores/novo");
+    ).toBe("/fornecedores/novo");
     expect(
       screen.getByRole("link", { name: "Editar" }).getAttribute("href"),
-    ).toBe(`/cadastros/fornecedores/${id}/editar`);
+    ).toBe(`/fornecedores/${id}/editar`);
     expect(
       screen.getByRole("link", { name: "Consultar" }).getAttribute("href"),
-    ).toBe(`/cadastros/fornecedores/${id}`);
+    ).toBe(`/fornecedores/${id}`);
   });
 
   it("mantém somente consulta para o Diretor", () => {

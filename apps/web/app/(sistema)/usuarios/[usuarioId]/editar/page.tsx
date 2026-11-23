@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { ChevronLeft } from "lucide-react";
-import { PageHeader } from "@/components/shared/page-header";
-import { UsuarioForm } from "@/features/usuarios/components/usuario-form";
-import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
 import { AccessDenied } from "@/components/shared/access-denied";
-import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
+import { PageHeader } from "@/components/shared/page-header";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { CadastroFormPage } from "@/features/cadastros/components/cadastro-form-page";
+import { pagina } from "@/features/cadastros/components/cadastro-ui";
+import { serverUsuarioOperations } from "@/features/usuarios/api/server-usuario-operations";
+import {
+  SituacaoUsuario,
+  UsuarioForm,
+} from "@/features/usuarios/components/usuario-form";
 import { isApiError } from "@/lib/api/core/api-error";
+import { exigirIdentidadeAtual } from "@/lib/auth/server-session";
 
 export const metadata: Metadata = { title: "Editar usuário" };
 
@@ -24,7 +30,6 @@ export default async function EditarUsuarioPage({
   }
 
   const { usuarioId } = await params;
-
   const resultado = await (async () => {
     try {
       const resposta = await serverUsuarioOperations.consultar(usuarioId, {
@@ -36,51 +41,39 @@ export default async function EditarUsuarioPage({
         tipo: "erro" as const,
         mensagem: isApiError(falha)
           ? falha.message
-          : "Não foi possível consultar este usuário.",
+          : "Tente carregar a página novamente. Se o problema continuar, volte mais tarde.",
       };
     }
   })();
 
   if (resultado.tipo === "erro") {
     return (
-      <main className="mx-auto grid max-w-[1400px] gap-4 px-4 py-6 text-[#17253d] sm:px-7">
+      <main className={pagina}>
         <PageHeader
           title="Editar usuário"
           description="Não foi possível carregar os dados deste usuário."
           actions={
-            <Link
-              href="/usuarios"
-              className="inline-flex items-center gap-1 text-sm font-semibold"
-            >
-              <ChevronLeft className="size-4" /> Voltar aos usuários
-            </Link>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/usuarios">Voltar à consulta</Link>
+            </Button>
           }
         />
-        <p
-          role="alert"
-          className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
-        >
-          {resultado.mensagem}
-        </p>
+        <Alert variant="destructive">
+          <AlertTitle>Não foi possível carregar este usuário</AlertTitle>
+          <AlertDescription>{resultado.mensagem}</AlertDescription>
+        </Alert>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto grid w-full max-w-[1400px] gap-5 px-4 py-5 text-[#17253d] sm:px-7 sm:py-6">
-      <PageHeader
-        title="Editar usuário"
-        description="Atualize os dados e o perfil de acesso."
-        actions={
-          <Link
-            href={`/usuarios/${usuarioId}`}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-[#526b8c]"
-          >
-            <ChevronLeft className="size-4" /> Voltar à consulta
-          </Link>
-        }
-      />
+    <CadastroFormPage
+      title="Editar usuário"
+      description="Atualize os dados, o perfil de acesso e a situação do usuário."
+      listHref={`/usuarios/${usuarioId}`}
+    >
       <UsuarioForm usuario={resultado.resposta.dados} />
-    </main>
+      <SituacaoUsuario usuario={resultado.resposta.dados} />
+    </CadastroFormPage>
   );
 }

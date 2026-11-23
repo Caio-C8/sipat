@@ -18,42 +18,42 @@ export const paginasCadastros = {
     titulo: "Cadastros",
     lista: "Processos de compra",
     novo: "Novo processo",
-    href: "/cadastros",
+    href: "/processos-compra",
     subtitulo: "Organize os processos de compra e os documentos fiscais.",
   },
   especies: {
     titulo: "Cadastrar espécie",
     lista: "Espécies cadastradas",
     novo: "Nova espécie",
-    href: "/cadastros/especies",
+    href: "/especies",
     subtitulo: "Agrupe bens com características semelhantes.",
   },
   naturezas: {
     titulo: "Cadastrar natureza",
     lista: "Naturezas cadastradas",
     novo: "Nova natureza",
-    href: "/cadastros/naturezas",
+    href: "/naturezas",
     subtitulo: "Defina a natureza usada na identificação dos bens.",
   },
   comissoes: {
     titulo: "Cadastrar comissão",
     lista: "Comissões cadastradas",
     novo: "Nova comissão",
-    href: "/cadastros/comissoes",
+    href: "/comissoes",
     subtitulo: "Defina a vigência e os funcionários participantes.",
   },
   responsaveis: {
     titulo: "Cadastrar responsável",
     lista: "Responsáveis cadastrados",
     novo: "Novo responsável",
-    href: "/cadastros/responsaveis",
+    href: "/responsaveis",
     subtitulo: "Cadastre os funcionários responsáveis pelos bens.",
   },
   fornecedores: {
     titulo: "Cadastrar fornecedor",
     lista: "Fornecedores cadastrados",
     novo: "Novo fornecedor",
-    href: "/cadastros/fornecedores",
+    href: "/fornecedores",
     subtitulo: "Gerencie os fornecedores vinculados ao patrimônio.",
   },
 } as const;
@@ -144,7 +144,11 @@ export function CadastrosTelas({
               ? "Selecione para consultar."
               : "Selecione para consultar ou editar."}
           </p>
-          <SimpleQueryFilters action={config.href} filters={filters} />
+          <SimpleQueryFilters
+            action={config.href}
+            title={`Pesquisar ${config.lista.toLocaleLowerCase("pt-BR")}`}
+            filters={filters}
+          />
           <ul className="grid gap-2">
             {registros.map((item) => (
               <li key={item.id}>

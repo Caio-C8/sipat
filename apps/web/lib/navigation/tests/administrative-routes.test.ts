@@ -9,13 +9,13 @@ describe("rotas administrativas canônicas", () => {
 
     expect(new Set(lists).size).toBe(lists.length);
     expect(lists).toEqual([
-      "/cadastros",
-      "/cadastros/fornecedores",
-      "/cadastros/setores",
-      "/cadastros/responsaveis",
-      "/cadastros/comissoes",
-      "/cadastros/naturezas",
-      "/cadastros/especies",
+      "/processos-compra",
+      "/fornecedores",
+      "/setores",
+      "/responsaveis",
+      "/comissoes",
+      "/naturezas",
+      "/especies",
       "/usuarios",
     ]);
   });

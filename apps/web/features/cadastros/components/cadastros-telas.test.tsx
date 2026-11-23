@@ -8,13 +8,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CadastrosTelas } from "./cadastros-telas";
-import {
-  FormularioNatureza,
-  FormularioResponsavel,
-  FormularioSetor,
-} from "./formularios-basicos";
+import { FormularioNatureza } from "@/features/naturezas/components/natureza-form";
+import { FormularioResponsavel } from "@/features/responsaveis/components/responsavel-form";
+import { FormularioSetor } from "@/features/setores/components/setor-form";
 import { FormularioCadastro } from "./formulario-cadastro";
-import { FormularioFornecedor } from "./formulario-fornecedor";
+import { FormularioFornecedor } from "@/features/fornecedores/components/fornecedor-form";
 import { ApiError } from "@/lib/api/core/api-error";
 import { browserApiClient } from "@/lib/api/browser-api-client";
 const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
@@ -88,7 +86,7 @@ describe("cadastros integrados", () => {
       ),
     );
     expect(router.replace).toHaveBeenCalledWith(
-      "/cadastros/naturezas?id=" + id + "&salvo=1",
+      "/naturezas/" + id + "?salvo=1",
     );
   });
   it("resume erros, marca o campo e move o foco ao primeiro inválido", async () => {
@@ -279,7 +277,7 @@ describe("cadastros integrados", () => {
     render(
       <FormularioCadastro
         titulo="Novo cadastro"
-        destino="/cadastros"
+        destino="/processos-compra"
         idempotente
         salvar={salvar}
       >
@@ -327,7 +325,7 @@ describe("cadastros integrados", () => {
     render(
       <FormularioCadastro
         titulo="Novo cadastro"
-        destino="/cadastros"
+        destino="/processos-compra"
         salvar={salvar}
       >
         <input name="nome" />
@@ -345,7 +343,7 @@ describe("cadastros integrados", () => {
     const { rerender } = render(
       <FormularioCadastro
         titulo="Novo cadastro"
-        destino="/cadastros"
+        destino="/processos-compra"
         contexto="pagina-criacao"
         salvar={vi.fn()}
       >
@@ -357,7 +355,7 @@ describe("cadastros integrados", () => {
     rerender(
       <FormularioCadastro
         titulo="Editar cadastro"
-        destino="/cadastros"
+        destino="/processos-compra"
         contexto="modal"
         onCancelar={onCancelar}
         salvar={vi.fn()}

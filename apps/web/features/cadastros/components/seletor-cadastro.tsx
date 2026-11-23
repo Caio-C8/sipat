@@ -17,12 +17,14 @@ type Props = {
   rotulo: string;
   inicial?: OpcaoCadastro;
   required?: boolean;
+  onValueChange?: (opcao: OpcaoCadastro | undefined) => void;
 };
 function SeletorPaginado({
   name,
   rotulo,
   inicial,
   required = true,
+  onValueChange,
   consulta,
 }: { consulta: ReturnType<typeof useListarNaturezas> } & Props) {
   const id = useId();
@@ -56,13 +58,14 @@ function SeletorPaginado({
         required={required}
         options={options}
         value={escolhida?.id}
-        onValueChange={(value) =>
-          setEscolhida(
-            [...(dados?.dados ?? []), ...(inicial ? [inicial] : [])].find(
-              (opcao) => opcao.id === value,
-            ),
-          )
-        }
+        onValueChange={(value) => {
+          const proxima = [
+            ...(dados?.dados ?? []),
+            ...(inicial ? [inicial] : []),
+          ].find((opcao) => opcao.id === value);
+          setEscolhida(proxima);
+          onValueChange?.(proxima);
+        }}
         onSearchChange={(value) => {
           setPagina(1);
           setBusca(value.trim());

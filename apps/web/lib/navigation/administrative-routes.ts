@@ -13,12 +13,12 @@ function administrativeRoute(list: `/${string}`): AdministrativeRoute {
 }
 
 export const administrativeRoutes = {
-  processosCompra: administrativeRoute("/cadastros"),
-  fornecedores: administrativeRoute("/cadastros/fornecedores"),
-  setores: administrativeRoute("/cadastros/setores"),
-  responsaveis: administrativeRoute("/cadastros/responsaveis"),
-  comissoes: administrativeRoute("/cadastros/comissoes"),
-  naturezas: administrativeRoute("/cadastros/naturezas"),
-  especies: administrativeRoute("/cadastros/especies"),
+  processosCompra: administrativeRoute("/processos-compra"),
+  fornecedores: administrativeRoute("/fornecedores"),
+  setores: administrativeRoute("/setores"),
+  responsaveis: administrativeRoute("/responsaveis"),
+  comissoes: administrativeRoute("/comissoes"),
+  naturezas: administrativeRoute("/naturezas"),
+  especies: administrativeRoute("/especies"),
   usuarios: administrativeRoute("/usuarios"),
 } as const satisfies Record<string, AdministrativeRoute>;

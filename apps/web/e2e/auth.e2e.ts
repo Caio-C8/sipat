@@ -442,10 +442,10 @@ test.describe("Autenticação Web", () => {
         name: "Processos de compra",
         exact: true,
       }),
-    ).toHaveAttribute("href", "/cadastros");
+    ).toHaveAttribute("href", "/processos-compra");
     await expect(
       navigation.getByRole("link", { name: "Setores", exact: true }),
-    ).toHaveAttribute("href", "/cadastros/setores");
+    ).toHaveAttribute("href", "/setores");
     await expect(
       navigation.getByRole("link", {
         name: "Patrimônios",
@@ -522,17 +522,17 @@ test.describe("Autenticação Web", () => {
         name: "Processos de compra",
         exact: true,
       }),
-    ).toHaveAttribute("href", "/cadastros");
+    ).toHaveAttribute("href", "/processos-compra");
     await expect(navigation.getByText("Usuários", { exact: true })).toHaveCount(
       0,
     );
     for (const [nome, href] of [
-      ["Responsáveis", "/cadastros/responsaveis"],
-      ["Setores", "/cadastros/setores"],
-      ["Comissões", "/cadastros/comissoes"],
-      ["Naturezas", "/cadastros/naturezas"],
-      ["Espécies", "/cadastros/especies"],
-      ["Fornecedores", "/cadastros/fornecedores"],
+      ["Responsáveis", "/responsaveis"],
+      ["Setores", "/setores"],
+      ["Comissões", "/comissoes"],
+      ["Naturezas", "/naturezas"],
+      ["Espécies", "/especies"],
+      ["Fornecedores", "/fornecedores"],
       ["Depreciações", "/depreciacao"],
     ] as const) {
       await expect(

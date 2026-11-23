@@ -1,210 +1,234 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import type { UsuarioDetalhe } from "@repo/contracts";
+import { toast } from "sonner";
+import { SelectField } from "@/components/shared/form-fields";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Campo,
+  mensagemErro,
+  texto,
+} from "@/features/cadastros/components/cadastro-ui";
+import { useCadastroFieldError } from "@/features/cadastros/components/cadastro-field-errors";
+import { FormularioCadastro } from "@/features/cadastros/components/formulario-cadastro";
 import { browserApiClient } from "@/lib/api/browser-api-client";
-import { isApiError } from "@/lib/api/core/api-error";
 import { criarOperacoesUsuarios } from "../api/usuario-operations";
 
 const operacoes = criarOperacoesUsuarios(browserApiClient);
-const campo =
-  "mt-1 min-h-10 w-full rounded-md border border-[#dce5f0] bg-white px-3 text-sm text-[#17253d] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#2863ec]";
-const perfilLabel = (perfil: string) =>
-  perfil === "ADMINISTRADOR" ? "Administrador" : "Diretor de patrimônio";
+type PerfilUsuario = "ADMINISTRADOR" | "DIRETOR_PATRIMONIO";
 
-function mensagem(erro: unknown) {
-  if (isApiError(erro)) {
-    if (erro.status === 401) return "Sua sessão expirou. Entre novamente.";
-    if (erro.status === 403)
-      return "Você não tem permissão para esta operação.";
-    return erro.erros.length
-      ? erro.erros.map((item) => `${item.campo}: ${item.mensagem}`).join(" ")
-      : erro.message;
-  }
-  return "Não foi possível concluir a operação. Confira os dados e tente novamente.";
+function PerfilUsuarioField({
+  value,
+  onValueChange,
+}: {
+  value: PerfilUsuario;
+  onValueChange: (value: PerfilUsuario) => void;
+}) {
+  const error = useCadastroFieldError("perfil");
+  return (
+    <SelectField
+      id="perfil-usuario"
+      name="perfil"
+      label="Perfil de acesso"
+      required
+      value={value}
+      onValueChange={(next) => onValueChange(next as PerfilUsuario)}
+      error={error}
+      options={[
+        {
+          value: "DIRETOR_PATRIMONIO",
+          label: "Diretor de patrimônio",
+        },
+        { value: "ADMINISTRADOR", label: "Administrador" },
+      ]}
+    />
+  );
 }
 
-export function UsuarioForm({ usuario }: { usuario?: UsuarioDetalhe }) {
-  const router = useRouter();
-  const [nome, setNome] = useState(usuario?.nome ?? "");
-  const [email, setEmail] = useState(usuario?.email ?? "");
-  const [senha, setSenha] = useState("");
-  const [perfil, setPerfil] = useState(usuario?.perfil ?? "DIRETOR_PATRIMONIO");
-  const [erro, setErro] = useState("");
-  const [ocupado, setOcupado] = useState(false);
-
-  async function salvar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErro("");
-    setOcupado(true);
-    try {
-      if (usuario) {
-        await operacoes.alterar(usuario.id, { nome, email, perfil });
-        router.push(`/usuarios/${usuario.id}`);
-      } else {
-        const resposta = await operacoes.criar({ nome, email, senha, perfil });
-        router.push(`/usuarios/${resposta.dados.id}`);
-      }
-      router.refresh();
-    } catch (falha) {
-      setErro(mensagem(falha));
-    } finally {
-      setOcupado(false);
-    }
-  }
+export function UsuarioForm({
+  usuario,
+  contexto = "pagina",
+  onCancelar,
+  onSucesso,
+}: {
+  usuario?: UsuarioDetalhe;
+  contexto?: "pagina" | "modal";
+  onCancelar?: () => void;
+  onSucesso?: (id: string) => void;
+}) {
+  const perfilInicial = usuario?.perfil ?? "DIRETOR_PATRIMONIO";
+  const [perfil, setPerfil] = useState<PerfilUsuario>(perfilInicial);
 
   return (
-    <form onSubmit={salvar} className="grid gap-5">
-      <section
-        className="grid gap-5 rounded-lg border border-[#dfe7f1] bg-white p-5 sm:p-6"
-        aria-labelledby="dados-heading"
-      >
-        <h2 id="dados-heading" className="text-lg font-bold text-[#17253d]">
-          Dados de acesso
-        </h2>
-        <label className="text-sm font-medium text-[#425875]">
-          Nome completo *
-          <input
-            className={campo}
-            value={nome}
-            onChange={(event) => setNome(event.target.value)}
-            maxLength={100}
-            autoComplete="name"
+    <FormularioCadastro
+      titulo={usuario ? "Editar usuário" : "Novo usuário"}
+      contexto={
+        contexto === "modal"
+          ? "modal"
+          : usuario
+            ? "pagina-edicao"
+            : "pagina-criacao"
+      }
+      destino="/usuarios"
+      rotaDetalhe
+      destinoSucesso={(id) => `/usuarios/${id}?salvo=1`}
+      rotulo={usuario ? "Salvar alterações" : "Cadastrar usuário"}
+      mensagemSucesso={
+        contexto === "modal" ? "Usuário salvo com sucesso." : undefined
+      }
+      navegarAposSucesso={contexto !== "modal"}
+      onCancelar={onCancelar}
+      onSucesso={onSucesso}
+      onRestaurar={() => setPerfil(perfilInicial)}
+      salvar={async (dados) => {
+        const body = {
+          nome: texto(dados, "nome"),
+          email: texto(dados, "email"),
+          perfil: texto(dados, "perfil") as PerfilUsuario,
+        };
+        if (usuario) {
+          await operacoes.alterar(usuario.id, body);
+          return { id: usuario.id };
+        }
+        const resposta = await operacoes.criar({
+          ...body,
+          senha: String(dados.get("senha") ?? ""),
+        });
+        return resposta.dados;
+      }}
+    >
+      <Campo
+        rotulo="Nome completo"
+        name="nome"
+        defaultValue={usuario?.nome ?? ""}
+        maxLength={100}
+        autoComplete="name"
+        required
+      />
+      <Campo
+        rotulo="E-mail"
+        name="email"
+        type="email"
+        defaultValue={usuario?.email ?? ""}
+        maxLength={150}
+        autoComplete="email"
+        required
+      />
+      {!usuario ? (
+        <div className="grid gap-1">
+          <Campo
+            rotulo="Senha inicial"
+            name="senha"
+            type="password"
+            autoComplete="new-password"
+            aria-describedby="senha-inicial-description"
             required
           />
-        </label>
-        <label className="text-sm font-medium text-[#425875]">
-          E-mail *
-          <input
-            className={campo}
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            maxLength={150}
-            autoComplete="email"
-            required
-          />
-        </label>
-        {!usuario ? (
-          <label className="text-sm font-medium text-[#425875]">
-            Senha inicial *
-            <input
-              className={campo}
-              type="password"
-              value={senha}
-              onChange={(event) => setSenha(event.target.value)}
-              autoComplete="new-password"
-              required
-            />
-            <span className="mt-1 block text-xs font-normal text-[#7188a5]">
-              O usuário deverá redefinir esta senha no primeiro acesso.
-            </span>
-          </label>
-        ) : null}
-        <label className="text-sm font-medium text-[#425875]">
-          Perfil de acesso *
-          <select
-            className={campo}
-            value={perfil}
-            onChange={(event) => setPerfil(event.target.value as typeof perfil)}
+          <p
+            id="senha-inicial-description"
+            className="text-sm text-muted-foreground"
           >
-            <option value="DIRETOR_PATRIMONIO">Diretor de patrimônio</option>
-            <option value="ADMINISTRADOR">Administrador</option>
-          </select>
-        </label>
-        {usuario ? (
-          <p className="text-sm text-[#7188a5]">
-            A situação atual é{" "}
-            <strong>{usuario.ativo ? "Ativo" : "Inativo"}</strong>. Você pode
-            alterá-la na consulta do usuário.
+            O usuário deverá redefinir esta senha no primeiro acesso.
           </p>
-        ) : null}
-      </section>
-      {erro ? (
-        <p
-          role="alert"
-          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900"
-        >
-          {erro}
-        </p>
+        </div>
       ) : null}
-      <div className="flex flex-wrap justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-10 px-5"
-          onClick={() => router.back()}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          disabled={ocupado}
-          className="min-h-10 bg-[#203b61] px-5 text-white hover:bg-[#31537f]"
-        >
-          {ocupado
-            ? "Salvando…"
-            : usuario
-              ? "Salvar alterações"
-              : "Cadastrar usuário"}
-        </Button>
-      </div>
-    </form>
+      <PerfilUsuarioField value={perfil} onValueChange={setPerfil} />
+    </FormularioCadastro>
   );
 }
 
 export function SituacaoUsuario({ usuario }: { usuario: UsuarioDetalhe }) {
   const router = useRouter();
-  const [erro, setErro] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [confirmar, setConfirmar] = useState(false);
+
   async function alternar() {
-    if (
-      !usuario.ativo &&
-      !window.confirm(`Deseja ativar o acesso de ${usuario.nome}?`)
-    )
-      return;
-    if (
-      usuario.ativo &&
-      !window.confirm(
-        `Deseja inativar o acesso de ${usuario.nome}? As sessões atuais serão encerradas.`,
-      )
-    )
-      return;
-    setErro("");
+    setErro(null);
     setOcupado(true);
     try {
       await operacoes.alterarSituacao(usuario.id, !usuario.ativo);
+      setConfirmar(false);
+      toast.success(
+        usuario.ativo
+          ? "Usuário inativado com sucesso."
+          : "Usuário ativado com sucesso.",
+      );
       router.refresh();
     } catch (falha) {
-      setErro(mensagem(falha));
+      setErro(mensagemErro(falha));
+      setConfirmar(false);
     } finally {
       setOcupado(false);
     }
   }
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button
-        type="button"
-        variant="outline"
-        disabled={ocupado}
-        onClick={alternar}
-        className="min-h-10 px-4"
-      >
-        {ocupado
-          ? "Atualizando…"
-          : usuario.ativo
-            ? "Inativar usuário"
-            : "Ativar usuário"}
-      </Button>
+    <section
+      className="grid gap-3 rounded-lg border border-border bg-card p-4 text-sm"
+      aria-labelledby="situacao-usuario"
+    >
+      <h2 id="situacao-usuario" className="font-semibold">
+        Situação do usuário
+      </h2>
+      <p aria-live="polite">
+        Situação atual: <strong>{usuario.ativo ? "Ativo" : "Inativo"}</strong>
+      </p>
       {erro ? (
-        <p role="alert" className="basis-full text-sm text-red-800">
-          {erro}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
       ) : null}
-    </div>
+      <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
+        <AlertDialogTrigger asChild>
+          <Button
+            type="button"
+            variant={usuario.ativo ? "destructive" : "outline"}
+            disabled={ocupado}
+          >
+            {usuario.ativo ? "Inativar usuário" : "Ativar usuário"}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {usuario.ativo ? "Inativar" : "Ativar"} usuário?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {usuario.ativo
+                ? `O acesso de ${usuario.nome} será bloqueado e as sessões atuais serão encerradas. O histórico será preservado.`
+                : `O acesso de ${usuario.nome} será reativado sem alterar o histórico.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={ocupado}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              variant={usuario.ativo ? "destructive" : "default"}
+              disabled={ocupado}
+              onClick={(event) => {
+                event.preventDefault();
+                void alternar();
+              }}
+            >
+              {ocupado ? "Atualizando…" : "Confirmar situação"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </section>
   );
 }
-
-export { perfilLabel };

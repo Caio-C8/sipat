@@ -81,17 +81,20 @@ describe("catálogo de navegação do sistema", () => {
     expect(encontrarNavegacaoPorCaminho("/manutencoes/pedido-01")?.id).toBe(
       "manutencoes",
     );
-    expect(encontrarNavegacaoPorCaminho("/cadastros/setores/novo")?.id).toBe(
-      "setores",
+    expect(encontrarNavegacaoPorCaminho("/setores/novo")?.id).toBe("setores");
+    expect(
+      encontrarNavegacaoPorCaminho("/fornecedores/95e540bb-38c3-4a3f/editar")
+        ?.id,
+    ).toBe("fornecedores");
+    expect(encontrarNavegacaoPorCaminho("/responsaveis/novo")?.id).toBe(
+      "responsaveis",
     );
     expect(
-      encontrarNavegacaoPorCaminho(
-        "/cadastros/fornecedores/95e540bb-38c3-4a3f/editar",
-      )?.id,
-    ).toBe("fornecedores");
-    expect(
-      encontrarNavegacaoPorCaminho("/cadastros/responsaveis/novo")?.id,
-    ).toBe("responsaveis");
+      encontrarNavegacaoPorCaminho("/naturezas/95e540bb-38c3-4a3f/editar")?.id,
+    ).toBe("naturezas");
+    expect(encontrarNavegacaoPorCaminho("/processos-compra/novo")?.id).toBe(
+      "processos-compra",
+    );
     expect(
       encontrarNavegacaoPorCaminho("/movimentacoes-inexistente"),
     ).toBeUndefined();
@@ -117,12 +120,18 @@ describe("catálogo de navegação do sistema", () => {
       ),
     ).not.toContain("95e540bb");
     expect(
-      encontrarTelaPorCaminho(
-        "/cadastros/fornecedores/95e540bb-38c3-4a3f/editar",
-      )?.breadcrumb,
+      encontrarTelaPorCaminho("/fornecedores/95e540bb-38c3-4a3f/editar")
+        ?.breadcrumb,
     ).toEqual([
-      { label: "Fornecedores", href: "/cadastros/fornecedores" },
+      { label: "Fornecedores", href: "/fornecedores" },
       { label: "Editar fornecedor" },
+    ]);
+    expect(
+      encontrarTelaPorCaminho("/comissoes/95e540bb-38c3-4a3f/editar")
+        ?.breadcrumb,
+    ).toEqual([
+      { label: "Comissões", href: "/comissoes" },
+      { label: "Editar comissão" },
     ]);
   });
 
