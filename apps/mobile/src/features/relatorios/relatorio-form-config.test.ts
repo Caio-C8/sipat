@@ -18,10 +18,7 @@ const valid = {
     fim: "31/12/2026",
     base: "ENVIO",
   },
-  depreciacoes: {
-    competenciaInicio: "2026-01",
-    competenciaFim: "2026-12",
-  },
+  depreciacoes: { competencia: "2026-01" },
   "pendencias-depreciacao": {},
   reavaliacoes: {
     inicio: "01/01/2026",
@@ -82,7 +79,7 @@ describe("relatorioFormConfig", () => {
     });
   });
 
-  it("aplica enums e o limite de doze competências", () => {
+  it("aplica enums e aceita competência de depreciação opcional", () => {
     expect(
       validateRelatorioDraft("manutencoes", {
         inicio: "01/01/2026",
@@ -90,16 +87,15 @@ describe("relatorioFormConfig", () => {
         base: "INVALIDA",
       }).success,
     ).toBe(false);
+    expect(validateRelatorioDraft("depreciacoes", {})).toMatchObject({
+      success: true,
+      query: {},
+    });
     expect(
-      validateRelatorioDraft("depreciacoes", {
-        competenciaInicio: "2025-12",
-        competenciaFim: "2026-12",
-      }),
+      validateRelatorioDraft("depreciacoes", { competencia: "2026-13" }),
     ).toMatchObject({
       success: false,
-      errors: {
-        competenciaFim: "Use um intervalo ordenado de até 12 competências.",
-      },
+      errors: { competencia: "Informe competência no formato AAAA-MM." },
     });
   });
 
