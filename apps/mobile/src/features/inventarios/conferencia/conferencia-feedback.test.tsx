@@ -1,11 +1,7 @@
 import type { VerificarItemInventarioResultado } from "@repo/contracts";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import {
-  READING_TOAST_DURATION_MS,
-  ReadingToast,
-  readingFeedback,
-} from "./conferencia-feedback";
+import { ReadingResult, readingFeedback } from "./conferencia-feedback";
 
 vi.mock("@react-native-vector-icons/lucide", () => ({
   Lucide: ({ name }: { name: string }) => <span data-icon={name} />,
@@ -26,20 +22,19 @@ const correctResult = {
 } as unknown as VerificarItemInventarioResultado;
 
 describe("feedback da conferência", () => {
-  it("apresenta o resultado em toast dispensável", () => {
+  it("mantém o resultado e oferece a próxima leitura explicitamente", () => {
     const markup = renderToStaticMarkup(
-      <ReadingToast onClose={vi.fn()} result={correctResult} />,
+      <ReadingResult onReadNext={vi.fn()} result={correctResult} />,
     );
 
     expect(markup).toContain("Bem conferido");
     expect(markup).toContain("Notebook da conferência · 000123");
     expect(markup).toContain("Tecnologia da Informação · setor correto.");
-    expect(markup).toContain('aria-label="Fechar aviso da leitura"');
+    expect(markup).toContain("Ler próximo patrimônio");
+    expect(markup).toContain(
+      'aria-label="Ler próximo patrimônio. Limpa o resultado atual e reativa a câmera"',
+    );
     expect(markup).toContain('data-icon="circle-check"');
-  });
-
-  it("mantém o aviso tempo suficiente antes do fechamento automático", () => {
-    expect(READING_TOAST_DURATION_MS).toBe(6_000);
   });
 
   it("explica a origem e o local de uma divergência", () => {

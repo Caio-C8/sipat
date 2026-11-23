@@ -169,11 +169,32 @@ Ocorrências` foi substituído pelo acesso às correções pendentes. A compara�
 visual da UI executada em 390×844, telefone/tablet, orientação, fonte ampliada,
 TalkBack e VoiceOver permanece pendente de ambiente/dispositivo.
 
-A validação local desta entrega passou em lint, typecheck, 134 testes Vitest,
-formatação, `git diff --check` e exports Expo Android, iOS e Web. A integração
-real com API/PostgreSQL e a acessibilidade em dispositivos não foram repetidas
-nesta execução; a fronteira mobile usa os contratos e endpoints já cobertos
-pela integração de `INVENTARIOS-002`.
+`MOBILE-INVENTARIOS-004` passou a pausar o leitor de forma síncrona na primeira
+leitura patrimonial válida e a mantê-lo desmontado durante mutation, resultado,
+erro, divergência, digitação manual, background e perda de foco da rota. O
+resultado permanece legível até `Ler próximo patrimônio`; falhas oferecem
+`Tentar novamente` e `Ler outro patrimônio` sem repetição automática. O guia
+visual limita a aceitação pelo centro informado em `bounds` ou `cornerPoints`,
+com fallback quando a plataforma não fornece geometria, e a câmera usa foco
+contínuo e ampliação leve. O formulário manual agora reage à abertura do
+teclado, compacta a câmera pausada e rola o input para a área visível.
+
+Na primeira validação em tablet Android, o modo `height` do
+`KeyboardAvoidingView` não reposicionou o input no layout edge-to-edge. A tela
+passou a usar `padding`, inset automático no iOS e câmera pausada compacta
+durante a entrada manual. A mesma validação confirmou a limitação documentada
+do ML Kit para códigos 1D de um único caractere: o aplicativo aceita o valor
+canônico `7`, mas a etiqueta precisa codificar ao menos `07` para o detector
+Android produzir o callback.
+
+A validação final informada em 23/11/2026 passou em lint, typecheck, testes
+Vitest, formatação, `git diff --check` e exports Expo Android, iOS e Web. A
+homologação em tablet Android cobriu câmera com etiqueta real, pausa/retomada,
+resultado persistente e campo manual acima do teclado. As propriedades
+acessíveis do resultado e da ação de próxima leitura foram verificadas pela
+suíte. A integração real com API/PostgreSQL permanece coberta pela fronteira e
+pelos endpoints já validados em `INVENTARIOS-002`; não houve mudança de
+contrato nesta tarefa. `MOBILE-INVENTARIOS-004` está concluída sem pendências.
 
 `MOBILE-HOME-001` tornou `/` a home autenticada inicial; `MOBILE-HOME-002`
 preservou proteção, moveu o logout para o menu da topbar e adicionou conteúdo

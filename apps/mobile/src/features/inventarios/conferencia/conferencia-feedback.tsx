@@ -3,8 +3,6 @@ import type { VerificarItemInventarioResultado } from "@repo/contracts";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { mobileInventarios, radii, spacing } from "../../../theme/tokens";
 
-export const READING_TOAST_DURATION_MS = 6_000;
-
 export function readingFeedback(result: VerificarItemInventarioResultado) {
   const { item } = result;
   const correct = item.situacao === "CORRETO";
@@ -33,22 +31,22 @@ export function readingFeedback(result: VerificarItemInventarioResultado) {
   } as const;
 }
 
-export function ReadingToast({
-  onClose,
+export function ReadingResult({
+  onReadNext,
   result,
 }: Readonly<{
-  onClose(): void;
+  onReadNext(): void;
   result: VerificarItemInventarioResultado;
 }>) {
   const feedback = readingFeedback(result);
   const { item } = result;
 
   return (
-    <View pointerEvents="box-none" style={styles.layer}>
-      <View
-        accessibilityLiveRegion="polite"
-        style={[styles.toast, feedback.warning && styles.toastWarning]}
-      >
+    <View
+      accessibilityLiveRegion="polite"
+      style={[styles.result, feedback.warning && styles.resultWarning]}
+    >
+      <View style={styles.resultHeader}>
         <Lucide
           accessible={false}
           color={
@@ -59,64 +57,59 @@ export function ReadingToast({
           name={feedback.warning ? "triangle-alert" : "circle-check"}
           size={22}
         />
-        <View style={styles.content}>
-          <Text style={styles.title}>{feedback.title}</Text>
-          <Text style={styles.item}>
-            {item.patrimonio.descricao} · {item.patrimonio.numeroPatrimonio}
-          </Text>
-          <Text style={styles.message}>{feedback.message}</Text>
-        </View>
-        <Pressable
-          accessibilityLabel="Fechar aviso da leitura"
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={onClose}
-          style={styles.close}
-        >
-          <Lucide
-            accessible={false}
-            color={mobileInventarios.textMuted}
-            name="x"
-            size={19}
-          />
-        </Pressable>
+        <Text accessibilityRole="header" style={styles.title}>
+          {feedback.title}
+        </Text>
       </View>
+      <View
+        accessible
+        accessibilityLabel={`${item.patrimonio.descricao}, patrimônio ${item.patrimonio.numeroPatrimonio}. ${feedback.message}`}
+        style={styles.content}
+      >
+        <Text style={styles.item}>
+          {item.patrimonio.descricao} · {item.patrimonio.numeroPatrimonio}
+        </Text>
+        <Text style={styles.message}>{feedback.message}</Text>
+      </View>
+      <Pressable
+        accessibilityHint="Limpa o resultado atual e reativa a câmera"
+        accessibilityLabel="Ler próximo patrimônio. Limpa o resultado atual e reativa a câmera"
+        accessibilityRole="button"
+        onPress={onReadNext}
+        style={styles.nextButton}
+      >
+        <Lucide
+          accessible={false}
+          color="#ffffff"
+          name="scan-barcode"
+          size={19}
+        />
+        <Text style={styles.nextButtonText}>Ler próximo patrimônio</Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  layer: {
-    alignItems: "center",
-    left: 0,
-    paddingHorizontal: spacing.lg,
-    position: "absolute",
-    right: 0,
-    top: spacing.md,
-    zIndex: 20,
-  },
-  toast: {
-    alignItems: "flex-start",
+  result: {
     backgroundColor: mobileInventarios.successSurface,
     borderColor: mobileInventarios.success,
     borderRadius: radii.md,
     borderWidth: 1,
-    elevation: 5,
-    flexDirection: "row",
-    gap: spacing.sm,
-    maxWidth: 680,
+    gap: spacing.md,
+    marginTop: spacing.lg,
     padding: spacing.md,
-    shadowColor: mobileInventarios.text,
-    shadowOffset: { height: 3, width: 0 },
-    shadowOpacity: 0.16,
-    shadowRadius: 8,
-    width: "100%",
   },
-  toastWarning: {
+  resultWarning: {
     backgroundColor: mobileInventarios.warningSurface,
     borderColor: mobileInventarios.warning,
   },
-  content: { flex: 1 },
+  resultHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  content: { gap: spacing.xs },
   title: {
     color: mobileInventarios.text,
     fontSize: 14,
@@ -127,20 +120,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     lineHeight: 17,
-    marginTop: spacing.xs,
   },
   message: {
     color: mobileInventarios.textMuted,
     fontSize: 12,
     lineHeight: 17,
-    marginTop: spacing.xs,
   },
-  close: {
+  nextButton: {
     alignItems: "center",
-    borderRadius: radii.pill,
-    height: 32,
+    backgroundColor: mobileInventarios.action,
+    borderRadius: radii.md,
+    flexDirection: "row",
+    gap: spacing.sm,
     justifyContent: "center",
-    margin: -spacing.xs,
-    width: 32,
+    minHeight: 48,
+    paddingHorizontal: spacing.md,
   },
+  nextButtonText: { color: "#ffffff", fontWeight: "800" },
 });

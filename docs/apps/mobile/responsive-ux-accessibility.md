@@ -54,10 +54,14 @@ disabled, offline e falta de permissão quando aplicável. Pull-to-refresh pode
 complementar, mas não substituir, uma ação acessível. Não use toast como único
 local de informação necessária para corrigir o fluxo.
 
-Na conferência patrimonial, resultados informativos de leitura usam um aviso
-flutuante anunciado por live region, dispensável e removido automaticamente
-após seis segundos. Divergências preservam o modal com as ações de continuar e
-corrigir; erros de entrada permanecem próximos ao campo correspondente.
+Na conferência patrimonial, resultados informativos de leitura permanecem em
+um card anunciado por live region até a ação `Ler próximo patrimônio`.
+Divergências preservam o modal com as ações de continuar e corrigir; falhas
+mantêm repetição explícita sem reativar o leitor, e erros de entrada permanecem
+próximos ao campo correspondente. O conteúdo rolável reage ao teclado e leva o
+campo manual para a área visível ao receber foco; no Android edge-to-edge, a
+área pausada da câmera também é compactada durante a digitação para preservar o
+campo e sua ação acima do teclado.
 
 ## TalkBack, VoiceOver e Web
 

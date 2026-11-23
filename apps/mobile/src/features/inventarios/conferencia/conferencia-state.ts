@@ -3,7 +3,15 @@ import {
   NumeroPatrimonialSchema,
   type ItemJaVerificadoOutroSetorDados,
 } from "@repo/contracts";
+import type { BarcodeScanningResult } from "expo-camera";
 import type { ApiError } from "../../../lib/api/api-error";
+
+const SCAN_GUIDE = {
+  left: 0.1,
+  right: 0.9,
+  top: 0.24,
+  bottom: 0.76,
+} as const;
 
 export function normalizeNumeroPatrimonial(value: string) {
   const normalized = value.trim().toUpperCase();
@@ -68,18 +76,63 @@ export function conferenciaErrorMessage(error: ApiError) {
 }
 
 export function shouldMountCamera(input: {
+  appActive: boolean;
   available: boolean;
   focused: boolean;
   granted: boolean;
   modalOpen: boolean;
+  paused: boolean;
   submitting: boolean;
 }) {
   return (
+    input.appActive &&
     input.available &&
     input.focused &&
     input.granted &&
     !input.modalOpen &&
+    !input.paused &&
     !input.submitting
+  );
+}
+
+export function isBarcodeInsideScanGuide(
+  result: BarcodeScanningResult,
+  frame: Readonly<{ height: number; width: number }>,
+) {
+  const points = result.cornerPoints.filter(
+    (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
+  );
+  const bounds = result.bounds;
+  const boundsUsable =
+    Number.isFinite(bounds.origin.x) &&
+    Number.isFinite(bounds.origin.y) &&
+    Number.isFinite(bounds.size.width) &&
+    Number.isFinite(bounds.size.height) &&
+    bounds.size.width > 0 &&
+    bounds.size.height > 0;
+
+  let center: Readonly<{ x: number; y: number }> | null = null;
+  if (points.length > 0) {
+    center = {
+      x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+      y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+    };
+  } else if (boundsUsable) {
+    center = {
+      x: bounds.origin.x + bounds.size.width / 2,
+      y: bounds.origin.y + bounds.size.height / 2,
+    };
+  }
+
+  // Some barcode types and platforms omit geometry. Keep those compatible
+  // instead of making otherwise valid patrimonial labels impossible to read.
+  if (!center || frame.width <= 0 || frame.height <= 0) return true;
+
+  return (
+    center.x >= frame.width * SCAN_GUIDE.left &&
+    center.x <= frame.width * SCAN_GUIDE.right &&
+    center.y >= frame.height * SCAN_GUIDE.top &&
+    center.y <= frame.height * SCAN_GUIDE.bottom
   );
 }
 
