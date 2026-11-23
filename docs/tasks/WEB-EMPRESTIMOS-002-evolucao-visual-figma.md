@@ -14,12 +14,14 @@ Foram inspecionados diretamente os nós `303:6579` (lista), `303:6769`
 
 ## Entrega
 
-- Lista com abas, filtros e paginação na URL, indicação de atraso derivada da
-  API, identificação curta baseada no UUID e retorno à consulta anterior.
+- Lista sem abas, com filtro de situação, filtros e paginação na URL, indicação
+  de atraso derivada da API e destinatário sem identificador técnico visível.
 - Seleção de bens elegíveis com busca, paginação, checkboxes, limite do contrato
   e estado preservado entre pesquisa e cadastro.
-- Cadastro dividido em destino, comissão e bens; revisão local antes da única
-  confirmação; resultado mostra todos os registros separados quando aplicável.
+- Cadastro dividido em destino, comissão, bens e forma de registro no mesmo
+  conjunto de cards; a comissão usa um único combobox pesquisável. A revisão
+  local antecede a confirmação e o resultado mostra os registros separados
+  quando aplicável.
 - Detalhe com saída, bens, devoluções, histórico sustentado pelos eventos da
   resposta e link para a ficha patrimonial.
 - Registro de devolução parcial ou integral com prévia de pendências, seleção
@@ -29,7 +31,8 @@ Foram inspecionados diretamente os nós `303:6579` (lista), `303:6769`
 
 ## Adaptações do desenho
 
-O contrato fornece UUID, então não foi criada numeração `EMP-...`.
+O contrato fornece UUID, usado somente na navegação e integração; lista,
+resultado e detalhe apresentam o destinatário sem expor o identificador.
 O catálogo específico retorna apenas bens ativos elegíveis; a interface não
 simula indisponíveis. O detalhe não inventa responsável do setor, estado atual
 do patrimônio nem dados ausentes de registros legados. A barra lateral e a

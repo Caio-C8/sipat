@@ -2,6 +2,10 @@
 
 **Status:** implementada em 13/11/2026; verificação automatizada concluída
 
+> Decisão posterior de 23/11/2026: o detalhe acessado pela listagem passou a
+> usar página completa no padrão de movimentações. O drawer iniciado na ficha
+> patrimonial permanece separado para a ação contextual de reavaliar o bem.
+
 ## Objetivo
 
 Adequar o fluxo Web de reavaliações já integrado à API para reproduzir com
@@ -254,6 +258,14 @@ Arquivos de API e banco são referências de verificação, não alvos previstos
 `apps/api/src/modules/reavaliacoes/reavaliacoes.controller.ts`,
 `apps/api/src/modules/reavaliacoes/` e
 `packages/database/prisma/schema.prisma`.
+
+## Evolução posterior — 23/11/2026
+
+- A primeira etapa passou a seguir a seleção de movimentações: busca por número
+  ou descrição, filtro por setor atual, tabela com responsável e situação,
+  contador e checkboxes para até vinte bens.
+- O contrato de reavaliação em massa, a prévia, os parâmetros individuais e a
+  confirmação existentes foram preservados.
 
 ## Verificações esperadas
 

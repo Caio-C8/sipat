@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import {
   ReavaliacaoParamsSchema,
   type ReavaliacaoDetalhe,
@@ -9,7 +11,16 @@ import { isApiError } from "@/lib/api/core/api-error";
 import { serverReavaliacaoOperations } from "../api/server-reavaliacao-operations";
 import { formatarDataCivil, formatarDecimal } from "../presentation";
 import { ErroReavaliacao } from "./erro-reavaliacao";
-import { ReavaliacaoDetalheDrawer } from "./reavaliacao-detalhe-drawer";
+import { PageHeader } from "@/components/shared/page-header";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function DetalheConteudo({ item }: { item: ReavaliacaoDetalhe }) {
   const linhas: [string, string | null, string][] = item.novo
@@ -39,7 +50,7 @@ function DetalheConteudo({ item }: { item: ReavaliacaoDetalhe }) {
     : [];
 
   return (
-    <div className="grid gap-6 p-5 text-[#19355d] sm:p-7">
+    <section className="grid gap-6 rounded-lg border border-border bg-card p-5 text-[#19355d] sm:p-7">
       <section
         className="rounded-md bg-[#eef5ff] p-4"
         aria-labelledby="patrimonio-reavaliado-title"
@@ -78,10 +89,6 @@ function DetalheConteudo({ item }: { item: ReavaliacaoDetalhe }) {
               {item.registradoPor.nome ?? "Nome histórico não registrado"}
             </dd>
           </div>
-          <div>
-            <dt className="text-xs text-[#526580]">Identificador</dt>
-            <dd className="mt-1 break-all font-mono text-xs">{item.id}</dd>
-          </div>
         </dl>
       </section>
       <section
@@ -93,74 +100,76 @@ function DetalheConteudo({ item }: { item: ReavaliacaoDetalhe }) {
         </h2>
         {item.novo ? (
           <>
-            <div
-              className="overflow-x-auto"
-              role="region"
-              aria-label="Comparação de valores"
-              tabIndex={0}
+            <Table
+              className="min-w-[34rem]"
+              containerProps={{
+                role: "region",
+                "aria-label": "Comparação de valores",
+                tabIndex: 0,
+              }}
             >
-              <table className="w-full min-w-[34rem] text-left text-sm">
-                <caption className="sr-only">
-                  Valores anteriores e novos
-                </caption>
-                <thead className="bg-[#f7f9fc] text-xs text-[#526580]">
-                  <tr>
-                    <th scope="col" className="p-3">
-                      Campo
-                    </th>
-                    <th scope="col" className="p-3">
-                      Anterior
-                    </th>
-                    <th scope="col" className="p-3">
-                      Novo ciclo
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {linhas.map(([nome, anterior, novo]) => (
-                    <tr key={nome} className="border-b border-[#e4eaf2]">
-                      <th scope="row" className="p-3 font-medium">
-                        {nome}
-                      </th>
-                      <td className="p-3">
-                        {anterior === null
-                          ? "Não havia parâmetro"
-                          : formatarDecimal(anterior)}
-                      </td>
-                      <td className="p-3 font-semibold text-[#173d6b]">
-                        {formatarDecimal(novo)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="border-b border-[#e4eaf2]">
-                    <th scope="row" className="p-3 font-medium">
-                      Residual percentual
-                    </th>
-                    <td className="p-3">
-                      {item.anterior?.percentualResidualAnterior
-                        ? `${item.anterior.percentualResidualAnterior.replace(".", ",")}%`
-                        : "—"}
-                    </td>
-                    <td className="p-3">
-                      {item.novo.percentualResidualNovo
-                        ? `${item.novo.percentualResidualNovo.replace(".", ",")}%`
-                        : "—"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row" className="p-3 font-medium">
-                      Vida útil
-                    </th>
-                    <td className="p-3">
-                      {item.anterior
-                        ? `${item.anterior.vidaUtilRestanteAnteriorMeses} meses restantes`
-                        : "Não havia"}
-                    </td>
-                    <td className="p-3">{item.novo.vidaUtilNovaMeses} meses</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              <TableCaption className="sr-only">
+                Valores anteriores e novos
+              </TableCaption>
+              <TableHeader className="bg-muted text-xs text-muted-foreground">
+                <TableRow>
+                  <TableHead scope="col" className="p-3">
+                    Campo
+                  </TableHead>
+                  <TableHead scope="col" className="p-3">
+                    Anterior
+                  </TableHead>
+                  <TableHead scope="col" className="p-3">
+                    Novo ciclo
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {linhas.map(([nome, anterior, novo]) => (
+                  <TableRow key={nome}>
+                    <TableHead scope="row" className="p-3 font-medium">
+                      {nome}
+                    </TableHead>
+                    <TableCell className="p-3">
+                      {anterior === null
+                        ? "Não havia parâmetro"
+                        : formatarDecimal(anterior)}
+                    </TableCell>
+                    <TableCell className="p-3 font-semibold text-primary">
+                      {formatarDecimal(novo)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableHead scope="row" className="p-3 font-medium">
+                    Residual percentual
+                  </TableHead>
+                  <TableCell className="p-3">
+                    {item.anterior?.percentualResidualAnterior
+                      ? `${item.anterior.percentualResidualAnterior.replace(".", ",")}%`
+                      : "—"}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {item.novo.percentualResidualNovo
+                      ? `${item.novo.percentualResidualNovo.replace(".", ",")}%`
+                      : "—"}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableHead scope="row" className="p-3 font-medium">
+                    Vida útil
+                  </TableHead>
+                  <TableCell className="p-3">
+                    {item.anterior
+                      ? `${item.anterior.vidaUtilRestanteAnteriorMeses} meses restantes`
+                      : "Não havia"}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    {item.novo.vidaUtilNovaMeses} meses
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
             <div className="mt-5 rounded-md border border-[#dbe8fb] bg-[#f4f8ff] p-4">
               <p className="text-xs text-[#526580]">Novo valor bruto</p>
               <p className="mt-1 text-xl font-bold text-[#2863ec]">
@@ -180,17 +189,15 @@ function DetalheConteudo({ item }: { item: ReavaliacaoDetalhe }) {
           </p>
         )}
       </section>
-    </div>
+    </section>
   );
 }
 
 export async function ReavaliacaoDetalheServer({
   reavaliacaoId,
-  interceptado,
   retorno,
 }: {
   reavaliacaoId: string;
-  interceptado: boolean;
   retorno: string;
 }) {
   await exigirIdentidadeAtual();
@@ -210,24 +217,42 @@ export async function ReavaliacaoDetalheServer({
   }
   if (!item) {
     return (
-      <ReavaliacaoDetalheDrawer
-        interceptado={interceptado}
-        patrimonio="não identificado"
-        retorno={retorno}
-      >
-        <div className="p-6">
-          <ErroReavaliacao erro={erroConsulta} />
-        </div>
-      </ReavaliacaoDetalheDrawer>
+      <main className="grid min-w-0 gap-5 p-4 sm:p-7">
+        <PageHeader
+          title="Detalhes da reavaliação"
+          description="Não foi possível carregar os dados deste registro."
+          actions={<AcaoVoltar retorno={retorno} />}
+        />
+        <ErroReavaliacao erro={erroConsulta} />
+      </main>
     );
   }
   return (
-    <ReavaliacaoDetalheDrawer
-      interceptado={interceptado}
-      patrimonio={item.patrimonio.numeroPatrimonio ?? "sem número histórico"}
-      retorno={retorno}
-    >
+    <main className="grid min-w-0 gap-5 bg-[#f7f9fc] p-4 text-[#19355d] sm:p-7">
+      <PageHeader
+        title="Detalhes da reavaliação"
+        description={
+          <>
+            Patrimônio {item.patrimonio.numeroPatrimonio ?? "sem número"} ·{" "}
+            {item.patrimonio.descricao ?? "Descrição histórica não registrada"}
+          </>
+        }
+        actions={<AcaoVoltar retorno={retorno} />}
+      />
       <DetalheConteudo item={item} />
-    </ReavaliacaoDetalheDrawer>
+    </main>
+  );
+}
+
+function AcaoVoltar({ retorno }: { retorno: string }) {
+  return (
+    <Link
+      prefetch={false}
+      href={retorno}
+      className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+    >
+      <ChevronLeft aria-hidden="true" className="size-4" />
+      Voltar às reavaliações
+    </Link>
   );
 }

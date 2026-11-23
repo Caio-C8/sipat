@@ -124,6 +124,11 @@ describe("ProcessamentoDepreciacoes", () => {
       ),
     ).toBeTruthy();
     expect(screen.queryByText(/\b(?:API|URL)\b/)).toBeNull();
+    expect(
+      screen
+        .getByRole("link", { name: "Voltar às depreciações" })
+        .getAttribute("href"),
+    ).toBe("/depreciacoes");
   });
 
   it("oferece somente consulta ao administrador", () => {

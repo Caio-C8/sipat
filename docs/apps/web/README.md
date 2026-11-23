@@ -44,8 +44,9 @@ fronteiras entre UI, contratos e integração HTTP.
   reservada do próximo número oficial. Pesquisa, cadastro, ficha e drawers usam
   as primitives e os tokens do design system, com campos semânticos, erros
   persistentes e foco acessível padronizado;
-- `/movimentacoes` e seu detalhe consultam transferências reais para os dois perfis;
-  `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo diretor;
+- `/movimentacoes` e seu detalhe consultam transferências reais para os dois
+  perfis; `/movimentacoes/nova` registra de 1 a 10 transferências somente pelo
+  diretor. Lista, filtros e paginação usam o kit visual compartilhado;
 - `/manutencoes`, `/manutencoes/nova` e o detalhe permitem aos dois perfis
   consultar, criar, revisar orçamento, registrar retorno e anexar/abrir PDFs
   pela API real; a API mantém cobertura de integração com PostgreSQL isolado em
@@ -56,9 +57,14 @@ fronteiras entre UI, contratos e integração HTTP.
   A evolução visual entregue em
   [WEB-REAVALIACOES-002](../../tasks/WEB-REAVALIACOES-002-paridade-visual-figma.md)
   reproduz na tela independente a lista, a criação em etapas e o detalhe
-  lateral de `Telas PC`, sem alterar o domínio existente;
-- `/depreciacao` seleciona pela URL as competências devidas, prioriza a mais
+  em página completa no padrão de movimentações, sem alterar o domínio
+  existente;
+- `/depreciacoes` lista todos os registros processados para os dois perfis por
+  padrão e permite filtrar por uma competência exata opcional; o Diretor acessa
+  `Processar depreciações`, que abre `/depreciacao`. A tela de
+  processamento seleciona pela URL as competências devidas, prioriza a mais
   antiga e permite ao Diretor executar depreciações individuais ou em lote;
+  o Administrador mantém somente a leitura das pendências;
 - `/inventarios` permite a Administrador e Diretor consultar e filtrar
   inventários; o Diretor pode criar e editar inventários pendentes em modais
   roteáveis, resolver divergências e finalizar com confirmação explícita.
@@ -70,8 +76,16 @@ fronteiras entre UI, contratos e integração HTTP.
 - `/emprestimos`, `/emprestimos/nova` e o detalhe oferecem consulta, saída e
   devolução parcial na API real; a Web cobre lista, detalhe e criação com a
   fronteira HTTP simulada e a API mantém cobertura própria com PostgreSQL.
-  A evolução visual com abas, seleção, revisão, detalhe e devolução está em
-  [WEB-EMPRESTIMOS-002](../../tasks/WEB-EMPRESTIMOS-002-evolucao-visual-figma.md);
+  A evolução visual de seleção, revisão, detalhe e devolução está em
+  [WEB-EMPRESTIMOS-002](../../tasks/WEB-EMPRESTIMOS-002-evolucao-visual-figma.md).
+  A consulta usa um filtro de situação para todos, em andamento ou finalizados,
+  sem abas; a API deriva a conclusão da existência de itens ainda sem devolução.
+  Filtros, campos, seleção, tabelas e paginação usam o kit visual compartilhado;
+- `/baixas`, `/baixas/nova` e o detalhe oferecem consulta aos dois perfis e
+  registro unitário somente ao Diretor. O bem é escolhido por combobox
+  pesquisável no próprio formulário; após sucesso, a Web confirma por toast e
+  volta à listagem. O PDF comprobatório original permanece restrito ao Diretor.
+  Filtros, formulário, tabela e paginação usam o kit visual compartilhado;
 - movimentações, manutenções, reavaliações e empréstimos distinguem os três
   conflitos públicos de idempotência, preservam a chave somente enquanto o
   resultado permanece incerto e nunca fazem retry automático. Em movimentações,

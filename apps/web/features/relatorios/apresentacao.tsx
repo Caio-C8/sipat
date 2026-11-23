@@ -1,13 +1,19 @@
 import { isApiError } from "@/lib/api/core/api-error";
 export function mensagemRelatorio(e: unknown): string {
   if (typeof e === "string") return e;
-  if (isApiError(e))
-    return e.status === 401
-      ? "Sessão expirada. Entre novamente."
-      : e.status === 403
-        ? "Você não possui permissão para consultar este relatório."
-        : e.message;
-  return "Não foi possível consultar o relatório. Confira os filtros e tente novamente.";
+  if (isApiError(e)) {
+    if (e.status === 401) return "Sessão expirada. Entre novamente.";
+    if (e.status === 403)
+      return "Você não possui permissão para consultar este relatório.";
+    if (e.status === 400 || e.codigo === "VALIDACAO_ENTRADA_INVALIDA")
+      return "Os filtros não foram aceitos. Limpe ou revise os valores informados e consulte novamente.";
+    if (e.status !== null && e.status >= 500)
+      return "O serviço de relatórios está temporariamente indisponível. Tente novamente em instantes.";
+    if (e.categoria === "rede" || e.categoria === "timeout")
+      return "Não foi possível acessar o serviço de relatórios. Verifique a conexão e tente novamente.";
+    return e.message;
+  }
+  return "Não foi possível carregar os registros. Tente novamente; se o problema continuar, atualize a página.";
 }
 export function rotulo(campo: string): string {
   const nomes: Record<string, string> = {
@@ -17,8 +23,6 @@ export function rotulo(campo: string): string {
     descricao: "Descrição atual",
     inicio: "Início",
     fim: "Fim",
-    competenciaInicio: "Competência inicial",
-    competenciaFim: "Competência final",
     competencia: "Competência",
     primeiraCompetencia: "Primeira competência",
     ultimaCompetenciaProcessada: "Última competência processada",

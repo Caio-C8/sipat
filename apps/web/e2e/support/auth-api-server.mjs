@@ -126,6 +126,90 @@ const patrimonioBaixa = {
     },
   },
 };
+const reavaliacaoId = "8d67c3c2-5fd2-4f90-8d3d-64fb7ca129e8";
+const patrimonioReavaliacao = {
+  ...patrimonioBaixa,
+  id: "925f5775-3027-4bc5-b658-293ea0663be1",
+  numeroPatrimonio: "125",
+  descricao: "Notebook disponível para reavaliação",
+};
+const patrimonioReavaliacaoDetalhe = {
+  ...patrimonioReavaliacao,
+  dataTombamento: "2025-01-15",
+  tipoIncorporacao: "AQUISICAO",
+  valorIncorporacao: "5490.0000000",
+  processoCompra: null,
+  cadastradoPor: {
+    id: identities.director.id,
+    nome: identities.director.nome,
+  },
+  parametroDepreciacaoAtual: null,
+  disponibilidadeUso: null,
+  resumoDepreciacao: {
+    primeiraCompetencia: null,
+    ultimaCompetenciaProcessada: null,
+    proximaCompetencia: null,
+    quantidadePendencias: 0,
+  },
+  createdAt: "2025-01-15T12:00:00.000Z",
+  updatedAt: null,
+};
+const reavaliacaoResumo = {
+  id: reavaliacaoId,
+  dataReferencia: "2026-11-10",
+  dataReavaliacao: "2026-11-10T15:30:00.000Z",
+  patrimonio: {
+    id: patrimonioReavaliacao.id,
+    numeroPatrimonio: patrimonioReavaliacao.numeroPatrimonio,
+    descricao: patrimonioReavaliacao.descricao,
+  },
+  comissao: {
+    id: comissaoDepreciacao.id,
+    nome: comissaoDepreciacao.nome,
+  },
+  valorLiquidoAnterior: "4990.0000000",
+  valorBrutoNovo: "6000.0000000",
+  vidaUtilNovaMeses: 60,
+  valorResidualNovo: "600.0000000",
+};
+const reavaliacaoDetalhe = {
+  ...reavaliacaoResumo,
+  contabilAnterior: {
+    valorBrutoAnterior: "5490.0000000",
+    depreciacaoAcumuladaAnterior: "500.0000000",
+  },
+  anterior: {
+    valorBrutoAnterior: "5490.0000000",
+    depreciacaoAcumuladaAnterior: "500.0000000",
+    valorLiquidoAnterior: "4990.0000000",
+    valorBaseAnterior: "4941.0000000",
+    valorResidualAnterior: "549.0000000",
+    percentualResidualAnterior: "10.00",
+    vidaUtilInicialAnteriorMeses: 60,
+    quantidadeDepreciacoesAnteriores: 5,
+    vidaUtilRestanteAnteriorMeses: 55,
+    parametroAnteriorId: "6042cdfc-54d4-43bc-9ddc-449388dc0960",
+  },
+  novo: {
+    valorBrutoNovo: "6000.0000000",
+    valorBaseNova: "5400.0000000",
+    valorResidualNovo: "600.0000000",
+    percentualResidualNovo: "10.00",
+    vidaUtilNovaMeses: 60,
+  },
+  parametroNovoId: "3bcaf094-f9d8-42d6-aa56-cef2923a901a",
+  registradoPor: {
+    id: identities.director.id,
+    nome: identities.director.nome,
+  },
+  createdAt: "2026-11-10T15:30:00.000Z",
+};
+const segundoPatrimonioBaixa = {
+  ...patrimonioBaixa,
+  id: "a1c78412-3fee-4e32-a4cb-67f962491730",
+  numeroPatrimonio: "124",
+  descricao: "Monitor adicional disponível para baixa",
+};
 const detalheBaixa = {
   id: baixaId,
   patrimonio: {
@@ -392,6 +476,10 @@ function baixaScenarioFromCookie(cookie = "") {
   return cookie.includes("sipat_baixas_scenario=1");
 }
 
+function reavaliacaoScenarioFromCookie(cookie = "") {
+  return cookie.includes("sipat_reavaliacoes_scenario=1");
+}
+
 const server = createServer(async (request, response) => {
   const requestUrl = new URL(
     request.url ?? "/",
@@ -473,12 +561,19 @@ const server = createServer(async (request, response) => {
     request.headers.cookie?.includes("sipat_emprestimos_scenario=1")
   ) {
     if (requestUrl.pathname === "/api/emprestimos") {
+      const finalizados =
+        requestUrl.searchParams.get("situacao") === "CONCLUIDO";
       json(response, 200, {
         status: 200,
         sucesso: true,
         mensagem: "Empréstimos listados.",
-        dados: [emprestimoResumo],
-        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+        dados: finalizados ? [] : [emprestimoResumo],
+        meta: {
+          total: finalizados ? 0 : 1,
+          pagina: 1,
+          limite: 20,
+          ultimaPagina: 1,
+        },
       });
       return;
     }
@@ -552,10 +647,85 @@ const server = createServer(async (request, response) => {
       });
       return;
     }
+    if (requestUrl.pathname === "/api/relatorios/depreciacoes") {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Depreciações consultadas.",
+        tipo: "depreciacoes",
+        dados: [
+          {
+            id: webDomainFixtures.relatorio.linhaId,
+            patrimonioId: webDomainFixtures.relatorio.patrimonioId,
+            competencia: "2026-10",
+            numeroPatrimonio: "REL-301",
+            descricao: "Notebook para depreciação",
+            parametroId: "parâmetro vigente",
+            processamento: "2026-11-01T12:00:00.000Z",
+            valorContabilAnterior: "4500.0000000",
+            valorDepreciado: "100.0000000",
+            valorContabilNovo: "4400.0000000",
+            comissao: "Comissão patrimonial vigente",
+            autor: "João Diretor",
+          },
+        ],
+        resumo: {
+          quantidade: 1,
+          bensDistintos: 1,
+          quotas: "100.0000000",
+          porCompetencia: [
+            {
+              competencia: "2026-10",
+              quantidade: 1,
+              quotas: "100.0000000",
+            },
+          ],
+        },
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+        consulta: {
+          id: webDomainFixtures.relatorio.consultaId,
+          instante: "2026-11-16T12:00:00.000Z",
+          filtros: {},
+          criterioTemporal: "Competência mensal processada.",
+          ordenacao: "Competência decrescente.",
+          avisos: [],
+          excluidosDataDesconhecida: 0,
+        },
+      });
+      return;
+    }
   }
 
   if (baixaScenarioFromCookie(request.headers.cookie)) {
     const session = sessionFromCookie(request.headers.cookie);
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname === "/api/relatorios/opcoes/patrimonios"
+    ) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Patrimônios consultados.",
+        dados: [{ id: patrimonioBaixaId, rotulo: "Patrimônio 123" }],
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+      });
+      return;
+    }
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname === "/api/relatorios/opcoes/comissoes"
+    ) {
+      json(response, 200, {
+        status: 200,
+        sucesso: true,
+        mensagem: "Comissões consultadas.",
+        dados: [
+          { id: comissaoDepreciacao.id, rotulo: comissaoDepreciacao.nome },
+        ],
+        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+      });
+      return;
+    }
     if (
       request.method === "GET" &&
       requestUrl.pathname === "/api/relatorios/baixas"
@@ -607,8 +777,8 @@ const server = createServer(async (request, response) => {
         status: 200,
         sucesso: true,
         mensagem: "Patrimônios listados.",
-        dados: [patrimonioBaixa],
-        meta: { total: 1, pagina: 1, limite: 20, ultimaPagina: 1 },
+        dados: [patrimonioBaixa, segundoPatrimonioBaixa],
+        meta: { total: 2, pagina: 1, limite: 20, ultimaPagina: 1 },
       });
       return;
     }
@@ -1038,6 +1208,22 @@ const server = createServer(async (request, response) => {
     });
     return;
   }
+  const detalheReavaliacao = /^\/api\/reavaliacoes\/([0-9a-f-]+)$/.exec(
+    requestUrl.pathname,
+  );
+  if (
+    request.method === "GET" &&
+    detalheReavaliacao?.[1] === reavaliacaoId &&
+    reavaliacaoScenarioFromCookie(request.headers.cookie)
+  ) {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Reavaliação consultada.",
+      dados: reavaliacaoDetalhe,
+    });
+    return;
+  }
   if (request.method === "GET" && requestUrl.pathname === "/api/inventarios") {
     json(response, 200, {
       status: 200,
@@ -1128,12 +1314,15 @@ const server = createServer(async (request, response) => {
     return;
   }
   if (request.method === "GET" && requestUrl.pathname === "/api/reavaliacoes") {
+    const dados = reavaliacaoScenarioFromCookie(request.headers.cookie)
+      ? [reavaliacaoResumo]
+      : [];
     json(response, 200, {
       status: 200,
       sucesso: true,
       mensagem: "Reavaliações consultadas.",
-      dados: [],
-      meta: { total: 0, pagina: 1, limite: 20, ultimaPagina: 1 },
+      dados,
+      meta: { total: dados.length, pagina: 1, limite: 20, ultimaPagina: 1 },
     });
     return;
   }
@@ -1267,17 +1456,20 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    const dados = reavaliacaoScenarioFromCookie(request.headers.cookie)
+      ? [patrimonioReavaliacao]
+      : [];
     const sendResponse = () =>
       json(response, 200, {
         status: 200,
         sucesso: true,
         mensagem: "Patrimônios listados com sucesso.",
-        dados: [],
+        dados,
         meta: {
-          total,
+          total: dados.length || total,
           pagina: 1,
-          ultimaPagina: Math.max(1, total),
-          limite: 1,
+          ultimaPagina: 1,
+          limite: dados.length ? 20 : 1,
         },
       });
 
@@ -1287,6 +1479,23 @@ const server = createServer(async (request, response) => {
     }
 
     sendResponse();
+    return;
+  }
+
+  const detalhePatrimonio = /^\/api\/patrimonios\/([0-9a-f-]+)$/.exec(
+    requestUrl.pathname,
+  );
+  if (
+    request.method === "GET" &&
+    detalhePatrimonio?.[1] === patrimonioReavaliacao.id &&
+    reavaliacaoScenarioFromCookie(request.headers.cookie)
+  ) {
+    json(response, 200, {
+      status: 200,
+      sucesso: true,
+      mensagem: "Patrimônio consultado.",
+      dados: patrimonioReavaliacaoDetalhe,
+    });
     return;
   }
 

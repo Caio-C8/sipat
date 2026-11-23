@@ -42,6 +42,9 @@ test.describe("Baixas patrimoniais", () => {
     await expect(
       page.getByRole("link", { name: "Registrar baixa" }),
     ).toHaveCount(0);
+    await selecionarOpcaoComponente(page, "Patrimônio", "Patrimônio 123");
+    await page.getByRole("button", { name: "Consultar" }).click();
+    await expect(page).toHaveURL(/patrimonioId=/);
     await page.getByRole("link", { name: "Ver detalhe" }).click();
     await expect(page).toHaveURL(new RegExp(`/baixas/${patrimonioId}`));
     await expect(
@@ -81,12 +84,14 @@ test.describe("Baixas patrimoniais", () => {
   }) => {
     await sessao(page, baseURL, "director");
     await page.goto("/baixas/nova");
-    await page
-      .getByRole("radio", { name: "Selecionar patrimônio 123" })
-      .check();
-    await page
-      .getByRole("button", { name: /Continuar com 1 patrimônio/ })
-      .click();
+    await selecionarOpcaoComponente(
+      page,
+      "Patrimônio para baixa",
+      "123 · Notebook corporativo com descrição longa para validar reflow",
+    );
+    await expect(
+      page.getByText("Patrimônio selecionado para baixa"),
+    ).toBeVisible();
     await page.getByLabel("Data da baixa").fill("2026-11-10");
     await selecionarOpcaoComponente(page, "Tipo", "Alienação");
     await expect(page.getByLabel("Comissão vigente na data")).toBeEnabled();
@@ -100,12 +105,9 @@ test.describe("Baixas patrimoniais", () => {
       .fill("Alienação autorizada após avaliação.");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Confirmar baixa" }).click();
-    await expect(page).toHaveURL(new RegExp(`/baixas/${patrimonioId}`));
-    await expect(page.getByRole("status")).toContainText(
-      "Baixa registrada com sucesso",
-    );
+    await expect(page).toHaveURL(/\/baixas$/);
     await expect(
-      page.getByRole("button", { name: "Abrir PDF comprobatório" }),
+      page.getByText("Patrimônio baixado com sucesso."),
     ).toBeVisible();
   });
 

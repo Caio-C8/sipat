@@ -1,6 +1,6 @@
 # `WEB-OPERACOES-001` — Padronizar operações patrimoniais
 
-**Status:** `aprovada`
+**Status:** `implementada em 23/11/2026; validação automatizada e manual pendente`
 
 ## Objetivo
 
@@ -127,6 +127,41 @@ Executar de forma incremental, com regressão ao fim de cada domínio:
 - axe, teclado, zoom e viewports previstos;
 - comparação com os frames vivos já usados nas tarefas anteriores quando
   continuarem válidos.
+
+## Handoff de implementação
+
+- Movimentações e reavaliações passaram a usar os campos, comboboxes, alerts,
+  tabelas e paginação compartilhados nas consultas, preservando filtros na URL,
+  detalhes e fluxos de criação existentes.
+- Depreciações preservam a leitura do Administrador e condicionam comissão,
+  confirmação residual e ações de processamento ao Diretor; competência,
+  comissão, busca, seleção e tabela usam o kit comum.
+- Os filtros de entidades de movimentações, reavaliações e baixas usam
+  comboboxes pesquisáveis no mesmo padrão de patrimônios, sem os controles
+  auxiliares de busca e paginação de opções.
+- Empréstimos usam controles semânticos compartilhados na consulta, seleção,
+  cadastro, revisão, detalhe e devolução. As abas foram substituídas pelo filtro
+  de situação `Todos`, `Em andamento` ou `Finalizados`; a situação continua
+  derivada das devoluções pela API, sem alterar agrupamento, idempotência ou
+  contratos.
+- Baixas usam campos, tabela e paginação comuns; o registro unitário escolhe o
+  bem em um combobox pesquisável no próprio formulário e, após sucesso, exibe
+  toast e retorna à listagem. O Administrador continua sem ação de registro nem
+  acesso ao PDF comprobatório original.
+- Depreciações possuem uma listagem pesquisável própria em `/depreciacoes`,
+  sem recorte temporal por padrão e com filtro opcional por uma competência
+  exata; a ação `Processar depreciações` conduz à tela preservada de
+  competências em `/depreciacao`, que oferece o retorno para a listagem.
+- Valores contábeis continuam formatados com sete casas por `formatBrl`; foi
+  adicionada cobertura unitária explícita para reavaliações.
+- Mensagens visíveis deixaram de mencionar API ou servidor. Testes E2E foram
+  adaptados aos comboboxes e receberam uma asserção contra linguagem técnica.
+- As páginas de consulta resolvem sessão e cabeçalhos antes dos ramos de
+  validação, mantendo a ordem de suspensão estável durante navegações com
+  filtros e evitando o aviso de uso condicional de `use()` do React.
+- Por restrição da execução, nenhum teste, typecheck, build ou E2E foi
+  executado. Foram executados somente lint direcionado aos arquivos Web
+  alterados, Prettier direcionado e `git diff --check`.
 
 ## Pendências ou decisões bloqueantes
 

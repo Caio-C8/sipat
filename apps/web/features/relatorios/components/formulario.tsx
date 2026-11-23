@@ -160,13 +160,11 @@ export function FormularioRelatorios({
   };
   const opcionalPeriodo =
     tipo === "patrimonios" || tipo === "ficha-bem" || tipo === "baixas";
-  const competenciaOpcional = tipo === "pendencias-depreciacao";
-  const camposTemporais =
-    tipo === "depreciacoes"
-      ? ["competenciaInicio", "competenciaFim"]
-      : competenciaOpcional
-        ? ["competencia"]
-        : ["inicio", "fim"];
+  const competenciaOpcional =
+    tipo === "depreciacoes" || tipo === "pendencias-depreciacao";
+  const camposTemporais = competenciaOpcional
+    ? ["competencia"]
+    : ["inicio", "fim"];
   const extraTexto =
     tipo === "patrimonios"
       ? ["busca"]

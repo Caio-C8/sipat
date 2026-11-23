@@ -298,9 +298,9 @@ export function construirFonte(
       from = `depreciacoes_patrimoniais r JOIN patrimonios p ON p.id=r.patrimonio_id ${joinsAutor}`;
       ordem1 = "r.data_competencia::text";
       ordem2 = "r.data_depreciacao";
-      if (q.competenciaInicio)
+      if (q.competencia)
         cond.push(
-          sql`r.data_competencia >= ${String(q.competenciaInicio) + "-01"}::date AND r.data_competencia < (${String(q.competenciaFim) + "-01"}::date + interval '1 month')`,
+          sql`r.data_competencia = ${String(q.competencia) + "-01"}::date`,
         );
       igual("r.comissao_id", q.comissaoId);
       criterio =

@@ -43,21 +43,19 @@ test("baixas lista todos os registros sem período e aceita período como filtro
   assert.equal(schema.safeParse({ fim: "2026-12-31" }).success, false);
   assert.deepEqual(queryPdfRelatorio("baixas").parse({}), {});
 });
-test("competências até doze meses e bases enumeradas por domínio", () => {
+test("depreciações listam tudo por padrão e aceitam uma competência opcional", () => {
   const schema = queryRelatorio("depreciacoes");
+  assert.deepEqual(schema.parse({}), { pagina: 1, limite: 20 });
+  assert.equal(schema.safeParse({ competencia: "2026-01" }).success, true);
+  assert.equal(schema.safeParse({ competencia: "2026-13" }).success, false);
   assert.equal(
-    schema.safeParse({
-      competenciaInicio: "2026-01",
-      competenciaFim: "2026-12",
-    }).success,
-    true,
+    schema.safeParse({ competenciaInicio: "2026-01" }).success,
+    false,
   );
-  for (const fim of ["2027-01", "2026-00", "2025-12"])
-    assert.equal(
-      schema.safeParse({ competenciaInicio: "2026-01", competenciaFim: fim })
-        .success,
-      false,
-    );
+  assert.deepEqual(queryPdfRelatorio("depreciacoes").parse({}), {});
+});
+
+test("bases enumeradas por domínio", () => {
   assert.equal(
     queryRelatorio("manutencoes").safeParse({
       inicio: "2026-01-01",

@@ -74,8 +74,7 @@ export const filtrosRelatorios = {
   depreciacoes: z.strictObject({
     ...comum,
     ...comissao,
-    competenciaInicio: mes,
-    competenciaFim: mes,
+    competencia: mes.optional(),
   }),
   "pendencias-depreciacao": z.strictObject({
     ...comum,
@@ -152,18 +151,6 @@ function refinar(
     if (dias < 1) erro("fim", "O fim deve ser igual ou posterior ao início.");
     if (tipo !== "ficha-bem" && tipo !== "patrimonios" && dias > 366)
       erro("fim", "Use no máximo 366 dias.");
-  }
-  if (tipo === "depreciacoes") {
-    const indice = (v: unknown) => {
-      const [a, m] = String(v).split("-").map(Number);
-      return a! * 12 + m!;
-    };
-    const meses = indice(q.competenciaFim) - indice(q.competenciaInicio) + 1;
-    if (meses < 1 || meses > 12)
-      erro(
-        "competenciaFim",
-        "Use um intervalo ordenado de até 12 competências.",
-      );
   }
   if (
     typeof q.pagina === "number" &&

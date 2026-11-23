@@ -7,6 +7,16 @@ import {
   type EmprestimoDetalhe,
 } from "@repo/contracts";
 import { Button } from "@/components/ui/button";
+import { TextareaField, TextField } from "@/components/shared/form-fields";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
@@ -21,10 +31,8 @@ import {
 import { useConsultarEmprestimo, useDevolverEmprestimo } from "../api/hooks";
 import {
   botaoPrimarioEmprestimo,
-  campoEmprestimo,
   dataExibicao,
   hojeSaoPaulo,
-  identificacaoEmprestimo,
   mensagemEmprestimo,
   painelEmprestimo,
   situacaoEmprestimo,
@@ -181,17 +189,12 @@ export function DetalheEmprestimo({
         title={
           exibirDevolucao
             ? "Registrar devolução"
-            : identificacaoEmprestimo(detalhe.id)
+            : `Empréstimo para: ${detalhe.destinatario ?? "Não informado"}`
         }
         description={
-          <>
-            {exibirDevolucao
-              ? "Confira os bens recebidos e registre a devolução."
-              : `${detalhe.modoAgrupamento === "EM_GRUPO" ? "Em grupo" : detalhe.modoAgrupamento === "SEPARADAMENTE" ? "Separadamente" : "Agrupamento não informado"} · ${detalhe.destinatario ?? "Destinatário não informado"}`}
-            <span className="mt-1 block break-all text-xs">
-              ID completo: {detalhe.id}
-            </span>
-          </>
+          exibirDevolucao
+            ? "Confira os bens recebidos e registre a devolução."
+            : undefined
         }
         actions={
           <Link
@@ -273,80 +276,77 @@ export function DetalheEmprestimo({
             <h2 id="bens-title" className="font-bold">
               Bens e devoluções
             </h2>
-            <div
-              className="mt-4 overflow-x-auto"
-              role="region"
-              aria-label="Bens do empréstimo"
-              tabIndex={0}
+            <Table
+              className="min-w-[780px]"
+              containerClassName="mt-4"
+              containerProps={{
+                role: "region",
+                "aria-label": "Bens do empréstimo",
+                tabIndex: 0,
+              }}
             >
-              <table className="w-full min-w-[780px] text-left text-sm">
-                <thead className="bg-[#f7f9fc] text-xs uppercase text-[#526580]">
-                  <tr>
-                    {[
-                      "Patrimônio / descrição",
-                      "Setor de vínculo",
-                      "Neste empréstimo",
-                      "Devolução",
-                      "Ação",
-                    ].map((titulo) => (
-                      <th key={titulo} scope="col" className="p-3">
-                        {titulo}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {detalhe.itens.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-[#e4eaf2] last:border-0"
-                    >
-                      <td className="p-3">
-                        <strong>{item.patrimonio.numeroPatrimonio}</strong>
-                        <p className="text-[#526580]">
-                          {item.patrimonio.descricao}
-                        </p>
-                      </td>
-                      <td className="p-3">
-                        {item.setorVinculo?.nome ?? "Não informado"}
-                      </td>
-                      <td className="p-3">
-                        {item.pendente ? "Pendente de devolução" : "Devolvido"}
-                      </td>
-                      <td className="p-3">
-                        {item.devolucao ? (
-                          <>
-                            <span>
-                              {dataExibicao(item.devolucao.dataDevolucao)}
+              <TableHeader className="bg-muted text-xs uppercase text-muted-foreground">
+                <TableRow>
+                  {[
+                    "Patrimônio / descrição",
+                    "Setor de vínculo",
+                    "Neste empréstimo",
+                    "Devolução",
+                    "Ação",
+                  ].map((titulo) => (
+                    <TableHead key={titulo} scope="col" className="p-3">
+                      {titulo}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {detalhe.itens.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="p-3 whitespace-normal">
+                      <strong>{item.patrimonio.numeroPatrimonio}</strong>
+                      <p className="text-[#526580]">
+                        {item.patrimonio.descricao}
+                      </p>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      {item.setorVinculo?.nome ?? "Não informado"}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      {item.pendente ? "Pendente de devolução" : "Devolvido"}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      {item.devolucao ? (
+                        <>
+                          <span>
+                            {dataExibicao(item.devolucao.dataDevolucao)}
+                          </span>
+                          {item.devolucao.aposPrevisao && (
+                            <span className="block text-amber-900">
+                              Após a previsão
                             </span>
-                            {item.devolucao.aposPrevisao && (
-                              <span className="block text-amber-900">
-                                Após a previsão
-                              </span>
-                            )}
-                            <span className="block text-xs text-[#526580]">
-                              Recebido por{" "}
-                              {item.devolucao.registradoPor?.nome ??
-                                "não informado"}
-                            </span>
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <Link
-                          className="inline-flex rounded-md border border-[#dce5f0] px-3 py-2 font-semibold hover:bg-slate-50"
-                          href={`/patrimonios/${item.patrimonio.id}`}
-                        >
+                          )}
+                          <span className="block text-xs text-[#526580]">
+                            Recebido por{" "}
+                            {item.devolucao.registradoPor?.nome ??
+                              "não informado"}
+                          </span>
+                        </>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/patrimonios/${item.patrimonio.id}`}>
                           Ver bem
                         </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </section>
           <section
             className={painelEmprestimo}
@@ -410,21 +410,19 @@ export function DetalheEmprestimo({
             <section className={painelEmprestimo}>
               <h2 className="font-bold">Dados da devolução</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <label className="text-sm">
-                  Data da devolução
-                  <input
-                    className={campoEmprestimo}
-                    type="date"
-                    required
-                    min={detalhe.dataEmprestimo.slice(0, 10)}
-                    max={hojeSaoPaulo()}
-                    value={dataDevolucao}
-                    onChange={(e) => {
-                      setDataDevolucao(e.target.value);
-                      setComissaoId("");
-                    }}
-                  />
-                </label>
+                <TextField
+                  id="data-devolucao-emprestimo"
+                  label="Data da devolução"
+                  type="date"
+                  required
+                  min={detalhe.dataEmprestimo.slice(0, 10)}
+                  max={hojeSaoPaulo()}
+                  value={dataDevolucao}
+                  onChange={(e) => {
+                    setDataDevolucao(e.target.value);
+                    setComissaoId("");
+                  }}
+                />
                 <SeletorComissaoEmprestimo
                   dataReferencia={dataDevolucao}
                   rotulo="Comissão vigente na devolução"
@@ -437,9 +435,8 @@ export function DetalheEmprestimo({
                 </div>
               </div>
               <p className="mt-4 text-sm text-[#526580]">
-                {identificacaoEmprestimo(detalhe.id)} · {detalhe.pendentes} de{" "}
-                {detalhe.total} bens pendentes ·{" "}
-                {detalhe.destinatario ?? "Destinatário não informado"}
+                Empréstimo para: {detalhe.destinatario ?? "Não informado"} ·{" "}
+                {detalhe.pendentes} de {detalhe.total} bens pendentes
               </p>
             </section>
             <section className={painelEmprestimo}>
@@ -449,65 +446,63 @@ export function DetalheEmprestimo({
                   {selecionados.length} selecionado(s)
                 </p>
               </div>
-              <div
-                className="mt-4 overflow-x-auto"
-                role="region"
-                aria-label="Bens pendentes de recebimento"
-                tabIndex={0}
+              <Table
+                className="min-w-[620px]"
+                containerClassName="mt-4"
+                containerProps={{
+                  role: "region",
+                  "aria-label": "Bens pendentes de recebimento",
+                  tabIndex: 0,
+                }}
               >
-                <table className="w-full min-w-[620px] text-left text-sm">
-                  <thead className="bg-[#f7f9fc] text-xs uppercase text-[#526580]">
-                    <tr>
-                      <th className="p-3" scope="col">
-                        Receber
-                      </th>
-                      <th className="p-3" scope="col">
-                        Patrimônio / descrição
-                      </th>
-                      <th className="p-3" scope="col">
-                        Setor de vínculo
-                      </th>
-                      <th className="p-3" scope="col">
-                        Situação
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendentes.map((item) => (
-                      <tr key={item.id} className="border-b border-[#e4eaf2]">
-                        <td className="p-3">
-                          <input
-                            type="checkbox"
-                            aria-label={`Receber ${item.patrimonio.numeroPatrimonio}`}
-                            checked={selecionados.includes(item.id)}
-                            onChange={() => alternar(item.id)}
-                          />
-                        </td>
-                        <td className="p-3">
-                          <strong>{item.patrimonio.numeroPatrimonio}</strong>
-                          <p className="text-[#526580]">
-                            {item.patrimonio.descricao}
-                          </p>
-                        </td>
-                        <td className="p-3">
-                          {item.setorVinculo?.nome ?? "Não informado"}
-                        </td>
-                        <td className="p-3">Pendente</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                <TableHeader className="bg-muted text-xs uppercase text-muted-foreground">
+                  <TableRow>
+                    <TableHead className="p-3" scope="col">
+                      Receber
+                    </TableHead>
+                    <TableHead className="p-3" scope="col">
+                      Patrimônio / descrição
+                    </TableHead>
+                    <TableHead className="p-3" scope="col">
+                      Setor de vínculo
+                    </TableHead>
+                    <TableHead className="p-3" scope="col">
+                      Situação
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendentes.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="p-3">
+                        <Checkbox
+                          aria-label={`Receber ${item.patrimonio.numeroPatrimonio}`}
+                          checked={selecionados.includes(item.id)}
+                          onCheckedChange={() => alternar(item.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="p-3 whitespace-normal">
+                        <strong>{item.patrimonio.numeroPatrimonio}</strong>
+                        <p className="text-[#526580]">
+                          {item.patrimonio.descricao}
+                        </p>
+                      </TableCell>
+                      <TableCell className="p-3">
+                        {item.setorVinculo?.nome ?? "Não informado"}
+                      </TableCell>
+                      <TableCell className="p-3">Pendente</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </section>
-            <label className="text-sm">
-              Observação da devolução (opcional)
-              <textarea
-                className={campoEmprestimo}
-                maxLength={2000}
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-              />
-            </label>
+            <TextareaField
+              id="observacao-devolucao-emprestimo"
+              label="Observação da devolução (opcional)"
+              maxLength={2000}
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+            />
             <p role="status" className="text-sm">
               {selecionados.length === 0
                 ? "Selecione ao menos um bem recebido."

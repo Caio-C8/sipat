@@ -80,7 +80,7 @@ export default async function BaixaDetalhePage({
           role="status"
           className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900"
         >
-          Baixa registrada com sucesso. O detalhe abaixo foi lido da API.
+          Baixa registrada com sucesso. Confira os dados do registro abaixo.
         </p>
       ) : null}
       <section

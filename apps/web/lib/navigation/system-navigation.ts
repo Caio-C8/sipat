@@ -102,7 +102,7 @@ export const catalogoNavegacao: readonly ItemNavegacao[] = [
     icon: TrendingDown,
     grupo: "principal",
     perfis: TODOS_PERFIS,
-    href: "/depreciacao",
+    href: "/depreciacoes",
   },
   {
     id: "movimentacoes",
@@ -290,10 +290,18 @@ export const catalogoTelasSistema: readonly TelaSistema[] = [
   tela(
     "depreciacoes",
     "Depreciações",
-    "/depreciacao",
+    "/depreciacoes",
     TODOS_PERFIS,
     "depreciacoes",
     [{ label: "Depreciações" }],
+  ),
+  tela(
+    "depreciacoes-processar",
+    "Processar depreciações",
+    "/depreciacao",
+    TODOS_PERFIS,
+    "depreciacoes",
+    [{ label: "Depreciações", href: "/depreciacoes" }, { label: "Processar" }],
   ),
   tela(
     "movimentacoes",

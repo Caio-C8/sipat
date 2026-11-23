@@ -111,24 +111,32 @@ test.describe("Movimentações integradas — mocks estritos", () => {
     await expect(
       page.getByRole("link", { name: "Nova movimentação", exact: true }),
     ).toHaveCount(0);
+    await page
+      .getByRole("combobox", { name: "Setor de origem", exact: true })
+      .click();
     await expect(
-      page.getByRole("combobox", { name: "Setor de origem", exact: true }),
-    ).toContainText("Arquivo histórico (inativo)");
+      page.getByRole("option", { name: "Arquivo histórico (inativo)" }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.getByRole("combobox", { name: "Comissão", exact: true }).click();
     await expect(
-      page.getByRole("combobox", { name: "Comissão", exact: true }),
-    ).toContainText("Comissão histórica");
+      page.getByRole("option", {
+        name: "Comissão histórica (2000-01-01 a 2001-12-31)",
+      }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("table")).toContainText(
       "Correção de inventário",
     );
-    await page
-      .getByRole("combobox", { name: "Comissão", exact: true })
-      .selectOption(fixture.comissoes[0]!.id);
-    await page.getByLabel("De", { exact: true }).fill("2026-10-28");
-    await page.getByLabel("Até", { exact: true }).fill("2026-10-28");
+    await selecionarOpcaoComponente(
+      page,
+      "Comissão",
+      "Comissão vigente (2000-01-01 a 2999-12-31)",
+    );
+    await page.getByLabel("Data inicial", { exact: true }).fill("2026-10-28");
+    await page.getByLabel("Data final", { exact: true }).fill("2026-10-28");
     auxiliares(apiMock, "FILTRO", true);
-    await page
-      .getByRole("button", { name: "Aplicar filtros", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Pesquisar", exact: true }).click();
     await expect(page).toHaveURL(
       new RegExp(`comissaoId=${fixture.comissoes[0]!.id}`),
     );
@@ -470,7 +478,7 @@ test.describe("Movimentações integradas — mocks estritos", () => {
     apiMock,
   }) => {
     await sessao(page, baseURL);
-    auxiliares(apiMock, "FILTRO");
+    auxiliares(apiMock, "FILTRO", true);
     await page
       .context()
       .addCookies([

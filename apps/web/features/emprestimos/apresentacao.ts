@@ -1,11 +1,9 @@
 import { isApiError } from "@/lib/api/core/api-error";
 
 export const painelEmprestimo =
-  "min-w-0 rounded-xl border border-[#e1e7ef] bg-white p-4 shadow-sm sm:p-6";
-export const campoEmprestimo =
-  "mt-1.5 w-full min-h-10 rounded-md border border-[#cbd5e1] bg-white px-3 py-2 text-[#19355d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#225aa5]";
+  "min-w-0 rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6";
 export const botaoPrimarioEmprestimo =
-  "bg-[#213f66] text-white hover:bg-[#172f50]";
+  "bg-primary text-primary-foreground hover:bg-primary/90";
 
 export function identificacaoEmprestimo(id: string): string {
   return `Empréstimo ${id.slice(0, 8)}`;
