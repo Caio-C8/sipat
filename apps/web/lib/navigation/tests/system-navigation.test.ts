@@ -63,7 +63,6 @@ describe("catálogo de navegação do sistema", () => {
       ...administracao.filter((item) => item !== "Usuários"),
     ]);
     for (const itens of [administrador, diretor]) {
-      expect(itens).not.toContain("Configurações");
       expect(itens).not.toContain("Histórico patrimonial");
     }
   });
@@ -108,9 +107,9 @@ describe("catálogo de navegação do sistema", () => {
       { label: "Detalhes" },
     ]);
     expect(
-      encontrarTelaPorCaminho("/configuracoes/alterar-senha")?.breadcrumb,
+      encontrarTelaPorCaminho("/minha-conta/alterar-senha")?.breadcrumb,
     ).toEqual([
-      { label: "Minha conta", href: "/configuracoes" },
+      { label: "Minha conta", href: "/minha-conta" },
       { label: "Alterar senha" },
     ]);
     expect(
@@ -140,7 +139,7 @@ describe("catálogo de navegação do sistema", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Minha conta",
-          padrao: "/configuracoes",
+          padrao: "/minha-conta",
         }),
         expect.objectContaining({
           label: "Detalhes do inventário",

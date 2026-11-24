@@ -98,7 +98,7 @@ export function UserMenu({
           </div>
           <Link
             className="mt-2 flex min-h-[34px] items-center rounded-md px-2 py-[7px] text-[11px] font-bold text-[#24466e] no-underline hover:bg-[#f3f7fb] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#8dbbf0]"
-            href="/configuracoes"
+            href="/minha-conta"
             role="menuitem"
             onClick={() => setOpen(false)}
           >

@@ -546,16 +546,13 @@ test.describe("Autenticação Web", () => {
       navigation.getByRole("link", { name: "Reavaliações", exact: true }),
     ).toHaveAttribute("href", "/reavaliacoes");
     await expect(
-      navigation.getByText("Configurações", { exact: true }),
-    ).toHaveCount(0);
-    await expect(
       navigation.getByText("Histórico patrimonial", { exact: true }),
     ).toHaveCount(0);
 
     await page.getByRole("button", { name: /Menu do usuário/ }).click();
     await expect(
       page.getByRole("menuitem", { name: "Minha conta", exact: true }),
-    ).toHaveAttribute("href", "/configuracoes");
+    ).toHaveAttribute("href", "/minha-conta");
   });
 
   test("mantém busca global disponível e remove notificações do shell", async ({
@@ -764,6 +761,55 @@ test.describe("Autenticação Web", () => {
     ]);
     await page.goto("/dashboard");
     await expect(page).toHaveURL(/\/redefinir-senha$/);
+  });
+
+  test("entrega as telas da conta com navegação e acessibilidade", async ({
+    page,
+  }) => {
+    await page.context().addCookies([
+      {
+        name: "sipat_session",
+        value: "active",
+        url: "http://localhost:3100",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+
+    await page.goto("/minha-conta");
+    await expect(page).toHaveURL(/\/minha-conta$/);
+    await expect(
+      page.getByRole("heading", { name: "Minha conta" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Alterar senha" }),
+    ).toHaveAttribute("href", "/minha-conta/alterar-senha");
+
+    const conta = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(conta.violations, JSON.stringify(conta.violations, null, 2)).toEqual(
+      [],
+    );
+
+    await page.goto("/minha-conta/alterar-senha");
+    await expect(page).toHaveURL(/\/minha-conta\/alterar-senha$/);
+    await expect(
+      page.getByRole("heading", { name: "Alterar senha" }),
+    ).toBeVisible();
+    await expect(page.getByLabel(/^Senha atual/)).toBeVisible();
+    await expect(page.getByLabel(/^Nova senha/)).toBeVisible();
+    await expect(
+      page.getByText("Você precisará entrar novamente"),
+    ).toBeVisible();
+
+    const alterarSenha = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
+    expect(
+      alterarSenha.violations,
+      JSON.stringify(alterarSenha.violations, null, 2),
+    ).toEqual([]);
   });
 
   test("oferece caminhos de saída em endereço não encontrado", async ({

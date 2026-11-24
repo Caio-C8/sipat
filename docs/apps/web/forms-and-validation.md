@@ -5,9 +5,10 @@
 O SIPAT instala React Hook Form e o resolver Zod. O cadastro de naturezas é a
 vertical de prova desse padrão; validação visual, mapeamento para o contrato e
 operações HTTP continuam separados. Formulários ainda não migrados, como
-`/patrimonios/novo` e `/configuracoes/alterar-senha`, preservam o estado local e
-os schemas das respectivas operações até que uma mudança concreta justifique a
-migração.
+`/patrimonios/novo` preserva o estado local e os schemas da respectiva operação
+até que uma mudança concreta justifique a migração. O formulário de
+`/minha-conta/alterar-senha` também mantém estado local, aplica o schema da
+operação, usa os campos compartilhados e direciona o foco ao primeiro erro.
 
 Independentemente da biblioteca, dados externos devem ser validados no boundary
 e a API deve repetir a validação. Validação no navegador melhora a experiência,

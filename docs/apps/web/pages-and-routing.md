@@ -70,7 +70,7 @@ dinâmicas mostram labels orientados à tarefa sem expor o identificador técnic
 ancestrais reais são links. A correspondência por segmentos evita colisões como
 `/patrimonios/novo` e `/patrimonios/[patrimonioId]`.
 
-`WEB-SHELL-002` removeu Configurações e Histórico da sidebar, manteve Minha
+`WEB-SHELL-002` removeu entradas sem função e Histórico da sidebar, manteve Minha
 conta no menu do usuário e eliminou o sino e a consulta de notificações. A
 extensão implementada padroniza todas as páginas autenticadas com `PageHeader`:
 título e descrição à esquerda e ações opcionais à direita. No dashboard, a
