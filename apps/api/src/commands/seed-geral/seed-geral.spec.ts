@@ -82,10 +82,10 @@ describe("seed geral", () => {
   });
 
   it("recusa migration pendente ou build com histórico diferente", () => {
-    const concluidas = Array.from({ length: 32 }, (_, indice) => ({
+    const concluidas = Array.from({ length: 35 }, (_, indice) => ({
       migration_name:
-        indice === 31
-          ? "20261117120000_adiciona_indices_dashboard_operacional"
+        indice === 34
+          ? "20261124010000_restabelece_indices_busca_global"
           : `migration-${indice}`,
       finished_at: new Date(),
       rolled_back_at: null,
@@ -102,8 +102,8 @@ describe("seed geral", () => {
       ]),
     ).toThrow("migrations esperadas");
     expect(() => exigirMigrationsAtuais(concluidas.slice(0, -1))).toThrow(
-      "Esperado: 32 migrations, última " +
-        "20261117120000_adiciona_indices_dashboard_operacional",
+      "Esperado: 35 migrations, última " +
+        "20261124010000_restabelece_indices_busca_global",
     );
   });
 
