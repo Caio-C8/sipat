@@ -54,9 +54,9 @@
     "stack:production:down": "docker compose --profile mobile-web --env-file .env.production -f compose.yaml -f compose.production.yaml down"
   },
   "devDependencies": {
-    "dotenv-cli": "^11.0.0",
-    "prettier": "^3.4.2",
-    "turbo": "^2.10.4",
-    "typescript": "^5.7.3"
+    "dotenv-cli": "^11.1.0",
+    "prettier": "^3.10.1",
+    "turbo": "^2.11.13",
+    "typescript": "^6.0.3"
   }
 }
