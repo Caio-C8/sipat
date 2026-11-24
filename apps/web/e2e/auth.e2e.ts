@@ -558,7 +558,7 @@ test.describe("Autenticação Web", () => {
     ).toHaveAttribute("href", "/configuracoes");
   });
 
-  test("mantém busca indisponível e remove notificações do shell", async ({
+  test("mantém busca global disponível e remove notificações do shell", async ({
     page,
   }) => {
     await page.context().addCookies([
@@ -576,8 +576,8 @@ test.describe("Autenticação Web", () => {
       page.getByRole("navigation", { name: "Localização atual" }),
     ).toContainText("Início");
     await expect(
-      page.getByLabel("Pesquisa ainda não implementada"),
-    ).toBeDisabled();
+      page.getByRole("button", { name: /Pesquisar no SIPAT/ }),
+    ).toBeEnabled();
     await expect(page.getByRole("button", { name: /ajuda/i })).toHaveCount(0);
 
     await expect(

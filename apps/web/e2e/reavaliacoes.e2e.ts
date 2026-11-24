@@ -42,7 +42,7 @@ test.describe("reavaliações por perfil", () => {
       "Comissão",
       "Comissão patrimonial vigente",
     );
-    await page.getByRole("button", { name: "Pesquisar" }).click();
+    await page.getByRole("button", { name: "Pesquisar", exact: true }).click();
     await expect(page).toHaveURL(/comissaoId=/);
     await page.getByRole("link", { name: "Detalhes" }).first().click();
     await expect(page).toHaveURL(/\/reavaliacoes\/[0-9a-f-]+/);
