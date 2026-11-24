@@ -51,7 +51,7 @@ test.describe("Relatórios", () => {
     await expect(
       page.getByRole("button", { name: "Gerar prévia" }),
     ).toBeVisible();
-    await expect(page.getByLabel("Busca")).toHaveCount(0);
+    await expect(page.locator("main").getByLabel("Busca")).toHaveCount(0);
     await expect(page.getByText("Seleção por cadastro")).toHaveCount(0);
     await expect(page.getByText(/\d+ opções/)).toHaveCount(0);
     const patrimonio = page.getByRole("combobox", { name: "Patrimônio" });
@@ -121,7 +121,7 @@ test.describe("Relatórios", () => {
     await page.goto(
       "/relatorios?relatorio=patrimonios&consultar=1&busca=identificador-antigo",
     );
-    await expect(page.getByLabel("Busca")).toHaveCount(0);
+    await expect(page.locator("main").getByLabel("Busca")).toHaveCount(0);
     await expect(page.getByText("identificador-antigo")).toHaveCount(0);
   });
 

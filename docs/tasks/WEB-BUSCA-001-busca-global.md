@@ -1,6 +1,6 @@
 # `WEB-BUSCA-001` — Implementar busca global por domínios
 
-**Status:** `aprovada`
+**Status:** `implementada em 23/11/2026; validação funcional pendente`
 
 ## Objetivo
 
@@ -126,4 +126,19 @@ resultados compartilhados e respeitando a autorização do usuário autenticado.
 
 ## Pendências ou decisões bloqueantes
 
-- Nenhuma.
+- Executar as verificações previstas após aplicar a migration em PostgreSQL
+  descartável. Por restrição desta execução, testes, lint, tipos, build,
+  containers e `EXPLAIN` não foram executados; os critérios de aceite permanecem
+  desmarcados até essa validação.
+
+## Implementação entregue
+
+- `GET /api/busca` usa contrato discriminado, autorização compartilhada e uma
+  única consulta parametrizada para os quinze domínios, sem usuários;
+- a resposta limita cada grupo a cinco itens, informa total/truncamento e expõe
+  somente identificação humana, título, complemento seguro e destino canônico;
+- a migration habilita `pg_trgm` e índices GIN para os campos de busca parcial;
+- a topbar usa as primitives existentes para dialog, campo, botões, badges,
+  separadores, loading e alerta, com debounce, cancelamento, atalho e foco;
+- foram criados testes de contrato, API, operação/componente Web e E2E para os
+  dois perfis, sem execução nesta entrega.

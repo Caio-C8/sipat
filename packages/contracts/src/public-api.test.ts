@@ -174,9 +174,21 @@ import {
   DisponibilidadeUsoPatrimonioSchema,
   ListarCompetenciasDepreciacaoResponseSchema,
   ResumoPendenciasDepreciacaoResponseSchema,
+  BuscaGlobalQuerySchema,
+  BuscaGlobalResponseSchema,
+  DominioBuscaGlobalSchema,
 } from "./index";
 
 describe("@repo/contracts — API pública", () => {
+  it("exporta os contratos da busca global pelo entrypoint", () => {
+    for (const schema of [
+      BuscaGlobalQuerySchema,
+      BuscaGlobalResponseSchema,
+      DominioBuscaGlobalSchema,
+    ]) {
+      assert.equal(typeof schema.safeParse, "function");
+    }
+  });
   it("exporta os schemas genéricos do baseline", () => {
     const schemas = [
       MetaPaginacaoSchema,
