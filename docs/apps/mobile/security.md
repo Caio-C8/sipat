@@ -104,8 +104,7 @@ rota normalizados, com baixa cardinalidade.
 - revise config plugins, permissões e código gerado;
 - preserve lockfile e versões de Node/pnpm do EAS;
 - mantenha os patches transitivos registrados em `pnpm-workspace.yaml` enquanto
-  `deepmerge` e as linhas 10/13 de `glob` não tiverem atualização oficial
-  compatível;
+  `deepmerge` não tiver atualização oficial compatível;
 - execute `pnpm security:patches` após instalar dependências e remova cada patch
   assim que uma versão oficial corrigida puder substituí-lo;
 - não versione keystore, certificado, profile ou chave privada;
@@ -114,19 +113,19 @@ rota normalizados, com baixa cardinalidade.
 
 As correções oficiais transitivas atualmente fixadas por `overrides` incluem
 `node-forge@1.4.3`, `fast-uri@3.1.9`, `body-parser@2.4.0`, `multer@2.5.0`, `vite@8.3.5`,
-`source-map-js@1.2.2` e `uuid@11.1.1`, além das linhas corrigidas de
-`brace-expansion`. A fonte de verdade permanece `pnpm-workspace.yaml`, e o
-`pnpm-lock.yaml` registra as versões efetivamente resolvidas.
+`source-map-js@1.2.2`, `uuid@11.1.1`, `effect@3.22.5`, `glob@14.0.6` e
+`minimatch@11.0.9`, além das linhas corrigidas de `brace-expansion`. A fonte de
+verdade permanece `pnpm-workspace.yaml`, e o `pnpm-lock.yaml` registra as
+versões efetivamente resolvidas.
 
 O patch atual de `deepmerge@4.3.1` descarta `__proto__` antes de copiar ou
 combinar propriedades e mitiga
 [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4),
-para o qual ainda não existe versão oficial corrigida. Os patches de
-`glob@10.5.0` e `glob@13.0.6` interrompem imediatamente os quatro caminhos de
-walk após cancelamento e fazem o backport mínimo da correção de
-[GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4);
-a versão oficial corrigida começa em `14.0.2`, fora das faixas ainda exigidas
-por Jest e Nest CLI.
+para o qual ainda não existe versão oficial corrigida. Os antigos patches de
+`glob@10.5.0` e `glob@13.0.6` foram removidos depois que a árvore completa passou
+a resolver `glob@14.0.6`, posterior à correção oficial de
+[GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4), sem
+conflitos de peer dependencies e com lint, testes e builds validados.
 
 Em 12 de novembro de 2026, `node-forge@1.4.3` passou a fornecer as correções
 oficiais dos advisories restantes da linha `1.4.2`, substituindo o override
@@ -135,13 +134,11 @@ anterior. A atualização compatível de `shadcn` para `4.23.0` também removeu 
 de [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5),
 e o patch local de Zod foi removido.
 
-`minimatch@10.2.6` permanece transitivo no tooling do Expo/Jest. O advisory
-[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)
-possui correção somente na major 11, enquanto os consumidores atuais declaram a
-major 10. Não aplique override global silencioso: a mudança remove APIs e muda
-o formato de export. Reavalie quando Expo, Jest e dependências associadas
-publicarem faixas compatíveis; até lá, não exponha padrões de glob controlados
-por usuário nesses processos de build e teste.
+O tooling de Expo, Jest e Nest CLI passou a resolver `minimatch@11.0.9`, posterior
+à correção de
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249).
+O override permanece explícito e deve ser removido quando todos os consumidores
+publicarem faixas que resolvam naturalmente uma versão corrigida.
 
 `decode-uri-component@0.5.1` já possuía a correção, mas migrou para ESM e ficava
 fora do intervalo `^0.2.2` consumido por `query-string@7.1.3` no antigo Expo
@@ -155,13 +152,12 @@ de outubro de 2026 por não considerar a falha explorável na prática. Não há
 motivo para manter um limite local de profundidade para um advisory retirado.
 
 Auditorias baseadas apenas no número da versão, incluindo `pnpm audit` e o
-Dependabot, podem continuar exibindo os avisos mitigados porque não
-inspecionam o conteúdo dos patches locais. Não ignore nem encerre os avisos sem
-registrar a existência dos patches e a execução bem-sucedida de
-`pnpm security:patches`.
+Dependabot, podem exibir um aviso mitigado quando não inspecionam o conteúdo do
+patch local de `deepmerge`. Não ignore nem encerre um aviso sem registrar a
+existência do patch e a execução bem-sucedida de `pnpm security:patches`.
 
 `pnpm security:patches` valida as versões oficiais fixadas, a ausência do Zod 3,
-o conteúdo aplicado dos dois patches de `glob` e o comportamento protegido de
+as versões corrigidas de `glob` e `minimatch` e o comportamento protegido de
 `deepmerge` e `node-forge`.
 
 ## Checklist de uma feature protegida

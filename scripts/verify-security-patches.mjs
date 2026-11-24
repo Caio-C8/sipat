@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +12,9 @@ const webRequire = createRequire(
 );
 const apiRequire = createRequire(
   join(repositoryRoot, "apps", "api", "package.json"),
+);
+const databaseRequire = createRequire(
+  join(repositoryRoot, "packages", "database", "package.json"),
 );
 const expoRequire = createRequire(mobileRequire.resolve("expo/package.json"));
 const expoCliRequire = createRequire(
@@ -40,29 +42,23 @@ const babelIstanbulRequire = createRequire(
 const testExcludeRequire = createRequire(
   babelIstanbulRequire.resolve("test-exclude/package.json"),
 );
+const prismaConfigRequire = createRequire(
+  databaseRequire.resolve("@prisma/config/package.json"),
+);
 
 assert.match(expoCliManifest.version, /^58\./);
 assert.equal(expoCliRequire("node-forge/package.json").version, "1.4.3");
 assert.equal(expoConfigRequire("deepmerge/package.json").version, "4.3.1");
 assert.equal(shadcnRequire("zod/package.json").version, "4.6.7");
 assert.equal(dotenvxRequire("systeminformation").version(), "5.33.18");
+assert.equal(prismaConfigRequire("effect/package.json").version, "3.22.5");
 
-for (const [globRequire, expectedVersion] of [
-  [testExcludeRequire, "10.5.0"],
-  [nestCliRequire, "13.0.6"],
-]) {
+for (const globRequire of [testExcludeRequire, nestCliRequire]) {
   const globManifestPath = globRequire.resolve("glob/package.json");
-  assert.equal(globRequire(globManifestPath).version, expectedVersion);
+  assert.equal(globRequire(globManifestPath).version, "14.0.6");
 
-  const walkerSource = readFileSync(
-    join(dirname(globManifestPath), "dist", "commonjs", "walker.js"),
-    "utf8",
-  );
-  assert.equal(
-    walkerSource.match(/if \(this\.signal\?\.aborted\)\s+return cb\(\);/gu)
-      ?.length,
-    4,
-  );
+  const resolvedGlobRequire = createRequire(globManifestPath);
+  assert.equal(resolvedGlobRequire("minimatch/package.json").version, "11.0.9");
 }
 
 const forge = expoCliRequire("node-forge");
