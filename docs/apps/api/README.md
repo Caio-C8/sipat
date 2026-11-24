@@ -75,6 +75,10 @@ No estado atual:
   Idempotência, concorrência, inventário e cronologia foram verificados no
   PostgreSQL isolado; ver [EMPRESTIMOS-001](../../tasks/EMPRESTIMOS-001-api-persistencia-emprestimos.md).
 
+- `BuscaModule` expõe `GET /api/busca` aos dois perfis, agrega os quinze
+  domínios compartilhados em uma consulta parametrizada, limita cada grupo e
+  nunca inclui usuários ou payloads completos; a validação funcional permanece
+  pendente conforme `WEB-BUSCA-001`;
 - a API expõe `GET /api/health`, `POST /api/auth/login`,
   `POST /api/auth/logout`, `GET /api/auth/me`,
   `POST /api/auth/alterar-senha`, `POST /api/auth/esqueceu-senha`,

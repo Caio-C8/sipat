@@ -91,3 +91,7 @@ usuário autenticado, permanece pendente em
 [WEB-DASHBOARD-002](../tasks/WEB-DASHBOARD-002-visao-operacional.md). As demais
 ampliações aprovadas para a evolução Web estão delimitadas no
 [roadmap de contratos](./roadmap.md#contratos-da-evolução-web-de-usabilidade-e-padronização).
+
+`BuscaGlobalQuerySchema` e `BuscaGlobalResponseSchema` delimitam a consulta
+agregada de `GET /api/busca`: termo de 2 a 100 caracteres, limite máximo de
+cinco itens e quinze grupos discriminados sem usuários ou payloads completos.

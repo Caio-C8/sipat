@@ -25,7 +25,7 @@ salvo a proteção do leitor de inventário ao final.
 | 9     | [`WEB-CADASTROS-002`](../../tasks/WEB-CADASTROS-002-modais-roteaveis.md)          | cadastros independentes, modais roteáveis e situação junto da edição    | implementada; validação pendente | objetivos 2–4                          |
 | 10    | [`WEB-OPERACOES-001`](../../tasks/WEB-OPERACOES-001-padronizar-operacoes.md)      | cinco áreas patrimoniais consistentes sem mudar domínio                 | implementada; validação pendente | objetivos 2–5                          |
 | 11    | [`WEB-RELATORIOS-002`](../../tasks/WEB-RELATORIOS-002-padronizacao-visual.md)     | relatórios funcionais no kit final e valores com sete casas             | implementada; validação pendente | objetivos 2–4                          |
-| 12    | [`WEB-BUSCA-001`](../../tasks/WEB-BUSCA-001-busca-global.md)                      | busca única por quinze domínios e resultados autorizados                | aprovada                         | objetivos 2, 4–11                      |
+| 12    | [`WEB-BUSCA-001`](../../tasks/WEB-BUSCA-001-busca-global.md)                      | busca única por quinze domínios e resultados autorizados                | implementada; validação pendente | objetivos 2, 4–11                      |
 | 13    | [`MOBILE-INVENTARIOS-004`](../../tasks/MOBILE-INVENTARIOS-004-controle-leitor.md) | leitor pausa após uma etiqueta e retoma por ação explícita              | aprovada                         | fluxo Mobile atual; fora da frente Web |
 
 ### Regras de execução

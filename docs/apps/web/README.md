@@ -115,6 +115,9 @@ fronteiras entre UI, contratos e integração HTTP.
   `PageHeader`, rodapé derivado da tela e menu do usuário, com navegação
   ordenada e filtrada por perfil; Minha conta fica no menu, o shell não consulta
   notificações e `SystemFooter` é o único rodapé de página autenticada;
+- a topbar oferece busca global cancelável e agrupada nos quinze domínios de
+  leitura compartilhada, com no máximo cinco resultados por grupo e destinos
+  canônicos; a validação funcional de `WEB-BUSCA-001` permanece pendente;
 - não existem biblioteca de cache remoto nem estado global na Web;
 - `WEB-AUTH-001` está implementado com backend mockado estrito no E2E; a
   validação adicional contra uma stack real permanece pendente.
