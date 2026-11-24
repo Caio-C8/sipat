@@ -20,17 +20,16 @@ describe("MinhaConta", () => {
     render(<MinhaConta identidade={identidade} />);
 
     expect(screen.getByRole("heading", { name: "Minha conta" })).toBeTruthy();
-    expect(screen.getByText("Paulo Caixeta")).toBeTruthy();
-    expect(screen.getByText("paulo.caixeta@example.test")).toBeTruthy();
+    expect(screen.getAllByText("Paulo Caixeta")).toHaveLength(2);
+    expect(screen.getAllByText("paulo.caixeta@example.test")).toHaveLength(2);
     expect(screen.getByText("Administrador")).toBeTruthy();
-    expect(screen.getByText("Não disponível")).toBeTruthy();
-    expect(screen.getByText("Ativo")).toBeTruthy();
+    expect(screen.getByText("Ativa")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "Alterar senha" }).getAttribute("href"),
-    ).toBe("/configuracoes/alterar-senha");
+    ).toBe("/minha-conta/alterar-senha");
     expect(
       screen
-        .getByRole("link", { name: /Use a recuperação disponível/ })
+        .getByRole("link", { name: /Inicie a recuperação de acesso/ })
         .getAttribute("href"),
     ).toBe("/esqueci-senha");
   });

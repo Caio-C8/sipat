@@ -238,7 +238,7 @@ Especificação aprovada:
 
 Ordena a navegação conforme a matriz de perfis, centraliza telas e padrões
 descendentes, torna ancestrais do breadcrumb navegáveis, deriva o rodapé e
-remove Configurações, Histórico e notificações da sidebar/topbar. Estados de
+remove entradas sem função, Histórico e notificações da sidebar/topbar. Estados de
 acesso, indisponibilidade, 404 e erro de segmento compartilham uma composição
 acionável sem alterar URLs ou a autoridade da API.
 [Escopo e evidências](../../tasks/WEB-SHELL-002-navegacao-estados-globais.md).

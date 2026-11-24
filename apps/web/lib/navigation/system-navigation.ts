@@ -677,22 +677,17 @@ export const catalogoTelasSistema: readonly TelaSistema[] = [
     "usuarios",
     [{ label: "Usuários", href: "/usuarios" }, { label: "Detalhes" }],
   ),
-  tela(
-    "minha-conta",
-    "Minha conta",
-    "/configuracoes",
-    TODOS_PERFIS,
-    undefined,
-    [{ label: "Minha conta" }],
-  ),
+  tela("minha-conta", "Minha conta", "/minha-conta", TODOS_PERFIS, undefined, [
+    { label: "Minha conta" },
+  ]),
   tela(
     "alterar-senha",
     "Alterar senha",
-    "/configuracoes/alterar-senha",
+    "/minha-conta/alterar-senha",
     TODOS_PERFIS,
     undefined,
     [
-      { label: "Minha conta", href: "/configuracoes" },
+      { label: "Minha conta", href: "/minha-conta" },
       { label: "Alterar senha" },
     ],
   ),

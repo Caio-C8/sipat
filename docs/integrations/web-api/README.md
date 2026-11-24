@@ -42,11 +42,11 @@ No estado atual:
 - login, logout, `/auth/me` e conclusão do primeiro acesso possuem consumidor
   Web; mutações enviam o sinal de CSRF e o cookie permanece `HttpOnly` sob
   controle da API;
-- `/configuracoes` consome `GET /auth/me` via fronteira Server e não consulta
+- `/minha-conta` consome `GET /auth/me` via fronteira Server e não consulta
   `/usuarios/:id`, que permanece exclusivo do Administrador; por isso o setor
   não está disponível na identidade atual. A situação ativa deriva da sessão
   autenticada;
-- `/configuracoes/alterar-senha` usa a operação tipada
+- `/minha-conta/alterar-senha` usa a operação tipada
   `POST /auth/alterar-senha`, envia CSRF, valida `AlterarSenhaBodySchema` e, após
   sucesso, orienta novo login porque a API revoga as sessões e expira o cookie;
 - a recuperação de senha continua integrada em `WEB-AUTH-002` pelo token de

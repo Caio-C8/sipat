@@ -33,9 +33,9 @@ fronteiras entre UI, contratos e integração HTTP.
   responsável são informações automáticas fora de inputs; o residual é
   informado explicitamente em reais ou percentual. O cadastro registra o bem
   por `POST /patrimonios` com validação e idempotência;
-- `/configuracoes` exibe a identidade autenticada; a aba de usuários permanece
-  indisponível. `/configuracoes/alterar-senha` consome o `AUTH-002`, encerra as
-  sessões no backend e orienta um novo login;
+- `/minha-conta` exibe a identidade autenticada e oferece acesso à proteção da
+  conta. `/minha-conta/alterar-senha` consome o `AUTH-002`, encerra as sessões
+  no backend e orienta um novo login;
 - `/patrimonios` oferece pesquisa com filtros relacionais pesquisáveis e
   compartilháveis pela URL; o detalhe organiza todos os atributos, usa filtros
   e paginação compartilhados no histórico e mantém as quatro ações em drawers.
