@@ -169,7 +169,7 @@ test("número humano do pedido é uma string decimal positiva", () => {
     id: randomUUID(),
     numeroPedido: "42",
     numeroRequisicao: null,
-    dataEnvio: "2026-10-01",
+    dataEnvio: "2026-10-01T11:30:00.000Z",
     dataRetorno: null,
     status: "EM_ANDAMENTO",
     totalItens: 1,

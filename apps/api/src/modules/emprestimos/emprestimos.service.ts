@@ -18,7 +18,10 @@ import type {
   RegistrarDevolucaoEmprestimoResponse,
 } from "@repo/contracts";
 import { Prisma } from "@repo/database";
-import { diaSaoPaulo } from "../../common/utils/datas-institucionais";
+import {
+  diaSaoPaulo,
+  instanteNoDiaComHoraAtualSaoPaulo,
+} from "../../common/utils/datas-institucionais";
 import {
   calcularHashIdempotencia,
   construirConflitoIdempotencia,
@@ -144,6 +147,10 @@ export class EmprestimosService {
             );
             const agora = new Date();
             this.exigirNaoFutura(dados.dataEmprestimo, "dataEmprestimo", agora);
+            const dataEmprestimo = instanteNoDiaComHoraAtualSaoPaulo(
+              dados.dataEmprestimo,
+              agora,
+            );
             for (const [indice, id] of dados.patrimonioIds.entries()) {
               const bem = bens.find((item) => item.id === id);
               if (!bem)
@@ -168,20 +175,25 @@ export class EmprestimosService {
                   `patrimonioIds.${indice}`,
                 );
               if (
-                await repository.existeEventoNaOuAposData(
+                await repository.existeEmprestimoNaOuAposData(
                   id,
-                  dados.dataEmprestimo,
+                  dataEmprestimo,
                 )
               )
-                throw this.conflito(
-                  "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
-                  "A data contradiz evento patrimonial ou conferência já registrada.",
-                  `patrimonioIds.${indice}`,
-                );
+                throw new ConflictException({
+                  codigo: "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
+                  mensagem:
+                    "Não foi possível registrar o empréstimo na data informada porque um dos bens possui outro empréstimo ou devolução nessa data ou depois dela.",
+                  erros: [
+                    {
+                      campo: `patrimonioIds.${indice}`,
+                      codigo: "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
+                      mensagem:
+                        "Este bem possui outro empréstimo ou devolução na mesma data ou depois. Confira a data e o histórico de empréstimos do bem.",
+                    },
+                  ],
+                });
             }
-            const dataEmprestimo = new Date(
-              `${dados.dataEmprestimo}T00:00:00.000Z`,
-            );
             const dataPrevistaDevolucao = new Date(
               `${dados.dataPrevistaDevolucao}T00:00:00.000Z`,
             );
@@ -331,6 +343,10 @@ export class EmprestimosService {
             );
             const agora = new Date();
             this.exigirNaoFutura(dados.dataDevolucao, "dataDevolucao", agora);
+            const dataDevolucao = instanteNoDiaComHoraAtualSaoPaulo(
+              dados.dataDevolucao,
+              agora,
+            );
             const atuais = await repository.buscarGrupo(grupoId);
             for (const [indice, id] of dados.emprestimoIds.entries()) {
               const registro = atuais.find((item) => item.id === id);
@@ -346,10 +362,7 @@ export class EmprestimosService {
                   "Este bem já foi devolvido.",
                   `emprestimoIds.${indice}`,
                 );
-              if (
-                dados.dataDevolucao <
-                registro.dataEmprestimo.toISOString().slice(0, 10)
-              )
+              if (dataDevolucao < registro.dataEmprestimo)
                 throw this.entradaInvalida(
                   "A devolução não pode anteceder a saída.",
                   "dataDevolucao",
@@ -363,21 +376,7 @@ export class EmprestimosService {
                   "O estado do bem mudou.",
                   `emprestimoIds.${indice}`,
                 );
-              if (
-                await repository.existeConferenciaVinculadaNaOuAposData(
-                  id,
-                  dados.dataDevolucao,
-                )
-              )
-                throw this.conflito(
-                  "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
-                  "A data contradiz uma conferência que registrou o empréstimo.",
-                  "dataDevolucao",
-                );
             }
-            const dataDevolucao = new Date(
-              `${dados.dataDevolucao}T00:00:00.000Z`,
-            );
             for (const registro of selecionados) {
               await repository.criarDevolucao({
                 emprestimoId: registro.id,

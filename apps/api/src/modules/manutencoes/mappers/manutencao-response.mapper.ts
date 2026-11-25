@@ -34,17 +34,20 @@ export class ManutencaoResponseMapper {
       versaoOrcamento: item.versaoOrcamento,
       orcamentoAtual: revisoes.at(-1) ?? null,
       revisoesOrcamento: revisoes,
-      dataRetorno: dia(item.dataRetorno),
+      dataRetorno: item.dataRetorno?.toISOString() ?? null,
       descricaoServicoRealizado: item.descricaoServicoRealizado,
       valorRealizado: item.valorRealizado?.toString() ?? null,
-      garantia: item.descricaoGarantia
-        ? {
-            descricao: item.descricaoGarantia,
-            ...(item.dataFimGarantia
-              ? { dataFim: dia(item.dataFimGarantia)! }
-              : {}),
-          }
-        : null,
+      garantia:
+        item.descricaoGarantia || item.dataFimGarantia
+          ? {
+              ...(item.descricaoGarantia
+                ? { descricao: item.descricaoGarantia }
+                : {}),
+              ...(item.dataFimGarantia
+                ? { dataFim: dia(item.dataFimGarantia)! }
+                : {}),
+            }
+          : null,
       recebidoPor: item.recebidoPor,
       recebidoEm: instante(item.recebidoEm),
       anexoObservacao: item.caminhoAnexoObservacao
@@ -70,8 +73,8 @@ export class ManutencaoResponseMapper {
       id: pedido.id,
       numeroPedido: pedido.numeroPedido.toString(),
       numeroRequisicao: pedido.numeroRequisicao,
-      dataEnvio: dia(pedido.dataEnvio)!,
-      dataRetorno: dia(pedido.dataRetorno),
+      dataEnvio: pedido.dataEnvio.toISOString(),
+      dataRetorno: pedido.dataRetorno?.toISOString() ?? null,
       status: pedido.status,
       totalItens: pedido.totalItens,
       itensPendentes: pedido.itensPendentes,

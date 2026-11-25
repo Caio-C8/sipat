@@ -31,6 +31,10 @@ import type {
   DocumentoBaixaAberto,
 } from "./types";
 import { Inject } from "@nestjs/common";
+import {
+  diaSaoPaulo,
+  instanteNoDiaComHoraAtualSaoPaulo,
+} from "../../common/utils/datas-institucionais";
 
 @Injectable()
 export class BaixasService {
@@ -130,7 +134,7 @@ export class BaixasService {
     createdById: string,
     caminhoAnexoDocumento?: string,
   ): Promise<BaixaDetalhePayload> {
-    const dataBaixa = this.paraDataCivil(dados.dataBaixa);
+    const dataBaixa = instanteNoDiaComHoraAtualSaoPaulo(dados.dataBaixa);
     try {
       return await this.baixas.executarTransacao(async (transacao) => {
         const patrimonio = await transacao.bloquearPatrimonio(patrimonioId);
@@ -150,8 +154,9 @@ export class BaixasService {
         const comissao = await transacao.bloquearComissao(dados.comissaoId);
         if (
           comissao === null ||
-          dataBaixa < comissao.dataVigenciaInicio ||
-          dataBaixa > comissao.dataVigenciaFim
+          this.paraDataCivil(diaSaoPaulo(dataBaixa)) <
+            comissao.dataVigenciaInicio ||
+          this.paraDataCivil(diaSaoPaulo(dataBaixa)) > comissao.dataVigenciaFim
         ) {
           throw this.comissaoInvalida();
         }
@@ -201,13 +206,7 @@ export class BaixasService {
   }
 
   private exigirDataNaoFutura(dataBaixa: string): void {
-    const agora = new Date();
-    const hoje = [
-      agora.getFullYear(),
-      String(agora.getMonth() + 1).padStart(2, "0"),
-      String(agora.getDate()).padStart(2, "0"),
-    ].join("-");
-    if (dataBaixa > hoje) {
+    if (dataBaixa > diaSaoPaulo(new Date())) {
       throw new ConflictException({
         codigo: "DATA_BAIXA_FUTURA",
         mensagem: "A data da baixa não pode ser futura.",

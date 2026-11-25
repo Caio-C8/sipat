@@ -36,12 +36,14 @@ implementação do banco e da API.
   do Prisma;
 - reutilizar o params de patrimônio quando a semântica coincidir ou declarar um
   params explícito para `patrimonioId`, sem duplicar primitives UUID;
-- definir `BaixarPatrimonioDadosSchema` estrito com `dataBaixa` em `YYYY-MM-DD`,
+- definir `BaixarPatrimonioDadosSchema` estrito com `dataBaixa` como data civil;
+  a API combina o dia informado com o horário atual de `America/Sao_Paulo`,
   `tipo`, `motivo`, `observacao` opcional e `comissaoId`;
 - normalizar espaços externos e limitar `motivo` e `observacao` a 2.000
   caracteres; motivo vazio falha e observação ausente permanece ausente;
-- validar apenas a representação de `dataBaixa` no contrato compartilhado; a
-  comparação com o relógio do servidor pertence a `BAIXAS-001`;
+- validar apenas a representação civil de `dataBaixa` no contrato compartilhado;
+  a comparação e a composição com o relógio do servidor pertencem a
+  `BAIXAS-001`;
 - definir constantes e schemas do multipart com campo textual `dados`, campo de
   arquivo opcional `documento`, um arquivo, um campo, duas partes, extensão
   `.pdf`, MIME `application/pdf` e 10 MiB;
@@ -66,8 +68,9 @@ implementação do banco e da API.
 ## Decisões aprovadas
 
 - toda baixa exige comissão; a vigência será validada pela API na data civil da
-  baixa;
-- `dataBaixa` é civil e não pode ser futura, mas datas passadas são aceitas;
+  baixa em `America/Sao_Paulo`;
+- `dataBaixa` representa o instante significativo da ocorrência e não pode ser
+  futura, mas instantes passados são aceitos;
 - `motivo` é obrigatório e `observacao` é opcional;
 - `TRANSFERENCIA` significa transferência permanente para fora do acervo, não
   movimentação entre setores;

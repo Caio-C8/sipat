@@ -355,10 +355,16 @@ correções está registrada em RF19.
 - Ao emprestar, o patrimônio deve assumir o status EMPRESTADO; após a devolução, deve retornar ao status ATIVO.
 - O Diretor de Patrimônio escolhe explicitamente entre **em grupo** (um identificador UUID de consulta compartilhado e um registro por bem) e **separadamente** (um empréstimo independente por bem), inclusive ao selecionar somente um bem. Os dados da confirmação são copiados para cada registro individual.
 - Destinatário externo em texto livre (pessoa ou instituição), finalidade, data de saída, previsão de devolução e comissão são obrigatórios para novos registros; observação é opcional. Dados nulos legados permanecem legíveis como não informados.
-- Saída e devolução aceitam datas civis passadas ou de hoje, nunca futuras. A previsão não antecede a saída; a devolução não antecede a saída. Cada comissão deve estar vigente na data civil da respectiva operação e pode ser diferente no retorno. O instante de gravação permanece auditável separadamente.
+- Saída e devolução exigem data e horário de ocorrência passados ou atuais,
+  nunca futuros. O usuário seleciona somente o dia e o sistema combina esse dia
+  com o horário atual na confirmação. A previsão de devolução permanece uma
+  data civil, sem horário, e não antecede o dia da saída; a devolução não
+  antecede o instante da saída. Cada comissão deve estar vigente na data civil
+  da respectiva operação e pode ser diferente no retorno. O instante de
+  gravação permanece auditável separadamente.
 - A devolução pode selecionar parte dos bens ainda pendentes. Apenas os selecionados voltam a ATIVO; o grupo é concluído quando não resta pendência. Atraso é calculado em America/Sao_Paulo sobre previsão vencida de bem pendente, sem estado persistido.
-- Uma saída retroativa que contradiga evento patrimonial ou conferência de inventário posterior é recusada, inclusive quando os fatos compartilham o mesmo dia civil sem ordem comprovável. Os vínculos e resultados históricos do inventário não são reescritos após devolução.
-- Para saída ou devolução retroativa, outro evento patrimonial ou conferência no mesmo dia civil, sem horário de operação que comprove a ordem, produz conflito. Decisão confirmada em 31/10/2026.
+- A cronologia retroativa é validada dentro do próprio domínio: uma nova saída é recusada quando o bem já possui outro empréstimo ou devolução no mesmo instante ou depois dele. Movimentações, manutenções, baixas e conferências de inventário não produzem esse conflito de cronologia do empréstimo.
+- Uma conferência de inventário não impede a saída nem a devolução. Seus vínculos e resultados históricos permanecem preservados e não são reescritos após a devolução. As regras de estado atual do bem e de inventário em andamento continuam aplicáveis. Decisão revisada em 24/11/2026.
 - Empréstimo e devolução não alteram setor, responsável cadastral nem valor patrimonial. Confirmações são atômicas e idempotentes por usuário e chave UUID; a mesma chave com outro conteúdo é conflito.
 
 ### RF17: Baixa de Patrimônios
@@ -375,7 +381,11 @@ anexado, comissão e usuário responsável.
 - Somente patrimônios ATIVOS podem ser baixados.
 - A baixa deve alterar o status do patrimônio para BAIXADO.
 - Toda baixa deve estar associada a uma comissão vigente na data da baixa.
-- A data da baixa é uma data civil e não pode estar no futuro.
+- A baixa registra a data e o horário efetivos da ocorrência e não pode estar
+  no futuro. O usuário seleciona somente o dia e o sistema combina esse dia com
+  o horário atual na confirmação. A vigência da comissão é avaliada na data
+  civil correspondente em `America/Sao_Paulo`; o instante de auditoria
+  permanece separado.
 - O tipo da baixa deve ser um dos seguintes:
   - `ALIENACAO`: saída do acervo por alienação;
   - `INUTILIZACAO`: desfazimento de bem sem possibilidade ou conveniência de
@@ -424,14 +434,18 @@ informações de recebimento.
 
 **Decisões confirmadas para RF18:** comissão e data de envio pertencem ao pedido;
 fornecedor, tipo (`PREVENTIVA` ou `CORRETIVA`) e previsão de retorno pertencem a
-cada item. A data de envio pode ser passada, mas não futura, e a comissão deve
-estar vigente nela. A comissão original permanece vinculada durante atualizações
+cada item. Envio e retorno registram data e horário efetivos, combinando o dia
+selecionado pelo usuário com o horário atual da confirmação; orçamento,
+previsão de retorno e fim da garantia permanecem datas civis. A data e hora de
+envio podem ser passadas, mas não futuras, e a comissão deve estar vigente na
+data civil correspondente em `America/Sao_Paulo`. A comissão original permanece vinculada durante atualizações
 de orçamento e retornos posteriores. Cada item possui um orçamento atualizável
 somente antes do retorno; a interface não apresenta versões nem sugere um
 histórico consultável. O retorno é individual e único, com
-descrição do serviço, valor e garantia com descrição e data final opcional. O
-pedido só é concluído quando todos os itens retornarem; sua data agregada é a
-do último retorno. Há somente um anexo opcional da observação do pedido e um por
+descrição do serviço, valor e garantia opcional, cuja descrição e data final
+também são independentes e opcionais. O
+pedido só é concluído quando todos os itens retornarem; seu instante agregado é
+o do último retorno. Há somente um anexo opcional da observação do pedido e um por
 item, sem classificação por envio/recebimento e sem coleção de documentos. Nova
 vinculação de fornecedor exige cadastro ativo, sem apagar vínculos históricos.
 Durante conferência de setor em andamento, envio e retorno que mudem a
@@ -669,7 +683,8 @@ patrimônios e atividades patrimoniais realizadas pelo usuário atual.
 - Uma espécie deve estar vinculada a uma única natureza.
 - Um patrimônio deve possuir uma única espécie e um setor atual.
 - Os valores monetários devem utilizar o formato decimal, com 13 casas decimais à esquerda da vírgula e 7 casas decimais à direita da vírgula.
-- Na Web, inputs monetários aceitam duas casas decimais durante a digitação; a
+- Na Web, inputs monetários aceitam de zero a sete casas decimais durante a
+  digitação e transportam o valor como string, sem conversão binária; a
   apresentação de valores monetários, inclusive em relatórios e PDFs gerados,
   usa exatamente sete casas decimais sem alterar a precisão armazenada.
 - Os valores patrimoniais devem ser armazenados em Real (BRL).

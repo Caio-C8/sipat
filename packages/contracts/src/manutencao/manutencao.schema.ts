@@ -130,10 +130,14 @@ export const AtualizarOrcamentoManutencaoBodySchema = z.strictObject({
   descricaoOrcamento: TextoLongoSchema,
   valorOrcamento: Decimal19_7Schema,
 });
-export const GarantiaManutencaoSchema = z.strictObject({
-  descricao: TextoLongoSchema,
-  dataFim: DataCivilSchema.optional(),
-});
+export const GarantiaManutencaoSchema = z
+  .strictObject({
+    descricao: TextoLongoSchema.optional(),
+    dataFim: DataCivilSchema.optional(),
+  })
+  .refine((garantia) => garantia.descricao || garantia.dataFim, {
+    message: "Informe a descrição ou o fim da garantia.",
+  });
 export const RegistrarRetornoManutencaoBodySchema = z.strictObject({
   chaveIdempotencia: ChaveIdempotenciaSchema,
   dataRetorno: DataCivilSchema,
@@ -187,7 +191,7 @@ export const ItemManutencaoSchema = z.strictObject({
   versaoOrcamento: z.number().int().min(0),
   orcamentoAtual: RevisaoOrcamentoManutencaoSchema.nullable(),
   revisoesOrcamento: z.array(RevisaoOrcamentoManutencaoSchema),
-  dataRetorno: DataCivilSchema.nullable(),
+  dataRetorno: DataHoraSchema.nullable(),
   descricaoServicoRealizado: z.string().nullable(),
   valorRealizado: Decimal19_7Schema.nullable(),
   garantia: GarantiaManutencaoSchema.nullable(),
@@ -199,8 +203,8 @@ export const ManutencaoResumoSchema = z.strictObject({
   id: z.uuid(),
   numeroPedido: NumeroPedidoManutencaoSchema,
   numeroRequisicao: z.string().nullable(),
-  dataEnvio: DataCivilSchema,
-  dataRetorno: DataCivilSchema.nullable(),
+  dataEnvio: DataHoraSchema,
+  dataRetorno: DataHoraSchema.nullable(),
   status: StatusManutencaoSchema,
   totalItens: z.number().int().min(0),
   itensPendentes: z.number().int().min(0),
@@ -223,7 +227,7 @@ export const ComissaoOpcaoManutencaoSchema = RelacionadoSchema.extend({
 export const RetornoManutencaoSchema = z.strictObject({
   item: ItemManutencaoSchema,
   statusPedido: StatusManutencaoSchema,
-  dataRetornoPedido: DataCivilSchema.nullable(),
+  dataRetornoPedido: DataHoraSchema.nullable(),
 });
 export const ListarManutencoesResponseSchema =
   criarRespostaSucessoPaginadaSchema(ManutencaoResumoSchema);

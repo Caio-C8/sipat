@@ -389,7 +389,12 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
     ).rejects.toMatchObject({ status: 400 });
     await expect(
       service.criar({ ...base, dataEmprestimo: "2010-01-01" }, diretor),
-    ).rejects.toMatchObject({ status: 409 });
+    ).rejects.toMatchObject({
+      status: 409,
+      response: {
+        codigo: "COMISSAO_FORA_DA_VIGENCIA",
+      },
+    });
     expect(
       (await db.patrimonio.findUniqueOrThrow({ where: { id: patrimonio.id } }))
         .status,
@@ -399,6 +404,72 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
         where: { patrimonioId: patrimonio.id },
       }),
     ).toBe(0);
+  });
+
+  it("rejeita nova saída que contradiz outro empréstimo ou devolução", async () => {
+    const patrimonio = await bem();
+    const primeiro = await service.criar(saida([patrimonio.id]), diretor);
+    if (Array.isArray(primeiro.dados)) throw new Error("Grupo esperado.");
+    await service.devolver(
+      primeiro.dados.id,
+      {
+        chaveIdempotencia: randomUUID(),
+        emprestimoIds: [primeiro.dados.itens[0]!.id],
+        dataDevolucao: hoje,
+        comissaoId,
+      },
+      diretor,
+    );
+
+    await expect(
+      service.criar(saida([patrimonio.id]), diretor),
+    ).rejects.toMatchObject({
+      status: 409,
+      response: {
+        codigo: "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
+        mensagem:
+          "Não foi possível registrar o empréstimo na data informada porque um dos bens possui outro empréstimo ou devolução nessa data ou depois dela.",
+        erros: [
+          {
+            campo: "patrimonioIds.0",
+            codigo: "CRONOLOGIA_PATRIMONIAL_CONFLITANTE",
+          },
+        ],
+      },
+    });
+  });
+
+  it("permite saída no mesmo dia de uma conferência de inventário", async () => {
+    const patrimonio = await bem();
+    const inventario = await db.inventario.create({
+      data: {
+        nome: "Conferência independente RF16",
+        comissaoId,
+        createdById: diretor.id,
+      },
+    });
+    const setorInventario = await db.setorInventario.create({
+      data: { inventarioId: inventario.id, setorId },
+    });
+    await db.itemInventario.create({
+      data: {
+        inventarioId: inventario.id,
+        setorInventarioId: setorInventario.id,
+        setorEsperadoId: setorId,
+        patrimonioId: patrimonio.id,
+        statusVerificacao: "VERIFICADO",
+        situacao: "CORRETO",
+        statusPatrimonioNaVerificacao: "ATIVO",
+        dataVerificacao: new Date(`${hoje}T14:52:00.000Z`),
+        verificadoPorId: diretor.id,
+      },
+    });
+
+    const resposta = await service.criar(
+      { ...saida([patrimonio.id]), dataEmprestimo: hoje },
+      diretor,
+    );
+    expect(Array.isArray(resposta.dados)).toBe(false);
   });
 
   it("serializa duas saídas concorrentes para o mesmo bem e calcula atraso/filtros", async () => {
@@ -500,7 +571,7 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
     expect(devolucao.dados.emprestimo.situacao).toBe("CONCLUIDO");
   });
 
-  it("preserva vínculo histórico do inventário e recusa retorno no dia da conferência", async () => {
+  it("preserva vínculo histórico do inventário e permite retorno no dia da conferência", async () => {
     const patrimonio = await bem();
     const resposta = await service.criar(saida([patrimonio.id]), diretor);
     if (Array.isArray(resposta.dados)) throw new Error("Grupo esperado.");
@@ -531,15 +602,6 @@ comBanco("empréstimos RF16 no PostgreSQL isolado", () => {
       dataDevolucao: hoje,
       comissaoId,
     };
-    await expect(
-      service.devolver(resposta.dados.id, retorno, diretor),
-    ).rejects.toMatchObject({
-      response: { codigo: "CRONOLOGIA_PATRIMONIAL_CONFLITANTE" },
-    });
-    await db.itemInventario.update({
-      where: { id: item.id },
-      data: { dataVerificacao: new Date(`${diaAnterior}T12:00:00.000Z`) },
-    });
     await service.devolver(resposta.dados.id, retorno, diretor);
     const depois = await db.itemInventario.findUniqueOrThrow({
       where: { id: item.id },

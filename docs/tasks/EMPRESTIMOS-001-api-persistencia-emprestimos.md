@@ -16,7 +16,7 @@ Registrar e consultar saídas e devoluções patrimoniais reais, individuais ou 
 ## Escopo
 
 - Migration aditiva, módulo Nest por camadas, opções paginadas, lista, detalhe, saída e devolução parcial.
-- Autorização no servidor, vigência de comissão na data informada, bloqueio de setor em conferência EM_ANDAMENTO, cronologia retroativa, locks e rollback da seleção inteira.
+- Autorização no servidor, vigência de comissão na data informada, bloqueio de setor em conferência EM_ANDAMENTO, cronologia retroativa restrita a empréstimos e devoluções, locks e rollback da seleção inteira.
 - Idempotência persistente com usuário, tipo, hash do payload normalizado e resposta da primeira confirmação.
 
 ## Fora do escopo
@@ -27,6 +27,7 @@ Registrar e consultar saídas e devoluções patrimoniais reais, individuais ou 
 
 - Diretor escreve; Diretor e Administrador consultam. Não aplicar o bloqueio PENDENTE específico das transferências.
 - Preservar dados e vínculos históricos; não inferir modo de grupo legado com um bem nem preencher nulos antigos.
+- Conferências concluídas e eventos de outros domínios não bloqueiam saída ou devolução por cronologia; estado atual e inventário em andamento continuam sendo revalidados na confirmação.
 
 ## Critérios de aceite
 

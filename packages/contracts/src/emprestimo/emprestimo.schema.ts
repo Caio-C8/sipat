@@ -139,7 +139,7 @@ export const EmprestimoResumoSchema = z.strictObject({
   modoAgrupamento: ModoAgrupamentoEmprestimoSchema.nullable(),
   destinatario: z.string().nullable(),
   dataEmprestimo: DataHoraSchema,
-  dataPrevistaDevolucao: DataHoraSchema.nullable(),
+  dataPrevistaDevolucao: DataCivilSchema.nullable(),
   total: z.number().int().min(1),
   pendentes: z.number().int().min(0),
   situacao: SituacaoEmprestimoSchema,

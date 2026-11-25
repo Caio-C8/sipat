@@ -54,7 +54,7 @@ const detalheBaixa = {
     nome: "Comissão de baixa patrimonial",
   },
   tipo: "ALIENACAO",
-  dataBaixa: "2026-10-27",
+  dataBaixa: "2026-10-27T17:30:00.000Z",
   motivo: "Bem sem interesse para o acervo",
   observacao: null,
   createdById: ids.usuario,
@@ -114,7 +114,7 @@ describe("contratos de entrada da baixa patrimonial", () => {
     });
   });
 
-  it("valida somente a representação civil da data", () => {
+  it("valida um instante ISO com fuso explícito", () => {
     assert.equal(
       parseValido(BaixarPatrimonioDadosSchema, {
         ...dadosMinimos,
