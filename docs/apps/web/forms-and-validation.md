@@ -79,7 +79,8 @@ visual; use uma operação com entrada e saída explícitas.
   `Restaurar alterações`, com confirmação quando houver perda de dados;
 - mensagens públicas descrevem o que o usuário pode fazer e não mencionam API,
   servidor, stack, tabela ou implementação interna;
-- inputs monetários mantêm string decimal e duas casas durante a edição;
+- inputs monetários mantêm string decimal e aceitam até sete casas durante a
+  edição;
   inputs inteiros aceitam apenas dígitos e não usam comportamento de incremento
   acidental de `type="number"`.
 

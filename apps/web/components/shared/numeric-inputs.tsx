@@ -2,11 +2,7 @@
 
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import {
-  centsDigitsToDecimal,
-  decimalToCentsDigits,
-  formatBrlInput,
-} from "@/lib/format/decimal";
+import { formatBrlInput, normalizeBrlInput } from "@/lib/format/decimal";
 
 type MoneyInputProps = Omit<
   React.ComponentProps<typeof Input>,
@@ -17,24 +13,33 @@ type MoneyInputProps = Omit<
 };
 
 const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
-  ({ value, onValueChange, ...props }, ref) => (
-    <Input
-      {...props}
-      ref={ref}
-      type="text"
-      inputMode="decimal"
-      value={formatBrlInput(value)}
-      onChange={(event) => {
-        const digits = event.target.value.replace(/\D/g, "");
-        onValueChange(centsDigitsToDecimal(digits));
-      }}
-      onFocus={(event) => {
-        event.currentTarget.select();
-        props.onFocus?.(event);
-      }}
-      data-decimal-value={centsDigitsToDecimal(decimalToCentsDigits(value))}
-    />
-  ),
+  ({ value, onValueChange, ...props }, ref) => {
+    const [draft, setDraft] = React.useState<string | null>(null);
+    return (
+      <Input
+        {...props}
+        ref={ref}
+        type="text"
+        inputMode="decimal"
+        value={draft ?? formatBrlInput(value)}
+        onChange={(event) => {
+          const normalized = normalizeBrlInput(event.target.value);
+          setDraft(normalized.formatted);
+          onValueChange(normalized.decimal);
+        }}
+        onFocus={(event) => {
+          setDraft(formatBrlInput(value));
+          event.currentTarget.select();
+          props.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setDraft(null);
+          props.onBlur?.(event);
+        }}
+        data-decimal-value={value || "0"}
+      />
+    );
+  },
 );
 MoneyInput.displayName = "MoneyInput";
 

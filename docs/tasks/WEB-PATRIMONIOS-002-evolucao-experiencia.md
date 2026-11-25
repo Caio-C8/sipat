@@ -53,7 +53,8 @@ patrimoniais existentes.
 - filtros ficam na URL e sobrevivem a refresh/compartilhamento;
 - os quatro drawers pertencem à ficha, enquanto as páginas gerais continuam
   disponíveis;
-- valores monetários exibem sete casas e inputs aceitam duas.
+- valores monetários exibem sete casas e inputs aceitam até sete, conforme
+  decisão revisada em 24/11/2026.
 
 ## Critérios de aceite
 

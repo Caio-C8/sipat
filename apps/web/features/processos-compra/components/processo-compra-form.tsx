@@ -19,6 +19,7 @@ import {
 } from "@/features/cadastros/api/hooks";
 import {
   Campo,
+  CampoMonetario,
   texto,
   opcional,
   cartao,
@@ -98,6 +99,7 @@ export function FormularioProcesso({
   const criar = useCriarProcessoCompra();
   const alterar = useAlterarProcessoCompra();
   const [notas, setNotas] = useState<string[]>([]);
+  const [valorTotal, setValorTotal] = useState(registro?.valorTotal ?? "");
   return (
     <div className="grid gap-4">
       <FormularioCadastro
@@ -111,7 +113,10 @@ export function FormularioProcesso({
         contexto={contexto}
         onCancelar={onCancelar}
         onSucesso={onSucesso}
-        onRestaurar={() => setNotas([])}
+        onRestaurar={() => {
+          setNotas([]);
+          setValorTotal(registro?.valorTotal ?? "");
+        }}
         navegarAposSucesso={contexto !== "modal"}
         rotaDetalhe
         idempotente={!registro}
@@ -122,7 +127,7 @@ export function FormularioProcesso({
             anoProcesso: ano(dados, "anoProcesso"),
             numeroEmpenho: opcional(dados, "numeroEmpenho"),
             anoEmpenho: ano(dados, "anoEmpenho"),
-            valorTotal: opcional(dados, "valorTotal")?.replace(",", "."),
+            valorTotal: opcional(dados, "valorTotal"),
             observacao: opcional(dados, "observacao"),
           };
           if (registro)
@@ -196,12 +201,12 @@ export function FormularioProcesso({
             defaultValue={registro?.anoEmpenho ?? ""}
           />
         </div>
-        <Campo
+        <CampoMonetario
           rotulo="Valor total (R$)"
           name="valorTotal"
-          inputMode="decimal"
-          placeholder="Ex.: 1250,00"
-          defaultValue={registro?.valorTotal ?? ""}
+          value={valorTotal}
+          onValueChange={setValorTotal}
+          placeholder="R$ 0,00"
         />
         <div className="text-sm">
           <label htmlFor="observacao-processo">Observação</label>
