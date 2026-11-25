@@ -20,6 +20,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { AlertaIdempotencia } from "@/components/alerta-idempotencia";
 import { isApiError } from "@/lib/api/core/api-error";
+import { paraDataHoraLocalSaoPaulo } from "@/lib/format/data-hora-sao-paulo";
 import {
   decidirAposFalha,
   isConflitoIdempotencia,
@@ -100,12 +101,31 @@ export function DetalheEmprestimo({
       comissaoId,
       ...(observacao.trim() ? { observacao } : {}),
     };
+    const diaEmprestimo = paraDataHoraLocalSaoPaulo(
+      detalhe.dataEmprestimo,
+    ).slice(0, 10);
     const corpo = JSON.stringify(semChave);
     chaveAnterior.current = obterTentativaIdempotente(
       chaveAnterior.current,
       corpo,
     );
-    const validacao = RegistrarDevolucaoEmprestimoBodySchema.safeParse({
+    const validacao = RegistrarDevolucaoEmprestimoBodySchema.superRefine(
+      (dados, contexto) => {
+        if (dados.dataDevolucao < diaEmprestimo)
+          contexto.addIssue({
+            code: "custom",
+            path: ["dataDevolucao"],
+            message:
+              "A data da devolução não pode anteceder a data do empréstimo.",
+          });
+        if (dados.dataDevolucao > hojeSaoPaulo())
+          contexto.addIssue({
+            code: "custom",
+            path: ["dataDevolucao"],
+            message: "A data da devolução não pode ser futura.",
+          });
+      },
+    ).safeParse({
       ...semChave,
       chaveIdempotencia: chaveAnterior.current!.chave,
     });
@@ -400,7 +420,11 @@ export function DetalheEmprestimo({
           )}
         </>
       ) : (
-        <form className="grid gap-5" onSubmit={(e) => void confirmar(e)}>
+        <form
+          className="grid gap-5"
+          noValidate
+          onSubmit={(e) => void confirmar(e)}
+        >
           <fieldset
             disabled={
               devolucao.pending || decisaoIdempotencia?.tipo === "ja_processada"
@@ -415,8 +439,6 @@ export function DetalheEmprestimo({
                   label="Data da devolução"
                   type="date"
                   required
-                  min={detalhe.dataEmprestimo.slice(0, 10)}
-                  max={hojeSaoPaulo()}
                   value={dataDevolucao}
                   onChange={(e) => {
                     setDataDevolucao(e.target.value);

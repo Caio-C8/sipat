@@ -73,7 +73,7 @@ export default async function MovimentacaoDetalhePage({
             ["Comissão", item.comissao.nome],
             ["Registrado por", item.registradoPor.nome],
             [
-              "Data e horário (São Paulo)",
+              "Data e horário",
               formatarDataMovimentacao(item.dataTransferencia),
             ],
             [

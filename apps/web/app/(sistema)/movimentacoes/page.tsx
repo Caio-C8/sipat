@@ -170,7 +170,6 @@ export default async function MovimentacoesPage({
                       <time dateTime={item.dataTransferencia}>
                         {formatarDataMovimentacao(item.dataTransferencia)}
                       </time>
-                      <p className="text-xs text-muted-foreground">São Paulo</p>
                     </TableCell>
                     <TableCell className="px-3 py-4 align-top">
                       <Button

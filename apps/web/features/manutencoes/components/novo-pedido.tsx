@@ -49,6 +49,7 @@ import { campoManutencao, painelManutencao } from "../apresentacao";
 import { criarOperacoesManutencoes } from "../api/manutencao-operations";
 import { ErroManutencao } from "./erro-manutencao";
 import { toast } from "sonner";
+import { hojeLocalSaoPaulo } from "@/lib/format/data-hora-sao-paulo";
 
 const operacoes = criarOperacoesManutencoes(browserApiClient);
 type Opcao = { id: string; nome: string };
@@ -67,13 +68,6 @@ type ItemForm = {
 };
 type ErrosItem = Partial<Record<keyof ItemForm, string>>;
 
-const hoje = () =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 const novoItem = (bem: Bem): ItemForm => ({
   patrimonioId: bem.id,
   numero: bem.numeroPatrimonio,
@@ -89,7 +83,7 @@ const novoItem = (bem: Bem): ItemForm => ({
 
 export function NovoPedido() {
   const router = useRouter();
-  const [dataEnvio, setDataEnvio] = useState(hoje);
+  const [dataEnvio, setDataEnvio] = useState(hojeLocalSaoPaulo);
   const [comissaoId, setComissaoId] = useState("");
   const [justificativa, setJustificativa] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -173,7 +167,7 @@ export function NovoPedido() {
         void operacoes
           .comissoes(
             {
-              dataEnvio,
+              dataEnvio: dataEnvio.slice(0, 10),
               ...(buscaComissao.trim() ? { busca: buscaComissao.trim() } : {}),
               limite: "50",
             },
@@ -368,7 +362,7 @@ export function NovoPedido() {
             <Input
               type="date"
               value={dataEnvio}
-              max={hoje()}
+              max={hojeLocalSaoPaulo()}
               onChange={(e) => {
                 setDataEnvio(e.target.value);
                 setComissaoId("");

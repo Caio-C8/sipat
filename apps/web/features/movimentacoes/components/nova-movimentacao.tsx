@@ -357,8 +357,7 @@ export function NovaMovimentacao({
           </span>
           <p role="status" className="mt-3">
             {resultado.dados.length} transferência(s) registrada(s) em{" "}
-            {formatarDataMovimentacao(resultado.dados[0]!.dataTransferencia)}{" "}
-            (São Paulo).
+            {formatarDataMovimentacao(resultado.dados[0]!.dataTransferencia)} .
           </p>
           <ul className="my-5 grid divide-y divide-border rounded-lg border border-border">
             {resultado.dados.map((item) => (
@@ -1050,7 +1049,7 @@ export function NovaMovimentacao({
                 aria-label="Resumo das transferências"
                 tabIndex={0}
               >
-                <div className="min-w-[44rem]">
+                <div className="min-w-176">
                   <div className="grid grid-cols-[1.2fr_1fr_auto_1fr] gap-4 bg-muted px-3 py-3 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                     <span>Patrimônio / bem</span>
                     <span>Origem</span>
@@ -1133,7 +1132,7 @@ export function NovaMovimentacao({
         ) : null}
       </fieldset>
       <div
-        className={`${painelMovimentacao} flex flex-wrap items-center justify-between gap-3 !p-3`}
+        className={`${painelMovimentacao} flex flex-wrap items-center justify-between gap-3 p-3!`}
       >
         <div className="flex flex-wrap gap-2">
           {modoDetalhe ? (

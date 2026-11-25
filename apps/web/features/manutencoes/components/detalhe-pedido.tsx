@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { hojeLocalSaoPaulo } from "@/lib/format/data-hora-sao-paulo";
 import type {
   AnexoObservacaoManutencao,
   ItemManutencao,
@@ -65,13 +66,6 @@ import { criarOperacoesManutencoes } from "../api/manutencao-operations";
 import { ErroManutencao } from "./erro-manutencao";
 
 const operacoes = criarOperacoesManutencoes(browserApiClient);
-const hoje = () =>
-  new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
 const formatarDataHora = (valor: string | null) =>
   valor
     ? new Intl.DateTimeFormat("pt-BR", {
@@ -270,7 +264,7 @@ function FormularioOrcamento({
   onConcluir: () => void;
 }) {
   const [data, setData] = useState(
-    item.orcamentoAtual?.dataOrcamento ?? hoje(),
+    item.orcamentoAtual?.dataOrcamento ?? hojeLocalSaoPaulo(),
   );
   const [descricao, setDescricao] = useState(
     item.orcamentoAtual?.descricaoOrcamento ?? "",
@@ -420,7 +414,7 @@ function FormularioRetorno({
   onJaProcessada: (erro: unknown, decisao: DecisaoIdempotencia) => void;
   onConcluir: () => void;
 }) {
-  const [data, setData] = useState(hoje());
+  const [data, setData] = useState(hojeLocalSaoPaulo());
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [garantiaDescricao, setGarantiaDescricao] = useState("");
@@ -443,12 +437,15 @@ function FormularioRetorno({
       dataRetorno: data,
       descricaoServicoRealizado: descricao,
       valorRealizado: valor,
-      garantia: garantiaDescricao.trim()
-        ? {
-            descricao: garantiaDescricao.trim(),
-            ...(garantiaFim ? { dataFim: garantiaFim } : {}),
-          }
-        : null,
+      garantia:
+        garantiaDescricao.trim() || garantiaFim
+          ? {
+              ...(garantiaDescricao.trim()
+                ? { descricao: garantiaDescricao.trim() }
+                : {}),
+              ...(garantiaFim ? { dataFim: garantiaFim } : {}),
+            }
+          : null,
     };
     const validacao = RegistrarRetornoManutencaoBodySchema.safeParse(body);
     if (!validacao.success) {
@@ -496,8 +493,8 @@ function FormularioRetorno({
         Data do retorno *
         <Input
           type="date"
-          min={dataEnvio}
-          max={hoje()}
+          min={dataEnvio.slice(0, 10)}
+          max={hojeLocalSaoPaulo()}
           value={data}
           onChange={(e) => {
             setData(e.target.value);
@@ -553,7 +550,6 @@ function FormularioRetorno({
             setGarantiaFim(e.target.value);
             alterar();
           }}
-          disabled={!garantiaDescricao.trim()}
           className={campoManutencao}
         />
       </label>
@@ -657,7 +653,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
               <div>
                 <dt className="text-xs text-[#526580]">Data de envio</dt>
                 <dd className="mt-1 font-semibold">
-                  {formatarDataCivil(pedido.dataEnvio)}
+                  {formatarDataHora(pedido.dataEnvio)}
                 </dd>
               </div>
               <div>
@@ -673,7 +669,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
               <div>
                 <dt className="text-xs text-[#526580]">Último retorno</dt>
                 <dd className="mt-1 font-semibold">
-                  {formatarDataCivil(pedido.dataRetorno)}
+                  {formatarDataHora(pedido.dataRetorno)}
                 </dd>
               </div>
             </dl>
@@ -774,7 +770,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
                         </span>
                         {item.dataRetorno ? (
                           <p className="mt-1 text-xs text-[#526580]">
-                            {formatarDataCivil(item.dataRetorno)}
+                            {formatarDataHora(item.dataRetorno)}
                           </p>
                         ) : null}
                       </td>
@@ -877,7 +873,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
                                       Data
                                     </dt>
                                     <dd>
-                                      {formatarDataCivil(
+                                      {formatarDataHora(
                                         item.orcamentoAtual.dataOrcamento,
                                       )}
                                     </dd>
@@ -942,7 +938,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
                                       Data
                                     </dt>
                                     <dd>
-                                      {formatarDataCivil(item.dataRetorno)}
+                                      {formatarDataHora(item.dataRetorno)}
                                     </dd>
                                   </div>
                                   <div>
@@ -968,7 +964,7 @@ export function DetalhePedido({ inicial }: { inicial: ManutencaoDetalhe }) {
                                     </dt>
                                     <dd>
                                       {item.garantia?.descricao ??
-                                        "Sem garantia informada"}
+                                        "Descrição não informada"}
                                     </dd>
                                   </div>
                                   <div>

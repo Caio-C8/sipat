@@ -9,8 +9,19 @@ export const painelManutencao =
 
 export function formatarDataCivil(valor: string | null | undefined): string {
   if (!valor) return "Não informada";
-  const [ano, mes, dia] = valor.split("-");
+  const [ano, mes, dia] = valor.slice(0, 10).split("-");
   return `${dia}/${mes}/${ano}`;
+}
+
+export function formatarDataHoraManutencao(
+  valor: string | null | undefined,
+): string {
+  if (!valor) return "Não informada";
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(valor));
 }
 
 export function formatarMoeda(valor: string | null | undefined): string {

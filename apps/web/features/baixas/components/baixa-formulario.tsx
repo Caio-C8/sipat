@@ -68,7 +68,8 @@ export function BaixaFormulario({
 
   async function carregarComissoes(data: string) {
     controleComissoes.current?.abort();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || data > hoje) return;
+    const dia = data.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hoje) return;
     const controle = new AbortController();
     controleComissoes.current = controle;
     setCarregandoComissoes(true);
@@ -77,7 +78,7 @@ export function BaixaFormulario({
       const resposta =
         await browserPatrimonioOperations.listarOpcoesComissoesBaixa(
           patrimonio.id,
-          { dataBaixa: data, pagina: "1", limite: "50" },
+          { dataBaixa: dia, pagina: "1", limite: "50" },
           controle.signal,
         );
       if (!controle.signal.aborted) setComissoes(resposta.dados);
