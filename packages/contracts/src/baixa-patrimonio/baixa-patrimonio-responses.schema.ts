@@ -4,7 +4,7 @@ import {
   criarRespostaSucessoSchema,
 } from "../common";
 import { ComissaoResumoSchema } from "../comissao";
-import { DataCivilSchema, NumeroPatrimonialSchema } from "../patrimonio";
+import { NumeroPatrimonialSchema } from "../patrimonio";
 import { NomeUsuarioSchema } from "../usuario";
 import {
   MotivoBaixaPatrimonioSchema,
@@ -37,7 +37,7 @@ export const BaixaPatrimonioDetalheSchema = z
     patrimonio: PatrimonioBaixaResponseSchema,
     comissao: ComissaoBaixaResponseSchema,
     tipo: TipoBaixaPatrimonioSchema,
-    dataBaixa: DataCivilSchema,
+    dataBaixa: DateTimeUtcResponseSchema,
     motivo: MotivoBaixaPatrimonioSchema,
     observacao: ObservacaoBaixaPatrimonioSchema.nullable(),
     createdById: z.uuid(),

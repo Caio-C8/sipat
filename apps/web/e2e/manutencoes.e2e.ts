@@ -215,7 +215,7 @@ test.describe("Manutenções", () => {
             id: fixtures.manutencao.id,
             numeroPedido: "2",
             numeroRequisicao: "MAN-2026-001",
-            dataEnvio: "2026-11-16",
+            dataEnvio: "2026-11-16T12:00:00.000Z",
             dataRetorno: null,
             status: "EM_ANDAMENTO",
             totalItens: 1,

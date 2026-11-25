@@ -37,6 +37,12 @@ import {
   construirConflitoIdempotencia,
 } from "../../common/utils/idempotencia";
 import { ComissoesService } from "../comissoes/comissoes.service";
+import {
+  diaSaoPaulo,
+  inicioDiaSaoPaulo,
+  instanteNoDiaComHoraAtualSaoPaulo,
+  proximoDiaCivil,
+} from "../../common/utils/datas-institucionais";
 import { InventariosPolicyService } from "../inventarios/inventarios-policy.service";
 import { PatrimoniosService } from "../patrimonios/patrimonios.service";
 import { ManutencoesRepository } from "./manutencoes.repository";
@@ -44,6 +50,7 @@ import { ManutencaoResponseMapper } from "./mappers/manutencao-response.mapper";
 import type { ManutencaoPayload } from "./types";
 
 const dia = (valor: string) => new Date(`${valor}T00:00:00.000Z`);
+const instante = (valor: string) => new Date(valor);
 const hojeSaoPaulo = () =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
@@ -71,9 +78,13 @@ export class ManutencoesService {
         ? {
             dataEnvio: {
               ...(query.dataEnvioInicio
-                ? { gte: dia(query.dataEnvioInicio) }
+                ? { gte: inicioDiaSaoPaulo(query.dataEnvioInicio) }
                 : {}),
-              ...(query.dataEnvioFim ? { lte: dia(query.dataEnvioFim) } : {}),
+              ...(query.dataEnvioFim
+                ? {
+                    lt: inicioDiaSaoPaulo(proximoDiaCivil(query.dataEnvioFim)),
+                  }
+                : {}),
             },
           }
         : {}),
@@ -219,7 +230,7 @@ export class ManutencoesService {
     dados: CriarManutencaoBodyData,
     identidade: IdentidadeAutenticada,
   ): Promise<ManutencaoDetalhe> {
-    if (dados.dataEnvio > hojeSaoPaulo())
+    if (dados.dataEnvio > diaSaoPaulo(new Date()))
       throw this.entradaInvalida(
         "DATA_ENVIO_FUTURA",
         "A data de envio não pode ser futura.",
@@ -240,12 +251,15 @@ export class ManutencoesService {
         if (anterior)
           return this.recuperarResultado(anterior, payloadHash, "CRIACAO");
 
-        const dataEnvio = dia(dados.dataEnvio);
+        const dataEnvio = instanteNoDiaComHoraAtualSaoPaulo(dados.dataEnvio);
         const comissao = await this.comissoes.bloquearParaMovimentacao(
           dados.comissaoId,
           tx,
         );
-        this.comissoes.validarVigenciaBloqueada(comissao, dataEnvio);
+        this.comissoes.validarVigenciaBloqueada(
+          comissao,
+          dia(diaSaoPaulo(dataEnvio)),
+        );
         const ids = dados.itens.map((item) => item.patrimonioId).sort();
         const setores = await repo.buscarSetoresPatrimonios(ids);
         await this.inventarios.coordenarManutencao(
@@ -303,7 +317,7 @@ export class ManutencoesService {
             descricaoProblema: item.descricaoProblema ?? null,
             ...(item.orcamentoInicial
               ? {
-                  dataOrcamento: dia(item.orcamentoInicial.dataOrcamento),
+                  dataOrcamento: instante(item.orcamentoInicial.dataOrcamento),
                   descricaoOrcamento: item.orcamentoInicial.descricaoOrcamento,
                   valorOrcamento: item.orcamentoInicial.valorOrcamento,
                   versaoOrcamento: 1,
@@ -314,7 +328,7 @@ export class ManutencoesService {
             await repo.criarRevisao({
               itemId: criado.id,
               versao: 1,
-              dataOrcamento: dia(item.orcamentoInicial.dataOrcamento),
+              dataOrcamento: instante(item.orcamentoInicial.dataOrcamento),
               descricaoOrcamento: item.orcamentoInicial.descricaoOrcamento,
               valorOrcamento: item.orcamentoInicial.valorOrcamento,
               fornecedorId: item.fornecedorId ?? null,
@@ -380,7 +394,7 @@ export class ManutencoesService {
         await repo.criarRevisao({
           itemId,
           versao,
-          dataOrcamento: dia(dados.dataOrcamento),
+          dataOrcamento: instante(dados.dataOrcamento),
           descricaoOrcamento: dados.descricaoOrcamento,
           valorOrcamento: dados.valorOrcamento,
           fornecedorId,
@@ -389,7 +403,7 @@ export class ManutencoesService {
         await repo.atualizarItem(itemId, {
           versaoOrcamento: versao,
           fornecedorId,
-          dataOrcamento: dia(dados.dataOrcamento),
+          dataOrcamento: instante(dados.dataOrcamento),
           descricaoOrcamento: dados.descricaoOrcamento,
           valorOrcamento: dados.valorOrcamento,
           updatedAt: new Date(),
@@ -445,18 +459,19 @@ export class ManutencoesService {
             "ITEM_MANUTENCAO_NAO_ENCONTRADO",
             "Item não encontrado neste pedido.",
           );
-        if (
-          dados.dataRetorno <
-            pedidoAntes.dataEnvio.toISOString().slice(0, 10) ||
-          dados.dataRetorno > hojeSaoPaulo()
-        )
+        const agora = new Date();
+        const dataRetorno = instanteNoDiaComHoraAtualSaoPaulo(
+          dados.dataRetorno,
+          agora,
+        );
+        if (dataRetorno < pedidoAntes.dataEnvio || dataRetorno > agora)
           throw this.entradaInvalida(
             "DATA_RETORNO_INVALIDA",
             "A data de retorno deve estar entre o envio e hoje.",
           );
         if (
           dados.garantia?.dataFim &&
-          dados.garantia.dataFim < dados.dataRetorno
+          dados.garantia.dataFim < diaSaoPaulo(dataRetorno)
         )
           throw this.entradaInvalida(
             "GARANTIA_DATA_INVALIDA",
@@ -488,9 +503,8 @@ export class ManutencoesService {
             "PATRIMONIO_NAO_EM_MANUTENCAO",
             "O patrimônio não está em manutenção.",
           );
-        const agora = new Date();
         await repo.atualizarItem(itemId, {
-          dataRetorno: dia(dados.dataRetorno),
+          dataRetorno,
           descricaoServicoRealizado: dados.descricaoServicoRealizado,
           valorRealizado: dados.valorRealizado,
           descricaoGarantia: dados.garantia?.descricao ?? null,
@@ -509,7 +523,7 @@ export class ManutencoesService {
         )
           await repo.atualizarPedido(pedidoId, {
             status: "CONCLUIDA",
-            dataRetorno: dia(dados.dataRetorno),
+            dataRetorno,
             updatedAt: agora,
           });
         const atualizado = await repo.consultar(pedidoId);
@@ -521,8 +535,7 @@ export class ManutencoesService {
         const resultado: RetornoManutencao = {
           item: ManutencaoResponseMapper.item(pedidoId, atualizadoItem),
           statusPedido: atualizado.status,
-          dataRetornoPedido:
-            atualizado.dataRetorno?.toISOString().slice(0, 10) ?? null,
+          dataRetornoPedido: atualizado.dataRetorno?.toISOString() ?? null,
         };
         await repo.salvarIdempotencia({
           usuarioId: identidade.id,

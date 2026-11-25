@@ -14,8 +14,7 @@ export const rotulosTipoBaixa: Record<string, string> = {
 };
 
 export function formatarDataBaixa(valor: string) {
-  const [ano, mes, dia] = valor.slice(0, 10).split("-");
-  return dia && mes && ano ? `${dia}/${mes}/${ano}` : valor;
+  return formatarInstanteBaixa(valor);
 }
 
 export function formatarInstanteBaixa(valor: string) {

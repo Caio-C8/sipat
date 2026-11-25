@@ -139,7 +139,7 @@ test.describe("Empréstimos", () => {
             modoAgrupamento: "EM_GRUPO",
             destinatario: "Instituição parceira",
             dataEmprestimo: "2026-11-16T12:00:00.000Z",
-            dataPrevistaDevolucao: "2026-11-16T12:00:00.000Z",
+            dataPrevistaDevolucao: "2026-11-16",
             total: 1,
             pendentes: 1,
             situacao: "EM_ANDAMENTO",

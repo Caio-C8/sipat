@@ -142,7 +142,7 @@ telas continua incremental para preservar o comportamento de cada vertical:
   com condicionais para todos os domínios;
 - paginação, ação de consulta, estados vazios e feedback terão composições
   comuns;
-- valores monetários são digitados com duas casas e exibidos com exatamente
+- valores monetários são digitados com até sete casas e exibidos com exatamente
   sete casas em Web e relatórios;
 - `components/ui` não conhece rota, perfil, contrato HTTP ou entidade SIPAT.
 

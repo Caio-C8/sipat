@@ -28,6 +28,7 @@ import {
   compareDecimal,
   divideDecimalByInteger,
   formatBrl,
+  formatBrlInput,
   multiplyDecimal,
   subtractDecimal,
 } from "@/lib/format/decimal";
@@ -147,7 +148,7 @@ function converterDecimal(valor: string) {
 
 function decimalMonetarioOuZero(valor: string) {
   const normalizado = converterDecimal(valor);
-  if (!/^\d+(?:\.\d{0,2})?$/.test(normalizado)) return "0.00";
+  if (!/^\d+(?:\.\d{0,7})?$/.test(normalizado)) return "0.00";
   if (normalizado.endsWith(".")) return `${normalizado}00`;
   const [inteiro, fracao = ""] = normalizado.split(".");
   return `${inteiro}.${fracao.padEnd(2, "0")}`;
@@ -276,9 +277,9 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
   const residualDecimal = decimalMonetarioOuZero(residualAtual);
   const valorResidualDecimal = residualEmPercentualAtual
     ? divideDecimalByInteger(
-        multiplyDecimal(valorDecimal, residualDecimal, 4),
+        multiplyDecimal(valorDecimal, residualDecimal, 7),
         "100",
-        2,
+        7,
       )
     : residualDecimal;
   const vidaUtilValida = /^[1-9]\d*$/.test(vidaUtilAtual);
@@ -287,7 +288,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
     compareDecimal(valorDecimal, valorResidualDecimal) > 0 &&
     vidaUtilValida
       ? divideDecimalByInteger(
-          subtractDecimal(valorDecimal, valorResidualDecimal, 2),
+          subtractDecimal(valorDecimal, valorResidualDecimal, 7),
           vidaUtilAtual,
           7,
         )
@@ -1054,7 +1055,7 @@ export function CadastroPatrimonio({ usuarioId }: { usuarioId: string }) {
                 <div className="mt-4 rounded-lg bg-accent p-4">
                   <p className="text-[11px]">Valor de incorporação</p>
                   <p className="break-words text-2xl font-bold text-brand-deep">
-                    {formatBrl(valorDecimal)}
+                    {formatBrlInput(valorDecimal)}
                   </p>
                   <p className="text-right text-[10px] text-muted-foreground">
                     por bem

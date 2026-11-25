@@ -20,7 +20,7 @@ import { ErroManutencao } from "@/features/manutencoes/components/erro-manutenca
 import { serverManutencaoOperations } from "@/features/manutencoes/api/server-manutencao-operations";
 import {
   classeStatusManutencao,
-  formatarDataCivil,
+  formatarDataHoraManutencao,
   painelManutencao,
   rotuloStatusManutencao,
 } from "@/features/manutencoes/apresentacao";
@@ -227,7 +227,7 @@ export default async function ManutencoesPage({
                         </span>
                       </td>
                       <td className="px-3 py-4 align-top">
-                        {formatarDataCivil(pedido.dataEnvio)}
+                        {formatarDataHoraManutencao(pedido.dataEnvio)}
                       </td>
                       <td className="px-3 py-4 align-top">
                         <span

@@ -1,9 +1,10 @@
-import { useId, type InputHTMLAttributes } from "react";
+import { useId, type ComponentProps, type InputHTMLAttributes } from "react";
 import Link from "next/link";
 import { ZodError } from "zod";
 import { isApiError } from "@/lib/api/core/api-error";
 import { mensagemConflitoIdempotencia } from "@/lib/api/core/idempotencia";
 import { PaginationSummary } from "@/components/shared/pagination-summary";
+import { MoneyInput } from "@/components/shared/numeric-inputs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useCadastroFieldError } from "./cadastro-field-errors";
@@ -40,6 +41,51 @@ export function Campo({
         aria-describedby={error ? `${id}-error` : props["aria-describedby"]}
         className="min-h-10"
       />
+      {error ? (
+        <p id={`${id}-error`} className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function CampoMonetario({
+  rotulo,
+  name,
+  value,
+  onValueChange,
+  required,
+  ...props
+}: Omit<
+  ComponentProps<typeof MoneyInput>,
+  "value" | "onValueChange" | "name"
+> & {
+  rotulo: string;
+  name: string;
+  value: string;
+  onValueChange: (value: string) => void;
+}) {
+  const generatedId = useId();
+  const id = props.id ?? generatedId;
+  const error = useCadastroFieldError(name);
+  return (
+    <div className="grid min-w-0 gap-1 text-sm text-[#29456d]">
+      <label htmlFor={id}>
+        {rotulo}
+        {required ? " *" : ""}
+      </label>
+      <MoneyInput
+        {...props}
+        id={id}
+        value={value}
+        onValueChange={onValueChange}
+        required={required}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error ? `${id}-error` : props["aria-describedby"]}
+        className="min-h-10"
+      />
+      <input type="hidden" name={name} value={value} />
       {error ? (
         <p id={`${id}-error`} className="text-sm text-destructive">
           {error}

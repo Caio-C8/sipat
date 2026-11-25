@@ -25,8 +25,11 @@ Definir os contratos compartilhados das operações de manutenção de patrimôn
 ## Decisões aprovadas
 
 - Fornecedor, tipo e previsão pertencem a cada item; comissão e data de envio pertencem ao pedido.
+- Envio e retorno são datetimes ISO 8601 com offset; orçamento, previsão de
+  retorno e fim da garantia permanecem datas civis.
 - PDF do pedido é opcional; documentos de item têm fase `ENVIO` ou `RECEBIMENTO`.
-- Orçamento por item possui versões; retorno único admite garantia com descrição e data final opcional.
+- Orçamento por item possui versões; retorno único admite garantia opcional,
+  com descrição e data final opcionais e independentes.
 - Usar UUID do pedido como referência inequívoca.
 
 ## Critérios de aceite

@@ -4,8 +4,8 @@ export interface EstadoMigrationSeed {
   rolled_back_at: Date | null;
 }
 
-const ULTIMA_MIGRATION = "20261124010000_restabelece_indices_busca_global";
-const TOTAL_MIGRATIONS = 35;
+const ULTIMA_MIGRATION = "20261124170000_adiciona_horario_eventos";
+const TOTAL_MIGRATIONS = 36;
 
 export function exigirMigrationsAtuais(
   migrations: readonly EstadoMigrationSeed[],

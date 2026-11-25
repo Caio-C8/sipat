@@ -44,9 +44,8 @@ o PDF comprobatório opcional de forma privada.
   não mapear silenciosamente `INVERSIBILIDADE`, `PERDA_FISICA` ou
   `AJUSTE_CONTABIL`; se houver valores legados, retornar ao planejador ou ao
   usuário para definir a migração de cada registro;
-- representar `dataBaixa` como `@db.Date`; se houver timestamps legados com
-  horário significativo, interromper a migração em vez de truncá-los sem
-  decisão;
+- representar `dataBaixa` como `@db.Timestamp(6)`, preservando o horário
+  significativo definido pelo servidor no momento da ocorrência;
 - garantir uma única baixa por patrimônio com unicidade em `patrimonioId`,
   mantendo as FKs restritivas e os índices exigidos pelas consultas reais;
 - manter `comissaoId`, `createdById`, `motivo` e `tipo` obrigatórios e
@@ -73,8 +72,9 @@ o PDF comprobatório opcional de forma privada.
 - validar extensão `.pdf`, MIME `application/pdf`, assinatura `%PDF-` e tamanho
   máximo de 10 MiB, reutilizando infraestrutura sem acoplar o novo domínio ao
   utilitário específico de nota fiscal;
-- rejeitar `dataBaixa` futura pela data civil do relógio do servidor e exigir
-  comissão existente e vigente inclusivamente nessa data;
+- rejeitar `dataBaixa` futura pelo instante do relógio do servidor e exigir
+  comissão existente e vigente inclusivamente na data civil correspondente em
+  `America/Sao_Paulo`;
 - usar `ComissoesService` para a pré-validação pública e, dentro da transação da
   baixa, adquirir lock de leitura sobre a comissão e revalidar sua vigência sem
   importar `ComissoesRepository`;

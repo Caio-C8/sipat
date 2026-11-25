@@ -8,7 +8,7 @@ export class BaixaResponseMapper {
       patrimonio: baixa.patrimonio,
       comissao: baixa.comissao,
       tipo: baixa.tipo,
-      dataBaixa: baixa.dataBaixa.toISOString().slice(0, 10),
+      dataBaixa: baixa.dataBaixa.toISOString(),
       motivo: baixa.motivo,
       observacao: baixa.observacao,
       createdById: baixa.createdById,

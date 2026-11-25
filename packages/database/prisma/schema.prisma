@@ -551,7 +551,7 @@ model TransferenciaPatrimonio {
 model EmprestimoPatrimonio {
   id                    String                     @id @default(uuid()) @db.Uuid
   dataEmprestimo        DateTime                   @map("data_emprestimo") @db.Timestamp(6)
-  dataPrevistaDevolucao DateTime?                  @map("data_prevista_devolucao") @db.Timestamp(6)
+  dataPrevistaDevolucao DateTime?                  @map("data_prevista_devolucao") @db.Date
   destinatario          String?                    @db.VarChar(200)
   finalidade            String?                    @db.Text
   observacao            String?                    @db.Text
@@ -625,9 +625,9 @@ model Manutencao {
   tipo                   TipoManutencao?
   justificativa          String?          @db.Text
   dataEmpenho            DateTime?        @map("data_empenho") @db.Date
-  dataEnvio              DateTime         @map("data_envio") @db.Date
+  dataEnvio              DateTime         @map("data_envio") @db.Timestamp(6)
   previsaoRetorno        DateTime?        @map("previsao_retorno") @db.Date
-  dataRetorno            DateTime?        @map("data_retorno") @db.Date
+  dataRetorno            DateTime?        @map("data_retorno") @db.Timestamp(6)
   status                 StatusManutencao @default(EM_ANDAMENTO)
   observacao             String?          @db.Text
   caminhoAnexoObservacao String?          @map("caminho_anexo_observacao") @db.VarChar(500)
@@ -668,7 +668,7 @@ model ItemManutencao {
   valorOrcamento            Decimal?       @map("valor_orcamento") @db.Decimal(19, 7)
   descricaoServicoRealizado String?        @map("descricao_servico_realizado") @db.Text
   valorRealizado            Decimal?       @map("valor_realizado") @db.Decimal(19, 7)
-  dataRetorno               DateTime?      @map("data_retorno") @db.Date
+  dataRetorno               DateTime?      @map("data_retorno") @db.Timestamp(6)
   observacao                String?        @db.Text
   caminhoAnexoObservacao    String?        @map("caminho_anexo_observacao") @db.VarChar(500)
   manutencaoId              String         @map("manutencao_id") @db.Uuid
@@ -874,7 +874,7 @@ model LocalizacaoPosteriorInventario {
 
 model BaixaPatrimonio {
   id                    String    @id @default(uuid()) @db.Uuid
-  dataBaixa             DateTime  @map("data_baixa") @db.Date
+  dataBaixa             DateTime  @map("data_baixa") @db.Timestamp(6)
   tipo                  TipoBaixa
   motivo                String    @db.Text
   observacao            String?   @db.Text

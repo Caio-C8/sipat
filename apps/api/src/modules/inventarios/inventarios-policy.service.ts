@@ -108,7 +108,9 @@ export class InventariosPolicyService {
             campo: `itens.${indice}.${campo}`,
             codigo: `SETOR_EM_INVENTARIO_${bloqueio.status}`,
             mensagem:
-              "O setor possui conferência pendente ou em andamento em inventário aberto.",
+              campo === "setorOrigemEsperadoId"
+                ? "O setor de origem possui conferência pendente ou em andamento em inventário aberto."
+                : "O setor de destino possui conferência pendente ou em andamento em inventário aberto.",
           });
       }
       if (fora.some((linha) => linha.patrimonioId === item.patrimonioId))

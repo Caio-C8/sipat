@@ -109,7 +109,7 @@ export function fonteEventos(
     joinsEmprestimo,
     camposEmprestimo(diaSaoPaulo(agora)),
     "r.data_emprestimo",
-    "DIA",
+    "INSTANTE",
   );
   evento(
     "DEVOLUCAO",
@@ -117,7 +117,7 @@ export function fonteEventos(
     joinsEmprestimo,
     camposEmprestimo(diaSaoPaulo(agora)),
     "d.data_devolucao",
-    "DIA",
+    "INSTANTE",
     "ud.nome",
     "cd.nome",
     "d.created_at",
@@ -130,7 +130,7 @@ export function fonteEventos(
     joinsAutor,
     camposBaixa,
     "r.data_baixa",
-    "DIA",
+    "INSTANTE",
   );
   evento(
     "ENVIO_MANUTENCAO",
@@ -138,7 +138,7 @@ export function fonteEventos(
     `${joinsManutencao} JOIN usuarios u ON u.id=m.created_by_id`,
     camposManutencao,
     "m.data_envio",
-    "DIA",
+    "INSTANTE",
     "u.nome",
     "c.nome",
     "r.created_at",
@@ -149,7 +149,7 @@ export function fonteEventos(
     `${joinsManutencao} LEFT JOIN usuarios u ON u.id=r.recebido_por_id`,
     camposManutencao,
     "r.data_retorno",
-    "DIA",
+    "INSTANTE",
     "u.nome",
     "c.nome",
     "r.recebido_em",
@@ -168,7 +168,7 @@ export function fonteEventos(
       fornecedor: "f.razao_social",
     },
     "v.data_orcamento",
-    "DIA",
+    "INSTANTE",
     "u.nome",
     "c.nome",
     "v.created_at",

@@ -34,8 +34,9 @@ genéricos que conheçam regras de domínio.
   exija ação também permanece próximo do formulário/diálogo;
 - padronizar filtro declarativo somente para filtros simples, tabela por
   composição/colunas da feature, paginação e link/ação de consulta;
-- implementar input monetário BRL com duas casas durante digitação e transporte
-  decimal por string; toda exibição monetária usa exatamente sete casas;
+- implementar input monetário BRL com até sete casas durante digitação e
+  transporte decimal por string; toda exibição monetária usa exatamente sete
+  casas;
 - implementar input inteiro por texto com `inputMode="numeric"`, sem expoente,
   sinal ou alteração por scroll;
 - migrar uma tela cadastral simples como vertical de prova antes de replicar o
@@ -56,8 +57,8 @@ genéricos que conheçam regras de domínio.
   usa `Restaurar alterações`;
 - sucesso não aparece em caixa verde fixa; erros técnicos nunca chegam ao texto
   do usuário;
-- exibição monetária, inclusive relatórios/PDFs, usa `R$ 1.234,5000000`; input
-  manual continua limitado a centavos.
+- exibição monetária, inclusive relatórios/PDFs, usa `R$ 1.234,5000000`; o
+  input manual aceita até sete casas, conforme decisão revisada em 24/11/2026.
 
 ## Critérios de aceite
 

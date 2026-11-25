@@ -35,6 +35,7 @@ import { useCriarEmprestimo, usePatrimoniosEmprestimo } from "../api/hooks";
 import {
   botaoPrimarioEmprestimo,
   dataExibicao,
+  detalhesErroEmprestimo,
   hojeSaoPaulo,
   mensagemEmprestimo,
   painelEmprestimo,
@@ -209,10 +210,8 @@ export function NovoEmprestimo({
         )}
       {isApiError(erro) && !decisaoIdempotencia && erro.erros.length > 0 && (
         <ul className="mt-2 list-inside list-disc">
-          {erro.erros.map((item, i) => (
-            <li key={i}>
-              {item.campo}: {item.mensagem}
-            </li>
+          {detalhesErroEmprestimo(erro, selecionados).map((detalhe, i) => (
+            <li key={i}>{detalhe}</li>
           ))}
         </ul>
       )}

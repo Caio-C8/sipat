@@ -25,7 +25,7 @@ const IDENTIDADE: IdentidadeAutenticada = {
 function detalhe(caminhoAnexoDocumento: string | null = null) {
   return {
     id: BAIXA_ID,
-    dataBaixa: new Date("2026-10-27T00:00:00.000Z"),
+    dataBaixa: new Date("2026-10-27"),
     tipo: "ALIENACAO" as const,
     motivo: "Alienação autorizada",
     observacao: null,

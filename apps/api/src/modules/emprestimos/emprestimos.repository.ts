@@ -169,29 +169,15 @@ export class EmprestimosRepository {
     return { items, total };
   }
 
-  async existeEventoNaOuAposData(
+  async existeEmprestimoNaOuAposData(
     patrimonioId: string,
-    data: string,
+    data: Date,
   ): Promise<boolean> {
     const [linha] = await this.database.$queryRaw<{ existe: boolean }[]>`
       SELECT (
-        EXISTS (SELECT 1 FROM transferencias_patrimoniais WHERE patrimonio_id = ${patrimonioId}::uuid AND data_transferencia::date >= ${data}::date)
-        OR EXISTS (SELECT 1 FROM baixas_patrimoniais WHERE patrimonio_id = ${patrimonioId}::uuid AND data_baixa >= ${data}::date)
-        OR EXISTS (SELECT 1 FROM itens_manutencao im JOIN manutencoes m ON m.id = im.manutencao_id WHERE im.patrimonio_id = ${patrimonioId}::uuid AND (m.data_envio >= ${data}::date OR im.data_retorno >= ${data}::date))
-        OR EXISTS (SELECT 1 FROM emprestimos_patrimoniais e WHERE e.patrimonio_id = ${patrimonioId}::uuid AND e.data_emprestimo::date >= ${data}::date)
-        OR EXISTS (SELECT 1 FROM devolucoes_patrimoniais d JOIN emprestimos_patrimoniais e ON e.id = d.emprestimo_id WHERE e.patrimonio_id = ${patrimonioId}::uuid AND d.data_devolucao::date >= ${data}::date)
-        OR EXISTS (SELECT 1 FROM itens_inventario i WHERE i.patrimonio_id = ${patrimonioId}::uuid AND (i.data_verificacao::date >= ${data}::date OR i.data_correcao::date >= ${data}::date))
+        EXISTS (SELECT 1 FROM emprestimos_patrimoniais e WHERE e.patrimonio_id = ${patrimonioId}::uuid AND e.data_emprestimo >= ${data})
+        OR EXISTS (SELECT 1 FROM devolucoes_patrimoniais d JOIN emprestimos_patrimoniais e ON e.id = d.emprestimo_id WHERE e.patrimonio_id = ${patrimonioId}::uuid AND d.data_devolucao >= ${data})
       ) AS existe
-    `;
-    return linha?.existe ?? false;
-  }
-
-  async existeConferenciaVinculadaNaOuAposData(
-    emprestimoId: string,
-    data: string,
-  ): Promise<boolean> {
-    const [linha] = await this.database.$queryRaw<{ existe: boolean }[]>`
-      SELECT EXISTS (SELECT 1 FROM itens_inventario WHERE emprestimo_patrimonio_id = ${emprestimoId}::uuid AND data_verificacao::date >= ${data}::date) AS existe
     `;
     return linha?.existe ?? false;
   }

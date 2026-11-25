@@ -121,6 +121,30 @@ function formatBrl(value: string): string {
   return `R$ ${formatDecimalBr(value, 7)}`;
 }
 
+function normalizeBrlInput(value: string): {
+  decimal: string;
+  formatted: string;
+} {
+  const hasCurrencyPrefix = /^\s*R\$/i.test(value);
+  const raw = value.replace(/^\s*R\$\s*/i, "").trim();
+  const commaIndex = raw.lastIndexOf(",");
+  const dotIndexes = [...raw.matchAll(/\./g)].map((match) => match.index ?? -1);
+  const dotAsDecimal =
+    commaIndex < 0 && !hasCurrencyPrefix && dotIndexes.length === 1;
+  const separatorIndex =
+    commaIndex >= 0 ? commaIndex : dotAsDecimal ? dotIndexes[0]! : -1;
+  const integerRaw = separatorIndex >= 0 ? raw.slice(0, separatorIndex) : raw;
+  const fractionRaw = separatorIndex >= 0 ? raw.slice(separatorIndex + 1) : "";
+  const integer = integerRaw.replace(/\D/g, "").replace(/^0+(?=\d)/, "") || "0";
+  const fraction = fractionRaw.replace(/\D/g, "").slice(0, 7);
+  const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+  return {
+    decimal: `${integer}${fraction ? `.${fraction}` : ""}`,
+    formatted: `R$ ${grouped}${separatorIndex >= 0 ? `,${fraction}` : ""}`,
+  };
+}
+
 function decimalToCentsDigits(value: string): string {
   const decimal = parseDecimal(value || "0");
   if (decimal.negative)
@@ -139,8 +163,13 @@ function centsDigitsToDecimal(digits: string): string {
 }
 
 function formatBrlInput(value: string): string {
-  const canonical = centsDigitsToDecimal(decimalToCentsDigits(value));
-  return `R$ ${formatDecimalBr(canonical, 2)}`;
+  const decimal = parseDecimal(value || "0");
+  if (decimal.negative)
+    throw new RangeError("O valor monetário não pode ser negativo.");
+  if (decimal.fraction.length > 7)
+    throw new RangeError("O valor excede 7 casas decimais.");
+  const grouped = decimal.integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `R$ ${grouped},${decimal.fraction.padEnd(2, "0")}`;
 }
 
 export {
@@ -153,5 +182,6 @@ export {
   compareDecimal,
   divideDecimalByInteger,
   multiplyDecimal,
+  normalizeBrlInput,
   subtractDecimal,
 };

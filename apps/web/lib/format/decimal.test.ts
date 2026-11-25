@@ -9,6 +9,7 @@ import {
   formatBrlInput,
   formatDecimalBr,
   multiplyDecimal,
+  normalizeBrlInput,
   subtractDecimal,
 } from "./decimal";
 
@@ -24,10 +25,16 @@ describe("formatação decimal sem perda de precisão", () => {
     expect(formatBrl("0")).toBe("R$ 0,0000000");
   });
 
-  it("mantém duas casas na edição e transporta decimal como string", () => {
+  it("aceita até sete casas na edição e transporta decimal como string", () => {
     expect(decimalToCentsDigits("1234.50")).toBe("123450");
     expect(centsDigitsToDecimal("123450")).toBe("1234.50");
     expect(formatBrlInput("1234.5")).toBe("R$ 1.234,50");
+    expect(formatBrlInput("1234.1234567")).toBe("R$ 1.234,1234567");
+    expect(normalizeBrlInput("R$ 1.234,12345678")).toEqual({
+      decimal: "1234.1234567",
+      formatted: "R$ 1.234,1234567",
+    });
+    expect(normalizeBrlInput("1234.7654321").decimal).toBe("1234.7654321");
   });
 
   it("rejeita representações que não pertencem ao contrato decimal", () => {

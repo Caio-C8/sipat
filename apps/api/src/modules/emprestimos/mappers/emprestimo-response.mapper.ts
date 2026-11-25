@@ -17,7 +17,8 @@ export class EmprestimoResponseMapper {
       modoAgrupamento: row.modoAgrupamento,
       destinatario: row.destinatario,
       dataEmprestimo: row.dataEmprestimo.toISOString(),
-      dataPrevistaDevolucao: row.dataPrevistaDevolucao?.toISOString() ?? null,
+      dataPrevistaDevolucao:
+        row.dataPrevistaDevolucao?.toISOString().slice(0, 10) ?? null,
       total: Number(row.total),
       pendentes,
       situacao: pendentes > 0 ? "EM_ANDAMENTO" : "CONCLUIDO",
@@ -45,7 +46,7 @@ export class EmprestimoResponseMapper {
       destinatario: primeiro.destinatario,
       dataEmprestimo: primeiro.dataEmprestimo.toISOString(),
       dataPrevistaDevolucao:
-        primeiro.dataPrevistaDevolucao?.toISOString() ?? null,
+        primeiro.dataPrevistaDevolucao?.toISOString().slice(0, 10) ?? null,
       total: registros.length,
       pendentes,
       situacao: pendentes > 0 ? "EM_ANDAMENTO" : "CONCLUIDO",

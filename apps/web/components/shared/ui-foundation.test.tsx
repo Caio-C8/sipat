@@ -106,13 +106,13 @@ describe("fundação compartilhada de UI", () => {
     );
 
     fireEvent.change(screen.getByLabelText("Valor"), {
-      target: { value: "R$ 1.234,56" },
+      target: { value: "R$ 1.234,5678901" },
     });
     fireEvent.change(screen.getByLabelText("Quantidade"), {
       target: { value: "-12e3" },
     });
 
-    expect(moneyChange).toHaveBeenCalledWith("1234.56");
+    expect(moneyChange).toHaveBeenCalledWith("1234.5678901");
     expect(integerChange).toHaveBeenCalledWith("123");
     expect(screen.getByLabelText("Quantidade").getAttribute("type")).toBe(
       "text",

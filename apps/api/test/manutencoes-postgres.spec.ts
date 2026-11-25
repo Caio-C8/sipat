@@ -11,6 +11,7 @@ import { PatrimoniosRepository } from "../src/modules/patrimonios/patrimonios.re
 import { PatrimoniosService } from "../src/modules/patrimonios/patrimonios.service";
 import { CoordenadorDocumentosService } from "../src/common/storage/coordenador-documentos.service";
 import type { ArmazenamentoDocumentosPorta } from "../src/common/storage/armazenamento-documentos.port";
+import { diaSaoPaulo } from "../src/common/utils/datas-institucionais";
 
 const url = process.env.MANUTENCOES_INTEGRATION_DATABASE_URL;
 const describeComBanco = url ? describe : describe.skip;
@@ -242,7 +243,9 @@ describeComBanco("manutenção no PostgreSQL descartável", () => {
       identidade,
     );
     expect(final.statusPedido).toBe("CONCLUIDA");
-    expect(final.dataRetornoPedido).toBe("2026-10-23");
+    expect(final.dataRetornoPedido).not.toBeNull();
+    expect(Number.isNaN(Date.parse(final.dataRetornoPedido!))).toBe(false);
+    expect(diaSaoPaulo(new Date(final.dataRetornoPedido!))).toBe("2026-10-23");
     expect(
       (
         await db.patrimonio.findUniqueOrThrow({ where: { id: primeiro.id } })

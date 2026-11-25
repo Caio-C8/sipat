@@ -41,7 +41,7 @@ function Dado({
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{titulo}</dt>
-      <dd className="mt-1 break-words text-sm font-medium text-brand-deep">
+      <dd className="mt-1 wrap-break-word text-sm font-medium text-brand-deep">
         {valor ?? nulo}
       </dd>
     </div>
